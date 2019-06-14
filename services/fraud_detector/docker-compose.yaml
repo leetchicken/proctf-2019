@@ -1,0 +1,14 @@
+version: '2.0'
+services:
+  fraud_detector:
+    build: .
+    ports:
+      - "127.0.0.1:10000:10000"
+    volumes:
+      - ./data:/home/fraud_detector/data
+      - ./static:/home/fraud_detector/static
+      - ./start.sh:/home/fraud_detector/start.sh
+      - ./app.py:/home/fraud_detector/app.py
+      - ./fraud_detector.py:/home/fraud_detector/fraud_detector.py
+    restart: on-failure
+    mem_limit: 1024m

@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title> Taxi Fraud Detection System </title>
+    <style>
+        body {
+            width: 800px;
+            background-color: #eff0f1;
+        }
+
+        textarea {
+            display: block;
+            width: 600px;
+            height: 120px;
+            font-family: DejaVu Sans Mono, Consolas, Courier New, monospace;
+            margin: 5px 0px 20px 0px;
+        }
+
+        input {
+            margin: 5px 0px 20px 0px;
+            width: 600px;
+        }
+
+        .user_desc_name {
+            text-align: center;
+            font-size: x-large;
+        }
+
+        .user_img {
+            display: block;
+            padding: 10px 0px;
+        }
+
+        .boldify {
+            font-weight: bold;
+        }
+
+        .small_padding {
+            display: block;
+            padding: 0px 0px 15px 0px;
+        }
+
+        #compare_column1 {
+            display: inline-block;
+            width: 150px;
+            padding: 0px 0px 10px 0px;
+
+        }
+
+        #compare_column2 {
+            display: inline-block;
+            width: 200px;
+            padding: 0px 20px 0px 30px;
+        }
+
+        #compare_column3 {
+            display: inline-block;
+            vertical-align: top;
+            width: 200px;
+            padding: 0px 10px;
+        }
+
+        .column_body {
+            width: 100%;
+            height: 370px;
+        }
+
+        .img-c1 { filter: hue-rotate(290deg); }
+        .img-c2 { filter: hue-rotate(30deg); }
+        .img-c3 { filter: hue-rotate(310deg); }
+        .img-c4 { filter: hue-rotate(0deg); }
+        .img-c5 { filter: hue-rotate(40deg); }
+
+    </style>
+</head>
+<body>
+    <h1>The-Fraud-Detection-Test-System</h1>
+    <div> You visited an internal site for fraud detection rules testing. </div>
+    <div> Develop some fraud detection algo and compare it with others. </div>
+    <div> Feel free to put secret data in rules, nobody will be able see it. </div>
+    <br>
+    <img src="taxi.png" class="img-c1"><img src="taxi.png" class="img-c2"><img src="taxi.png" class="img-c3">
+    <img src="taxi.png" class="img-c4"><img src="taxi.png" class="img-c5">
+    <br>
+
+    <h2>Develop</h2>
+
+    Algo name: <br> <input id="algoname" placeholder='a_start.py'>
+    <br>
+    The code:
+    <textarea id="algocode" spellcheck="false" maxlength="2048" placeholder='if user["name"][0] == "A":
+    fraud_prob = 100
+    '></textarea>
+    <button onclick="sendButtonPressed()">Send</button> <span id="send_status"></span>
+
+    <h2>Compare</h2>
+    <div id="compare_column1">
+        <center class="small_padding"><b>Pick rules</b></center>
+        <select class="column_body" id="algo_list" multiple></select>
+    </div>
+    <div id="compare_column2">
+        <center class="small_padding"><b>Pick user</b></center>
+        <select class="column_body" id="user_list" size=100 onchange="userSelected(this)"></select>
+    </div>
+    <div id="compare_column3">
+        <center class="small_padding"><b>User info</b></center>
+        <div class="column_body" id="user_info"></div>
+    </div>
+    <br>
+
+    <button onclick="compareButtonPressed()">Compare</button>
+
+    <h4> Fraud probabilities </h4>
+    <div id="compare_result">press "Compare" first</div>
+
+    <script>
+        var allUsers = {}
+        var allAlgos = {}
+
+        function callApi(method, url, args, callback) {
+            var req = new XMLHttpRequest()
+            req.open(method, url, true)
+            req.setRequestHeader('Content-type', 'application/json; charset=utf-8');
+            req.onreadystatechange = function() {
+                if (req.readyState == 4) {
+                    var raw_resp = req.responseText
+                    var resp = {}
+                    try {
+                        resp = JSON.parse(raw_resp)
+                    } catch (e) {
+                        console.log("json parse exception", raw_resp)
+                    }
+                    callback(resp)
+                }
+            }
+            req.send(JSON.stringify(args))
+        }
+
+        function userSelected(el) {
+            var index = el.selectedIndex
+            var user = allUsers[index]
+
+            var user_info = document.getElementById("user_info")
+            user_info.innerHTML = ""
+
+            var info_div = document.createElement("div")
+            info_div.classList.add("user_desc_name")
+            info_div.innerText = user.name + " " + user.surname
+            user_info.appendChild(info_div)
+
+            var img = document.createElement("img")
+            img.classList.add("user_img")
+            img.style = "filter: hue-rotate(" + (77 * index) + "deg);"
+            if (!user["is_fraud"]) {
+                img.src = "noavatar.png"
+            } else {
+                img.src = "hacker.png"
+            }
+            user_info.appendChild(img)
+
+            for(attr in user) {
+                if (attr == "name" || attr == "surname" || attr == "is_fraud") {
+                    continue
+                }
+                var div = document.createElement("div")
+                var span1 = document.createElement("span")
+                var span2 = document.createElement("span")
+                span1.classList.add("boldify")
+
+                var attr_for_out = attr.charAt(0).toUpperCase() + attr.slice(1)
+
+                span1.innerText = attr_for_out.replace(/_/g, " ") + ": "
+                span2.innerText = user[attr]
+
+                div.appendChild(span1)
+                div.appendChild(span2)
+                
+                user_info.appendChild(div)
+            }
+        }
+
+        function updateUsers() {
+            var usersEl = document.getElementById("user_list")
+            usersEl.innerText = ""
+
+            for(user in allUsers) {
+                var userEl = document.createElement("option")
+                userEl.innerText = allUsers[user]["surname"] + " " + allUsers[user]["name"]
+                usersEl.appendChild(userEl)
+            }
+        }
+
+        function updateAlgos() {
+            var algosEl = document.getElementById("algo_list")
+            algosEl.innerText = ""
+
+            for(algo in allAlgos) {
+                var algoEl = document.createElement("option")
+                algoEl.classList.add("algo_list_item")
+                algoEl.innerText = allAlgos[algo]
+                algosEl.appendChild(algoEl)
+            }
+        }
+
+        function sendButtonPressed() {
+            var name = document.getElementById("algoname").value
+            var code = document.getElementById("algocode").value
+
+            callApi("POST", "/addrule", {"name": name, "code": code}, function (result) {
+                document.getElementById("send_status").innerText = result
+                downloadRules()
+            })
+        }
+
+        function compareButtonPressed() {
+            var algosEl = document.getElementById("algo_list")
+            var algoNames = []
+
+            for (var i = 0; i < algosEl.selectedOptions.length; i+=1) {
+                algoNames.push(algosEl.selectedOptions[i].value)
+            }
+
+            var userId = document.getElementById("user_list").selectedIndex
+
+            callApi("POST", "/checkuser", {"rules": algoNames, "user": userId}, function (result) {
+                // console.log(result)
+                var resultEl = document.getElementById("compare_result")
+                resultEl.innerHTML = ""
+
+                if (!Array.isArray(result)) {
+                    resultEl.innerText = result
+                    return
+                }
+
+                for (var i = 0; i < result.length; i+=1) {
+                    var canvas = document.createElement("canvas")
+                    canvas.width = 600 / result.length
+                    if (canvas.width < 100) {
+                        canvas.width = 100
+                    }
+                    var headerSize = 20
+                    canvas.height = 100 + headerSize
+
+                    var ctx = canvas.getContext("2d")
+                    ctx.fillStyle = "#00B500"
+                    ctx.fillRect(0, headerSize, canvas.width, 100 - result[i]);
+                    ctx.fillStyle = "red"
+                    ctx.fillRect(0, 100 + headerSize - result[i], canvas.width, result[i]);
+                    ctx.textAlign = "center";
+                    ctx.font = "30px Arial";
+                    ctx.strokeText(result[i] + " %", canvas.width / 2, 70)
+                    ctx.font = "10px Arial";
+                    ctx.fillStyle = "black"
+                    ctx.fillText(algoNames[i], canvas.width / 2, 15)
+
+                    resultEl.appendChild(canvas)
+
+                }
+                window.scrollTo(0, document.body.scrollHeight)
+                // downloadRules()
+            })
+
+            
+        }
+
+        function downloadRules() {
+            callApi("GET", "/rules", {}, function (algos) {
+                allAlgos = algos
+                updateAlgos()
+            })
+        }
+
+        function downloadUsers() {
+            callApi("GET", "/users", {}, function (users) {
+                allUsers = users
+                updateUsers()                
+            })
+        }
+
+        downloadRules()
+        downloadUsers()
+    </script>
+</body>
+</html>
