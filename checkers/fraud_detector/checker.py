@@ -163,7 +163,10 @@ def put(host, flag_id, flag, vuln):
 def get(host, flag_id, flag, vuln):
     s = create_session()
 
-    rule_name, get_help_data = json.loads(base64.b64decode(flag_id))
+    try:
+        rule_name, get_help_data = json.loads(base64.b64decode(flag_id))
+    except Exception:
+        verdict(MUMBLE, "Bad flag id", "Bad flag_id: %s" % traceback.format_exc())
 
     ans = call_get_rules_api(s, host)
     if ans is None or rule_name not in ans:
