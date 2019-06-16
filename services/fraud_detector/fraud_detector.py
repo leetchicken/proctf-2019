@@ -23,6 +23,7 @@ SAFE_FUNCTIONS = {
     "bytes": bytes,
     "ord": ord,
     "chr": chr,
+    "len": len,
     "randint": random.randint,
     "sha256": lambda data: hashlib.sha256(data.encode()).digest()
 }
@@ -39,7 +40,7 @@ BASE_GLOBS = {
 
 
 def set_limits():
-    resource.setrlimit(resource.RLIMIT_DATA, (10_000_000, 10_000_000))
+    resource.setrlimit(resource.RLIMIT_DATA, (20_000_000, 20_000_000))
     resource.setrlimit(resource.RLIMIT_CPU, (1, 1))
     signal.setitimer(signal.ITIMER_VIRTUAL, 2.0)  # finer grain control
 
