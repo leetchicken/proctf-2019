@@ -50,7 +50,7 @@ def create_session():
     s.get = functools.partial(s.get, timeout=TIMEOUT)
     s.post = functools.partial(s.post, timeout=TIMEOUT)
     s.headers["User-Agent"] = random.choice(USER_AGENTS)
-    return s    
+    return s
 
 
 def call_get_rules_api(session, host):
@@ -82,7 +82,7 @@ def call_check_user_api(session, host, rules, user):
         return None
     ans_obj = ans.json()
     if type(ans_obj) is not list or any(type(o) != int for o in ans_obj):
-        return None    
+        return None
     return ans_obj
 
 
@@ -111,7 +111,7 @@ def check(host):
     for rule_name, rule in [rule1_name, rule1], [rule2_name, rule2]:
         ans = call_add_rule_api(s, host, name=rule_name, code=rule)
         if ans is None or not ans.startswith("ok:"):
-            verdict(MUMBLE, "Failed to add rule", 
+            verdict(MUMBLE, "Failed to add rule",
                     "Failed to add rule: %s %s" % rule_name, ans)
 
     ans = call_get_rules_api(s, host)
@@ -120,9 +120,9 @@ def check(host):
 
     user_idxs = random.sample(range(len(USERS)), 3)
 
-    rules_to_check = [random.choice([rule1_name, rule2_name]) for i in range(random.randint(32, 64))]
-    
-    ans = call_check_user_api(s, host, rules=rules_to_check, user=user_idxs[0])
+    rules_seq = [random.choice([rule1_name, rule2_name]) for i in range(random.randint(32, 64))]
+
+    ans = call_check_user_api(s, host, rules=rules_seq, user=user_idxs[0])
     if ans is None or len(set(ans)) in [1, 2]:
         verdict(MUMBLE, "Check failed", "Bad random test")
 
@@ -132,7 +132,6 @@ def check(host):
         expected = fraud_detector.run_rules([rule1], USERS[user_idx])
         if ans is None or expected != ans:
             verdict(MUMBLE, "Check failed", "Bad interpreter test")
-
     verdict(OK)
 
 
@@ -147,7 +146,7 @@ def put(host, flag_id, flag, vuln):
 
     ans = call_add_rule_api(s, host, name=rule_name, code=rule)
     if ans is None or not ans.startswith("ok:"):
-        verdict(MUMBLE, "Failed to add rule", 
+        verdict(MUMBLE, "Failed to add rule",
                 "Failed to add rule: %s %s" % rule_name, ans)
 
     user_idxs = random.sample(range(len(USERS)), 8)
@@ -188,7 +187,7 @@ def main(args):
 
     if not args:
         verdict(CHECKER_ERROR, "No args", "No args")
-        
+
     cmd, args = args[0], args[1:]
     if cmd not in CMD_MAPPING:
         verdict(CHECKER_ERROR, "Checker error", "Wrong command %s" % cmd)
@@ -204,7 +203,7 @@ def main(args):
     except json.decoder.JSONDecodeError as E:
         verdict(MUMBLE, "Json decode error", "Json decode error: %s" % E)
     except Exception as E:
-        verdict(CHECKER_ERROR, "Checker error", "Checker error: %s" % E)
+        verdict(CHECKER_ERROR, "Checker error", "Checker error: %s %s" % (type(E), E))
     verdict(CHECKER_ERROR, "Checker error", "No verdict")
 
 

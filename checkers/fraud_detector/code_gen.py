@@ -66,20 +66,32 @@ def gen_iterable():
 
 
 def gen_function_check1(var_name):
-    return """def {1}({2}, {3}):
+    f_name = gen_name()
+    arg1_name = gen_name()
+    arg2_name = gen_name()
+    sign = choice("+-*/")
+    arg1 = randint(1, 100)
+    arg2 = randint(1, 100)
+    assign = choice(["+=", "-="])
+
+    return """def {f_name}({arg1_name}, {arg2_name}):
     <GARBAGE>
-    return {2}{4}{3}
+    return {arg1_name}{sign}{arg2_name}
 <GARBAGE>
-{0}{7}{1}({5}, {6})""".format(var_name, gen_name(), gen_name(), gen_name(), gen_rand_str(1, 1, "+-*/"),
-                            randint(1, 100), randint(1, 100), choice(["+=", "-="]))
+{var_name}{assign}{f_name}({arg1}, {arg2})""".format(**locals())
 
 
 def gen_function_check2(var_name):
-    return """def {1}({2}):
+    f_name = gen_name()
+    arg_name = gen_name()
+    operation = choice(["+", "-", "ord('%s')+" % choice(NAME_ABC)])
+    arg = randint(1, 100)
+    assign = choice(["+=", "-="])
+
+    return """def {f_name}({arg_name}):
     <GARBAGE>
-    return {3}{2}
-{0}{5}{1}({4})""".format(var_name, gen_name(), gen_name(),
-                   choice(["+", "-", "ord('%s')+" % choice(NAME_ABC)]), randint(1, 100), choice(["+=", "-="]))
+    return {operation}{arg_name}
+{var_name}{assign}{f_name}({arg})""".format(**locals())
 
 
 def gen_type_check(var_name):
@@ -117,13 +129,14 @@ def gen_str_data_check(var_name):
 
 
 def gen_locals_check(var_name):
-    return """def {1}():
-    {2}
+    f_name = gen_name()
+    assign = "; ".join(["%s = %d" % (gen_name(), randint(1, 100)) for i in range(randint(1, 7))])
+    assign2 = choice(["+=", "-="])
+
+    return """def {f_name}():
+    {assign}
     return len(locals())
-{0} {3} {1}()""".format(var_name, gen_name(),
-                        "; ".join(["%s = %d" % (gen_name(),
-                                                randint(1, 100)) for i in range(randint(1, 7))]),
-                        choice(["+=", "-="]))
+{var_name} {assign2} {f_name}()""".format(**locals())
 
 
 def gen_try_check(var_name):
@@ -246,7 +259,7 @@ def gen_rand_check():
 def gen_vuln1_check(flag):
     var_name = gen_name()
     payload = """{0}{1}sha256("{2}")[len(str(user["{3}"])) % 32]""".format(var_name,
-                                                                           choice(["+=", "-="]), 
+                                                                           choice(["+=", "-="]),
                                                                            flag, choice(STR_FIELDS))
     return gen_check(var_name, payload)
 
