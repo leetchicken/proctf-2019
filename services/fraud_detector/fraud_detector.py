@@ -40,7 +40,7 @@ BASE_GLOBS = {
 
 
 def set_limits():
-    resource.setrlimit(resource.RLIMIT_DATA, (20_000_000, 20_000_000))
+    resource.setrlimit(resource.RLIMIT_DATA, (50_000_000, 50_000_000))
     resource.setrlimit(resource.RLIMIT_CPU, (1, 1))
     signal.setitimer(signal.ITIMER_VIRTUAL, 2.0)  # finer grain control
 

@@ -3,6 +3,7 @@
 export PYTHONUNBUFFERED=1
 
 chown fraud_detector:fraud_detector /home/fraud_detector/data/rules
+chown root:root /home/fraud_detector
 chmod 755 /home/fraud_detector /home/fraud_detector/static /home/fraud_detector/data /home/fraud_detector/data/users
 chmod 700 /home/fraud_detector/data/rules
 

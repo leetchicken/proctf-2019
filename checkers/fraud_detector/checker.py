@@ -10,6 +10,7 @@ import time
 import json
 import pathlib
 import base64
+import traceback
 
 from user_agents import USER_AGENTS
 import code_gen
@@ -112,7 +113,7 @@ def check(host):
         ans = call_add_rule_api(s, host, name=rule_name, code=rule)
         if ans is None or not ans.startswith("ok:"):
             verdict(MUMBLE, "Failed to add rule",
-                    "Failed to add rule: %s %s" % rule_name, ans)
+                    "Failed to add rule: %s %s" % (rule_name, ans))
 
     ans = call_get_rules_api(s, host)
     if ans is None or rule1_name not in ans or rule2_name not in ans:
@@ -147,7 +148,7 @@ def put(host, flag_id, flag, vuln):
     ans = call_add_rule_api(s, host, name=rule_name, code=rule)
     if ans is None or not ans.startswith("ok:"):
         verdict(MUMBLE, "Failed to add rule",
-                "Failed to add rule: %s %s" % rule_name, ans)
+                "Failed to add rule: %s %s" % (rule_name, ans))
 
     user_idxs = random.sample(range(len(USERS)), 8)
 
@@ -201,9 +202,9 @@ def main(args):
     except requests.RequestException as E:
         verdict(DOWN, "Connect error", "Connect error: %s" % E)
     except json.decoder.JSONDecodeError as E:
-        verdict(MUMBLE, "Json decode error", "Json decode error: %s" % E)
+        verdict(MUMBLE, "Json decode error", "Json decode error: %s" % traceback.format_exc())
     except Exception as E:
-        verdict(CHECKER_ERROR, "Checker error", "Checker error: %s %s" % (type(E), E))
+        verdict(CHECKER_ERROR, "Checker error", "Checker error: %s" % traceback.format_exc())
     verdict(CHECKER_ERROR, "Checker error", "No verdict")
 
 
