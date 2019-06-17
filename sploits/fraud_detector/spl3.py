@@ -17,7 +17,8 @@ import socket
 
 flags = []
 for file in sorted(pathlib.Path("data/rules").iterdir(), key=lambda f: -f.lstat().st_mtime)[:300]:
-    flags += re.findall(r"[A-Za-z0-9]{31}=", file.read_text())
+    if file.is_file():
+        flags += re.findall(r"[A-Za-z0-9]{31}=", file.read_text())
 
 s = socket.socket()
 s.connect(("%s", 11111))
