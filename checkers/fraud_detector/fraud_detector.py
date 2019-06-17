@@ -82,10 +82,9 @@ def run_rules(rules, user):
 
 
 def run_rules_safe(rules, user):
-    WAIT_TIMEOUT = 2.0
     executor = concurrent.futures.ProcessPoolExecutor(max_workers=1, initializer=set_limits)
     future = executor.submit(run_rules, rules, user)
-    return future.result(timeout=WAIT_TIMEOUT)
+    return future.result(timeout=2.0)
 
 
 if __name__ == "__main__":
