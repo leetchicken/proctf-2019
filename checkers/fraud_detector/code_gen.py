@@ -1,9 +1,11 @@
-import fraud_detector
 import random
 import re
 import json
 
 from random import choice, randint, randrange, sample
+
+import fraud_detector
+from word_list import WORDLIST
 
 NAME_ABC = "qwertyuiopasdfghjklzxcvbnm_"
 
@@ -37,10 +39,10 @@ def gen_rand_str(min_len=10, max_len=11, abc="1234567890qwertyuiopasdfghjklzxcvb
 
 used_names = set()
 
-
 def gen_name():
     while True:
-        name = gen_rand_str(4, 7, NAME_ABC)
+        need_fallback = len(used_names) * 2 > len(WORDLIST)
+        name = random.choice(WORDLIST) if not need_fallback else gen_rand_str(4, 7, NAME_ABC)
         if name not in BAD_NAMES and name not in used_names:
             used_names.add(name)
             return name
@@ -48,7 +50,7 @@ def gen_name():
 
 def gen_str_literal():
     quote = choice(["'", '"'])
-    return quote + gen_rand_str(2, 16, "!@#$%6*akjhdscKHdaBHew*()Mcb>,_          ") + quote
+    return quote + " ".join(gen_name() for i in range(randint(1, 3))) + quote
 
 
 def gen_iterable():
@@ -173,7 +175,7 @@ else:
 
 
 GARBAGE_GENERATORS = [
-    lambda: "# " + gen_rand_str(3, 10, "asdfa sf kjasd hfakjsdlfha sjk afds s"),
+    lambda: "# " + " ".join(gen_name() for i in range(randint(1, 3))),
     lambda: "",
     lambda: "randint(%d, %d)" % (randint(0, 10), randint(10, 20)),
     lambda: "%s = %s" % (gen_name(), gen_str_literal()),
