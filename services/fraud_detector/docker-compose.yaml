@@ -3,7 +3,8 @@ services:
   fraud_detector:
     build: .
     ports:
-      - "127.0.0.1:10000:10000"
+      - "0.0.0.0:10000:10000"
+#      - "127.0.0.1:10000:10000"
     volumes:
       - ./data:/home/fraud_detector/data
       - ./static:/home/fraud_detector/static
