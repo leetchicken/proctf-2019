@@ -12,4 +12,4 @@ services:
       - ./app.py:/home/fraud_detector/app.py
       - ./fraud_detector.py:/home/fraud_detector/fraud_detector.py
     restart: on-failure
-    mem_limit: 1024m
+    mem_limit: 2000m
