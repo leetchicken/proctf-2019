@@ -16,3 +16,4 @@ hw Debug*
 makefile.defs
 makefile.targets
 mbed_config.h
+/Debug/
