@@ -3,6 +3,9 @@
 projectfiles
 *.py*
 BUILD/
+.vscode/
+.hg/
+.lock/
 
 // openstm32 stuff
 Debug/*

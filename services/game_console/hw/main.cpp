@@ -1,80 +1,259 @@
 #include "mbed.h"
-#include "LCD_DISCO_F746NG.h"
+#include "stm32746g_discovery_lcd.h"
+#include "stm32746g_discovery_ts.h"
 #include "EthernetInterface.h"
 #include "TCPServer.h"
 #include "TCPSocket.h"
-#include "api.h"
+#include "http_request.h"
+#include "MemoryPool.h"
+#include "Queue.h"
+#include "api_impl.h"
  
-LCD_DISCO_F746NG lcd;
 DigitalOut led1(LED1);
-Thread thread;
 
+typedef int (*TGameMain)(API*);
+APIImpl GAPIImpl;
 
-class APIImpl : public API
+struct Rect
 {
-public:
-    void printf(const char* str)
+    uint32_t x;
+    uint32_t y;
+    uint32_t width;
+    uint32_t height;
+
+    bool IsPointInside(uint32_t px, uint32_t py)
     {
-    	lcd.SetBackColor(LCD_COLOR_ORANGE);
-		lcd.SetTextColor(LCD_COLOR_CYAN);
-		lcd.DisplayStringAt(0, LINE(5), (uint8_t *)str, CENTER_MODE);
+        return (px >= x) && (py >= y) && (px < (x + width)) && (py < (y + height));
     }
 };
 
-typedef int (*TGameMain)(API*);
-
-APIImpl GAPIImpl;
-
-
-void NetworkThread()
+struct GameDesc
 {
-    printf("Basic HTTP server example\n");
-    
-    EthernetInterface eth;
-    eth.set_network("192.168.1.5", "255.255.255.0", "192.168.1.1");
-    eth.connect();
-    
-    printf("The target IP address is '%s'\n", eth.get_ip_address());
-    
-    TCPServer srv;
-    TCPSocket clt_sock;
-    SocketAddress clt_addr;
-    
-    /* Open the server on ethernet stack */
-    srv.open(&eth);
-    
-    /* Bind the HTTP port (TCP 80) to the server */
-    srv.bind(eth.get_ip_address(), 80);
-    
-    /* Can handle 5 simultaneous connections */
-    srv.listen(5);
-    
-    while (true) 
-    {
-        srv.accept(&clt_sock, &clt_addr);
-        printf("accept %s:%d\n", clt_addr.get_ip_address(), clt_addr.get_port());
-        int rcount = 0;
+    Rect uiRect;
+    uint32_t id;
+    std::string name;
+};
 
-        uint8_t code[1024];
-        rcount = clt_sock.recv(code, sizeof(code));
-        if(rcount < 0)
+typedef std::vector<GameDesc> TGameList;
+
+enum ERequests
+{
+    kRequestGameList = 0,
+    kRequestGameCode,
+    kReqeustGameAssets,
+
+    kRequestsCount
+};
+
+
+struct Request
+{
+    ERequests type;
+    void* responeData;
+    bool done;
+    bool succeed;
+};
+
+static const char* kServerAddr = "192.168.1.1:8000";
+
+EthernetInterface GEthernet;
+Thread GHttpThread;
+MemoryPool<Request, 64> GRequestsPool;
+Queue<Request, 64> GRequestsQueue;
+
+
+void HttpThread()
+{
+    while(true)
+    {
+        osEvent evt = GRequestsQueue.get();
+        if (evt.status == osEventMessage) 
         {
-            clt_sock.close();
-            continue;
+            Request* request = (Request*)evt.value.p;
+
+            char url[64];
+            if(request->type == kRequestGameList)
+                sprintf(url, "http://%s/list", kServerAddr);
+            else
+            {
+                printf("Invalid request: %d\n", request->type);
+                continue;
+            }            
+
+            printf("Request: %s\n", url);
+            HttpRequest* httpRequest = new HttpRequest(&GEthernet, HTTP_GET, url);
+            HttpResponse* httpResponse = httpRequest->send();
+            if (httpResponse) 
+            {
+                if(httpResponse->get_status_code() == 200)
+                {
+                    request->succeed = true;
+                }
+                else
+                {
+                    request->succeed = false;
+                }
+                
+                delete httpRequest;
+
+                request->done = true;
+            }
+            else
+            {
+                printf("HttpRequest failed (error code %d)\n", httpRequest->get_error());
+                request->succeed = false;
+                request->done = true;
+            }
+        }
+    }
+}
+
+
+void BSP_LCD_FillRect(const Rect& rect)
+{
+    BSP_LCD_FillRect(rect.x, rect.y, rect.width, rect.height);
+}
+
+
+enum EMainScreenState
+{
+    kMainScreenReady = 0,
+    kMainScreenWaitGameList,
+
+    kMainScreenStatesCount
+};
+
+
+Request* SendGetGameList(TGameList* games)
+{
+    Request* request = GRequestsPool.alloc();
+    request->type = kRequestGameList;
+    request->done = false;
+    request->succeed = false;
+    request->responeData = (void*)&games;
+    GRequestsQueue.put(request);
+    return request;
+}
+
+
+void MainScreen()
+{
+    TS_StateTypeDef tsState;
+
+    Rect updateRect = {440, 20, 40, 40};
+
+    TGameList games;
+    EMainScreenState state = kMainScreenReady;
+
+    Request* request = SendGetGameList(&games);
+    state = kMainScreenWaitGameList;
+
+    uint32_t progressColor = 0xFF0000FF;
+
+    int vsyncCurrentBuffer = 0;
+
+    while(1)
+    {
+        // vsync
+        while (!(LTDC->CDSR & LTDC_CDSR_VSYNCS));
+        BSP_LCD_SetLayerVisible(vsyncCurrentBuffer, DISABLE);
+        BSP_LCD_SelectLayer(vsyncCurrentBuffer);       
+        vsyncCurrentBuffer = (vsyncCurrentBuffer + 1) % 2;
+        BSP_LCD_SetLayerVisible(vsyncCurrentBuffer, ENABLE); 
+
+        if(state == kMainScreenWaitGameList)
+        {
+            if(request->done)
+            {
+                state = kMainScreenReady;
+                GRequestsPool.free(request);
+                request = NULL;
+                printf("Received games list\n");
+            }
         }
 
-        ScopedRamExecutionLock make_ram_executable;
-        TGameMain gameMain;
-        gameMain = (TGameMain)&code[1];
-        int retVal = gameMain(&GAPIImpl);
+        // touch screen
+        BSP_TS_GetState(&tsState);
 
-        char str[32];
-        memset(str, 0, 32);
-        sprintf(str, "%d", retVal);
+        uint32_t selectedGame = ~0u;
+        for (uint8_t i = 0; i < tsState.touchDetected; i++)
+        {
+            for(uint32_t g = 0; g < games.size(); g++)
+            {
+                Rect& rect = games[g].uiRect;
+                if(rect.IsPointInside(tsState.touchX[i], tsState.touchY[i]))
+                {
+                    selectedGame = g;
+                    break;
+                }
+            }
+            
+            if(selectedGame != ~0u)
+            	break;
 
-        clt_sock.send(str, strlen(str));
-        clt_sock.close();
+            if(state == kMainScreenReady && updateRect.IsPointInside(tsState.touchX[i], tsState.touchY[i]))
+            {
+                request = SendGetGameList(&games);
+                state = kMainScreenWaitGameList;
+                printf("Requested games list\n");
+            }
+        }
+
+        // rendering
+        BSP_LCD_Clear(LCD_COLOR_DARKBLUE);
+
+        BSP_LCD_SetTextColor(LCD_COLOR_LIGHTCYAN);
+        BSP_LCD_FillRect(20, 20, 40, 40);
+
+        if(state != kMainScreenReady)
+        {
+            BSP_LCD_SetTextColor(progressColor);
+            BSP_LCD_FillRect(440, 20, 40, 40);
+            uint32_t b = progressColor & 255;
+            b = (b + 1) & 255;
+            progressColor = 0xFF000000 | ((255 - b) << 8) | b;
+        }
+
+        for(uint32_t g = 0; g < games.size(); g++)
+        {
+            BSP_LCD_SetTextColor(g == selectedGame ? LCD_COLOR_LIGHTMAGENTA: LCD_COLOR_DARKMAGENTA);    
+            BSP_LCD_FillRect(games[g].uiRect);
+        }
     }
+}
+
+
+void InitDisplay()
+{
+    BSP_LCD_Init();
+
+    BSP_LCD_LayerDefaultInit(0, LCD_FB_START_ADDRESS);
+    BSP_LCD_LayerDefaultInit(1, LCD_FB_START_ADDRESS+(BSP_LCD_GetXSize()*BSP_LCD_GetYSize()*4));
+
+    BSP_LCD_DisplayOn();
+
+    BSP_LCD_SelectLayer(0);
+    BSP_LCD_Clear(LCD_COLOR_BLACK);
+
+    BSP_LCD_SelectLayer(1);
+    BSP_LCD_Clear(LCD_COLOR_BLACK);
+
+    BSP_LCD_SetFont(&LCD_DEFAULT_FONT);
+
+    BSP_LCD_SetBackColor(LCD_COLOR_WHITE);
+    BSP_LCD_SetTextColor(LCD_COLOR_DARKBLUE);
+
+    BSP_TS_Init(BSP_LCD_GetXSize(), BSP_LCD_GetYSize());
+}
+
+
+void InitNetwork()
+{
+    GEthernet.set_network("192.168.1.5", "255.255.255.0", "192.168.1.1");
+    GEthernet.connect();   
+    printf("The target IP address is '%s'\n", GEthernet.get_ip_address());
+
+    GHttpThread.start(HttpThread);
 }
 
  
@@ -82,40 +261,7 @@ int main()
 {  
 	led1 = 1;
 
-    thread.start(NetworkThread);
- 
-    lcd.DisplayStringAt(0, LINE(1), (uint8_t *)"MBED EXAMPLE", CENTER_MODE);
-    wait(1);
-  
-    while(1)
-    {
-      lcd.Clear(LCD_COLOR_BLUE);
-      lcd.SetBackColor(LCD_COLOR_BLUE);
-      lcd.SetTextColor(LCD_COLOR_WHITE);
-      wait(0.3);
-      lcd.DisplayStringAt(0, LINE(5), (uint8_t *)"DISCOVERY STM32F746NG", CENTER_MODE);
-      wait(1);
- 
-      lcd.Clear(LCD_COLOR_GREEN);
-      
-      lcd.SetTextColor(LCD_COLOR_BLUE);
-      lcd.DrawRect(10, 20, 50, 50);
-      wait(0.1);
-      lcd.SetTextColor(LCD_COLOR_BROWN);
-      lcd.DrawCircle(80, 80, 50);
-      wait(0.1);
-      lcd.SetTextColor(LCD_COLOR_YELLOW);
-      lcd.DrawEllipse(150, 150, 50, 100);
-      wait(0.1);
-      lcd.SetTextColor(LCD_COLOR_RED);
-      lcd.FillCircle(200, 200, 40);
-      wait(1);
- 
-      lcd.SetBackColor(LCD_COLOR_ORANGE);
-      lcd.SetTextColor(LCD_COLOR_CYAN);
-      lcd.DisplayStringAt(0, LINE(5), (uint8_t *)"HAVE FUN !!!", CENTER_MODE);
-      wait(1);
- 
-      led1 = !led1;
-    }
+    InitDisplay();
+    InitNetwork();
+    MainScreen();
 }
