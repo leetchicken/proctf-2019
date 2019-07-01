@@ -31,8 +31,8 @@ private:
 
 HttpResponse RequestHandler::HandleGet(HttpRequest request)
 {
-	if (ParseUrl(request.url, 1, "list"))
-	{
+    if (ParseUrl(request.url, 1, "list"))
+    {
         const uint32_t gamesNum = GGamesDatabase.size();
         const uint32_t kResponseCapacity = 1024;
         uint8_t* buf = (uint8_t*)malloc(kResponseCapacity);
@@ -55,7 +55,7 @@ HttpResponse RequestHandler::HandleGet(HttpRequest request)
         response.content = (char*)buf;
         response.contentLength = ptr - buf;
         return response;
-	}
+    }
     else if(ParseUrl(request.url, 1, "icon"))
     {
         static const std::string kId("id");
@@ -92,13 +92,13 @@ HttpResponse RequestHandler::HandleGet(HttpRequest request)
         return response;
     }
 
-	return HttpResponse(MHD_HTTP_NOT_FOUND);
+    return HttpResponse(MHD_HTTP_NOT_FOUND);
 }
 
 
 HttpResponse RequestHandler::HandlePost(HttpRequest request, HttpPostProcessor** postProcessor)
 {
-	return HttpResponse(MHD_HTTP_NOT_FOUND);
+    return HttpResponse(MHD_HTTP_NOT_FOUND);
 }
 
 
@@ -132,14 +132,14 @@ int main()
     if(!LoadDatabase())
         return -1;
 
-	RequestHandler handler;
-	HttpServer server(&handler);
+    RequestHandler handler;
+    HttpServer server(&handler);
 
-	server.Start(8000);
+    server.Start(8000);
 
-	while (1)
-		sleep(1);
+    while (1)
+        sleep(1);
 
-	server.Stop();
-	return 0;
+    server.Stop();
+    return 0;
 }

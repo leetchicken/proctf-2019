@@ -17,13 +17,13 @@ bool read_png(const char* file_name, Image& image)
     image.rgba = (RGBA*)memalign(16, image.width * image.height * sizeof(RGBA));
     memcpy(image.rgba, data, x * y * sizeof(uint32_t));
     stbi_image_free(data);
-	return true;
+    return true;
 }
 
 
 bool save_png(const char* file_name, const Image& image)
 {
-	return save_png(file_name, image.rgba, image.width, image.height);
+    return save_png(file_name, image.rgba, image.width, image.height);
 }
 
 
