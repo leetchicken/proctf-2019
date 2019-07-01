@@ -270,6 +270,7 @@ void DrawIcon(const GameDesc& desc)
 enum EMainScreenState
 {
     kMainScreenReady = 0,
+    kMainScreenWaitForNetwork,
     kMainScreenWaitGameList,
     kMainScreenLoadIcons,
     kMainScreenLoadGameCode,
@@ -323,10 +324,8 @@ void MainScreen()
     Rect updateRect(20, 20, 40, 40);
 
     TGameList games;
-    EMainScreenState state = kMainScreenReady;
-
-    Request* request = SendGetGameList(&games);
-    state = kMainScreenWaitGameList;
+    Request* request = NULL;
+    EMainScreenState state = kMainScreenWaitForNetwork;
 
     uint8_t* iconsMem = GSdram;
     uint8_t* gameCodeMem = (uint8_t*)malloc(kMaxGameCodeSize);//iconsMem + kIconWidth * kIconHeight * 4 * kIconCacheSize;
@@ -349,6 +348,13 @@ void MainScreen()
 
         // touch screen
         BSP_TS_GetState(&tsState);
+
+        if(state == kMainScreenWaitForNetwork && GEthernet.get_connection_status() == NSAPI_STATUS_GLOBAL_UP)
+        {
+            printf("Connected to the network: '%s'\n", GEthernet.get_ip_address());
+            request = SendGetGameList(&games);
+            state = kMainScreenWaitGameList;
+        }
 
         if(state == kMainScreenWaitGameList && request->done)
         {
@@ -520,7 +526,6 @@ void InitNetwork()
     GEthernet.set_network("192.168.1.5", "255.255.255.0", "192.168.1.1");
     GEthernet.set_blocking(false);
     GEthernet.connect();   
-    printf("The target IP address is '%s'\n", GEthernet.get_ip_address());
 
     GHttpThread.start(HttpThread);
 }
