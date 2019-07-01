@@ -8,6 +8,9 @@
 #include <map>
 #include <string>
 
+static const uint32_t kIconWidth = 172;
+static const uint32_t kIconHeight = 172;
+
 struct GameDesc
 {
     std::string name;
@@ -81,14 +84,18 @@ HttpResponse RequestHandler::HandleGet(HttpRequest request)
             return HttpResponse(MHD_HTTP_INTERNAL_SERVER_ERROR);
         }
 
-        uint32_t iconSize = icon.width * icon.height * 4;
+        if(icon.width != kIconWidth || icon.height != kIconHeight)
+        {
+            printf("  invalid icon size: %ux%u\n", icon.width, icon.height);
+            return HttpResponse(MHD_HTTP_INTERNAL_SERVER_ERROR);
+        }
 
         HttpResponse response;
         response.code = MHD_HTTP_OK;
         response.headers.insert({"Content-Type", "application/octet-stream"});
-        response.content = (char*)malloc(iconSize);
-        memcpy(response.content, icon.rgba, iconSize);
-        response.contentLength = iconSize;
+        response.contentLength = kIconWidth * kIconHeight * 4;
+        response.content = (char*)malloc(response.contentLength);
+        memcpy(response.content, icon.rgba, response.contentLength);
         return response;
     }
 
