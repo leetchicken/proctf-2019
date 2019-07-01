@@ -3,7 +3,6 @@
 projectfiles
 *.py*
 BUILD/
-.vscode/
 .hg/
 .lock/
 

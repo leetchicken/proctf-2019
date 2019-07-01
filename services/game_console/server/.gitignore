@@ -1,0 +1,5 @@
+*.o
+server-dbg
+server
+server.pro
+server.pro.user*
