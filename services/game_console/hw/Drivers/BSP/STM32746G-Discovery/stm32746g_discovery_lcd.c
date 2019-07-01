@@ -132,7 +132,7 @@ static LCD_DrawPropTypeDef DrawProp[MAX_LAYER_NUMBER];
 static void DrawChar(uint16_t Xpos, uint16_t Ypos, const uint8_t *c);
 static void FillTriangle(uint16_t x1, uint16_t x2, uint16_t x3, uint16_t y1, uint16_t y2, uint16_t y3);
 static void LL_FillBuffer(uint32_t LayerIndex, void *pDst, uint32_t xSize, uint32_t ySize, uint32_t OffLine, uint32_t ColorIndex);
-static void LL_ConvertLineToARGB8888(void * pSrc, void *pDst, uint32_t xSize, uint32_t ColorMode);
+static void LL_ConvertLineToARGB8888(uint32_t LayerIndex, void * pSrc, void *pDst, uint32_t xSize, uint32_t ColorMode);
 /**
   * @}
   */ 
@@ -1063,11 +1063,27 @@ void BSP_LCD_DrawBitmap(uint32_t Xpos, uint32_t Ypos, uint8_t *pbmp)
   for(index=0; index < height; index++)
   {
     /* Pixel format conversion */
-    LL_ConvertLineToARGB8888((uint32_t *)pbmp, (uint32_t *)address, width, input_color_mode);
+    LL_ConvertLineToARGB8888(ActiveLayer, (uint32_t *)pbmp, (uint32_t *)address, width, input_color_mode);
     
     /* Increment the source and destination buffers */
     address+=  (BSP_LCD_GetXSize()*4);
     pbmp -= width*(bit_pixel/8);
+  } 
+}
+
+
+void BSP_LCD_DrawImage(uint32_t Xpos, uint32_t Ypos, uint32_t width, uint32_t height, uint8_t* image, uint32_t pitch)
+{
+  uint32_t address = hLtdcHandler.LayerCfg[ActiveLayer].FBStartAdress + (((BSP_LCD_GetXSize()*Ypos) + Xpos)*(4));
+  uint32_t input_color_mode = CM_ARGB8888;
+  for(uint32_t index=0; index < height; index++)
+  {
+    /* Pixel format conversion */
+    LL_ConvertLineToARGB8888(ActiveLayer, (uint32_t*)image, (uint32_t*)address, width, input_color_mode);
+    
+    /* Increment the source and destination buffers */
+    address += BSP_LCD_GetXSize() * 4;
+    image += pitch;
   } 
 }
 
@@ -1602,7 +1618,7 @@ static void LL_FillBuffer(uint32_t LayerIndex, void *pDst, uint32_t xSize, uint3
   * @param  ColorMode: Input color mode   
   * @retval None
   */
-static void LL_ConvertLineToARGB8888(void *pSrc, void *pDst, uint32_t xSize, uint32_t ColorMode)
+static void LL_ConvertLineToARGB8888(uint32_t LayerIndex, void *pSrc, void *pDst, uint32_t xSize, uint32_t ColorMode)
 {    
   /* Configure the DMA2D Mode, Color Mode and output offset */
   hDma2dHandler.Init.Mode         = DMA2D_M2M_PFC;
@@ -1610,17 +1626,17 @@ static void LL_ConvertLineToARGB8888(void *pSrc, void *pDst, uint32_t xSize, uin
   hDma2dHandler.Init.OutputOffset = 0;     
   
   /* Foreground Configuration */
-  hDma2dHandler.LayerCfg[1].AlphaMode = DMA2D_NO_MODIF_ALPHA;
-  hDma2dHandler.LayerCfg[1].InputAlpha = 0xFF;
-  hDma2dHandler.LayerCfg[1].InputColorMode = ColorMode;
-  hDma2dHandler.LayerCfg[1].InputOffset = 0;
+  hDma2dHandler.LayerCfg[LayerIndex].AlphaMode = DMA2D_NO_MODIF_ALPHA;
+  hDma2dHandler.LayerCfg[LayerIndex].InputAlpha = 0xFF;
+  hDma2dHandler.LayerCfg[LayerIndex].InputColorMode = ColorMode;
+  hDma2dHandler.LayerCfg[LayerIndex].InputOffset = 0;
   
   hDma2dHandler.Instance = DMA2D; 
   
   /* DMA2D Initialization */
   if(HAL_DMA2D_Init(&hDma2dHandler) == HAL_OK) 
   {
-    if(HAL_DMA2D_ConfigLayer(&hDma2dHandler, 1) == HAL_OK) 
+    if(HAL_DMA2D_ConfigLayer(&hDma2dHandler, LayerIndex) == HAL_OK) 
     {
       if (HAL_DMA2D_Start(&hDma2dHandler, (uint32_t)pSrc, (uint32_t)pDst, xSize, 1) == HAL_OK)
       {
