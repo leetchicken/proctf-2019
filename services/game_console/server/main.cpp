@@ -98,6 +98,45 @@ HttpResponse RequestHandler::HandleGet(HttpRequest request)
         memcpy(response.content, icon.rgba, response.contentLength);
         return response;
     }
+    else if(ParseUrl(request.url, 1, "code"))
+    {
+        static const std::string kId("id");
+        uint32_t id = ~0u;
+        FindInMap(request.queryString, kId, id);
+        printf("  id=%x\n", id);
+
+        auto iter = GGamesDatabase.find(id);
+        if(iter == GGamesDatabase.end())
+        {
+            printf("  unknown game\n");
+            return HttpResponse(MHD_HTTP_NOT_FOUND);
+        }
+
+        std::string codeFilePath = "data/";
+        codeFilePath.append(iter->second.name);
+        codeFilePath.append("/code.bin");
+        printf("  %s\n", codeFilePath.c_str());
+        FILE* f = fopen(codeFilePath.c_str(), "r");
+	    if (!f)
+        {
+            printf( "failed to read code\n");
+            return HttpResponse(MHD_HTTP_INTERNAL_SERVER_ERROR);
+        }
+
+        fseek(f, 0, SEEK_END);
+        size_t codeFileSize = ftell(f);
+        fseek(f, 0, SEEK_SET);
+        char* code = (char*)malloc(codeFileSize);
+        fread(code, 1, codeFileSize, f);
+        fclose(f);
+
+        HttpResponse response;
+        response.code = MHD_HTTP_OK;
+        response.headers.insert({"Content-Type", "application/octet-stream"});
+        response.content = code;
+        response.contentLength = codeFileSize;
+        return response;
+    }
 
     return HttpResponse(MHD_HTTP_NOT_FOUND);
 }

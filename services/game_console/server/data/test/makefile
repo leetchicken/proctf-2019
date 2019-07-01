@@ -3,4 +3,4 @@ OPTS = -c -std=gnu++98 -fPIC -fno-rtti -fno-exceptions -fno-builtin -funsigned-c
 all:
 	arm-none-eabi-g++ $(OPTS) test_game.cpp -o test_game.o
 	arm-none-eabi-ld test_game.o -o test_game.elf
-	arm-none-eabi-objcopy -O binary test_game.elf test_game.bin
+	arm-none-eabi-objcopy -O binary test_game.elf code.bin

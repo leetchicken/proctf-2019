@@ -14,6 +14,7 @@ static const uint32_t kIconWidth = 172;
 static const uint32_t kIconHeight = 172;
 static const uint32_t kMaxIconsOnScreen = 3;
 static const uint32_t kIconCacheSize = kMaxIconsOnScreen + 1;
+static const uint32_t kMaxGameCodeSize = 1024;
  
 DigitalOut led1(LED1);
 
@@ -177,6 +178,12 @@ void HttpThread()
                 needBodyCallback = true;
                 GHttpBodyCallbackPtr = (uint8_t*)request->responseData;
             }
+            else if(request->type == kRequestGameCode)
+            {
+                sprintf(url, "http://%s/code?id=%u", kServerAddr, request->gameId);
+                needBodyCallback = true;
+                GHttpBodyCallbackPtr = (uint8_t*)request->responseData;
+            }
             else
             {
                 printf("Invalid request: %d\n", request->type);
@@ -265,6 +272,7 @@ enum EMainScreenState
     kMainScreenReady = 0,
     kMainScreenWaitGameList,
     kMainScreenLoadIcons,
+    kMainScreenLoadGameCode,
 
     kMainScreenStatesCount
 };
@@ -295,6 +303,19 @@ Request* SendLoadIcon(uint32_t gameId, uint8_t* iconAddr)
 }
 
 
+Request* SendLoadGameCode(uint32_t gameId, uint8_t* codeAddr)
+{
+    Request* request = GRequestsPool.alloc();
+    request->type = kRequestGameCode;
+    request->gameId = gameId;
+    request->done = false;
+    request->succeed = false;
+    request->responseData = (void*)codeAddr;
+    GRequestsQueue.put(request);
+    return request;
+}
+
+
 void MainScreen()
 {
     TS_StateTypeDef tsState;
@@ -307,7 +328,10 @@ void MainScreen()
     Request* request = SendGetGameList(&games);
     state = kMainScreenWaitGameList;
 
-    IconCache iconCache(GSdram);
+    uint8_t* iconsMem = GSdram;
+    uint8_t* gameCodeMem = (uint8_t*)malloc(kMaxGameCodeSize);//iconsMem + kIconWidth * kIconHeight * 4 * kIconCacheSize;
+
+    IconCache iconCache(iconsMem);
     uint32_t loadingIconForGameIdx = ~0u;
 
     uint32_t progressColor = 0xFF0000FF;
@@ -323,37 +347,37 @@ void MainScreen()
         vsyncCurrentBuffer = (vsyncCurrentBuffer + 1) % 2;
         BSP_LCD_SetLayerVisible(vsyncCurrentBuffer, ENABLE); 
 
-        if(state == kMainScreenWaitGameList)
+        // touch screen
+        BSP_TS_GetState(&tsState);
+
+        if(state == kMainScreenWaitGameList && request->done)
         {
-            if(request->done)
+            state = kMainScreenLoadIcons;
+            GRequestsPool.free(request);
+            request = NULL;
+            printf("Received games list\n");
+
+            uint32_t curCacheIdx = 0;
+            for(uint32_t i = 0; i < games.size(); i++)
             {
-                state = kMainScreenLoadIcons;
-                GRequestsPool.free(request);
-                request = NULL;
-                printf("Received games list\n");
+                games[i].uiRect.x = i * (kIconWidth + 20) + 20;
+                games[i].uiRect.y = 80;
+                games[i].uiRect.width = kIconWidth;
+                games[i].uiRect.height = kIconHeight;
 
-                uint32_t curCacheIdx = 0;
-                for(uint32_t i = 0; i < games.size(); i++)
+                Rect rect = games[i].uiRect;
+                rect.ClampByRect(GScreenRect);
+                if(rect.Area() && curCacheIdx < kIconCacheSize)
                 {
-                    games[i].uiRect.x = i * (kIconWidth + 20) + 20;
-                    games[i].uiRect.y = 80;
-                    games[i].uiRect.width = kIconWidth;
-                    games[i].uiRect.height = kIconHeight;
-
-                    Rect rect = games[i].uiRect;
-                    rect.ClampByRect(GScreenRect);
-                    if(rect.Area() && curCacheIdx < kIconCacheSize)
-                    {
-                        games[i].iconAddr = iconCache.cache[curCacheIdx].addr;
-                        games[i].iconState = kIconInvalid;
-                        iconCache.cache[curCacheIdx].gameIndex = i;
-                        curCacheIdx++;
-                    }
-                    else
-                    {
-                        games[i].iconAddr = NULL;
-                        games[i].iconState = kIconInvalid;
-                    }
+                    games[i].iconAddr = iconCache.cache[curCacheIdx].addr;
+                    games[i].iconState = kIconInvalid;
+                    iconCache.cache[curCacheIdx].gameIndex = i;
+                    curCacheIdx++;
+                }
+                else
+                {
+                    games[i].iconAddr = NULL;
+                    games[i].iconState = kIconInvalid;
                 }
             }
         }
@@ -383,13 +407,8 @@ void MainScreen()
             }
 
             if(loadingIconForGameIdx == ~0u)
-            {
                 state = kMainScreenReady;
-            }
         }
-
-        // touch screen
-        BSP_TS_GetState(&tsState);
 
         uint32_t selectedGame = ~0u;
         for (uint8_t i = 0; i < tsState.touchDetected; i++)
@@ -420,25 +439,49 @@ void MainScreen()
             }
         }
 
-        // rendering
-        BSP_LCD_Clear(LCD_COLOR_DARKBLUE);
-
-        BSP_LCD_SetTextColor(LCD_COLOR_LIGHTCYAN);
-        BSP_LCD_FillRect(updateRect);
-
-        if(state != kMainScreenReady)
+        if(state == kMainScreenReady && selectedGame != ~0u)
         {
-            BSP_LCD_SetTextColor(progressColor);
-            BSP_LCD_FillRect(440, 20, 40, 40);
-            uint32_t b = progressColor & 255;
-            b = (b + 1) & 255;
-            progressColor = 0xFF000000 | ((255 - b) << 8) | b;
+            request = SendLoadGameCode(games[selectedGame].id, gameCodeMem);
+            state = kMainScreenLoadGameCode;
+            printf("Requested game code: %x\n", games[selectedGame].id);
         }
 
-        for(uint32_t g = 0; g < games.size(); g++)
+        if(state == kMainScreenLoadGameCode && request->done)
         {
-            BSP_LCD_SetTextColor(g == selectedGame ? LCD_COLOR_LIGHTMAGENTA: games[g].id);    
-            DrawIcon(games[g]);
+            GRequestsPool.free(request);
+            request = NULL;
+            ScopedRamExecutionLock make_ram_executable;
+            TGameMain gameMain;
+            gameMain = (TGameMain)&gameCodeMem[1];
+            gameMain(&GAPIImpl);
+        }
+
+        // rendering
+        if(state == kMainScreenLoadGameCode)
+        {
+            BSP_LCD_Clear(LCD_COLOR_BLACK);
+            BSP_LCD_SetBackColor(LCD_COLOR_BLACK);
+            BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
+            BSP_LCD_DisplayStringAt(0, LINE(5), (uint8_t*)"Loading...", CENTER_MODE);
+        }
+        else
+        {
+            BSP_LCD_Clear(LCD_COLOR_DARKBLUE);
+
+            BSP_LCD_SetTextColor(LCD_COLOR_LIGHTCYAN);
+            BSP_LCD_FillRect(updateRect);
+
+            if(state != kMainScreenReady)
+            {
+                BSP_LCD_SetTextColor(progressColor);
+                BSP_LCD_FillRect(440, 20, 40, 40);
+                uint32_t b = progressColor & 255;
+                b = (b + 1) & 255;
+                progressColor = 0xFF000000 | ((255 - b) << 8) | b;
+            }
+
+            for(uint32_t g = 0; g < games.size(); g++)
+                DrawIcon(games[g]);
         }
     }
 }
