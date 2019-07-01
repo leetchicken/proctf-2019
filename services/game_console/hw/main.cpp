@@ -518,6 +518,7 @@ void InitDisplay()
 void InitNetwork()
 {
     GEthernet.set_network("192.168.1.5", "255.255.255.0", "192.168.1.1");
+    GEthernet.set_blocking(false);
     GEthernet.connect();   
     printf("The target IP address is '%s'\n", GEthernet.get_ip_address());
 
