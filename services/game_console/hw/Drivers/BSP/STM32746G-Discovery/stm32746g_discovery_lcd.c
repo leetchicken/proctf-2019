@@ -637,14 +637,10 @@ void BSP_LCD_Clear(uint32_t Color)
   */
 void BSP_LCD_ClearStringLine(uint32_t Line)
 {
-  uint32_t color_backup = DrawProp[ActiveLayer].TextColor;
-  DrawProp[ActiveLayer].TextColor = DrawProp[ActiveLayer].BackColor;
+  uint32_t color = DrawProp[ActiveLayer].BackColor;
   
   /* Draw rectangle with background color */
-  BSP_LCD_FillRect(0, (Line * DrawProp[ActiveLayer].pFont->Height), BSP_LCD_GetXSize(), DrawProp[ActiveLayer].pFont->Height);
-  
-  DrawProp[ActiveLayer].TextColor = color_backup;
-  BSP_LCD_SetTextColor(DrawProp[ActiveLayer].TextColor);  
+  BSP_LCD_FillRect(0, (Line * DrawProp[ActiveLayer].pFont->Height), BSP_LCD_GetXSize(), DrawProp[ActiveLayer].pFont->Height, color);
 }
 
 /**
@@ -1095,12 +1091,9 @@ void BSP_LCD_DrawImage(uint32_t Xpos, uint32_t Ypos, uint32_t width, uint32_t he
   * @param  Height: Rectangle height
   * @retval None
   */
-void BSP_LCD_FillRect(uint16_t Xpos, uint16_t Ypos, uint16_t Width, uint16_t Height)
+void BSP_LCD_FillRect(uint16_t Xpos, uint16_t Ypos, uint16_t Width, uint16_t Height, uint32_t color)
 {
   uint32_t  x_address = 0;
-  
-  /* Set the text color */
-  BSP_LCD_SetTextColor(DrawProp[ActiveLayer].TextColor);
   
   /* Get the rectangle start address */
   if(hLtdcHandler.LayerCfg[ActiveLayer].PixelFormat == LTDC_PIXEL_FORMAT_RGB565)
@@ -1112,7 +1105,7 @@ void BSP_LCD_FillRect(uint16_t Xpos, uint16_t Ypos, uint16_t Width, uint16_t Hei
     x_address = (hLtdcHandler.LayerCfg[ActiveLayer].FBStartAdress) + 4*(BSP_LCD_GetXSize()*Ypos + Xpos);
   }
   /* Fill the rectangle */
-  LL_FillBuffer(ActiveLayer, (uint32_t *)x_address, Width, Height, (BSP_LCD_GetXSize() - Width), DrawProp[ActiveLayer].TextColor);
+  LL_FillBuffer(ActiveLayer, (uint32_t *)x_address, Width, Height, (BSP_LCD_GetXSize() - Width), color);
 }
 
 /**

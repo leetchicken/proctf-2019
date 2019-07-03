@@ -231,7 +231,7 @@ void     BSP_LCD_DrawEllipse(int Xpos, int Ypos, int XRadius, int YRadius);
 void     BSP_LCD_DrawBitmap(uint32_t Xpos, uint32_t Ypos, uint8_t *pbmp);
 void     BSP_LCD_DrawImage(uint32_t Xpos, uint32_t Ypos, uint32_t width, uint32_t height, uint8_t* image, uint32_t pitch);
 
-void     BSP_LCD_FillRect(uint16_t Xpos, uint16_t Ypos, uint16_t Width, uint16_t Height);
+void     BSP_LCD_FillRect(uint16_t Xpos, uint16_t Ypos, uint16_t Width, uint16_t Height, uint32_t color);
 void     BSP_LCD_FillCircle(uint16_t Xpos, uint16_t Ypos, uint16_t Radius);
 void     BSP_LCD_FillPolygon(pPoint Points, uint16_t PointCount);
 void     BSP_LCD_FillEllipse(int Xpos, int Ypos, int XRadius, int YRadius);
