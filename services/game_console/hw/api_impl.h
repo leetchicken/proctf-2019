@@ -24,6 +24,8 @@ public:
     void FreeServerRequest(ServerRequest* request);
 
     void SwapFramebuffer();
+    void LCD_OnOff(bool onOff);
+    bool LCD_IsOn();
     void LCD_Clear(uint32_t color);
     void LCD_SetBackColor(uint32_t color);
     void LCD_SetTextColor(uint32_t color);
@@ -44,4 +46,5 @@ private:
     EthernetInterface* m_ethInterface;
     uint8_t* m_sdram;
     Timer m_timer;
+    bool m_displayIsOn;
 };

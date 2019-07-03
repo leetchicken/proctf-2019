@@ -64,6 +64,7 @@ APIImpl::APIImpl()
     m_ethInterface = NULL;
     m_sdram = NULL;
     m_timer.start();
+    m_displayIsOn = true;
 }
 
 
@@ -170,6 +171,23 @@ void APIImpl::SwapFramebuffer()
     BSP_LCD_SelectLayer(m_curFrameBuffer);       
     m_curFrameBuffer = (m_curFrameBuffer + 1) % 2;
     BSP_LCD_SetLayerVisible(m_curFrameBuffer, ENABLE); 
+}
+
+
+void APIImpl::LCD_OnOff(bool onOff)
+{
+    if(onOff)
+        BSP_LCD_DisplayOn();
+    else
+        BSP_LCD_DisplayOff();
+    
+    m_displayIsOn = onOff;
+}
+
+
+bool APIImpl::LCD_IsOn()
+{
+    return m_displayIsOn;
 }
 
 

@@ -82,7 +82,7 @@ struct Rect
 
         if(x + width - 1 >= rect.x + rect.width)
             width = rect.width - x;
-            
+
         if(y + height - 1 >= rect.y + rect.height)
             height = rect.height - y;
     }
@@ -153,6 +153,8 @@ public:
     virtual void FreeServerRequest(ServerRequest* request) = 0;
 
     virtual void SwapFramebuffer() = 0;
+    virtual void LCD_OnOff(bool onOff) = 0;
+    virtual bool LCD_IsOn() = 0;
     virtual void LCD_Clear(uint32_t color) = 0;
     virtual void LCD_SetBackColor(uint32_t color) = 0;
     virtual void LCD_SetTextColor(uint32_t color) = 0;
