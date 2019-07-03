@@ -55,22 +55,34 @@ struct Rect
     void ClampByRect(const Rect& rect)
     {
         if(x < rect.x)
+        {
+            width -= (rect.x - x);
+            if(width < 0)
+                width = 0;
             x = rect.x;
+        }
         if(x >= rect.x + rect.width)
+        {
             x = rect.x + rect.width;
+            width = 0;
+        }
 
         if(y < rect.y)
+        {
+            height -= (rect.y - y);
+            if(height < 0)
+                height = 0;
             y = rect.y;
+        }
         if(y >= rect.y + rect.height)
+        {
             y = rect.y + rect.height;
+            height = 0;
+        }
 
-        if(x + width - 1 < rect.x)
-            width = 0;
         if(x + width - 1 >= rect.x + rect.width)
             width = rect.width - x;
-
-        if(y + height - 1 < rect.y)
-            height = 0;
+            
         if(y + height - 1 >= rect.y + rect.height)
             height = rect.height - y;
     }
@@ -154,6 +166,7 @@ public:
     virtual void sprintf(char* str, const char* formatStr, ...) = 0;
     virtual void printf(const char* formatStr, ...) = 0;
     virtual void sleep(float t) = 0;
+    virtual float time() = 0;
 };
 
 typedef int (*TGameMain)(API*);

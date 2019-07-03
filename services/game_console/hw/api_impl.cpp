@@ -63,6 +63,7 @@ APIImpl::APIImpl()
     m_curFrameBuffer = 0;
     m_ethInterface = NULL;
     m_sdram = NULL;
+    m_timer.start();
 }
 
 
@@ -262,3 +263,8 @@ void APIImpl::sleep(float t)
     wait(t);
 }
 
+
+float APIImpl::time()
+{
+    return (float)m_timer.read_ms() / 1000.0f;
+}

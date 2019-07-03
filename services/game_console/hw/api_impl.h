@@ -37,9 +37,11 @@ public:
     void sprintf(char* str, const char* formatStr, ...);
     void printf(const char* formatStr, ...);
     void sleep(float t);
+    float time();
 
 private:
     int m_curFrameBuffer;
     EthernetInterface* m_ethInterface;
     uint8_t* m_sdram;
+    Timer m_timer;
 };
