@@ -91,7 +91,10 @@ void DrawIcon(API* api, const GameDesc& desc)
         if(desc.iconState == kIconValid)
         {
             uint32_t pitch = kIconWidth * 4;
-            api->LCD_DrawImage(rect, desc.iconAddr, pitch);
+            uint32_t offset = 0;
+            if(desc.uiRect.x < 0)
+                offset = -desc.uiRect.x * 4;
+            api->LCD_DrawImage(rect, desc.iconAddr + offset, pitch);
         }
         else
         {
@@ -168,10 +171,58 @@ int GameMain(API* api)
 
     uint8_t* gameCodeMem = (uint8_t*)api->Malloc(kMaxGameCodeSize);
 
+    bool touchOnPrevFrame = false;
+    uint16_t prevTouchX = 0, prevTouchY = 0;
+    float pressDownTime = 0.0f;
+
     while(1)
     {
         api->SwapFramebuffer();
         api->GetTouchScreenState(&tsState);
+
+        uint32_t selectedGame = ~0u;
+        bool updatePressed = false;
+
+        bool pressDown = false, pressUp = false;
+        // press down detection
+        if(!touchOnPrevFrame && (tsState.touchDetected == 1))
+        {
+            pressDownTime = api->time();
+            pressDown = true;
+        }
+        // press up detection
+        if(touchOnPrevFrame && !tsState.touchDetected)
+            pressUp = true;
+
+        if(pressUp && api->time() - pressDownTime < 0.1f)
+        {
+            for(uint32_t g = 0; g < gamesCount; g++)
+            {
+                Rect& rect = games[g].uiRect;
+                if(rect.IsPointInside(prevTouchX, prevTouchX))
+                {
+                    selectedGame = g;
+                    break;
+                }
+            }
+
+            if(selectedGame == ~0u && updateRect.IsPointInside(prevTouchX, prevTouchX))
+                updatePressed = true;
+        }
+        else if(touchOnPrevFrame && (tsState.touchDetected == 1))
+        {
+            int vecX = (int)tsState.touchX[0] - (int)prevTouchX;
+            for(uint32_t g = 0; g < gamesCount; g++)
+                games[g].uiRect.x += vecX;
+        }
+
+        touchOnPrevFrame = false;
+        if(tsState.touchDetected == 1)
+        {
+            prevTouchX = tsState.touchX[0];
+            prevTouchY = tsState.touchY[0];
+            touchOnPrevFrame = true;
+        }
 
         if(state == kMainScreenWaitForNetwork && api->GetNetwokConnectionStatus() == kNetwokConnectionStatusGlobalUp)
         {
@@ -267,39 +318,6 @@ int GameMain(API* api)
                 state = kMainScreenReady;
         }
 
-        uint32_t selectedGame = ~0u;
-        for (uint8_t i = 0; i < tsState.touchDetected; i++)
-        {
-            /*if(tsState.touchEventId[i] != TOUCH_EVENT_PRESS_DOWN)
-                continue;*/
-
-            for(uint32_t g = 0; g < gamesCount; g++)
-            {
-                Rect& rect = games[g].uiRect;
-                if(rect.IsPointInside(tsState.touchX[i], tsState.touchY[i]))
-                {
-                    selectedGame = g;
-                    break;
-                }
-            }
-            
-            if(selectedGame != ~0u)
-            	break;
-
-            if(state == kMainScreenReady && updateRect.IsPointInside(tsState.touchX[i], tsState.touchY[i]))
-            {
-                gamesCount = 0;
-                iconCache.Clear();
-                request = RequestGamesList(api);
-                if(request)
-                {
-                    state = kMainScreenWaitGameList;
-                    api->printf("Requested games list\n");
-                }
-                break;
-            }
-        }
-
         if(state == kMainScreenReady && selectedGame != ~0u)
         {
             request = RequestGameCode(api, games[selectedGame].id, gameCodeMem);
@@ -307,6 +325,18 @@ int GameMain(API* api)
             {
                 state = kMainScreenLoadGameCode;
                 api->printf("Requested game code: %x\n", games[selectedGame].id);
+            }
+        }
+
+        if(state == kMainScreenReady && updatePressed)
+        {
+            gamesCount = 0;
+            iconCache.Clear();
+            request = RequestGamesList(api);
+            if(request)
+            {
+                state = kMainScreenWaitGameList;
+                api->printf("Requested games list\n");
             }
         }
 
