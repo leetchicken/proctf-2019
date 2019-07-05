@@ -230,6 +230,8 @@ int GameMain(API* api)
             request = RequestGamesList(api);
             if(request)
                 state = kMainScreenWaitGameList;
+            else
+                state = kMainScreenReady;
         }
 
         if(state == kMainScreenWaitGameList && request->done)
@@ -313,7 +315,6 @@ int GameMain(API* api)
                 }
             }
 
-            // TODO error handling is missing
             if(loadingIconForGameIdx == ~0u)
                 state = kMainScreenReady;
         }
@@ -342,10 +343,11 @@ int GameMain(API* api)
 
         if(state == kMainScreenLoadGameCode && request->done)
         {
+            api->FreeServerRequest(request);
+            request = NULL;
+
             if(request->succeed)
             {
-                api->FreeServerRequest(request);
-                request = NULL;
                 //ScopedRamExecutionLock make_ram_executable;
                 TGameMain gameMain;
                 gameMain = (TGameMain)&gameCodeMem[1];
@@ -354,16 +356,19 @@ int GameMain(API* api)
             else
             {
                 api->printf("Failed to load game code\n");
-                api->FreeServerRequest(request);
-                request = NULL;
-                gamesCount = 0;
-                iconCache.Clear();
-                request = RequestGamesList(api);
-                if(request)
-                {
-                    state = kMainScreenWaitGameList;
-                    api->printf("Requested games list\n");
-                }
+            }
+
+            gamesCount = 0;
+            iconCache.Clear();
+            request = RequestGamesList(api);
+            if(request)
+            {
+                state = kMainScreenWaitGameList;
+                api->printf("Requested games list\n");
+            }
+            else
+            {
+                state = kMainScreenReady;
             }
         }
 
