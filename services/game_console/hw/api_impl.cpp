@@ -240,6 +240,40 @@ void APIImpl::LCD_DrawImage(const Rect& rect, uint8_t* image, uint32_t pitch)
 }
 
 
+void* APIImpl::fopen(const char* filename, const char* mode)
+{
+    return (void*)::fopen(filename, mode);
+}
+
+
+uint32_t APIImpl::fread(void* buffer, uint32_t size, void* file)
+{
+    return ::fread(buffer, 1, size, (FILE*)file);
+}
+
+
+uint32_t APIImpl::fwrite(const void* buffer, uint32_t size, void* file)
+{
+    return ::fwrite(buffer, 1, size, (FILE*)file);
+}
+
+
+uint32_t APIImpl::fsize(void* file)
+{
+    size_t curPos = ftell((FILE*)file);
+    fseek((FILE*)file, 0, SEEK_END);
+    size_t size = ftell((FILE*)file);
+    fseek((FILE*)file, curPos, SEEK_SET);
+    return size;
+}
+
+
+void APIImpl::fclose(void* file)
+{
+    ::fclose((FILE*)file);
+}
+
+
 void* APIImpl::memcpy(void* dst, const void* src, uint32_t size)
 {
     return ::memcpy(dst, src, size);

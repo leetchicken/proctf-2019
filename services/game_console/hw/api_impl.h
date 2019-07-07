@@ -33,6 +33,12 @@ public:
     void LCD_FillRect(const Rect& rect, uint32_t color);
     void LCD_DrawImage(const Rect& rect, uint8_t* image, uint32_t pitch);
 
+    void* fopen(const char* filename, const char* mode);
+    uint32_t fread(void* buffer, uint32_t size, void* file);
+    uint32_t fwrite(const void* buffer, uint32_t size, void* file);
+    uint32_t fsize(void* file);
+    void fclose(void* file);
+
     void* memcpy(void* dst, const void* src, uint32_t size);
     uint32_t strlen(const char* str);
     void strcpy(char* dst, const char* src);

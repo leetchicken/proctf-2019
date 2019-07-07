@@ -162,6 +162,12 @@ public:
     virtual void LCD_FillRect(const Rect& rect, uint32_t color) = 0;
     virtual void LCD_DrawImage(const Rect& rect, uint8_t* image, uint32_t pitch) = 0;
 
+    virtual void* fopen(const char* filename, const char* mode) = 0;
+    virtual uint32_t fread(void* buffer, uint32_t size, void* file) = 0;
+    virtual uint32_t fwrite(const void* buffer, uint32_t size, void* file) = 0;
+    virtual uint32_t fsize(void* file) = 0;
+    virtual void fclose(void* file) = 0;
+
     virtual void* memcpy(void* dst, const void* src, uint32_t size) = 0;
     virtual uint32_t strlen(const char* str) = 0;
     virtual void strcpy(char* dst, const char* src) = 0;
