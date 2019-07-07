@@ -18,6 +18,8 @@ struct IconCache
     };
 
     Item cache[kIconCacheSize];
+    uint32_t freeItems[kIconCacheSize];
+    uint32_t freeItemsNum;
 
     IconCache(uint8_t* startAddr)
     {
@@ -25,13 +27,37 @@ struct IconCache
         {
             cache[i].addr = startAddr + i * kIconSize;
             cache[i].gameIndex = ~0u;
+            freeItems[i] = i;
         }
+        freeItemsNum = kIconCacheSize;
+    }
+
+    uint32_t Allocate(uint32_t gameIdx)
+    {
+        if(!freeItemsNum)
+            return ~0u;
+        
+        uint32_t ret = freeItems[freeItemsNum - 1];
+        freeItemsNum--;
+        cache[ret].gameIndex = gameIdx;
+        return ret;
+    }
+
+    void Free(uint32_t idx)
+    {
+        cache[idx].gameIndex = ~0u;
+        freeItems[freeItemsNum] = idx;
+        freeItemsNum++;
     }
 
     void Clear()
     {
         for(uint32_t i = 0; i < kIconCacheSize; i++)
+        {
             cache[i].gameIndex = ~0u;
+            freeItems[i] = i;
+        }
+        freeItemsNum = kIconCacheSize;
     }
 };
 
@@ -52,12 +78,26 @@ struct GameDesc
     uint32_t id;
     char name[32];
     uint8_t* iconAddr;
+    uint32_t iconIndex;
     EIconState iconState;
+    ServerRequest* iconRequest;
 
     GameDesc()
-        : id(~0u), iconAddr(NULL), iconState(kIconInvalid)
+        : id(~0u)
     {
+        uiRect.y = 80;
+        uiRect.width = kIconWidth;
+        uiRect.height = kIconHeight;
         name[0] = '\0';
+        ResetIconState();
+    }
+
+    void ResetIconState()
+    {
+        iconAddr = NULL;
+        iconIndex = ~0u;
+        iconState = kIconInvalid;
+        iconRequest = NULL;
     }
 };
 
@@ -108,7 +148,6 @@ enum EMainScreenState
     kMainScreenReady = 0,
     kMainScreenWaitForNetwork,
     kMainScreenWaitGameList,
-    kMainScreenLoadIcons,
     kMainScreenLoadGameCode,
 
     kMainScreenStatesCount
@@ -160,11 +199,12 @@ int GameMain(API* api)
 
     ServerRequest* request = NULL;
     EMainScreenState state = kMainScreenWaitForNetwork;
-    uint32_t loadingIconForGameIdx = ~0u;
     uint32_t progressColor = 0xFF0000FF;
 
     uint8_t* iconsMem = api->GetSDRam();
     IconCache iconCache(iconsMem);
+    bool evictIcon = false;
+    uint32_t iconRequestsInFlight = 0;
 
     GameDesc* games = (GameDesc*)(iconsMem + kIconSize * kIconCacheSize);
     uint32_t gamesCount = 0;
@@ -244,6 +284,7 @@ int GameMain(API* api)
                 for(uint32_t g = 0; g < gamesCount; g++)
                 {
                     GameDesc& desc = games[g];
+                    desc = GameDesc();
                     api->memcpy(&desc.id, response, 4);
                     response += 4;
                     uint32_t strLen = api->strlen((char*)response);
@@ -251,31 +292,13 @@ int GameMain(API* api)
                     response += strLen + 1;
                 }
 
-                uint32_t curCacheIdx = 0;
                 for(uint32_t i = 0; i < gamesCount; i++)
                 {
                     games[i].uiRect.x = i * (kIconWidth + 20) + 20;
-                    games[i].uiRect.y = 80;
-                    games[i].uiRect.width = kIconWidth;
-                    games[i].uiRect.height = kIconHeight;
-
-                    Rect rect = games[i].uiRect;
-                    rect.ClampByRect(screenRect);
-                    if(rect.Area() && curCacheIdx < kIconCacheSize)
-                    {
-                        games[i].iconAddr = iconCache.cache[curCacheIdx].addr;
-                        games[i].iconState = kIconInvalid;
-                        iconCache.cache[curCacheIdx].gameIndex = i;
-                        curCacheIdx++;
-                    }
-                    else
-                    {
-                        games[i].iconAddr = NULL;
-                        games[i].iconState = kIconInvalid;
-                    }
+                    games[i].ResetIconState();
                 }
 
-                state = kMainScreenLoadIcons;
+                state = kMainScreenReady;
                 api->printf("Received games list\n");
             }
             else
@@ -288,35 +311,59 @@ int GameMain(API* api)
             request = NULL;
         }
 
-        if(state == kMainScreenLoadIcons)
+        for(uint32_t i = 0; i < gamesCount; i++)
         {
-            if(loadingIconForGameIdx != ~0u && request->done)
+            Rect rect = games[i].uiRect;
+            rect.ClampByRect(screenRect);
+
+            if(evictIcon && !rect.Area() && games[i].iconState == kIconValid)
             {
-                api->FreeServerRequest(request);
-                request = NULL;
-                games[loadingIconForGameIdx].iconState = kIconValid;
-                loadingIconForGameIdx = ~0u;
+                iconCache.Free(games[i].iconIndex);
+                games[i].ResetIconState();
+                evictIcon = false;
             }
 
-            if(loadingIconForGameIdx == ~0u)
+            if(rect.Area() && games[i].iconState == kIconInvalid)
             {
-                for(uint32_t i = 0; i < gamesCount; i++)
+                uint32_t iconIdx = iconCache.Allocate(i);
+                if(iconIdx != ~0u)
                 {
-                    if(games[i].iconAddr && games[i].iconState == kIconInvalid && !request)
+                    uint8_t* iconAddr = iconCache.cache[iconIdx].addr;
+                    request = RequestIcon(api, games[i].id, iconAddr);
+                    if(request)
                     {
-                        request = RequestIcon(api, games[i].id, games[i].iconAddr);
-                        if(request)
-                        {
-                            games[i].iconState = kIconLoading;
-                            loadingIconForGameIdx = i;
-                        }
-                        break;
+                        games[i].iconAddr = iconAddr;
+                        games[i].iconIndex = iconIdx;
+                        games[i].iconState = kIconLoading;
+                        games[i].iconRequest = request;
+                        iconRequestsInFlight++;
+                    }
+                    else
+                    {
+                        iconCache.Free(iconIdx);
                     }
                 }
+                else
+                {
+                    evictIcon = true;
+                }                
             }
 
-            if(loadingIconForGameIdx == ~0u)
-                state = kMainScreenReady;
+            if(games[i].iconState == kIconLoading && games[i].iconRequest->done)
+            {
+                ServerRequest* request = games[i].iconRequest;
+                if(games[i].iconRequest->succeed)
+                    games[i].iconState = kIconValid;
+                else
+                {
+                    iconCache.Free(games[i].iconIndex);
+                    games[i].ResetIconState();
+                }
+
+                api->FreeServerRequest(request);
+                games[i].iconRequest = NULL;
+                iconRequestsInFlight--;
+            }
         }
 
         if(state == kMainScreenReady && selectedGame != ~0u)
@@ -329,7 +376,7 @@ int GameMain(API* api)
             }
         }
 
-        if(state == kMainScreenReady && updatePressed)
+        if(state == kMainScreenReady && updatePressed && !iconRequestsInFlight)
         {
             gamesCount = 0;
             iconCache.Clear();
@@ -341,7 +388,7 @@ int GameMain(API* api)
             }
         }
 
-        if(state == kMainScreenLoadGameCode && request->done)
+        if(state == kMainScreenLoadGameCode && request->done && !iconRequestsInFlight)
         {
             api->FreeServerRequest(request);
             request = NULL;
@@ -385,7 +432,7 @@ int GameMain(API* api)
             api->LCD_Clear(kColorDarkBlue);
             api->LCD_FillRect(updateRect, kColorLightCyan);
 
-            if(state != kMainScreenReady)
+            if(state != kMainScreenReady || iconRequestsInFlight)
             {
                 api->LCD_FillRect(Rect(440, 20, 40, 40), progressColor);
                 uint32_t b = progressColor & 255;
