@@ -13,7 +13,6 @@ namespace SPN
 		private int maxSBoxesInLastRound;
 		private double thresholdBias;
 
-
 		private readonly SubstitutionPermutationNetwork spn;
 		private LinearApproximationTable[][] linearApproximationTables;
 
@@ -57,8 +56,13 @@ namespace SPN
 			return bests;
 		}
 
+		Dictionary<(int, int, uint), List<SBoxesWithPath>> cache = new Dictionary<(int, int, uint), List<SBoxesWithPath>>();
 		private List<SBoxesWithPath> TraceRound(int roundNum, int sboxNum, uint X)
 		{
+			var cacheKey = (roundNum, sboxNum, X);
+			if(cache.ContainsKey(cacheKey))
+				return cache[cacheKey];
+
 			var bestApproximations = ChooseBestApproximations(linearApproximationTables[roundNum][sboxNum].table, X);
 
 			var activatedOutputSBoxes = new List<SBoxesWithPath>();
@@ -66,8 +70,8 @@ namespace SPN
 			foreach(var approximation in bestApproximations)
 			{
 				var probability = approximation.probability;
-				if(roundNum <= 0)
-					Console.WriteLine($"{new string(' ', roundNum)}round {roundNum}, SBox {sboxNum}: X {Convert.ToString(X, 2)}, Y {Convert.ToString(approximation.Y, 2)}: probability {probability}");
+//				if(roundNum <= 0)
+//					Console.WriteLine($"{new string(' ', roundNum)}round {roundNum}, SBox {sboxNum}: X {Convert.ToString(X, 2)}, Y {Convert.ToString(approximation.Y, 2)}: probability {probability}");
 
 				var outputBits = PermuteY(approximation.Y, sboxNum);
 
@@ -92,7 +96,7 @@ namespace SPN
 				activatedOutputSBoxes.AddRange(Flattern(nextRoundsVariants, roundNum, sboxNum, approximation));
 			}
 
-
+			cache[cacheKey] = activatedOutputSBoxes;
 			return activatedOutputSBoxes;
 		}
 
