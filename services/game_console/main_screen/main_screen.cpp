@@ -20,8 +20,9 @@ struct IconCache
     Item cache[kIconCacheSize];
     uint32_t freeItems[kIconCacheSize];
     uint32_t freeItemsNum;
+    uint8_t* errorIcon;
 
-    IconCache(uint8_t* startAddr)
+    IconCache(uint8_t* startAddr, API* api)
     {
         for(uint32_t i = 0; i < kIconCacheSize; i++)
         {
@@ -30,6 +31,11 @@ struct IconCache
             freeItems[i] = i;
         }
         freeItemsNum = kIconCacheSize;
+
+        errorIcon = startAddr + kIconCacheSize * kIconSize;
+        void* f = api->fopen("/fs/error.bmp", "r");
+        api->fread(errorIcon, kIconSize, f);
+        api->fclose(f);
     }
 
     uint32_t Allocate(uint32_t gameIdx)
@@ -202,11 +208,11 @@ int GameMain(API* api)
     uint32_t progressColor = 0xFF0000FF;
 
     uint8_t* iconsMem = api->GetSDRam();
-    IconCache iconCache(iconsMem);
+    IconCache iconCache(iconsMem, api);
     bool evictIcon = false;
     uint32_t iconRequestsInFlight = 0;
 
-    GameDesc* games = (GameDesc*)(iconsMem + kIconSize * kIconCacheSize);
+    GameDesc* games = (GameDesc*)(iconsMem + kIconSize * (kIconCacheSize + 1));
     uint32_t gamesCount = 0;
 
     uint8_t* gameCodeMem = (uint8_t*)api->Malloc(kMaxGameCodeSize);
@@ -352,16 +358,16 @@ int GameMain(API* api)
             if(games[i].iconState == kIconLoading && games[i].iconRequest->done)
             {
                 ServerRequest* request = games[i].iconRequest;
-                if(games[i].iconRequest->succeed)
-                    games[i].iconState = kIconValid;
-                else
+                if(!games[i].iconRequest->succeed)
                 {
                     iconCache.Free(games[i].iconIndex);
                     games[i].ResetIconState();
+                    games[i].iconAddr = iconCache.errorIcon;
                 }
 
                 api->FreeServerRequest(request);
                 games[i].iconRequest = NULL;
+                games[i].iconState = kIconValid;
                 iconRequestsInFlight--;
             }
         }
