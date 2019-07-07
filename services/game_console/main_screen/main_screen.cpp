@@ -7,7 +7,6 @@ static const uint32_t kMaxIconsOnScreen = 3;
 static const uint32_t kIconCacheSize = kMaxIconsOnScreen + 1;
 static const uint32_t kMaxGamesCount = 256;
 static const uint32_t kMaxGameCodeSize = 1024;
-Rect GScreenRect;
 
 
 struct IconCache
@@ -74,18 +73,18 @@ enum ERequests
 };
 
 
-void FillRect(API* api, Rect rect, uint32_t color)
+void FillRect(API* api, const Rect& screenRect, Rect rect, uint32_t color)
 {
-    rect.ClampByRect(GScreenRect);
+    rect.ClampByRect(screenRect);
     if(rect.Area())
         api->LCD_FillRect(rect, color);
 }
 
 
-void DrawIcon(API* api, const GameDesc& desc)
+void DrawIcon(API* api, const Rect& screenRect, const GameDesc& desc)
 {
     Rect rect = desc.uiRect;
-    rect.ClampByRect(GScreenRect);
+    rect.ClampByRect(screenRect);
     if(rect.Area())
     {
         if(desc.iconState == kIconValid)
@@ -152,7 +151,8 @@ ServerRequest* RequestGameCode(API* api, uint32_t gameId, uint8_t* codeAddr)
 
 int GameMain(API* api)
 {
-    api->GetScreenRect(&GScreenRect);
+    Rect screenRect;
+    api->GetScreenRect(&screenRect);
 
     TouchScreenState tsState;
 
@@ -260,7 +260,7 @@ int GameMain(API* api)
                     games[i].uiRect.height = kIconHeight;
 
                     Rect rect = games[i].uiRect;
-                    rect.ClampByRect(GScreenRect);
+                    rect.ClampByRect(screenRect);
                     if(rect.Area() && curCacheIdx < kIconCacheSize)
                     {
                         games[i].iconAddr = iconCache.cache[curCacheIdx].addr;
@@ -394,7 +394,7 @@ int GameMain(API* api)
             }
 
             for(uint32_t g = 0; g < gamesCount; g++)
-                DrawIcon(api, games[g]);
+                DrawIcon(api, screenRect, games[g]);
         }
     }
 }

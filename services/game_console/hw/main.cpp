@@ -2,6 +2,8 @@
 #include "stm32746g_discovery_lcd.h"
 #include "stm32746g_discovery_ts.h"
 #include "EthernetInterface.h"
+#include "BlockDevice.h"
+#include "FATFileSystem.h"
 #include "api_impl.h"
  
 DigitalOut led1(LED1);
@@ -10,6 +12,7 @@ DigitalOut led1(LED1);
 APIImpl GAPIImpl;
 uint8_t* GSdram = NULL;
 EthernetInterface GEthernet;
+FATFileSystem fs ("fs", BlockDevice::get_default_instance());
 
 
 void InitDisplay()
@@ -45,8 +48,6 @@ void InitNetwork()
     GEthernet.connect();   
 }
 
-
-extern int GameMain(API* api);
  
 int main()
 {  
@@ -57,6 +58,24 @@ int main()
     
     GAPIImpl.Init(&GEthernet, GSdram);
 
+    FILE* f = fopen("/fs/code.bin", "r");
+    if(!f)
+    {
+        printf("Failed to open /fs/code.bin\n");
+        return 1;
+    }
+    fseek(f, 0, SEEK_END);
+    size_t codeFileSize = ftell(f);
+    fseek(f, 0, SEEK_SET);
+    uint8_t* code = (uint8_t*)malloc(codeFileSize);
+    fread(code, 1, codeFileSize, f);
+    fclose(f);
+
+    uint32_t baseAddr = 0;
+    memcpy(&baseAddr, code, 4);
+    uint8_t* gameMainAddr = code + baseAddr + 4;
+
     ScopedRamExecutionLock make_ram_executable;
-    GameMain(&GAPIImpl);
+    TGameMain gameMain = (TGameMain)&gameMainAddr[1];
+    gameMain(&GAPIImpl);
 }
