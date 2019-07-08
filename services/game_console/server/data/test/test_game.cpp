@@ -3,10 +3,10 @@
 
 int GameMain(API* api)
 {
-    while(1)
+    for(uint32_t i = 0; i < 3; i++)
     {
         api->printf("hello world!");
-        api->sleep(0.1f);
+        api->sleep(1.0f);
     }
     return 14;
 }
