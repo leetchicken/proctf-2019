@@ -95,7 +95,7 @@ HttpResponse RequestHandler::HandleGet(HttpRequest request)
         response.headers.insert({"Content-Type", "application/octet-stream"});
         response.contentLength = kIconWidth * kIconHeight * 4;
         response.content = (char*)malloc(response.contentLength);
-        memcpy(response.content, icon.abgr, response.contentLength);
+        ABGR_to_ARGB(icon.abgr, (ARGB*)response.content, icon.width, icon.height);
         return response;
     }
     else if(ParseUrl(request.url, 1, "code"))

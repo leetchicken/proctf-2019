@@ -19,6 +19,19 @@ union ABGR
 };
 
 
+union ARGB
+{
+    struct
+    {
+        uint32_t b : 8;
+        uint32_t g : 8;
+        uint32_t r : 8;
+        uint32_t a : 8;
+    };
+    uint32_t argb;
+};
+
+
 struct Image
 {
     ABGR* abgr;
@@ -55,3 +68,5 @@ struct Image
 bool read_png(const char* file_name, Image& image);
 bool save_png(const char* file_name, const Image& image);
 bool save_png(const char* file_name, const ABGR* abgr, uint32_t width, uint32_t height);
+ARGB* ABGR_to_ARGB_inplace(ABGR* abgr, uint32_t width, uint32_t height);
+void ABGR_to_ARGB(ABGR* abgr, ARGB* argb, uint32_t width, uint32_t height);

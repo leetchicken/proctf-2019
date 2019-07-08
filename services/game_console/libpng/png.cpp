@@ -31,3 +31,32 @@ bool save_png(const char* file_name, const ABGR* abgr, uint32_t width, uint32_t 
 {
     return stbi_write_png(file_name, width, height, 4, abgr, width * sizeof(uint32_t)) != 0;
 }
+
+
+ARGB* ABGR_to_ARGB_inplace(ABGR* abgr, uint32_t width, uint32_t height)
+{
+    uint32_t len = width * height;
+    for(uint32_t i = 0; i < len; i++)
+    {
+        ARGB pixel;
+        pixel.r = abgr[i].r;
+        pixel.g = abgr[i].g;
+        pixel.b = abgr[i].b;
+        pixel.a = abgr[i].a;
+        memcpy(&abgr[i], &pixel, sizeof(pixel));
+    }
+    return (ARGB*)abgr;
+}
+
+
+void ABGR_to_ARGB(ABGR* abgr, ARGB* argb, uint32_t width, uint32_t height)
+{
+    uint32_t len = width * height;
+    for(uint32_t i = 0; i < len; i++)
+    {
+        argb[i].r = abgr[i].r;
+        argb[i].g = abgr[i].g;
+        argb[i].b = abgr[i].b;
+        argb[i].a = abgr[i].a;
+    }
+}
