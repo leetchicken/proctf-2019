@@ -25,7 +25,7 @@ int main(int argc, char* argv[])
         return 1;
     }
 
-    fwrite(image.rgba, 1, image.width * image.height * 4, f);
+    fwrite(image.abgr, 1, image.width * image.height * 4, f);
     fclose(f);
 
     return 0;

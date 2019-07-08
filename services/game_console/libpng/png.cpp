@@ -14,8 +14,8 @@ bool read_png(const char* file_name, Image& image)
 
     image.width = x;
     image.height = y;
-    image.rgba = (RGBA*)memalign(16, image.width * image.height * sizeof(RGBA));
-    memcpy(image.rgba, data, x * y * sizeof(uint32_t));
+    image.abgr = (ABGR*)memalign(16, image.width * image.height * sizeof(ABGR));
+    memcpy(image.abgr, data, x * y * sizeof(uint32_t));
     stbi_image_free(data);
     return true;
 }
@@ -23,11 +23,11 @@ bool read_png(const char* file_name, Image& image)
 
 bool save_png(const char* file_name, const Image& image)
 {
-    return save_png(file_name, image.rgba, image.width, image.height);
+    return save_png(file_name, image.abgr, image.width, image.height);
 }
 
 
-bool save_png(const char* file_name, const RGBA* rgba, uint32_t width, uint32_t height)
+bool save_png(const char* file_name, const ABGR* abgr, uint32_t width, uint32_t height)
 {
-    return stbi_write_png(file_name, width, height, 4, rgba, width * sizeof(uint32_t)) != 0;
+    return stbi_write_png(file_name, width, height, 4, abgr, width * sizeof(uint32_t)) != 0;
 }

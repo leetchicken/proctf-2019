@@ -6,7 +6,7 @@
 #include "stb_image_write.h"
 
 
-union RGBA
+union ABGR
 {
     struct
     {
@@ -15,28 +15,28 @@ union RGBA
         uint32_t b : 8;
         uint32_t a : 8;
     };
-    uint32_t rgba;
+    uint32_t abgr;
 };
 
 
 struct Image
 {
-    RGBA* rgba;
+    ABGR* abgr;
     uint32_t width;
     uint32_t height;
 
     Image()
-    	: rgba(nullptr), width(0), height(0)
+    	: abgr(nullptr), width(0), height(0)
     {
 
     }
 
     Image(uint32_t w, uint32_t h)
-    	: rgba(nullptr), width(w), height(h)
+    	: abgr(nullptr), width(w), height(h)
     {
-        uint32_t size = w * h * sizeof(RGBA);
+        uint32_t size = w * h * sizeof(ABGR);
         size = (size + 15) & ~15;
-        rgba = (RGBA*)memalign(16, size);
+        abgr = (ABGR*)memalign(16, size);
     }
 
     Image(const Image&) = delete;
@@ -46,12 +46,12 @@ struct Image
 
     ~Image()
     {
-        if(rgba)
-            free(rgba);
+        if(abgr)
+            free(abgr);
     }
 };
 
 
 bool read_png(const char* file_name, Image& image);
 bool save_png(const char* file_name, const Image& image);
-bool save_png(const char* file_name, const RGBA* rgba, uint32_t width, uint32_t height);
+bool save_png(const char* file_name, const ABGR* abgr, uint32_t width, uint32_t height);
