@@ -245,14 +245,14 @@ int GameMain(API* api)
             for(uint32_t g = 0; g < gamesCount; g++)
             {
                 Rect& rect = games[g].uiRect;
-                if(rect.IsPointInside(prevTouchX, prevTouchX))
+                if(rect.IsPointInside(prevTouchX, prevTouchY))
                 {
                     selectedGame = g;
                     break;
                 }
             }
 
-            if(selectedGame == ~0u && updateRect.IsPointInside(prevTouchX, prevTouchX))
+            if(selectedGame == ~0u && updateRect.IsPointInside(prevTouchX, prevTouchY))
                 updatePressed = true;
         }
         else if(touchOnPrevFrame && (tsState.touchDetected == 1))
