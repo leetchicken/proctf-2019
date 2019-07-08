@@ -1,7 +1,7 @@
 #.PHONY: debug release clean
-CXXFLAGS = -c -g -std=c++17
-SOURCES = main.cpp httpserver.cpp png.cpp
-LDFLAGS = -lmicrohttpd -lpugixml
+CXXFLAGS = -c -g -std=c++17 -I../libpng
+SOURCES = main.cpp httpserver.cpp
+LDFLAGS = -lmicrohttpd -lpugixml -L../libpng -lpng
 OBJS = $(SOURCES:.cpp=.o)
 
 all: release
