@@ -43,7 +43,7 @@ ARGB* ABGR_to_ARGB_inplace(ABGR* abgr, uint32_t width, uint32_t height)
         pixel.g = abgr[i].g;
         pixel.b = abgr[i].b;
         pixel.a = abgr[i].a;
-        memcpy(&abgr[i], &pixel, sizeof(pixel));
+        memcpy(&pixel, &abgr[i], sizeof(pixel));
     }
     return (ARGB*)abgr;
 }
