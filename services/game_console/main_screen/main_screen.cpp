@@ -402,8 +402,11 @@ int GameMain(API* api)
             if(request->succeed)
             {
                 //ScopedRamExecutionLock make_ram_executable;
+                uint32_t baseAddr = 0;
+                api->memcpy(&baseAddr, gameCodeMem, 4);
+                uint8_t* gameMainAddr = gameCodeMem + baseAddr + 4;
                 TGameMain gameMain;
-                gameMain = (TGameMain)&gameCodeMem[1];
+                gameMain = (TGameMain)&gameMainAddr[1];
                 gameMain(api);
             }
             else
