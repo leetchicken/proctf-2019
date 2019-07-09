@@ -25,7 +25,9 @@ int main(int argc, char* argv[])
         return 1;
     }
 
-    fwrite(image.abgr, 1, image.width * image.height * 4, f);
+
+    ARGB* argb = ABGR_to_ARGB_inplace(image.abgr, image.width, image.height);
+    fwrite(argb, 1, image.width * image.height * 4, f);
     fclose(f);
 
     return 0;
