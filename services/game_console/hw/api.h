@@ -161,6 +161,7 @@ public:
     virtual void LCD_DisplayStringAt(uint16_t xpos, uint16_t ypos, const char* text, ETextAlignMode mode) = 0;
     virtual void LCD_FillRect(const Rect& rect, uint32_t color) = 0;
     virtual void LCD_DrawImage(const Rect& rect, uint8_t* image, uint32_t pitch) = 0;
+    virtual void LCD_DrawImageWithBlend(const Rect& rect, uint8_t* image, uint32_t pitch) = 0;
 
     virtual void* fopen(const char* filename, const char* mode) = 0;
     virtual uint32_t fread(void* buffer, uint32_t size, void* file) = 0;

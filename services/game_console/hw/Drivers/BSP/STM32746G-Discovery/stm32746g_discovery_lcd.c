@@ -1068,37 +1068,74 @@ void BSP_LCD_DrawBitmap(uint32_t Xpos, uint32_t Ypos, uint8_t *pbmp)
 }
 
 
-void BSP_LCD_DrawImage(uint32_t Xpos, uint32_t Ypos, uint32_t width, uint32_t height, uint8_t* image, uint32_t pitch)
+void BSP_LCD_DrawImage(uint32_t Xpos, uint32_t Ypos, uint32_t width, uint32_t height, uint8_t* image, uint32_t pitch, int32_t withBlend)
 {
   uint32_t address = hLtdcHandler.LayerCfg[ActiveLayer].FBStartAdress + (((BSP_LCD_GetXSize()*Ypos) + Xpos)*(4));
 
-  hDma2dHandler.Instance = DMA2D;
-
-  hDma2dHandler.Init.Mode = DMA2D_M2M_BLEND;
-  hDma2dHandler.Init.ColorMode = DMA2D_OUTPUT_ARGB8888;
-  hDma2dHandler.Init.OutputOffset = BSP_LCD_GetXSize() - width;
-
-  // Foreground
-  hDma2dHandler.LayerCfg[1].AlphaMode = DMA2D_NO_MODIF_ALPHA;
-  hDma2dHandler.LayerCfg[1].InputColorMode = DMA2D_INPUT_ARGB8888;
-  hDma2dHandler.LayerCfg[1].InputOffset = pitch / 4 - width;
-
-  // Background
-  hDma2dHandler.LayerCfg[0].AlphaMode = DMA2D_NO_MODIF_ALPHA;
-  hDma2dHandler.LayerCfg[0].InputColorMode = DMA2D_INPUT_ARGB8888;
-  hDma2dHandler.LayerCfg[0].InputOffset = BSP_LCD_GetXSize() - width;
-
-  if(HAL_DMA2D_Init(&hDma2dHandler) == HAL_OK) 
+  if(withBlend)
   {
-    if(HAL_DMA2D_ConfigLayer(&hDma2dHandler, 1) == HAL_OK && HAL_DMA2D_ConfigLayer(&hDma2dHandler, 0) == HAL_OK) 
+    hDma2dHandler.Instance = DMA2D;
+
+    hDma2dHandler.Init.Mode = DMA2D_M2M_BLEND;
+    hDma2dHandler.Init.ColorMode = DMA2D_OUTPUT_ARGB8888;
+    hDma2dHandler.Init.OutputOffset = BSP_LCD_GetXSize() - width;
+
+    // Foreground
+    hDma2dHandler.LayerCfg[1].AlphaMode = DMA2D_NO_MODIF_ALPHA;
+    hDma2dHandler.LayerCfg[1].InputColorMode = DMA2D_INPUT_ARGB8888;
+    hDma2dHandler.LayerCfg[1].InputOffset = pitch / 4 - width;
+
+    // Background
+    hDma2dHandler.LayerCfg[0].AlphaMode = DMA2D_NO_MODIF_ALPHA;
+    hDma2dHandler.LayerCfg[0].InputColorMode = DMA2D_INPUT_ARGB8888;
+    hDma2dHandler.LayerCfg[0].InputOffset = BSP_LCD_GetXSize() - width;
+
+    if(HAL_DMA2D_Init(&hDma2dHandler) == HAL_OK) 
     {
-      if (HAL_DMA2D_BlendingStart(&hDma2dHandler, image, address, address, width, height) == HAL_OK)
+      if(HAL_DMA2D_ConfigLayer(&hDma2dHandler, 1) == HAL_OK && HAL_DMA2D_ConfigLayer(&hDma2dHandler, 0) == HAL_OK) 
       {
-        /* Polling For DMA transfer */  
-        HAL_DMA2D_PollForTransfer(&hDma2dHandler, 10);
+        if (HAL_DMA2D_BlendingStart(&hDma2dHandler, image, address, address, width, height) == HAL_OK)
+        {
+          // Polling For DMA transfer 
+          HAL_DMA2D_PollForTransfer(&hDma2dHandler, 10);
+        }
       }
     }
   }
+  else
+  {
+    hDma2dHandler.Instance = DMA2D;
+
+    hDma2dHandler.Init.Mode = DMA2D_M2M;
+    hDma2dHandler.Init.ColorMode = DMA2D_OUTPUT_ARGB8888;
+    hDma2dHandler.Init.OutputOffset = BSP_LCD_GetXSize() - width;
+
+    // Foreground
+    hDma2dHandler.LayerCfg[1].AlphaMode = DMA2D_NO_MODIF_ALPHA;
+    hDma2dHandler.LayerCfg[1].InputColorMode = DMA2D_INPUT_ARGB8888;
+    hDma2dHandler.LayerCfg[1].InputOffset = pitch / 4 - width;
+
+    if(HAL_DMA2D_Init(&hDma2dHandler) == HAL_OK)
+    {
+      if(HAL_DMA2D_ConfigLayer(&hDma2dHandler, 1) == HAL_OK)
+      {
+        if(HAL_DMA2D_Start(&hDma2dHandler, (uint32_t)image, address, width, height) == HAL_OK)
+        {
+          // Polling For DMA transfer 
+          HAL_DMA2D_PollForTransfer(&hDma2dHandler, 10);
+        }
+      }
+    }
+  }
+#if 0
+  uint32_t input_color_mode = CM_ARGB8888;
+  for(uint32_t index=0; index < height; index++)
+  {
+    LL_ConvertLineToARGB8888(ActiveLayer, (uint32_t*)image, (uint32_t*)address, width, input_color_mode);
+    address += BSP_LCD_GetXSize() * 4;
+    image += pitch;
+  }
+#endif
 }
 
 /**

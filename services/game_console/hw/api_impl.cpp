@@ -236,7 +236,13 @@ void APIImpl::LCD_FillRect(const Rect& rect, uint32_t color)
 
 void APIImpl::LCD_DrawImage(const Rect& rect, uint8_t* image, uint32_t pitch)
 {
-    BSP_LCD_DrawImage(rect.x, rect.y, rect.width, rect.height, image, pitch);
+    BSP_LCD_DrawImage(rect.x, rect.y, rect.width, rect.height, image, pitch, 0);
+}
+
+
+void APIImpl::LCD_DrawImageWithBlend(const Rect& rect, uint8_t* image, uint32_t pitch)
+{
+    BSP_LCD_DrawImage(rect.x, rect.y, rect.width, rect.height, image, pitch, 1);
 }
 
 

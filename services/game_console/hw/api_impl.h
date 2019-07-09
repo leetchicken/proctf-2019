@@ -32,6 +32,7 @@ public:
     void LCD_DisplayStringAt(uint16_t xpos, uint16_t ypos, const char* text, ETextAlignMode mode);
     void LCD_FillRect(const Rect& rect, uint32_t color);
     void LCD_DrawImage(const Rect& rect, uint8_t* image, uint32_t pitch);
+    void LCD_DrawImageWithBlend(const Rect& rect, uint8_t* image, uint32_t pitch);
 
     void* fopen(const char* filename, const char* mode);
     uint32_t fread(void* buffer, uint32_t size, void* file);
@@ -54,3 +55,4 @@ private:
     Timer m_timer;
     bool m_displayIsOn;
 };
+
