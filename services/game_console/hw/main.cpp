@@ -6,8 +6,6 @@
 #include "FATFileSystem.h"
 #include "api_impl.h"
  
-DigitalOut led1(LED1);
-
 
 APIImpl GAPIImpl;
 uint8_t* GSdram = NULL;
@@ -50,11 +48,11 @@ void InitNetwork()
 
  
 int main()
-{  
-	led1 = 1;
-
+{
     InitDisplay();
     InitNetwork();
+    BSP_PB_Init(BUTTON_KEY, BUTTON_MODE_GPIO);
+    BSP_LED_Init(LED_GREEN);
     
     GAPIImpl.Init(&GEthernet, GSdram);
 

@@ -246,6 +246,21 @@ void APIImpl::LCD_DrawImageWithBlend(const Rect& rect, uint8_t* image, uint32_t 
 }
 
 
+bool APIImpl::GetButtonState()
+{
+    return BSP_PB_GetState(BUTTON_KEY) > 0;
+}
+
+
+void APIImpl::LedOnOff(bool on)
+{
+    if(on)
+        BSP_LED_On(LED_GREEN);
+    else
+        BSP_LED_Off(LED_GREEN);
+}
+
+
 void* APIImpl::fopen(const char* filename, const char* mode)
 {
     return (void*)::fopen(filename, mode);

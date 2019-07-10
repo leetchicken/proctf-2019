@@ -34,6 +34,9 @@ public:
     void LCD_DrawImage(const Rect& rect, uint8_t* image, uint32_t pitch);
     void LCD_DrawImageWithBlend(const Rect& rect, uint8_t* image, uint32_t pitch);
 
+    bool GetButtonState();
+    void LedOnOff(bool on);
+
     void* fopen(const char* filename, const char* mode);
     uint32_t fread(void* buffer, uint32_t size, void* file);
     uint32_t fwrite(const void* buffer, uint32_t size, void* file);
