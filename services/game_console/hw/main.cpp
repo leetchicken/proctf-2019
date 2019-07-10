@@ -39,9 +39,31 @@ void InitDisplay()
 }
 
 
+char GMacAddress[] = {0x00, 0x80, 0xe1, 0xff, 0xff, 0xff};
+
+
+uint8_t mbed_otp_mac_address(char *mac)
+{
+    memcpy(mac, GMacAddress, 6);
+    return 1;
+};
+
+
 void InitNetwork()
 {
-    GEthernet.set_network("192.168.1.5", "255.255.255.0", "192.168.1.1");
+    FILE* f = fopen("/fs/mac", "r");
+    char macStr[128];
+    memset(macStr, 0, sizeof(macStr));
+    fread(macStr, 1, sizeof(macStr), f);
+    fclose(f);
+
+    for(size_t i = 0; i < 6; i++)
+    {
+        macStr[2 + i * 3] = 0;
+        GMacAddress[i] = strtoul(&macStr[i * 3], NULL, 16);
+    }
+
+    GEthernet.set_dhcp(true);
     GEthernet.set_blocking(false);
     GEthernet.connect();   
 }
