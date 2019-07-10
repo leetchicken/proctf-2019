@@ -53,43 +53,25 @@ struct IconsManager
 
         background = curSdram;
         uint32_t backgroundSize = kBackgroundWidth * kBackgroundHeight * 4;
-        void* f = api->fopen("/fs/background.bmp", "r");
-        api->fread(background, backgroundSize, f);
-        api->fclose(f);
-        curSdram += backgroundSize;
+        curSdram = ReadIcon("/fs/background.bmp", background, backgroundSize);
 
         emptyGameIcon = curSdram;
-        f = api->fopen("/fs/empty_icon.bmp", "r");
-        api->fread(emptyGameIcon, kGameIconSize, f);
-        api->fclose(f);
-        curSdram += kGameIconSize;
+        curSdram = ReadIcon("/fs/empty_icon.bmp", emptyGameIcon, kGameIconSize);
 
         uint32_t infoIconSize = kInfoIconsWidth * kInfoIconsHeight * 4;
 
         loadingIcon = curSdram;
-        f = api->fopen("/fs/loading.bmp", "r");
-        api->fread(loadingIcon, infoIconSize, f);
-        api->fclose(f);
-        curSdram += infoIconSize;
+        curSdram = ReadIcon("/fs/loading.bmp", loadingIcon, infoIconSize);
 
         networkOffIcon = curSdram;
-        f = api->fopen("/fs/network_off.bmp", "r");
-        api->fread(networkOffIcon, infoIconSize, f);
-        api->fclose(f);
-        curSdram += infoIconSize;
+        curSdram = ReadIcon("/fs/network_off.bmp", networkOffIcon, infoIconSize);
 
         networkOnIcon = curSdram;
-        f = api->fopen("/fs/network_on.bmp", "r");
-        api->fread(networkOnIcon, infoIconSize, f);
-        api->fclose(f);
-        curSdram += infoIconSize;
+        curSdram = ReadIcon("/fs/network_on.bmp", networkOnIcon, infoIconSize);
 
         refreshButton = curSdram;
         uint32_t refreshButtonSize = kRefreshButtonWidth * kRefreshButtonHeight * 4;
-        f = api->fopen("/fs/refresh.bmp", "r");
-        api->fread(refreshButton, refreshButtonSize, f);
-        api->fclose(f);
-        curSdram += refreshButtonSize;
+        curSdram = ReadIcon("/fs/refresh.bmp", refreshButton, refreshButtonSize);
 
         return curSdram;
     }
@@ -115,6 +97,15 @@ struct IconsManager
         for(uint32_t i = 0; i < kGameIconCacheSize; i++)
             freeGameIconIndices[i] = i;
         freeGameIconIndicesNum = kGameIconCacheSize;
+    }
+
+private:
+    uint8_t* ReadIcon(const char* fileName, uint8_t* dst, uint32_t size)
+    {
+        void* f = api->fopen(fileName, "r");
+        api->fread(dst, size, f);
+        api->fclose(f);
+        return dst + size;
     }
 };
 
