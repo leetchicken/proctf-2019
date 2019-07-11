@@ -136,6 +136,33 @@ enum ETextAlignMode
 };
 
 
+struct NetAddr
+{
+    uint32_t ip;
+    uint16_t port;
+};
+
+
+enum ESocketError
+{
+    kSocketErrorOk                 =  0,     /*!< no error */
+    kSocketErrorWouldBlock         = -1,     /*!< no data is not available but call is non-blocking */
+    kSocketErrorUnsupported        = -2,     /*!< unsupported functionality */
+    kSocketErrorParameter          = -3,     /*!< invalid configuration */
+    kSocketErrorNoConnection       = -4,     /*!< not connected to a network */
+    kSocketErrorNoSocket           = -5,     /*!< socket not available for use */
+    kSocketErrorNoAddress          = -6,     /*!< IP address is not known */
+    kSocketErrorNoMemory           = -7,     /*!< memory resource not available */
+    kSocketErrorDnsFailure         = -9,     /*!< DNS failed to complete successfully */
+    kSocketErrorDeviceError        = -2,     /*!< failure interfacing with the network processor */
+    kSocketErrorInProgress         = -3,     /*!< operation (eg connect) in progress */
+    kSocketErrorAlready            = -4,     /*!< operation (eg connect) already in progress */
+    kSocketErrorIsConnected        = -5,     /*!< socket is already connected */
+    kSocketErrorConnectionLost     = -6,     /*!< connection lost */
+    kSocketErrorConnectionTimeout  = -7,     /*!< connection timed out */
+};
+
+
 class API
 {
 public:
@@ -151,6 +178,18 @@ public:
     virtual ServerRequest* AllocServerRequest() = 0;
     virtual bool SendServerRequest(ServerRequest* request) = 0;
     virtual void FreeServerRequest(ServerRequest* request) = 0;
+
+    virtual uint32_t aton(const char* ip) = 0;
+    virtual void ntoa(uint32_t ip, char* ipStr) = 0;
+    virtual int socket(bool tcp) = 0;
+    virtual int send(int socket, const void* data, uint32_t size, NetAddr* addr = NULL) = 0;
+    virtual int recv(int socket, void* data, uint32_t size, NetAddr* addr = NULL) = 0;
+    virtual int connect(int socket, const NetAddr& addr) = 0;
+    virtual int bind(int socket, uint32_t ip, uint16_t port) = 0;
+    virtual int listen(int socket, int backlog = 1) = 0;
+    virtual int accept(int socket) = 0;
+    virtual int getpeername(int socket, NetAddr& addr) = 0;
+    virtual void close(int socket) = 0;
 
     virtual void SwapFramebuffer() = 0;
     virtual void LCD_OnOff(bool onOff) = 0;

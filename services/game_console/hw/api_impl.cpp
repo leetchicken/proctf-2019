@@ -4,6 +4,7 @@
 #include "http_request.h"
 #include "MemoryPool.h"
 #include "Queue.h"
+#include "ip4string.h"
 
 
 static const char* kServerAddr = "192.168.1.1:8000";
@@ -74,6 +75,11 @@ void APIImpl::Init(EthernetInterface* ethInterface, uint8_t* sdram)
     m_ethInterface = ethInterface;
     m_sdram = sdram;
     GHttpThread.start(callback(HttpThread, m_ethInterface));
+    memset(m_tcpSockets, 0, sizeof(m_tcpSockets));
+    m_freeTcpSockets = ~0u;
+    m_acceptedSockets = 0;
+    memset(m_udpSockets, 0, sizeof(m_udpSockets));
+    m_freeUdpSockets = ~0u;
 }
 
 
@@ -159,6 +165,301 @@ void APIImpl::FreeServerRequest(ServerRequest* request)
     HttpRequest* httpRequest = (HttpRequest*)request->internalData;
     delete httpRequest;
     GRequestsPool.free(request);
+}
+
+
+uint32_t APIImpl::aton(const char* ip)
+{
+    uint32_t ret;
+    SocketAddress addr(ip);
+    memcpy(&ret, addr.get_ip_bytes(), 4);
+    return ret;
+}
+
+
+void APIImpl::ntoa(uint32_t ip, char* ipStr)
+{
+    ip4tos(&ip, ipStr);
+}
+
+
+static int GetSocketIdx(int socket)
+{
+    if(socket <= 32)
+        return socket - 1;
+    else
+        return socket - 33;
+    return -1;
+}
+
+
+static bool IsTcpSocket(int socket)
+{
+    if(socket <= 32)
+        return true;
+    else
+        return false;
+    return false;
+}
+
+
+static int ConvertSocketRetVal(nsapi_size_or_error_t sizeOrError)
+{
+    switch(sizeOrError)
+    {
+        case NSAPI_ERROR_OK:
+            return kSocketErrorOk;
+        case NSAPI_ERROR_WOULD_BLOCK:
+            return kSocketErrorWouldBlock;
+        case NSAPI_ERROR_UNSUPPORTED:
+            return kSocketErrorUnsupported;    
+        case NSAPI_ERROR_PARAMETER:
+            return kSocketErrorParameter;   
+        case NSAPI_ERROR_NO_CONNECTION:
+            return kSocketErrorNoConnection;     
+        case NSAPI_ERROR_NO_SOCKET:
+            return kSocketErrorNoSocket;  
+        case NSAPI_ERROR_NO_ADDRESS:
+            return kSocketErrorNoAddress;     
+        case NSAPI_ERROR_NO_MEMORY:
+            return kSocketErrorNoMemory;
+        case NSAPI_ERROR_DNS_FAILURE:
+            return kSocketErrorDnsFailure;   
+        case NSAPI_ERROR_DEVICE_ERROR:
+            return kSocketErrorDeviceError;   
+        case NSAPI_ERROR_IN_PROGRESS:
+            return kSocketErrorInProgress;   
+        case NSAPI_ERROR_ALREADY:
+            return kSocketErrorAlready;   
+        case NSAPI_ERROR_IS_CONNECTED:
+            return kSocketErrorIsConnected;      
+        case NSAPI_ERROR_CONNECTION_LOST:
+            return kSocketErrorConnectionLost;  
+        case NSAPI_ERROR_CONNECTION_TIMEOUT:
+            return kSocketErrorConnectionTimeout;
+    }
+
+    if(sizeOrError < 0)
+        return kSocketErrorUnsupported;
+
+    return sizeOrError;
+}
+
+
+int APIImpl::socket(bool tcp)
+{
+    if(tcp)
+    {
+        if(m_freeTcpSockets == 0)
+            return kSocketErrorNoMemory;
+        int sockIdx = __builtin_ctz(m_freeTcpSockets);
+        m_freeTcpSockets &= ~(1 << sockIdx);
+        m_tcpSockets[sockIdx] = new TCPSocket();
+        int err = m_tcpSockets[sockIdx]->open(m_ethInterface);
+        if(err < 0)
+            return ConvertSocketRetVal(err);
+        return sockIdx + 1;
+    }
+    else
+    {
+        if(m_freeUdpSockets == 0)
+            return kSocketErrorNoMemory;
+        int sockIdx = __builtin_ctz(m_freeUdpSockets);
+        m_freeUdpSockets &= ~(1 << sockIdx);
+        m_udpSockets[sockIdx] = new UDPSocket();
+        int err = m_udpSockets[sockIdx]->open(m_ethInterface);
+        if(err < 0)
+            return ConvertSocketRetVal(err);
+        return sockIdx + 33;
+    }
+
+    return kSocketErrorParameter;
+}
+
+
+int APIImpl::send(int socket, const void* data, uint32_t size, NetAddr* addr)
+{
+    if(socket <= 0)
+        return kSocketErrorParameter;
+
+    int socketIdx = GetSocketIdx(socket);
+    if(IsTcpSocket(socket))
+    {
+        int ret = m_tcpSockets[socketIdx]->send(data, size);
+        return ConvertSocketRetVal(ret);
+    }
+    else
+    {
+        if(!addr)
+            return kSocketErrorParameter;
+        SocketAddress sockAddr(&addr->ip, NSAPI_IPv4, addr->port);
+        int ret = m_udpSockets[socketIdx]->sendto(sockAddr, data, size);
+        return ConvertSocketRetVal(ret);
+    }
+
+    return kSocketErrorParameter;
+}
+
+
+int APIImpl::recv(int socket, void* data, uint32_t size, NetAddr* addr)
+{
+    if(socket <= 0)
+        return kSocketErrorParameter;
+
+    int socketIdx = GetSocketIdx(socket);
+    if(IsTcpSocket(socket))
+    {
+        int ret = m_tcpSockets[socketIdx]->recv(data, size);
+        return ConvertSocketRetVal(ret);
+    }
+    else
+    {
+        SocketAddress sockAddr;
+        int ret = m_udpSockets[socketIdx]->recvfrom(&sockAddr, data, size);
+        if(addr)
+        {
+            memcpy(&addr->ip, sockAddr.get_ip_bytes(), 4);
+            addr->port = sockAddr.get_port();
+        }
+        return ConvertSocketRetVal(ret);
+    }
+    
+    return kSocketErrorParameter;
+}
+
+
+int APIImpl::connect(int socket, const NetAddr& addr)
+{
+    if(socket <= 0)
+        return kSocketErrorParameter;
+
+    int socketIdx = GetSocketIdx(socket);
+    if(IsTcpSocket(socket))
+    {
+        SocketAddress sockAddr(&addr.ip, NSAPI_IPv4, addr.port);
+        int ret = m_tcpSockets[socketIdx]->connect(sockAddr);
+        return ConvertSocketRetVal(ret);
+    }
+
+    return kSocketErrorUnsupported;
+}
+
+
+int APIImpl::bind(int socket, uint32_t ip, uint16_t port)
+{
+    if(socket <= 0)
+        return kSocketErrorParameter;
+
+    int socketIdx = GetSocketIdx(socket);
+    SocketAddress sockAddr(&ip, NSAPI_IPv4, port);
+    if(IsTcpSocket(socket))
+    {
+        int ret = m_tcpSockets[socketIdx]->bind(sockAddr);
+        return ConvertSocketRetVal(ret);
+    }
+    else
+    {
+        int ret = m_udpSockets[socketIdx]->bind(sockAddr);
+        return ConvertSocketRetVal(ret);
+    }
+    
+    return kSocketErrorParameter;
+}
+
+
+int APIImpl::listen(int socket, int backlog)
+{
+    if(socket <= 0)
+        return kSocketErrorParameter;
+
+    int socketIdx = GetSocketIdx(socket);
+    if(IsTcpSocket(socket))
+    {
+        int ret = m_tcpSockets[socketIdx]->listen(backlog);
+        return ConvertSocketRetVal(ret);
+    }
+    
+    return kSocketErrorUnsupported;
+}
+
+
+int APIImpl::accept(int socket)
+{
+    if(socket <= 0)
+        return kSocketErrorParameter;
+
+    int socketIdx = GetSocketIdx(socket);
+    if(IsTcpSocket(socket))
+    {
+        nsapi_error_t err = 0;
+        TCPSocket* newSock = m_tcpSockets[socketIdx]->accept(&err);
+        if(err < 0)
+            return ConvertSocketRetVal(err);
+
+        if(m_freeTcpSockets == 0)
+        {
+            newSock->close();
+            return kSocketErrorNoMemory;
+        }
+        int newSocketIdx = __builtin_ctz(m_freeTcpSockets);
+        m_freeTcpSockets &= ~(1 << newSocketIdx);  
+        m_acceptedSockets |= 1 << newSocketIdx;
+        m_tcpSockets[newSocketIdx] = newSock;
+
+        return newSocketIdx + 1;
+    }
+    
+    return kSocketErrorUnsupported;
+}
+
+
+int APIImpl::getpeername(int socket, NetAddr& addr)
+{
+    if(socket <= 0)
+        return kSocketErrorParameter;
+
+    SocketAddress sockAddr;
+    int err = 0;
+
+    int socketIdx = GetSocketIdx(socket);
+    if(IsTcpSocket(socket))
+        err = m_tcpSockets[socketIdx]->getpeername(&sockAddr);
+    else
+        err = m_udpSockets[socketIdx]->getpeername(&sockAddr);
+
+    if(err < 0)
+        return ConvertSocketRetVal(err);
+
+    memcpy(&addr.ip, sockAddr.get_ip_bytes(), 4);
+    addr.port = sockAddr.get_port();
+    return kSocketErrorOk;
+}
+
+
+void APIImpl::close(int socket)
+{
+    if(socket <= 0)
+        return;
+
+    int socketIdx = GetSocketIdx(socket);
+    if(IsTcpSocket(socket))
+    {
+        m_tcpSockets[socketIdx]->close();
+        bool acceptedSock = (m_acceptedSockets & (1 << socketIdx)) > 0;
+        if(!acceptedSock)
+            delete m_tcpSockets[socketIdx];
+        m_tcpSockets[socketIdx] = NULL;
+        m_freeTcpSockets |= 1 << socketIdx;
+        m_acceptedSockets &= ~(1 << socketIdx);  
+        m_tcpSockets[socketIdx] = NULL;
+    }
+    else
+    {
+        m_udpSockets[socketIdx]->close();
+        delete m_udpSockets[socketIdx];
+        m_freeUdpSockets |= 1 << socketIdx;
+        m_udpSockets[socketIdx] = NULL;
+    }
 }
 
 

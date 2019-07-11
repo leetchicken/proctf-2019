@@ -23,6 +23,18 @@ public:
     bool SendServerRequest(ServerRequest* request);
     void FreeServerRequest(ServerRequest* request);
 
+    uint32_t aton(const char* ip);
+    void ntoa(uint32_t ip, char* ipStr);
+    int socket(bool tcp);
+    int send(int socket, const void* data, uint32_t size, NetAddr* addr = NULL);
+    int recv(int socket, void* data, uint32_t size, NetAddr* addr = NULL);
+    int connect(int socket, const NetAddr& addr);
+    int bind(int socket, uint32_t ip, uint16_t port);
+    int listen(int socket, int backlog = 1);
+    int accept(int socket);
+    int getpeername(int socket, NetAddr& addr);
+    void close(int socket);
+
     void SwapFramebuffer();
     void LCD_OnOff(bool onOff);
     bool LCD_IsOn();
@@ -57,5 +69,10 @@ private:
     uint8_t* m_sdram;
     Timer m_timer;
     bool m_displayIsOn;
+    TCPSocket* m_tcpSockets[32];
+    uint32_t m_freeTcpSockets;
+    uint32_t m_acceptedSockets;
+    UDPSocket* m_udpSockets[32];
+    uint32_t m_freeUdpSockets;
 };
 
