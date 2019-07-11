@@ -63,7 +63,7 @@ HttpResponse RequestHandler::HandleGet(HttpRequest request)
     {
         static const std::string kId("id");
         uint32_t id = ~0u;
-        FindInMap(request.queryString, kId, id);
+        FindInMap(request.queryString, kId, id, 16);
         printf("  id=%x\n", id);
 
         auto iter = GGamesDatabase.find(id);
@@ -102,7 +102,7 @@ HttpResponse RequestHandler::HandleGet(HttpRequest request)
     {
         static const std::string kId("id");
         uint32_t id = ~0u;
-        FindInMap(request.queryString, kId, id);
+        FindInMap(request.queryString, kId, id, 16);
         printf("  id=%x\n", id);
 
         auto iter = GGamesDatabase.find(id);

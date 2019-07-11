@@ -161,13 +161,13 @@ bool FindInMap(const Map& map, const std::string& key, int& val)
 
 
 template <class Map>
-bool FindInMap(const Map& map, const std::string& key, uint32_t& val)
+bool FindInMap(const Map& map, const std::string& key, uint32_t& val, uint32_t base = 10)
 {
 	std::string valStr;
 	if (!FindInMap(map, key, valStr))
 		return false;
 	char* end;
-	val = strtoul(valStr.c_str(), &end, 10);
+	val = strtoul(valStr.c_str(), &end, base);
 	return true;
 }
 

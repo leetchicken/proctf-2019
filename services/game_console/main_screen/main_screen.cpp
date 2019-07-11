@@ -213,7 +213,7 @@ ServerRequest* RequestGamesList(API* api)
 ServerRequest* RequestIcon(API* api, uint32_t gameId, uint8_t* iconAddr)
 {
     ServerRequest* request = api->AllocServerRequest();
-    api->sprintf(request->url, "icon?id=%u", gameId);
+    api->sprintf(request->url, "icon?id=%x", gameId);
     request->responseData = (void*)iconAddr;
     request->responseDataCapacity = kGameIconSize;
     if(api->SendServerRequest(request))
@@ -225,7 +225,7 @@ ServerRequest* RequestIcon(API* api, uint32_t gameId, uint8_t* iconAddr)
 ServerRequest* RequestGameCode(API* api, uint32_t gameId, uint8_t* codeAddr)
 {
     ServerRequest* request = api->AllocServerRequest();
-    api->sprintf(request->url, "code?id=%u", gameId);
+    api->sprintf(request->url, "code?id=%x", gameId);
     request->responseData = (void*)codeAddr;
     request->responseDataCapacity = kMaxGameCodeSize;
     if(api->SendServerRequest(request))
