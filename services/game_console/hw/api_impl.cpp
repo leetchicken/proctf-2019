@@ -43,8 +43,8 @@ void HttpThread(EthernetInterface* ethInterface)
             bool needBodyCallback = request->responseData != NULL;
             GHttpBodyCallbackPtr = (uint8_t*)request->responseData;
             http_method httpMethod = ConvertHttpMethod(request->httpMethod);
-            HttpRequest* httpRequest = needBodyCallback ? new HttpRequest(ethInterface, httpMethod, url, HttpBodyCallback) 
-                                                        : new HttpRequest(ethInterface, httpMethod, url);
+            HttpRequest* httpRequest = needBodyCallback ? new HttpRequest(ethInterface, httpMethod, request->url, HttpBodyCallback) 
+                                                        : new HttpRequest(ethInterface, httpMethod, request->url);
             HttpResponse* httpResponse = httpRequest->send(request->requestBody, request->requestBodySize);
             if (httpResponse) 
             {
