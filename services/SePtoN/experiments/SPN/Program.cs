@@ -33,22 +33,24 @@ namespace SPN
 		{
 			var linearCryptoanalysis = new LinearCryptoanalysis(spn);
 
-			var thresholdBias = 0.001;
-			var maxSBoxesInLastRound = 2;
-
 			var bestApproximations = linearCryptoanalysis.ChooseBestPathsStartingFromSingleSBoxInRound0(maxSBoxesInLastRound, thresholdBias).ToList();
 
-			foreach(var bestApproximation in bestApproximations)
-			{
+			var bestApproximationsForASCII = bestApproximations
+//												.Where(sBoxesWithPath => sBoxesWithPath.sboxNum % 2 == 0 && sBoxesWithPath.X == 8).ToList()
+				;
+
+			foreach(var bestApproximation in bestApproximationsForASCII)
 				HackApproximation(spn, bestApproximation);
-			}
 		}
 
-		const int iterationsCount = 1_000_000;
+		const double thresholdBias = 0.001;
+		const int maxSBoxesInLastRound = 2;
+
+		const int iterationsCount = 100_000;
 
 		private static void HackApproximation(SubstitutionPermutationNetwork spn, SBoxesWithPath bestApproximation)
 		{
-			Console.WriteLine($"\nBEST OPTION: round0sboxNum {bestApproximation.sboxNum}\tX {bestApproximation.X}\tY {bestApproximation.Y}\tbias {Math.Abs(0.5 - bestApproximation.probability)}\tSBoxes {SubstitutionPermutationNetwork.GetSboxesMaskBitString(bestApproximation.lastRoundSBoxes)}");
+			Console.WriteLine($"\nBEST OPTION: round0sboxNum {bestApproximation.sboxNum}\tX {bestApproximation.X}\tY {bestApproximation.Y}\tbias {Math.Abs(0.5 - bestApproximation.probability)}\tSBoxes {SubstitutionPermutationNetwork.GetSboxesMaskBitString(bestApproximation.lastRoundSBoxes)}\tLastRoundInputBits {SubstitutionPermutationNetwork.GetBitString(bestApproximation.lastRoundInputBits)}");
 
 			var targetPartialSubkeys = GenerateTargetPartialSubkeys(bestApproximation.lastRoundSBoxes)
 										.Select(targetPartialSubkey => (targetPartialSubkey, SubstitutionPermutationNetwork.GetBytesBigEndian(targetPartialSubkey)))
@@ -61,7 +63,7 @@ namespace SPN
 			for(int it = 0; it < iterationsCount; it++)
 				HackIteration(spn, bestApproximation, targetPartialSubkeys, hackingSubstitutionPermutationNetwork, keyProbabilities);
 
-			PrintIteration(bestApproximation, keyProbabilities);
+			PrintApproximation(bestApproximation, keyProbabilities);
 		}
 
 		private static void HackIteration(SubstitutionPermutationNetwork spn, SBoxesWithPath bestApproximation, List<(uint, byte[])> targetPartialSubkeys, SubstitutionPermutationNetwork hackingSubstitutionPermutationNetwork, Dictionary<uint, int> keyProbabilities)
@@ -79,24 +81,36 @@ namespace SPN
 
 				hackingSubstitutionPermutationNetwork.DecryptRound(encUnkeyed, null, hackingSubstitutionPermutationNetwork.sboxes[SubstitutionPermutationNetwork.RoundsCount - 1], true, true);
 
-				var u_setBitsCount = SubstitutionPermutationNetwork.CountBits(bestApproximation.lastRoundBits & SubstitutionPermutationNetwork.GetUintBigEndian(encUnkeyed));
+				var u_setBitsCount = SubstitutionPermutationNetwork.CountBits(bestApproximation.lastRoundInputBits & SubstitutionPermutationNetwork.GetUintBigEndian(encUnkeyed));
 
 				if((p_setBitsCount + u_setBitsCount) % 2 == 0)
 					keyProbabilities[targetPartialSubkey]++;
 			}
 		}
 
-		private static void PrintIteration(SBoxesWithPath bestApproximation, Dictionary<uint, int> keyProbabilities)
+		private static void PrintApproximation(SBoxesWithPath bestApproximation, Dictionary<uint, int> keyProbabilities)
 		{
 			Console.WriteLine($"ITERATIONS DONE: {iterationsCount}");
 			Console.ForegroundColor = ConsoleColor.Blue;
 			Console.WriteLine($" {Key.ToHexUpperCase()} : REAL KEY");
 			Console.ResetColor();
 
+			var expectedCountBias = Math.Abs(0.5 - bestApproximation.probability) * iterationsCount;
+
+			var keyValuePairs = keyProbabilities.OrderByDescending(kvp => Math.Abs(iterationsCount / 2 - kvp.Value)).ToList();
+			var gotCountBias = Math.Abs(iterationsCount / 2 - keyValuePairs[0].Value);
+
+			if(Math.Abs(expectedCountBias - gotCountBias) > expectedCountBias / 2)
+			{
+				Console.ForegroundColor = ConsoleColor.Red;
+				Console.WriteLine($" best {gotCountBias} expected {expectedCountBias}");
+				Console.ResetColor();
+//				return;
+			}
+
 			int prevBias = -1;
 			var prefix = "";
-			var keyValuePairs = keyProbabilities.OrderByDescending(kvp => Math.Abs(iterationsCount / 2 - kvp.Value)) /*.Take(8)*/.ToList();
-			foreach(var kvp in keyValuePairs)
+			foreach(var kvp in keyValuePairs.Take(16))
 			{
 				var keyBytes = SubstitutionPermutationNetwork.GetBytesBigEndian(kvp.Key);
 				var isValidKey = IsValidKey(Key, keyBytes, bestApproximation.lastRoundSBoxes);

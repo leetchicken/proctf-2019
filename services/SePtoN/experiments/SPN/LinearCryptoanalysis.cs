@@ -70,8 +70,8 @@ namespace SPN
 			foreach(var approximation in bestApproximations)
 			{
 				var probability = approximation.probability;
-//				if(roundNum <= 0)
-//					Console.WriteLine($"{new string(' ', roundNum)}round {roundNum}, SBox {sboxNum}: X {Convert.ToString(X, 2)}, Y {Convert.ToString(approximation.Y, 2)}: probability {probability}");
+				if(roundNum <= 0)
+					Console.WriteLine($"{new string(' ', roundNum)}round {roundNum}, SBox {sboxNum}: X {Convert.ToString(X, 2)}, Y {Convert.ToString(approximation.Y, 2)}: SBox-probability {probability}");
 
 				var outputBits = PermuteY(approximation.Y, sboxNum);
 
@@ -80,17 +80,22 @@ namespace SPN
 					var sBoxes = outputBits.Aggregate(0u, (seed, kvp) => seed | SubstitutionPermutationNetwork.GetSBoxMaskWithNthBit(kvp.Key));
 					var bits = outputBits.Aggregate(0u, (seed, kvp) => seed | SubstitutionPermutationNetwork.GetBitMaskWithNthSboxAndMthBit(kvp.Key, kvp.Value));
 					var sBoxesWithPath = new SBoxesWithPath(sBoxes, bits, roundNum, sboxNum, approximation.X, approximation.Y, approximation.probability);
-					activatedOutputSBoxes.Add(sBoxesWithPath);
+					if(AreLastSboxesAndProbabilityAllowed(sBoxesWithPath))
+						activatedOutputSBoxes.Add(sBoxesWithPath);
 					continue;
 				}
 
 				var nextRoundsVariants = new List<List<SBoxesWithPath>>();
-				foreach(var permutationOutput in outputBits)
+				foreach(var grouping in outputBits.GroupBy(kvp => kvp.Key))
 				{
-					var newSboxNum = permutationOutput.Key;
-					var newBitNum = permutationOutput.Value;
-
-					nextRoundsVariants.Add(TraceRound(roundNum + 1, newSboxNum, SBox.GetUintWithNthBit(newBitNum)));
+					var newSboxNum = grouping.Key;
+					uint newX = 0;
+					foreach(var kvp in grouping)
+					{
+						var newBitNum = kvp.Value;
+						newX |= SBox.GetUintWithNthBit(newBitNum);
+					}
+					nextRoundsVariants.Add(TraceRound(roundNum + 1, newSboxNum, newX));
 				}
 
 				activatedOutputSBoxes.AddRange(Flattern(nextRoundsVariants, roundNum, sboxNum, approximation));
@@ -126,11 +131,15 @@ namespace SPN
 			}
 
 			result = result
-				.Where(sBoxesWithPath => SubstitutionPermutationNetwork.CountBitsInSboxesMask(sBoxesWithPath.lastRoundSBoxes) <= maxSBoxesInLastRound)
-				.Where(sBoxesWithPath => Math.Abs(sBoxesWithPath.probability - 0.5) > thresholdBias)
+				.Where(AreLastSboxesAndProbabilityAllowed)
 				.ToList();
 
 			return result;
+		}
+
+		private bool AreLastSboxesAndProbabilityAllowed(SBoxesWithPath sBoxesWithPath)
+		{
+			return SubstitutionPermutationNetwork.CountBitsInSboxesMask(sBoxesWithPath.lastRoundSBoxes) <= maxSBoxesInLastRound && Math.Abs(sBoxesWithPath.probability - 0.5) > thresholdBias;
 		}
 
 		private List<KeyValuePair<int, int>> PermuteY(uint Y, int sboxNum)
@@ -162,7 +171,7 @@ namespace SPN
 	class SBoxesWithPath
 	{
 		public uint lastRoundSBoxes;
-		public uint lastRoundBits;
+		public uint lastRoundInputBits;
 
 		//NOTE для листового узла
 		public readonly int roundNum;
@@ -181,7 +190,7 @@ namespace SPN
 			this.Y = Y;
 
 			this.lastRoundSBoxes = firstChild.lastRoundSBoxes;
-			this.lastRoundBits = firstChild.lastRoundBits;
+			this.lastRoundInputBits = firstChild.lastRoundInputBits;
 
 			children.Add(firstChild);
 
@@ -191,7 +200,7 @@ namespace SPN
 			if(fromOtherChildrenSBox != null)
 			{
 				lastRoundSBoxes |= fromOtherChildrenSBox.lastRoundSBoxes;
-				lastRoundBits |= fromOtherChildrenSBox.lastRoundBits;
+				lastRoundInputBits |= fromOtherChildrenSBox.lastRoundInputBits;
 				children.AddRange(fromOtherChildrenSBox.children);
 
 				this.probability = 1 / 2.0d + 2 * (firstChild.probability - 1 / 2.0d) * (fromOtherChildrenSBox.probability - 1 / 2.0d);
@@ -200,10 +209,10 @@ namespace SPN
 			
 		}
 
-		public SBoxesWithPath(uint lastRoundSBoxes, uint lastRoundBits, int roundNum, int sboxNum, uint X, uint Y, double probability)
+		public SBoxesWithPath(uint lastRoundSBoxes, uint lastRoundInputBits, int roundNum, int sboxNum, uint X, uint Y, double probability)
 		{
 			this.lastRoundSBoxes = lastRoundSBoxes;
-			this.lastRoundBits = lastRoundBits;
+			this.lastRoundInputBits = lastRoundInputBits;
 			this.roundNum = roundNum;
 			this.sboxNum = sboxNum;
 			this.X = X;

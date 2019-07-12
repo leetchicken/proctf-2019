@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Dynamic;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
@@ -8,26 +9,27 @@ namespace SPN
 {
 	class SubstitutionPermutationNetwork
 	{
-		public const int RoundsCount = 6; //NOTE can't be less than 2
-		public const int RoundSBoxesCount = BlockSizeBytes * 8 /SBox.BitSize;
-		public SBox[][] sboxes;
+		public static int RoundSBoxesCount => SBoxes.Length;
+		public static int BlockSizeBytes => (SBoxes.Length * SBox.BitSize) / 8;
 
-		private static uint[] SBox1 = { 0xE, 0x4, 0xD, 0x1, 0x2, 0xF, 0xB, 0x8, 0x3, 0xA, 0x6, 0xC, 0x5, 0x9, 0x0, 0x7 };
-		private static uint[] SBox2 = { 0xE, 0x4, 0xD, 0x1, 0x2, 0xF, 0xB, 0x8, 0x3, 0xA, 0x6, 0xC, 0x5, 0x9, 0x0, 0x7 };
-		private static uint[] SBox3 = { 0xE, 0x4, 0xD, 0x1, 0x2, 0xF, 0xB, 0x8, 0x3, 0xA, 0x6, 0xC, 0x5, 0x9, 0x0, 0x7 };
-		private static uint[] SBox4 = { 0xE, 0x4, 0xD, 0x1, 0x2, 0xF, 0xB, 0x8, 0x3, 0xA, 0x6, 0xC, 0x5, 0x9, 0x0, 0x7 };
-		private static uint[][] SBoxes = { SBox1, SBox2, SBox3, SBox4};
+		public const int RoundsCount = 4; //NOTE can't be less than 2
 
-		public const int KeySizeBytes = 2;
-		public const int BlockSizeBytes = 2;
+		private static uint[] SBoxDES = { 0xE, 0x4, 0xD, 0x1, 0x2, 0xF, 0xB, 0x8, 0x3, 0xA, 0x6, 0xC, 0x5, 0x9, 0x0, 0x7 };
+		private static uint[][] SBoxes = { SBoxDES, SBoxDES, SBoxDES, SBoxDES };
+
+//		private static uint[] SBoxLeftBit = { 0xE, 0x3, 0xC, 0xF, 0x0, 0xD, 0x1, 0x2, 0x7, 0x4, 0x6, 0x5, 0x9, 0xA, 0xB, 0x8 };
+//		private static uint[][] SBoxes = { SBoxLeftBit, SBoxLeftBit, SBoxLeftBit, SBoxLeftBit };
+
+//		private static uint[] SBoxAlmostASCII = { 0x7, 0x3, 0xC, 0xF, 0x0, 0xD, 0x1, 0x2, 0xE, 0x4, 0x6, 0x5, 0x9, 0xA, 0xB, 0x8 };
+//		private static uint[][] SBoxes = { SBoxAlmostASCII, SBoxAlmostASCII, SBoxAlmostASCII, SBoxAlmostASCII };
+		
+		
+//		private static int[] PBoxOutput = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 };
 		private static int[] PBoxOutput = { 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15, 4, 8, 12, 16 };
 
-//		private static uint[] SBoxInput = { 0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, 0xA, 0xB, 0xC, 0xD, 0xE, 0xF };
-//		private static uint[] SBoxOutput = { 0xE, 0x4, 0x1, 0x2, 0xF, 0xB, 0x8, 0xD, 0x3, 0x6, 0xC, 0xA, 0x5, 0x9, 0x0, 0x7 };
-//		public const int KeySizeBytes = 4;
-//		private const int BlockSizeBytes = 4;
-//		private static int[] PBoxOutput = { 21, 17, 19, 16, 30, 3, 4, 6, 8, 13, 29, 11, 1, 5, 7, 27, 22, 28, 20, 12, 18, 10, 14, 23, 24, 2, 15, 26, 25, 31, 32, 9 };
 
+
+		//NOTE SBoxes from GOST 28147-89
 //		private static uint[] SBox1 = {0x4, 0xA, 0x9, 0x2, 0xD, 0x8, 0x0, 0xE, 0x6, 0xB, 0x1, 0xC, 0x7, 0xF, 0x5, 0x3};
 //		private static uint[] SBox2 = {0xE, 0xB, 0x4, 0xC, 0x6, 0xD, 0xF, 0xA, 0x2, 0x3, 0x8, 0x1, 0x0, 0x7, 0x5, 0x9};
 //		private static uint[] SBox3 = {0x5, 0x8, 0x1, 0xD, 0xA, 0x3, 0x4, 0x2, 0xE, 0xF, 0xC, 0x7, 0x6, 0x0, 0x9, 0xB};
@@ -41,6 +43,7 @@ namespace SPN
 //		private const int BlockSizeBytes = 4;
 //		private static int[] PBoxOutput = { 21, 17, 19, 16, 30, 3, 4, 6, 8, 13, 29, 11, 1, 5, 7, 27, 22, 28, 20, 12, 18, 10, 14, 23, 24, 2, 15, 26, 25, 31, 32, 9 };
 
+		public SBox[][] sboxes;
 		public static byte[] GenerateRandomKey()
 		{
 			var key = new byte[KeySizeBytes];
@@ -75,6 +78,7 @@ namespace SPN
 			return result;
 		}
 
+		public static int KeySizeBytes => (SBoxes.Length * SBox.BitSize) / 8;
 		public IEnumerable<byte[]> KeyShedule(byte[] masterKey, int roundsCount)
 		{
 			for(int i = 0; i < roundsCount + 1; i++)
@@ -205,14 +209,14 @@ namespace SPN
 			return (uint)(1 << (SBox.BitSize * (RoundSBoxesCount - sboxNumZeroBased - 1) + (SBox.BitSize - bitNumZeroBased - 1)));
 		}
 
-		public static int CountBits(uint bitmask)
+		public static int CountBits(uint num)
 		{
 			int result = 0;
 			for(int i = 0; i < RoundSBoxesCount * SBox.BitSize; i++)
 			{
-				if((bitmask & 0x1) != 0)
+				if((num & 0x1) != 0)
 					result++;
-				bitmask >>= 1;
+				num >>= 1;
 			}
 			return result;
 		}
@@ -268,6 +272,19 @@ namespace SPN
 			for(int i = 0; i < RoundSBoxesCount; i++)
 			{
 				if((bitmask & (0x1 << (RoundSBoxesCount - i - 1))) != 0)
+					sb.Append("1");
+				else
+					sb.Append("0");
+			}
+			return sb.ToString();
+		}
+
+		public static string GetBitString(uint num)
+		{
+			var sb = new StringBuilder();
+			for(int i = 0; i < BlockSizeBytes * 8; i++)
+			{
+				if((num & (0x1 << (BlockSizeBytes * 8 - i - 1))) != 0)
 					sb.Append("1");
 				else
 					sb.Append("0");
