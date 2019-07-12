@@ -1,14 +1,5 @@
 #include "httpserver.h"
-
 #include <string.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/types.h>
-#include <sys/select.h>
-#include <sys/socket.h>
-#include <netinet/ip.h>
-#include <microhttpd.h>
-#include <pthread.h>
 #include <algorithm>
 
 #define POSTBUFFERSIZE 65536

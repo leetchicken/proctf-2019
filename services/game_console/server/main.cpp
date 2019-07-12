@@ -1,15 +1,8 @@
 #include <string.h>
-#include <stdio.h>
-#include <string.h>
-#include <unistd.h>
+#include <pugixml.hpp>
+#include <arpa/inet.h>
 #include "httpserver.h"
 #include "png.h"
-#include <pugixml.hpp>
-#include <map>
-#include <string>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
 
 static const uint32_t kIconWidth = 172;
 static const uint32_t kIconHeight = 172;
