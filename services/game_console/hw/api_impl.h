@@ -56,6 +56,7 @@ public:
     void fclose(void* file);
 
     void* memcpy(void* dst, const void* src, uint32_t size);
+    void* memset(void* dst, uint32_t val, uint32_t size);
     uint32_t strlen(const char* str);
     void strcpy(char* dst, const char* src);
     void sprintf(char* str, const char* formatStr, ...);

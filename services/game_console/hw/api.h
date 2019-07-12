@@ -246,6 +246,7 @@ public:
     virtual void fclose(void* file) = 0;
 
     virtual void* memcpy(void* dst, const void* src, uint32_t size) = 0;
+    virtual void* memset(void* dst, uint32_t val, uint32_t size) = 0;
     virtual uint32_t strlen(const char* str) = 0;
     virtual void strcpy(char* dst, const char* src) = 0;
     virtual void sprintf(char* str, const char* formatStr, ...) = 0;

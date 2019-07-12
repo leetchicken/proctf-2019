@@ -610,6 +610,12 @@ void* APIImpl::memcpy(void* dst, const void* src, uint32_t size)
 }
 
 
+void* APIImpl::memset(void* dst, uint32_t val, uint32_t size)
+{
+    return ::memset(dst, val, size);
+}
+
+
 uint32_t APIImpl::strlen(const char* str)
 {
     return ::strlen(str);
