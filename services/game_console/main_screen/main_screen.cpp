@@ -196,7 +196,7 @@ HTTPRequest* RequestGamesList(API* api)
     if(!request)
         return NULL;
     request->httpMethod = kHttpMethodGet;
-    api->strcpy(request->url, "list");
+    api->sprintf(request->url, "http://%s/list", kServerAddr);
     if(!api->SendHTTPRequest(request))
     {
         api->FreeHTTPRequest(request);
