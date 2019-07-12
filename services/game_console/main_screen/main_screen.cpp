@@ -197,9 +197,12 @@ HTTPRequest* RequestGamesList(API* api)
         return NULL;
     request->httpMethod = kHttpMethodGet;
     api->strcpy(request->url, "list");
-    if(api->SendHTTPRequest(request))
-        return request;
-    return NULL;
+    if(!api->SendHTTPRequest(request))
+    {
+        api->FreeHTTPRequest(request);
+        return NULL;
+    }
+    return request;
 }
 
 
@@ -212,9 +215,12 @@ HTTPRequest* RequestIcon(API* api, uint32_t gameId, uint8_t* iconAddr)
     api->sprintf(request->url, "http://%s/icon?id=%x", kServerAddr, gameId);
     request->responseData = (void*)iconAddr;
     request->responseDataCapacity = kGameIconSize;
-    if(api->SendHTTPRequest(request))
-        return request;
-    return NULL;
+    if(!api->SendHTTPRequest(request))
+    {
+        api->FreeHTTPRequest(request);
+        return NULL;
+    }
+    return request;
 }
 
 
@@ -227,9 +233,12 @@ HTTPRequest* RequestGameCode(API* api, uint32_t gameId, uint8_t* codeAddr)
     api->sprintf(request->url, "http://%s/code?id=%x", kServerAddr, gameId);
     request->responseData = (void*)codeAddr;
     request->responseDataCapacity = kMaxGameCodeSize;
-    if(api->SendHTTPRequest(request))
-        return request;
-    return NULL;
+    if(!api->SendHTTPRequest(request))
+    {
+        api->FreeHTTPRequest(request);
+        return NULL;
+    }
+    return request;
 }
 
 
