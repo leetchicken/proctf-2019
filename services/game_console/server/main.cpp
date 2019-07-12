@@ -7,6 +7,9 @@
 #include <pugixml.hpp>
 #include <map>
 #include <string>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 
 static const uint32_t kIconWidth = 172;
 static const uint32_t kIconHeight = 172;
@@ -17,7 +20,16 @@ struct GameDesc
     std::string desc;
 };
 
+struct TeamDesc
+{
+    std::string name;
+    std::string networkStr;
+    uint32_t network;
+};
+
 std::map<uint32_t, GameDesc> GGamesDatabase;
+std::map<uint32_t, TeamDesc> GTeamsDatabase;
+
 
 class RequestHandler : public HttpRequestHandler
 {
@@ -29,6 +41,24 @@ public:
 	HttpResponse HandlePost(HttpRequest request, HttpPostProcessor** postProcessor);
 
 private:
+};
+
+
+class NotificationProcessor : public HttpPostProcessor
+{
+public:
+    NotificationProcessor(const HttpRequest& request);
+    virtual ~NotificationProcessor();
+
+    int IteratePostData(MHD_ValueKind kind, const char *key, const char *filename, const char *contentType, const char *transferEncoding, const char *data, uint64_t offset, size_t size);
+    void IteratePostData(const char* uploadData, size_t uploadDataSize);
+
+    uint32_t m_contentLength = 0;
+    char* m_content = nullptr;
+    char* m_curContentPtr = nullptr;
+
+protected:
+    virtual void FinalizeRequest();
 };
 
 
@@ -144,20 +174,75 @@ HttpResponse RequestHandler::HandleGet(HttpRequest request)
 
 HttpResponse RequestHandler::HandlePost(HttpRequest request, HttpPostProcessor** postProcessor)
 {
+    if(ParseUrl(request.url, 1, "notification")) 
+    {
+		*postProcessor = new NotificationProcessor(request);
+        return HttpResponse();
+    }
+
     return HttpResponse(MHD_HTTP_NOT_FOUND);
 }
 
 
-bool LoadDatabase()
+NotificationProcessor::NotificationProcessor(const HttpRequest& request)
+    : HttpPostProcessor(request)
+{
+    static const std::string kContentLength("content-length");
+    FindInMap(request.headers, kContentLength, m_contentLength);
+
+    if(m_contentLength)
+        m_content = (char*)malloc(m_contentLength);
+    m_curContentPtr = m_content;
+}
+
+
+NotificationProcessor::~NotificationProcessor() 
+{
+    if(m_content)
+        free(m_content);
+}
+
+
+void NotificationProcessor::FinalizeRequest() 
+{
+    if(!m_contentLength)
+    {
+        Complete(HttpResponse(MHD_HTTP_BAD_REQUEST));
+		printf("  Bad request\n");
+        return;
+    }
+
+    Complete(HttpResponse(MHD_HTTP_OK));
+}
+
+
+int NotificationProcessor::IteratePostData( MHD_ValueKind kind, const char *key, const char *filename, const char *contentType,
+                                            const char *transferEncoding, const char *data, uint64_t offset, size_t size ) 
+{
+    return MHD_YES;
+}
+
+
+void NotificationProcessor::IteratePostData(const char* uploadData, size_t uploadDataSize)
+{
+    if(uploadDataSize)
+    {
+        memcpy(m_curContentPtr, uploadData, uploadDataSize);
+        m_curContentPtr += uploadDataSize;
+    }
+}
+
+
+bool LoadGamesDatabase()
 {
     pugi::xml_document doc;
     if (!doc.load_file("data/games.xml")) 
     {
-        printf("Failed to load database\n");
+        printf("Failed to load games database\n");
         return false;
     }
 
-    printf("Database:\n");
+    printf("Games database:\n");
     pugi::xml_node gamesNode = doc.child("Games");
     for (pugi::xml_node gameNode = gamesNode.first_child(); gameNode; gameNode = gameNode.next_sibling())
     {
@@ -173,9 +258,35 @@ bool LoadDatabase()
 }
 
 
+bool LoadTeamsDatabase()
+{
+    pugi::xml_document doc;
+    if (!doc.load_file("teams.xml")) 
+    {
+        printf("Failed to teams load database\n");
+        return false;
+    }
+
+    printf("Teams database:\n");
+    pugi::xml_node teamsNode = doc.child("Teams");
+    for (pugi::xml_node teamNode = teamsNode.first_child(); teamNode; teamNode = teamNode.next_sibling())
+    {
+        uint32_t number = teamNode.attribute("number").as_uint();
+        TeamDesc desc;
+        desc.name = teamNode.attribute("name").as_string();
+        desc.networkStr = teamNode.attribute("net").as_string();
+        inet_aton(desc.networkStr.c_str(), (in_addr*)&desc.network);
+        GTeamsDatabase.insert({number, desc});
+        printf("  %u %s %s(%08X)\n", number, desc.name.c_str(), desc.networkStr.c_str(), desc.network);
+    }
+
+    return true;
+}
+
+
 int main()
 {
-    if(!LoadDatabase())
+    if(!LoadGamesDatabase() || !LoadTeamsDatabase())
         return -1;
 
     RequestHandler handler;

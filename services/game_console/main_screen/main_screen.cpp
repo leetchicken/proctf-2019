@@ -242,6 +242,53 @@ HTTPRequest* RequestGameCode(API* api, uint32_t gameId, uint8_t* codeAddr)
 }
 
 
+HTTPRequest* PostNotification(API* api, const char* userName, const char* notification)
+{
+    HTTPRequest* request = api->AllocHTTPRequest();
+    if(!request)
+        return NULL;
+    request->httpMethod = kHttpMethodPost;
+    api->sprintf(request->url, "http://%s/notification", kServerAddr);
+    uint32_t userNameLen = api->strlen(userName);
+    uint32_t notificationLen = api->strlen(notification);
+    request->requestBodySize = userNameLen + notificationLen + sizeof(uint32_t) * 2;
+    request->requestBody = api->Malloc(request->requestBodySize);
+    uint8_t* ptr = (uint8_t*)request->requestBody;
+    api->memset(ptr, 0, request->requestBodySize);
+
+    api->memcpy(ptr, &userNameLen, sizeof(uint32_t));
+    ptr += sizeof(uint32_t);
+    if(userNameLen)
+    {
+        api->memcpy(ptr, userName, userNameLen);
+        ptr += userNameLen;
+    }
+
+    api->memcpy(ptr, &notificationLen, sizeof(uint32_t));
+    ptr += sizeof(uint32_t);
+    if(notificationLen)
+    {
+        api->memcpy(ptr, notification, notificationLen);
+        ptr += notificationLen;
+    }
+    
+    if(!api->SendHTTPRequest(request))
+    {
+        api->Free(request->requestBody);
+        api->FreeHTTPRequest(request);
+        return NULL;
+    }
+    return request;
+}
+
+
+void FreeNotificationRequest(API* api, HTTPRequest* request)
+{
+    api->Free(request->requestBody);
+    api->FreeHTTPRequest(request);
+}
+
+
 int GameMain(API* api)
 {
     Rect screenRect;
@@ -255,6 +302,7 @@ int GameMain(API* api)
     Rect refreshRect(163, 238, kRefreshButtonWidth, kRefreshButtonHeight);
 
     HTTPRequest* request = NULL;
+    HTTPRequest* notifRequest = NULL;
     EMainScreenState state = kMainScreenWaitForNetwork;
 
     uint8_t* curSdram = api->GetSDRam();
@@ -481,6 +529,12 @@ int GameMain(API* api)
             {
                 state = kMainScreenReady;
             }
+        }
+
+        if(notifRequest && notifRequest->done)
+        {
+            FreeNotificationRequest(api, notifRequest);
+            notifRequest = NULL;
         }
 
         // rendering

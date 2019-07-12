@@ -66,12 +66,12 @@ int HttpServer::HandleRequest(void* param,
 {
 	HttpServer* self = (HttpServer*)param;
 
-	printf("Received request: %s %s\n", method, url);
-
 	Headers headers;
 	QueryString queryString;
 	if (!*context)
 	{
+		printf("Received request: %s %s\n", method, url);
+
 		if (!strcmp(method, "POST"))
 		{
 			HttpPostProcessor* postProcessor = NULL;
@@ -112,7 +112,10 @@ int HttpServer::HandleRequest(void* param,
 
 		if (*uploadDataSize != 0)
 		{
-			result = MHD_post_process(postProcessor->mhdProcessor, uploadData, *uploadDataSize);
+			if(postProcessor->mhdProcessor)
+				result = MHD_post_process(postProcessor->mhdProcessor, uploadData, *uploadDataSize);
+			else
+				postProcessor->IteratePostData(uploadData, *uploadDataSize);
 
 			*uploadDataSize = 0;
 		}
@@ -205,8 +208,6 @@ HttpPostProcessor::HttpPostProcessor(const HttpRequest& request)
 void HttpPostProcessor::CreateMhdProcessor()
 {
 	mhdProcessor = MHD_create_post_processor(request.connection, POSTBUFFERSIZE, IteratePostDataBase, (void*)this);
-	if (!mhdProcessor)
-		printf("MHD_create_post_processor failed\n");
 }
 
 bool HttpPostProcessor::TryGetResponse(HttpResponse* response)

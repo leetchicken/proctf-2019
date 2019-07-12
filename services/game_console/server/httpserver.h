@@ -90,6 +90,8 @@ public:
 	                            uint64_t offset,
 	                            size_t size) = 0;
 
+	virtual void IteratePostData(const char* uploadData, size_t uploadDataSize) = 0;
+
 	MHD_PostProcessor* mhdProcessor;
 
 protected:
