@@ -117,13 +117,25 @@ enum ENetwokConnectionStatus
 };
 
 
-struct ServerRequest
+enum EHttpMethod
 {
+    kHttpMethodGet = 0,
+    kHttpMethodPost
+};
+
+
+struct HTTPRequest
+{
+    EHttpMethod httpMethod;
     char url[64];
+    void* requestBody;
+    uint32_t requestBodySize;
     void* responseData;
     uint32_t responseDataCapacity;
+    // members below are only for reading
     bool done;
     bool succeed;
+    // do not modify!!
     void* internalData;
 };
 
@@ -175,9 +187,31 @@ public:
 
     virtual ENetwokConnectionStatus GetNetwokConnectionStatus() = 0;
     virtual const char* GetIPAddress() = 0;
-    virtual ServerRequest* AllocServerRequest() = 0;
-    virtual bool SendServerRequest(ServerRequest* request) = 0;
-    virtual void FreeServerRequest(ServerRequest* request) = 0;
+
+    /*
+    HTTP Interface.
+    Usage example:
+
+    HTTPRequest* request = api->AllocHTTPRequest();
+    if(!request)
+        <error handling>
+    request->httpMethod = kHttpMethodGet;
+    api->sprintf(request->url, "http://%s/icon?id=%x", kServerAddr, gameId);
+    request->responseData = (void*)iconAddr;
+    request->responseDataCapacity = kGameIconSize;
+    if(!api->SendHTTPRequest(request))
+        <error handling>
+    while(!request->done)
+        api->sleep(0.1);
+    if(request->successed)
+    {
+        ...
+    }
+    api->FreeHTTPRequest(request);
+     */
+    virtual HTTPRequest* AllocHTTPRequest() = 0;
+    virtual bool SendHTTPRequest(HTTPRequest* request) = 0;
+    virtual void FreeHTTPRequest(HTTPRequest* request) = 0;
 
     virtual uint32_t aton(const char* ip) = 0;
     virtual void ntoa(uint32_t ip, char* ipStr) = 0;

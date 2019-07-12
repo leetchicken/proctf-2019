@@ -13,6 +13,7 @@ static const uint32_t kMaxGameIconsOnScreen = 3;
 static const uint32_t kGameIconCacheSize = kMaxGameIconsOnScreen + 1;
 static const uint32_t kMaxGamesCount = 256;
 static const uint32_t kMaxGameCodeSize = 1024;
+static const char* kServerAddr = "192.168.1.1:8000";
 
 
 struct IconsManager
@@ -129,7 +130,7 @@ struct GameDesc
     uint8_t* iconAddr;
     uint32_t iconIndex;
     EIconState iconState;
-    ServerRequest* iconRequest;
+    HTTPRequest* iconRequest;
 
     GameDesc()
         : id(~0u)
@@ -148,17 +149,6 @@ struct GameDesc
         iconState = kIconInvalid;
         iconRequest = NULL;
     }
-};
-
-
-enum ERequests
-{
-    kRequestGameList = 0,
-    kRequestIcon,
-    kRequestGameCode,
-    kReqeustGameAssets,
-
-    kRequestsCount
 };
 
 
@@ -200,35 +190,44 @@ enum EMainScreenState
 };
 
 
-ServerRequest* RequestGamesList(API* api)
+HTTPRequest* RequestGamesList(API* api)
 {
-    ServerRequest* request = api->AllocServerRequest();
+    HTTPRequest* request = api->AllocHTTPRequest();
+    if(!request)
+        return NULL;
+    request->httpMethod = kHttpMethodGet;
     api->strcpy(request->url, "list");
-    if(api->SendServerRequest(request))
+    if(api->SendHTTPRequest(request))
         return request;
     return NULL;
 }
 
 
-ServerRequest* RequestIcon(API* api, uint32_t gameId, uint8_t* iconAddr)
+HTTPRequest* RequestIcon(API* api, uint32_t gameId, uint8_t* iconAddr)
 {
-    ServerRequest* request = api->AllocServerRequest();
-    api->sprintf(request->url, "icon?id=%x", gameId);
+    HTTPRequest* request = api->AllocHTTPRequest();
+    if(!request)
+        return NULL;
+    request->httpMethod = kHttpMethodGet;
+    api->sprintf(request->url, "http://%s/icon?id=%x", kServerAddr, gameId);
     request->responseData = (void*)iconAddr;
     request->responseDataCapacity = kGameIconSize;
-    if(api->SendServerRequest(request))
+    if(api->SendHTTPRequest(request))
         return request;
     return NULL;
 }
 
 
-ServerRequest* RequestGameCode(API* api, uint32_t gameId, uint8_t* codeAddr)
+HTTPRequest* RequestGameCode(API* api, uint32_t gameId, uint8_t* codeAddr)
 {
-    ServerRequest* request = api->AllocServerRequest();
-    api->sprintf(request->url, "code?id=%x", gameId);
+    HTTPRequest* request = api->AllocHTTPRequest();
+    if(!request)
+        return NULL;
+    request->httpMethod = kHttpMethodGet;
+    api->sprintf(request->url, "http://%s/code?id=%x", kServerAddr, gameId);
     request->responseData = (void*)codeAddr;
     request->responseDataCapacity = kMaxGameCodeSize;
-    if(api->SendServerRequest(request))
+    if(api->SendHTTPRequest(request))
         return request;
     return NULL;
 }
@@ -246,7 +245,7 @@ int GameMain(API* api)
     Rect loadingRect(430, 10, kInfoIconsWidth, kInfoIconsHeight);
     Rect refreshRect(163, 238, kRefreshButtonWidth, kRefreshButtonHeight);
 
-    ServerRequest* request = NULL;
+    HTTPRequest* request = NULL;
     EMainScreenState state = kMainScreenWaitForNetwork;
 
     uint8_t* curSdram = api->GetSDRam();
@@ -356,7 +355,7 @@ int GameMain(API* api)
                 state = kMainScreenReady;
             }            
 
-            api->FreeServerRequest(request);
+            api->FreeHTTPRequest(request);
             request = NULL;
         }
 
@@ -400,7 +399,7 @@ int GameMain(API* api)
 
             if(games[i].iconState == kIconLoading && games[i].iconRequest->done)
             {
-                ServerRequest* request = games[i].iconRequest;
+                HTTPRequest* request = games[i].iconRequest;
                 if(games[i].iconRequest->succeed)
                 {
                     games[i].iconState = kIconValid;
@@ -412,7 +411,7 @@ int GameMain(API* api)
                     games[i].iconState = kIconValidEmpty;
                 }
 
-                api->FreeServerRequest(request);
+                api->FreeHTTPRequest(request);
                 games[i].iconRequest = NULL;
                 iconRequestsInFlight--;
             }
@@ -442,7 +441,7 @@ int GameMain(API* api)
 
         if(state == kMainScreenLoadGameCode && request->done && !iconRequestsInFlight)
         {
-            api->FreeServerRequest(request);
+            api->FreeHTTPRequest(request);
             request = NULL;
 
             if(request->succeed)

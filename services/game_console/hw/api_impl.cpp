@@ -7,10 +7,9 @@
 #include "ip4string.h"
 
 
-static const char* kServerAddr = "192.168.1.1:8000";
 Thread GHttpThread;
-MemoryPool<ServerRequest, 64> GRequestsPool;
-Queue<ServerRequest, 64> GRequestsQueue;
+MemoryPool<HTTPRequest, 64> GRequestsPool;
+Queue<HTTPRequest, 64> GRequestsQueue;
 
 
 uint8_t* GHttpBodyCallbackPtr = NULL;
@@ -21,6 +20,17 @@ void HttpBodyCallback(const char* data, uint32_t data_len)
 }
 
 
+static http_method ConvertHttpMethod(EHttpMethod m)
+{
+    if(m == kHttpMethodGet)
+        return HTTP_GET;
+    else if(m == kHttpMethodPost)
+        return HTTP_POST;
+
+    return HTTP_GET;
+}
+
+
 void HttpThread(EthernetInterface* ethInterface)
 {
     while(true)
@@ -28,16 +38,14 @@ void HttpThread(EthernetInterface* ethInterface)
         osEvent evt = GRequestsQueue.get();
         if (evt.status == osEventMessage) 
         {
-            ServerRequest* request = (ServerRequest*)evt.value.p;
-            char url[64];
-            sprintf(url, "http://%s/%s", kServerAddr, request->url);
-
-            printf("Request: %s\n", url);
+            HTTPRequest* request = (HTTPRequest*)evt.value.p;
+            printf("Request: %s\n", request->url);
             bool needBodyCallback = request->responseData != NULL;
             GHttpBodyCallbackPtr = (uint8_t*)request->responseData;
-            HttpRequest* httpRequest = needBodyCallback ? new HttpRequest(ethInterface, HTTP_GET, url, HttpBodyCallback) 
-                                                        : new HttpRequest(ethInterface, HTTP_GET, url);
-            HttpResponse* httpResponse = httpRequest->send();
+            http_method httpMethod = ConvertHttpMethod(request->httpMethod);
+            HttpRequest* httpRequest = needBodyCallback ? new HttpRequest(ethInterface, httpMethod, url, HttpBodyCallback) 
+                                                        : new HttpRequest(ethInterface, httpMethod, url);
+            HttpResponse* httpResponse = httpRequest->send(request->requestBody, request->requestBodySize);
             if (httpResponse) 
             {
                 printf("Response code: %d\n", httpResponse->get_status_code());
@@ -48,7 +56,7 @@ void HttpThread(EthernetInterface* ethInterface)
             }
             else
             {
-                printf("HttpRequest failed (error code %d)\n", httpRequest->get_error());
+                printf("Http request failed (error code %d)\n", httpRequest->get_error());
                 request->succeed = false;
                 request->done = true;
             }
@@ -146,21 +154,21 @@ const char* APIImpl::GetIPAddress()
 }
 
 
-ServerRequest* APIImpl::AllocServerRequest()
+HTTPRequest* APIImpl::AllocHTTPRequest()
 {
-    ServerRequest* request = GRequestsPool.alloc();
-    memset(request, 0, sizeof(ServerRequest));
+    HTTPRequest* request = GRequestsPool.alloc();
+    memset(request, 0, sizeof(HTTPRequest));
     return request;
 }
 
 
-bool APIImpl::SendServerRequest(ServerRequest* request)
+bool APIImpl::SendHTTPRequest(HTTPRequest* request)
 {
     return GRequestsQueue.put(request) == osOK;
 }
 
 
-void APIImpl::FreeServerRequest(ServerRequest* request)
+void APIImpl::FreeHTTPRequest(HTTPRequest* request)
 {
     HttpRequest* httpRequest = (HttpRequest*)request->internalData;
     delete httpRequest;

@@ -19,9 +19,9 @@ public:
 
     ENetwokConnectionStatus GetNetwokConnectionStatus();
     const char* GetIPAddress();
-    ServerRequest* AllocServerRequest();
-    bool SendServerRequest(ServerRequest* request);
-    void FreeServerRequest(ServerRequest* request);
+    HTTPRequest* AllocHTTPRequest();
+    bool SendHTTPRequest(HTTPRequest* request);
+    void FreeHTTPRequest(HTTPRequest* request);
 
     uint32_t aton(const char* ip);
     void ntoa(uint32_t ip, char* ipStr);
