@@ -3,6 +3,7 @@
 #include <microhttpd.h>
 #include <string>
 #include <map>
+#include <netinet/in.h>
 
 #define THREADPOOL_SIZE 16
 
@@ -25,6 +26,7 @@ struct HttpRequest
 	const char* method;
 	Headers headers;
 	QueryString queryString;
+	in_addr clientIp;
 
 	MHD_Connection* connection;
 };

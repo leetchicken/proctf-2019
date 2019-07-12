@@ -6,6 +6,7 @@
 #include <sys/types.h>
 #include <sys/select.h>
 #include <sys/socket.h>
+#include <netinet/ip.h>
 #include <microhttpd.h>
 #include <pthread.h>
 #include <algorithm>
@@ -279,6 +280,10 @@ HttpRequest::HttpRequest(const char* url,
 	this->connection = connection;
 	this->headers = headers;
 	this->queryString = queryString;
+	
+	sockaddr* addr = MHD_get_connection_info(connection, MHD_CONNECTION_INFO_CLIENT_ADDRESS)->client_addr;
+	sockaddr_in* addr4 = (sockaddr_in*)addr;
+	clientIp = addr4->sin_addr;
 };
 
 HttpResponse::HttpResponse() : HttpResponse(0, NULL, 0, Headers())

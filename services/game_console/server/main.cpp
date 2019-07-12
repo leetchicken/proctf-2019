@@ -64,6 +64,7 @@ protected:
 
 HttpResponse RequestHandler::HandleGet(HttpRequest request)
 {
+    printf("  IP: %s\n", inet_ntoa(request.clientIp));
     if (ParseUrl(request.url, 1, "list"))
     {
         const uint32_t gamesNum = GGamesDatabase.size();
@@ -174,6 +175,7 @@ HttpResponse RequestHandler::HandleGet(HttpRequest request)
 
 HttpResponse RequestHandler::HandlePost(HttpRequest request, HttpPostProcessor** postProcessor)
 {
+    printf("  IP: %s\n", inet_ntoa(request.clientIp));
     if(ParseUrl(request.url, 1, "notification")) 
     {
 		*postProcessor = new NotificationProcessor(request);
