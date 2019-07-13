@@ -216,6 +216,7 @@ public:
     virtual uint32_t aton(const char* ip) = 0;
     virtual void ntoa(uint32_t ip, char* ipStr) = 0;
     virtual int socket(bool tcp) = 0;
+    virtual int set_blocking(int socket, bool blocking) = 0;
     virtual int send(int socket, const void* data, uint32_t size, NetAddr* addr = NULL) = 0;
     virtual int recv(int socket, void* data, uint32_t size, NetAddr* addr = NULL) = 0;
     virtual int connect(int socket, const NetAddr& addr) = 0;

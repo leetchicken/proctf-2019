@@ -285,6 +285,27 @@ int APIImpl::socket(bool tcp)
 }
 
 
+int APIImpl::set_blocking(int socket, bool blocking)
+{
+    if(socket <= 0)
+        return kSocketErrorParameter;
+
+    int socketIdx = GetSocketIdx(socket);
+    if(IsTcpSocket(socket))
+    {
+        m_tcpSockets[socketIdx]->set_blocking(blocking);
+        return kSocketErrorOk;
+    }
+    else
+    {
+        m_udpSockets[socketIdx]->set_blocking(blocking);
+        return kSocketErrorOk;
+    }
+
+    return kSocketErrorParameter;
+}
+
+
 int APIImpl::send(int socket, const void* data, uint32_t size, NetAddr* addr)
 {
     if(socket <= 0)

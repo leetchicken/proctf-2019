@@ -26,6 +26,7 @@ public:
     uint32_t aton(const char* ip);
     void ntoa(uint32_t ip, char* ipStr);
     int socket(bool tcp);
+    int set_blocking(int socket, bool blocking);
     int send(int socket, const void* data, uint32_t size, NetAddr* addr = NULL);
     int recv(int socket, void* data, uint32_t size, NetAddr* addr = NULL);
     int connect(int socket, const NetAddr& addr);
