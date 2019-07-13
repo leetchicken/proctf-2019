@@ -14,6 +14,7 @@ static const uint32_t kGameIconCacheSize = kMaxGameIconsOnScreen + 1;
 static const uint32_t kMaxGamesCount = 256;
 static const uint32_t kMaxGameCodeSize = 1024;
 static const char* kServerAddr = "192.168.1.1:8000";
+static const uint32_t kServerIp = 0x0101A8C0;
 
 
 struct IconsManager
@@ -152,6 +153,126 @@ struct GameDesc
 };
 
 
+struct NotificationsCtx
+{
+    uint32_t auth;
+    char notification[256];
+    bool notificationIsReady;
+
+    NotificationsCtx()
+        : auth(~0u), notificationIsReady(false), socket(-1), postRequest(NULL), getRequest(NULL), hasNotification(0)
+    {
+    }
+
+    bool Init(API* api)
+    {
+        this->api = api;
+
+        socket = api->socket(false);
+        if(socket < 0)
+        {
+            api->printf("Failed to open notifications socket, can not continue\n");
+            return false;
+        }
+        api->bind(socket, 0, 8734);
+
+        return true;
+    }
+
+    void Post(const char* userName, const char* notification)
+    {
+        if(postRequest)
+            return;
+
+        postRequest = api->AllocHTTPRequest();
+        if(!postRequest)
+            return;
+        postRequest->httpMethod = kHttpMethodPost;
+        api->sprintf(postRequest->url, "http://%s/notification", kServerAddr);
+        uint32_t userNameLen = api->strlen(userName);
+        uint32_t notificationLen = api->strlen(notification);
+        postRequest->requestBodySize = userNameLen + notificationLen + sizeof(uint32_t) * 2;
+        postRequest->requestBody = api->Malloc(postRequest->requestBodySize);
+        uint8_t* ptr = (uint8_t*)postRequest->requestBody;
+        api->memset(ptr, 0, postRequest->requestBodySize);
+
+        api->memcpy(ptr, &userNameLen, sizeof(uint32_t));
+        ptr += sizeof(uint32_t);
+        if(userNameLen)
+        {
+            api->memcpy(ptr, userName, userNameLen);
+            ptr += userNameLen;
+        }
+
+        api->memcpy(ptr, &notificationLen, sizeof(uint32_t));
+        ptr += sizeof(uint32_t);
+        if(notificationLen)
+        {
+            api->memcpy(ptr, notification, notificationLen);
+            ptr += notificationLen;
+        }
+        
+        if(!api->SendHTTPRequest(postRequest))
+            FreePostRequest();
+    }
+
+    void Update()
+    {
+        if(postRequest && postRequest->done)
+            FreePostRequest();
+
+        if(getRequest && getRequest->done)
+        {
+            notificationIsReady = getRequest->succeed;
+            FreeGetRequest();
+        }
+
+        char data[16];
+        NetAddr addr;
+        int ret = api->recv(socket, data, 16, &addr);
+        if(ret == kSocketErrorOk && addr.ip == kServerIp)
+            hasNotification++;
+
+        if(hasNotification && !getRequest)
+            Get();
+    }
+
+private:
+
+    API* api;
+    int socket;
+    HTTPRequest* postRequest;
+    HTTPRequest* getRequest;
+    uint32_t hasNotification;
+
+    void FreePostRequest()
+    {
+        api->Free(postRequest->requestBody);
+        api->FreeHTTPRequest(postRequest);
+        postRequest = NULL;
+    }
+
+    void FreeGetRequest()
+    {
+        api->FreeHTTPRequest(getRequest);
+        getRequest = NULL;
+    }
+
+    void Get()
+    {
+        getRequest = api->AllocHTTPRequest();
+        if(!getRequest)
+            return;
+        getRequest->httpMethod = kHttpMethodGet;
+        api->sprintf(getRequest->url, "http://%s/notification?auth=%x", kServerAddr, auth);
+        getRequest->responseData = (void*)notification;
+        getRequest->responseDataCapacity = 512; // hahaha, should be 256
+        if(!api->SendHTTPRequest(getRequest))
+            FreeGetRequest();
+    }
+};
+
+
 void FillRect(API* api, const Rect& screenRect, Rect rect, uint32_t color)
 {
     rect.ClampByRect(screenRect);
@@ -242,53 +363,6 @@ HTTPRequest* RequestGameCode(API* api, uint32_t gameId, uint8_t* codeAddr)
 }
 
 
-HTTPRequest* PostNotification(API* api, const char* userName, const char* notification)
-{
-    HTTPRequest* request = api->AllocHTTPRequest();
-    if(!request)
-        return NULL;
-    request->httpMethod = kHttpMethodPost;
-    api->sprintf(request->url, "http://%s/notification", kServerAddr);
-    uint32_t userNameLen = api->strlen(userName);
-    uint32_t notificationLen = api->strlen(notification);
-    request->requestBodySize = userNameLen + notificationLen + sizeof(uint32_t) * 2;
-    request->requestBody = api->Malloc(request->requestBodySize);
-    uint8_t* ptr = (uint8_t*)request->requestBody;
-    api->memset(ptr, 0, request->requestBodySize);
-
-    api->memcpy(ptr, &userNameLen, sizeof(uint32_t));
-    ptr += sizeof(uint32_t);
-    if(userNameLen)
-    {
-        api->memcpy(ptr, userName, userNameLen);
-        ptr += userNameLen;
-    }
-
-    api->memcpy(ptr, &notificationLen, sizeof(uint32_t));
-    ptr += sizeof(uint32_t);
-    if(notificationLen)
-    {
-        api->memcpy(ptr, notification, notificationLen);
-        ptr += notificationLen;
-    }
-    
-    if(!api->SendHTTPRequest(request))
-    {
-        api->Free(request->requestBody);
-        api->FreeHTTPRequest(request);
-        return NULL;
-    }
-    return request;
-}
-
-
-void FreeNotificationRequest(API* api, HTTPRequest* request)
-{
-    api->Free(request->requestBody);
-    api->FreeHTTPRequest(request);
-}
-
-
 int GameMain(API* api)
 {
     Rect screenRect;
@@ -302,7 +376,6 @@ int GameMain(API* api)
     Rect refreshRect(163, 238, kRefreshButtonWidth, kRefreshButtonHeight);
 
     HTTPRequest* request = NULL;
-    HTTPRequest* notifRequest = NULL;
     EMainScreenState state = kMainScreenWaitForNetwork;
 
     uint8_t* curSdram = api->GetSDRam();
@@ -320,10 +393,16 @@ int GameMain(API* api)
     uint16_t prevTouchX = 0, prevTouchY = 0;
     float pressDownTime = 0.0f;
 
+    NotificationsCtx notificationsCtx;
+    if(!notificationsCtx.Init(api))
+        return 1;
+
     while(1)
     {
         api->SwapFramebuffer();
         api->GetTouchScreenState(&tsState);
+
+        notificationsCtx.Update();
 
         uint32_t selectedGame = ~0u;
         bool updatePressed = false;
@@ -529,12 +608,6 @@ int GameMain(API* api)
             {
                 state = kMainScreenReady;
             }
-        }
-
-        if(notifRequest && notifRequest->done)
-        {
-            FreeNotificationRequest(api, notifRequest);
-            notifRequest = NULL;
         }
 
         // rendering
