@@ -1,11 +1,14 @@
 #include <string.h>
 #include <pugixml.hpp>
 #include <arpa/inet.h>
+#include <mutex>
+#include <list>
 #include "httpserver.h"
 #include "png.h"
 
 static const uint32_t kIconWidth = 172;
 static const uint32_t kIconHeight = 172;
+static const uint32_t kNetworkMask = 0x00FFFFFF;
 
 struct GameDesc
 {
@@ -15,13 +18,119 @@ struct GameDesc
 
 struct TeamDesc
 {
+    uint32_t number;
     std::string name;
     std::string networkStr;
     uint32_t network;
 };
 
+struct Notification
+{
+    /*uint32_t userNameLen = 0;
+    char* userName = nullptr;
+    uint32_t notificationLen = 0;
+    char* notification = nullptr;*/
+    char* notification = nullptr;
+    uint32_t notificationLen = 0;
+
+    mutable uint32_t refCount = 0;
+
+    Notification(void* data, uint32_t dataSize)
+    {
+        /* char* ptr = (char*)data;
+        memcpy(&userNameLen, ptr, sizeof(uint32_t));
+        ptr += sizeof(uint32_t);
+        userName = (char*)malloc(userNameLen);
+        memcpy(userName, ptr, userNameLen);
+        ptr += userNameLen;
+
+        memcpy(&notificationLen, ptr, sizeof(uint32_t));
+        ptr += sizeof(uint32_t);
+        notification = (char*)malloc(notificationLen);
+        memcpy(notification, ptr, notificationLen);*/
+
+        notification = (char*)malloc(dataSize);
+        memcpy(notification, data, dataSize);
+        notificationLen = dataSize;
+    }
+
+    ~Notification()
+    {
+        /*if(userName)
+            free(userName);
+        if(notification)
+            free(notification);
+        userNameLen = 0;
+        userName = nullptr;
+        notificationLen = 0;
+        notification = nullptr;*/
+
+        if(notification)
+            free(notification);
+        notificationLen = 0;
+    }
+
+    void AddRef() const
+    {
+        __sync_add_and_fetch(&refCount, 1);
+    }
+
+    uint32_t Release() const
+    {
+        uint32_t count = __sync_sub_and_fetch(&refCount, 1);
+        if ((int32_t)count <= 0)
+            delete this;
+        return count;
+    }
+};
+
+struct Team
+{
+    TeamDesc desc;
+    std::mutex mutex;
+    std::list<Notification*> notifications;
+    float lastNotificationTime = 0.0f;
+    uint32_t auth = ~0u;
+
+    static const uint32_t kNotificationQueueSize = 8;
+
+    bool AddNotification(Notification* n)
+    {
+        std::lock_guard<std::mutex> guard(mutex);
+        if(notifications.size() >= kNotificationQueueSize)
+        {
+            printf("  Team %u %s: notification queue overflowed\n", desc.number, desc.name.c_str());
+            return false;
+        }
+        notifications.push_back(n);
+        n->AddRef();
+        return true;
+    }
+
+    Notification* GetNotification()
+    {
+        std::lock_guard<std::mutex> guard(mutex);
+        if(notifications.empty())
+            return nullptr;
+        auto* retVal = notifications.front();
+        notifications.pop_front();
+        return retVal;
+    }
+};
+
 std::map<uint32_t, GameDesc> GGamesDatabase;
-std::map<uint32_t, TeamDesc> GTeamsDatabase;
+std::map<uint32_t, Team> GTeams;
+std::map<uint32_t, uint32_t> GNetworkToTeamNumber;
+
+
+static uint32_t NetworkToTeam(const in_addr& sourceIp)
+{
+    uint32_t sourceNetwork = sourceIp.s_addr & kNetworkMask;
+    auto iter = GNetworkToTeamNumber.find(sourceNetwork);
+    if(iter == GNetworkToTeamNumber.end())
+        return ~0u;
+    return iter->second;
+}
 
 
 class RequestHandler : public HttpRequestHandler
@@ -50,9 +159,20 @@ public:
     char* m_content = nullptr;
     char* m_curContentPtr = nullptr;
 
+    in_addr m_sourceIp;
+
 protected:
     virtual void FinalizeRequest();
 };
+
+
+float GetTime()
+{
+    timespec tp;
+    memset(&tp, 0, sizeof(tp));
+    clock_gettime(CLOCK_MONOTONIC, &tp);
+    return tp.tv_sec + tp.tv_nsec / 1000000000.0;
+}
 
 
 HttpResponse RequestHandler::HandleGet(HttpRequest request)
@@ -161,6 +281,37 @@ HttpResponse RequestHandler::HandleGet(HttpRequest request)
         response.contentLength = codeFileSize;
         return response;
     }
+    else if(ParseUrl(request.url, 1, "notification"))
+    {
+        static const std::string kAuth("auth");
+        uint32_t auth = ~0u;
+        FindInMap(request.queryString, kAuth, auth, 16);
+        printf("  auth=%x\n", auth);
+
+        uint32_t teamNumber = NetworkToTeam(request.clientIp);
+        if(teamNumber == ~0u)
+        {
+            printf("  ERROR: Unknown network: %s\n", inet_ntoa(request.clientIp));
+            return HttpResponse(MHD_HTTP_FORBIDDEN);
+        }
+
+        Team& team = GTeams[teamNumber];
+        if(team.auth == ~0u || team.auth != auth)
+            return HttpResponse(MHD_HTTP_UNAUTHORIZED);
+
+        Notification* n = team.GetNotification();
+        if(!n)
+            return HttpResponse(MHD_HTTP_OK);
+
+        HttpResponse response;
+        response.code = MHD_HTTP_OK;
+        response.headers.insert({"Content-Type", "application/octet-stream"});
+        response.content = (char*)malloc(n->notificationLen);
+        memcpy(response.content, n->notification, n->notificationLen);
+        response.contentLength = n->notificationLen;
+        n->Release();
+        return response;
+    }
 
     return HttpResponse(MHD_HTTP_NOT_FOUND);
 }
@@ -188,6 +339,8 @@ NotificationProcessor::NotificationProcessor(const HttpRequest& request)
     if(m_contentLength)
         m_content = (char*)malloc(m_contentLength);
     m_curContentPtr = m_content;
+
+    m_sourceIp = request.clientIp;
 }
 
 
@@ -206,6 +359,46 @@ void NotificationProcessor::FinalizeRequest()
 		printf("  Bad request\n");
         return;
     }
+
+    uint32_t sourceNetwork = m_sourceIp.s_addr & kNetworkMask;
+    uint32_t sourceTeamNumber = NetworkToTeam(m_sourceIp);
+    if(sourceTeamNumber == ~0u)
+    {
+        printf("  ERROR: Unknown network: %s\n", inet_ntoa(m_sourceIp));
+        Complete(HttpResponse(MHD_HTTP_FORBIDDEN));
+    }
+
+    Team& sourceTeam = GTeams[sourceTeamNumber];
+    auto& teamDesc = sourceTeam.desc;
+
+    printf("  notification from Team %u %s\n", teamDesc.number, teamDesc.name.c_str());
+
+    float curTime = GetTime();
+    if(curTime - sourceTeam.lastNotificationTime < 1.0f)
+    {
+        sourceTeam.lastNotificationTime = curTime;
+        printf("  too fast\n");
+
+        const char* kTooFast = "Bad boy/girl, its too fast";
+        char* tooFast = (char*)malloc(strlen(kTooFast) + 1);
+        strcpy(tooFast, kTooFast);
+        Complete(HttpResponse(MHD_HTTP_FORBIDDEN, tooFast, strlen(kTooFast), Headers()));
+
+        return;
+    }
+    sourceTeam.lastNotificationTime = curTime;
+
+    Notification* notification = new Notification(m_content, m_contentLength);
+    notification->AddRef();
+    for(auto& iter : GTeams)
+    {
+        Team& team = iter.second;
+        if(team.desc.network == sourceNetwork)
+        continue;
+
+        team.AddNotification(notification);
+    }
+    notification->Release();
 
     Complete(HttpResponse(MHD_HTTP_OK));
 }
@@ -226,7 +419,6 @@ void NotificationProcessor::IteratePostData(const char* uploadData, size_t uploa
         m_curContentPtr += uploadDataSize;
     }
 }
-
 
 bool LoadGamesDatabase()
 {
@@ -267,12 +459,14 @@ bool LoadTeamsDatabase()
     for (pugi::xml_node teamNode = teamsNode.first_child(); teamNode; teamNode = teamNode.next_sibling())
     {
         uint32_t number = teamNode.attribute("number").as_uint();
-        TeamDesc desc;
+        Team& team = GTeams[number];
+        auto& desc = team.desc;
+        desc.number = number;
         desc.name = teamNode.attribute("name").as_string();
         desc.networkStr = teamNode.attribute("net").as_string();
         inet_aton(desc.networkStr.c_str(), (in_addr*)&desc.network);
-        GTeamsDatabase.insert({number, desc});
-        printf("  %u %s %s(%08X)\n", number, desc.name.c_str(), desc.networkStr.c_str(), desc.network);
+        GNetworkToTeamNumber.insert({desc.network, desc.number});
+        printf("  %u %s %s(%08X)\n", desc.number, desc.name.c_str(), desc.networkStr.c_str(), desc.network);
     }
 
     return true;
