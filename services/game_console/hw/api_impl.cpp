@@ -193,17 +193,17 @@ void APIImpl::ntoa(uint32_t ip, char* ipStr)
 
 static int GetSocketIdx(int socket)
 {
-    if(socket <= 32)
-        return socket - 1;
+    if(socket < 32)
+        return socket;
     else
-        return socket - 33;
+        return socket - 32;
     return -1;
 }
 
 
 static bool IsTcpSocket(int socket)
 {
-    if(socket <= 32)
+    if(socket < 32)
         return true;
     else
         return false;
@@ -266,7 +266,7 @@ int APIImpl::socket(bool tcp)
         int err = m_tcpSockets[sockIdx]->open(m_ethInterface);
         if(err < 0)
             return ConvertSocketRetVal(err);
-        return sockIdx + 1;
+        return sockIdx;
     }
     else
     {
@@ -278,7 +278,7 @@ int APIImpl::socket(bool tcp)
         int err = m_udpSockets[sockIdx]->open(m_ethInterface);
         if(err < 0)
             return ConvertSocketRetVal(err);
-        return sockIdx + 33;
+        return sockIdx;
     }
 
     return kSocketErrorParameter;
@@ -414,7 +414,7 @@ int APIImpl::accept(int socket)
         m_acceptedSockets |= 1 << newSocketIdx;
         m_tcpSockets[newSocketIdx] = newSock;
 
-        return newSocketIdx + 1;
+        return newSocketIdx;
     }
     
     return kSocketErrorUnsupported;
