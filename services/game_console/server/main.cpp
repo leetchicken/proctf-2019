@@ -127,6 +127,12 @@ struct Team
         return retVal;
     }
 
+    uint32_t GetNotificationsInQueue()
+    {
+        std::lock_guard<std::mutex> guard(mutex);
+        return notifications.size();
+    }
+
 private:
     std::mutex mutex;
     std::list<Notification*> notifications;
@@ -324,6 +330,39 @@ HttpResponse RequestHandler::HandleGet(HttpRequest request)
         memcpy(response.content, n->notification, n->notificationLen);
         response.contentLength = n->notificationLen;
         n->Release();
+        return response;
+    }
+    else if(ParseUrl(request.url, 1, "checksystem_status"))
+    {
+        std::string data;
+        for(auto& iter : GTeams)
+        {
+            auto& team = iter.second;
+            auto& desc = team.desc;
+            char buf[512];
+
+            sprintf(buf, "Team%u %s\n", desc.number, desc.name.c_str());
+            data.append(buf);
+
+            sprintf(buf, "  Network: %s\n", desc.networkStr.c_str());
+            data.append(buf);
+
+            sprintf(buf, "  Notifications in queue: %u\n", team.GetNotificationsInQueue());
+            data.append(buf);
+
+            sprintf(buf, "  Last notification post time: %f\n", team.lastNotificationTime);
+            data.append(buf);
+
+            sprintf(buf, "  Auth: %x\n\n", team.auth);
+            data.append(buf);
+        }
+
+        HttpResponse response;
+        response.code = MHD_HTTP_OK;
+        response.headers.insert({"Content-Type", "text/plain"});
+        response.content = (char*)malloc(data.size());
+        memcpy(response.content, data.c_str(), data.size());
+        response.contentLength = data.size();
         return response;
     }
 
