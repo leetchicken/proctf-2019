@@ -13,8 +13,8 @@ static const uint32_t kMaxGameIconsOnScreen = 3;
 static const uint32_t kGameIconCacheSize = kMaxGameIconsOnScreen + 1;
 static const uint32_t kMaxGamesCount = 256;
 static const uint32_t kMaxGameCodeSize = 1024;
-static const char* kServerAddr = "192.168.1.1:8000";
-static const uint32_t kServerIp = 0x0101A8C0;
+static const char* kServerIP = "192.168.1.1";
+static const uint32_t kServerPort = 8000;
 
 
 struct IconsManager
@@ -174,6 +174,7 @@ struct NotificationsCtx
             api->printf("Failed to open notifications socket, can not continue\n");
             return false;
         }
+        api->set_blocking(socket, false);
         api->bind(socket, 0, 8734);
 
         return true;
@@ -188,7 +189,7 @@ struct NotificationsCtx
         if(!postRequest)
             return;
         postRequest->httpMethod = kHttpMethodPost;
-        api->sprintf(postRequest->url, "http://%s/notification", kServerAddr);
+        api->sprintf(postRequest->url, "http://%s:%u/notification", kServerIP, kServerPort);
         uint32_t userNameLen = api->strlen(userName);
         uint32_t notificationLen = api->strlen(notification);
         postRequest->requestBodySize = userNameLen + notificationLen + sizeof(uint32_t) * 2;
@@ -225,15 +226,20 @@ struct NotificationsCtx
         {
             notificationIsReady = getRequest->succeed;
             FreeGetRequest();
+            hasNotification--;
         }
 
+        uint32_t serverIP = api->aton(kServerIP);
         char data[16];
         NetAddr addr;
         int ret = api->recv(socket, data, 16, &addr);
-        if(ret == kSocketErrorOk && addr.ip == kServerIp)
+        if(ret > 0 && addr.ip == serverIP)
+        {
+            api->printf("Notification is available\n");
             hasNotification++;
+        }
 
-        if(hasNotification && !getRequest)
+        if(hasNotification > 0 && !getRequest)
             Get();
     }
 
@@ -243,7 +249,7 @@ private:
     int socket;
     HTTPRequest* postRequest;
     HTTPRequest* getRequest;
-    uint32_t hasNotification;
+    int32_t hasNotification;
 
     void FreePostRequest()
     {
@@ -264,7 +270,7 @@ private:
         if(!getRequest)
             return;
         getRequest->httpMethod = kHttpMethodGet;
-        api->sprintf(getRequest->url, "http://%s/notification?auth=%x", kServerAddr, auth);
+        api->sprintf(getRequest->url, "http://%s:%u/notification?auth=%x", kServerIP, kServerPort, auth);
         getRequest->responseData = (void*)notification;
         getRequest->responseDataCapacity = 512; // hahaha, should be 256
         if(!api->SendHTTPRequest(getRequest))
@@ -317,7 +323,7 @@ HTTPRequest* RequestGamesList(API* api)
     if(!request)
         return NULL;
     request->httpMethod = kHttpMethodGet;
-    api->sprintf(request->url, "http://%s/list", kServerAddr);
+    api->sprintf(request->url, "http://%s:%u/list", kServerIP, kServerPort);
     if(!api->SendHTTPRequest(request))
     {
         api->FreeHTTPRequest(request);
@@ -333,7 +339,7 @@ HTTPRequest* RequestIcon(API* api, uint32_t gameId, uint8_t* iconAddr)
     if(!request)
         return NULL;
     request->httpMethod = kHttpMethodGet;
-    api->sprintf(request->url, "http://%s/icon?id=%x", kServerAddr, gameId);
+    api->sprintf(request->url, "http://%s:%u/icon?id=%x", kServerIP, kServerPort, gameId);
     request->responseData = (void*)iconAddr;
     request->responseDataCapacity = kGameIconSize;
     if(!api->SendHTTPRequest(request))
@@ -351,7 +357,7 @@ HTTPRequest* RequestGameCode(API* api, uint32_t gameId, uint8_t* codeAddr)
     if(!request)
         return NULL;
     request->httpMethod = kHttpMethodGet;
-    api->sprintf(request->url, "http://%s/code?id=%x", kServerAddr, gameId);
+    api->sprintf(request->url, "http://%s:%u/code?id=%x", kServerIP, kServerPort, gameId);
     request->responseData = (void*)codeAddr;
     request->responseDataCapacity = kMaxGameCodeSize;
     if(!api->SendHTTPRequest(request))
@@ -582,6 +588,10 @@ int GameMain(API* api)
 
             if(request->succeed)
             {
+                char buf[64];
+                api->memset(buf, 0, 64);
+                api->sprintf(buf, "Start game");
+                notificationsCtx.Post(api->GetIPAddress(), buf);
                 //ScopedRamExecutionLock make_ram_executable;
                 uint32_t baseAddr = 0;
                 api->memcpy(&baseAddr, gameCodeMem, 4);

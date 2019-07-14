@@ -9,6 +9,7 @@
 static const uint32_t kIconWidth = 172;
 static const uint32_t kIconHeight = 172;
 static const uint32_t kNetworkMask = 0x00FFFFFF;
+static const uint32_t kConsoleAddr = 0x06000000;
 
 struct GameDesc
 {
@@ -26,10 +27,6 @@ struct TeamDesc
 
 struct Notification
 {
-    /*uint32_t userNameLen = 0;
-    char* userName = nullptr;
-    uint32_t notificationLen = 0;
-    char* notification = nullptr;*/
     char* notification = nullptr;
     uint32_t notificationLen = 0;
 
@@ -37,18 +34,6 @@ struct Notification
 
     Notification(void* data, uint32_t dataSize)
     {
-        /* char* ptr = (char*)data;
-        memcpy(&userNameLen, ptr, sizeof(uint32_t));
-        ptr += sizeof(uint32_t);
-        userName = (char*)malloc(userNameLen);
-        memcpy(userName, ptr, userNameLen);
-        ptr += userNameLen;
-
-        memcpy(&notificationLen, ptr, sizeof(uint32_t));
-        ptr += sizeof(uint32_t);
-        notification = (char*)malloc(notificationLen);
-        memcpy(notification, ptr, notificationLen);*/
-
         notification = (char*)malloc(dataSize);
         memcpy(notification, data, dataSize);
         notificationLen = dataSize;
@@ -56,17 +41,9 @@ struct Notification
 
     ~Notification()
     {
-        /*if(userName)
-            free(userName);
         if(notification)
             free(notification);
-        userNameLen = 0;
-        userName = nullptr;
-        notificationLen = 0;
-        notification = nullptr;*/
-
-        if(notification)
-            free(notification);
+        notification = nullptr;
         notificationLen = 0;
     }
 
@@ -87,12 +64,10 @@ struct Notification
 struct Team
 {
     TeamDesc desc;
-    std::mutex mutex;
-    std::list<Notification*> notifications;
     float lastNotificationTime = 0.0f;
     uint32_t auth = ~0u;
 
-    static const uint32_t kNotificationQueueSize = 8;
+    static const uint32_t kNotificationQueueSize = 32;
 
     bool AddNotification(Notification* n)
     {
@@ -104,6 +79,22 @@ struct Team
         }
         notifications.push_back(n);
         n->AddRef();
+
+        int sock = socket(AF_INET, SOCK_DGRAM, 0);
+        if(sock < 0)
+        {
+            printf("  Failed to create socket\n");
+            return false;
+        }
+
+        sockaddr_in addr;
+        addr.sin_family = AF_INET;
+        addr.sin_addr.s_addr = desc.network | kConsoleAddr;
+        addr.sin_port = 8734;
+        char randomData[16];
+        sendto(sock, randomData, 16, 0, (sockaddr*)&addr, sizeof(addr));
+        close(sock);
+
         return true;
     }
 
@@ -116,6 +107,10 @@ struct Team
         notifications.pop_front();
         return retVal;
     }
+
+private:
+    std::mutex mutex;
+    std::list<Notification*> notifications;
 };
 
 std::map<uint32_t, GameDesc> GGamesDatabase;
