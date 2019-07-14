@@ -13,10 +13,12 @@ Queue<HTTPRequest, 64> GRequestsQueue;
 
 
 uint8_t* GHttpBodyCallbackPtr = NULL;
+uint32_t GHttpBodySize = 0;
 void HttpBodyCallback(const char* data, uint32_t data_len) 
 {
     memcpy(GHttpBodyCallbackPtr, data, data_len);
     GHttpBodyCallbackPtr += data_len;
+    GHttpBodySize += data_len;
 }
 
 
@@ -42,6 +44,7 @@ void HttpThread(EthernetInterface* ethInterface)
             printf("Request: %s\n", request->url);
             bool needBodyCallback = request->responseData != NULL;
             GHttpBodyCallbackPtr = (uint8_t*)request->responseData;
+            GHttpBodySize = 0;
             http_method httpMethod = ConvertHttpMethod(request->httpMethod);
             HttpRequest* httpRequest = needBodyCallback ? new HttpRequest(ethInterface, httpMethod, request->url, HttpBodyCallback) 
                                                         : new HttpRequest(ethInterface, httpMethod, request->url);
@@ -50,7 +53,14 @@ void HttpThread(EthernetInterface* ethInterface)
             {
                 printf("Response code: %d\n", httpResponse->get_status_code());
                 if(!request->responseData)
+                {
                     request->responseData = httpResponse->get_body();
+                    request->responseDataSize = httpResponse->get_body_length();
+                }
+                else
+                {
+                    request->responseDataSize = GHttpBodySize;
+                }
                 request->succeed = httpResponse->get_status_code() == 200;
                 request->done = true;
             }
