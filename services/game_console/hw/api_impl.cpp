@@ -278,7 +278,7 @@ int APIImpl::socket(bool tcp)
         int err = m_udpSockets[sockIdx]->open(m_ethInterface);
         if(err < 0)
             return ConvertSocketRetVal(err);
-        return sockIdx;
+        return sockIdx + 32;
     }
 
     return kSocketErrorParameter;
@@ -287,7 +287,7 @@ int APIImpl::socket(bool tcp)
 
 int APIImpl::set_blocking(int socket, bool blocking)
 {
-    if(socket <= 0)
+    if(socket < 0)
         return kSocketErrorParameter;
 
     int socketIdx = GetSocketIdx(socket);
@@ -308,7 +308,7 @@ int APIImpl::set_blocking(int socket, bool blocking)
 
 int APIImpl::send(int socket, const void* data, uint32_t size, NetAddr* addr)
 {
-    if(socket <= 0)
+    if(socket < 0)
         return kSocketErrorParameter;
 
     int socketIdx = GetSocketIdx(socket);
@@ -332,7 +332,7 @@ int APIImpl::send(int socket, const void* data, uint32_t size, NetAddr* addr)
 
 int APIImpl::recv(int socket, void* data, uint32_t size, NetAddr* addr)
 {
-    if(socket <= 0)
+    if(socket < 0)
         return kSocketErrorParameter;
 
     int socketIdx = GetSocketIdx(socket);
@@ -359,7 +359,7 @@ int APIImpl::recv(int socket, void* data, uint32_t size, NetAddr* addr)
 
 int APIImpl::connect(int socket, const NetAddr& addr)
 {
-    if(socket <= 0)
+    if(socket < 0)
         return kSocketErrorParameter;
 
     int socketIdx = GetSocketIdx(socket);
@@ -376,7 +376,7 @@ int APIImpl::connect(int socket, const NetAddr& addr)
 
 int APIImpl::bind(int socket, uint32_t ip, uint16_t port)
 {
-    if(socket <= 0)
+    if(socket < 0)
         return kSocketErrorParameter;
 
     int socketIdx = GetSocketIdx(socket);
@@ -398,7 +398,7 @@ int APIImpl::bind(int socket, uint32_t ip, uint16_t port)
 
 int APIImpl::listen(int socket, int backlog)
 {
-    if(socket <= 0)
+    if(socket < 0)
         return kSocketErrorParameter;
 
     int socketIdx = GetSocketIdx(socket);
@@ -414,7 +414,7 @@ int APIImpl::listen(int socket, int backlog)
 
 int APIImpl::accept(int socket)
 {
-    if(socket <= 0)
+    if(socket < 0)
         return kSocketErrorParameter;
 
     int socketIdx = GetSocketIdx(socket);
@@ -444,7 +444,7 @@ int APIImpl::accept(int socket)
 
 int APIImpl::getpeername(int socket, NetAddr& addr)
 {
-    if(socket <= 0)
+    if(socket < 0)
         return kSocketErrorParameter;
 
     SocketAddress sockAddr;
@@ -467,7 +467,7 @@ int APIImpl::getpeername(int socket, NetAddr& addr)
 
 void APIImpl::close(int socket)
 {
-    if(socket <= 0)
+    if(socket < 0)
         return;
 
     int socketIdx = GetSocketIdx(socket);
