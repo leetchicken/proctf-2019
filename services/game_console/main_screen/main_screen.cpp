@@ -222,10 +222,8 @@ struct NotificationsCtx
 
         if(getRequest && getRequest->done)
         {
-            gotNotification = getRequest->succeed;
-            FreeGetRequest();
-            pendingNotificationsNum--;
-            if(gotNotification)
+            gotNotification = false;
+            if(getRequest->succeed && getRequest->responseDataSize)
             {
                 char* ptr = data;
                 api->memcpy(&userNameLen, ptr, sizeof(uint32_t));
@@ -235,7 +233,10 @@ struct NotificationsCtx
                 api->memcpy(&notificationLen, ptr, sizeof(uint32_t));
                 ptr += sizeof(uint32_t);
                 notification = ptr;
+                gotNotification = true;
             }
+            FreeGetRequest();
+            pendingNotificationsNum--;
         }
 
         uint32_t serverIP = api->aton(kServerIP);
