@@ -675,6 +675,7 @@ int GameMain(API* api)
             api->LCD_Clear(0x00000000);
             api->LCD_SetBackColor(0x00000000);
             api->LCD_SetTextColor(0xffffffff);
+            api->LCD_SetFont(kFont24);
             api->LCD_DisplayStringAt(0, 100, "Loading...", kTextAlignCenter);
         }
         else
@@ -693,6 +694,13 @@ int GameMain(API* api)
 
         if(notificationsCtx.GotNotification())
         {
+            FontInfo fontInfo;
+            api->LCD_GetFontInfo(kFont12, &fontInfo);
+            api->LCD_SetFont(kFont12);
+            api->LCD_SetTextColor(0xffffffff);
+
+            Rect rect(60, 15, 270, 0);
+
             if(notificationDrawTimer < notificationDrawTime)
             {
                 uint32_t userNameLen = 0;
@@ -700,20 +708,30 @@ int GameMain(API* api)
                 uint32_t notificationLen = 0;
                 const char* notification = notificationsCtx.GetNotification(notificationLen);
 
-                uint32_t ypos = 40;
-                uint32_t xpos = 40;
+                uint32_t xpos = rect.x;
+                uint32_t ypos = rect.y;
                 for(uint32_t i = 0; i < userNameLen; i++)
                 {
                     api->LCD_DisplayChar(xpos, ypos, userName[i]);
-                    xpos += 17;
+                    xpos += fontInfo.charWidth;
+                    if(xpos > rect.x + rect.width)
+                    {
+                        xpos = rect.x;
+                        ypos += fontInfo.charHeight;
+                    }
                 }
                 
-                ypos += 30;
-                xpos = 40;
+                ypos += fontInfo.charHeight;
+                xpos = rect.x;
                 for(uint32_t i = 0; i < notificationLen; i++)
                 {
                     api->LCD_DisplayChar(xpos, ypos, notification[i]);
-                    xpos += 17;
+                    xpos += fontInfo.charWidth;
+                    if(xpos > rect.x + rect.width)
+                    {
+                        xpos = rect.x;
+                        ypos += fontInfo.charHeight;
+                    }
                 }
 
                 notificationDrawTimer += dt;
