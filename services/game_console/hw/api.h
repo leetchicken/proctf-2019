@@ -148,6 +148,23 @@ enum ETextAlignMode
 };
 
 
+enum EFont
+{
+    kFont8 = 0,
+    kFont12,
+    kFont16,
+    kFont20,
+    kFont24
+};
+
+
+struct FontInfo
+{
+    uint32_t charWidth;
+    uint32_t charHeight;
+};
+
+
 struct NetAddr
 {
     uint32_t ip;
@@ -232,6 +249,8 @@ public:
     virtual void LCD_Clear(uint32_t color) = 0;
     virtual void LCD_SetBackColor(uint32_t color) = 0;
     virtual void LCD_SetTextColor(uint32_t color) = 0;
+    virtual void LCD_SetFont(EFont font) = 0;
+    virtual void LCD_GetFontInfo(EFont font, FontInfo* fontInfo) = 0;
     virtual void LCD_DisplayStringAt(uint16_t xpos, uint16_t ypos, const char* text, ETextAlignMode mode) = 0;
     virtual void LCD_DisplayChar(uint16_t xpos, uint16_t ypos, char ascii) = 0;
     virtual void LCD_FillRect(const Rect& rect, uint32_t color) = 0;

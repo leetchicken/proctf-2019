@@ -42,6 +42,8 @@ public:
     void LCD_Clear(uint32_t color);
     void LCD_SetBackColor(uint32_t color);
     void LCD_SetTextColor(uint32_t color);
+    void LCD_SetFont(EFont font);
+    void LCD_GetFontInfo(EFont font, FontInfo* fontInfo);
     void LCD_DisplayStringAt(uint16_t xpos, uint16_t ypos, const char* text, ETextAlignMode mode);
     void LCD_DisplayChar(uint16_t xpos, uint16_t ypos, char ascii);
     void LCD_FillRect(const Rect& rect, uint32_t color);

@@ -539,6 +539,60 @@ void APIImpl::LCD_SetTextColor(uint32_t color)
 }
 
 
+void APIImpl::LCD_SetFont(EFont font)
+{
+    switch(font)
+    {
+        case kFont8:
+            BSP_LCD_SetFont(&Font8);
+            break;
+        case kFont12:
+            BSP_LCD_SetFont(&Font12);
+            break;
+        case kFont16:
+            BSP_LCD_SetFont(&Font16);
+            break;
+        case kFont20:
+            BSP_LCD_SetFont(&Font20);
+            break;
+        case kFont24:
+            BSP_LCD_SetFont(&Font24);
+            break;
+    }
+}
+
+
+void APIImpl::LCD_GetFontInfo(EFont font, FontInfo* fontInfo)
+{
+    if(!fontInfo)
+        return;
+
+    switch(font)
+    {
+        case kFont8:
+            fontInfo->charWidth = Font8.Width;
+            fontInfo->charHeight = Font8.Height;
+            break;
+        case kFont12:
+            fontInfo->charWidth = Font12.Width;
+            fontInfo->charHeight = Font12.Height;
+            break;
+        case kFont16:
+            fontInfo->charWidth = Font16.Width;
+            fontInfo->charHeight = Font16.Height;
+            break;
+        case kFont20:
+            fontInfo->charWidth = Font20.Width;
+            fontInfo->charHeight = Font20.Height;
+            break;
+        case kFont24:
+            fontInfo->charWidth = Font24.Width;
+            fontInfo->charHeight = Font24.Height;
+            break;
+    }
+}
+
+
 void APIImpl::LCD_DisplayStringAt(uint16_t xpos, uint16_t ypos, const char* text, ETextAlignMode mode)
 {
     Text_AlignModeTypdef bspMode = CENTER_MODE;
