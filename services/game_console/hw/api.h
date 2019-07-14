@@ -131,11 +131,12 @@ struct HTTPRequest
     void* requestBody;
     uint32_t requestBodySize;
     void* responseData;
-    uint32_t responseDataSize;
     uint32_t responseDataCapacity;
     // members below are only for reading
     bool done;
     bool succeed;
+    uint32_t responseDataSize;
+    uint32_t statusCode;
     // do not modify!!
     void* internalData;
 };

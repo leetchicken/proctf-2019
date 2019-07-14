@@ -61,12 +61,14 @@ void HttpThread(EthernetInterface* ethInterface)
                 {
                     request->responseDataSize = GHttpBodySize;
                 }
+                request->statusCode = httpResponse->get_status_code();
                 request->succeed = httpResponse->get_status_code() == 200;
                 request->done = true;
             }
             else
             {
                 printf("Http request failed (error code %d)\n", httpRequest->get_error());
+                request->statusCode = 0;
                 request->succeed = false;
                 request->done = true;
             }
