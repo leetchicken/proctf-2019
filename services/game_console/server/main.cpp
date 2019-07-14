@@ -32,6 +32,25 @@ struct Notification
 
     mutable uint32_t refCount = 0;
 
+    Notification(const char* userName, const char* notificationStr)
+    {
+        uint32_t userNameLen = strlen(userName);
+        uint32_t notificationStrlen = strlen(notificationStr);
+
+        notificationLen = sizeof(uint32_t) + userNameLen + sizeof(uint32_t) + notificationStrlen;
+        notification = (char*)malloc(notificationLen);
+
+        char* ptr = notification;
+        memcpy(ptr, &userNameLen, sizeof(uint32_t));
+        ptr += sizeof(uint32_t);
+        memcpy(ptr, userName, userNameLen);
+        ptr += userNameLen;
+
+        memcpy(ptr, &notificationStrlen, sizeof(uint32_t));
+        ptr += sizeof(uint32_t);
+        memcpy(ptr, notificationStr, notificationStrlen);
+    }
+
     Notification(void* data, uint32_t dataSize)
     {
         notification = (char*)malloc(dataSize);
@@ -90,7 +109,7 @@ struct Team
         sockaddr_in addr;
         addr.sin_family = AF_INET;
         addr.sin_addr.s_addr = desc.network | kConsoleAddr;
-        addr.sin_port = 8734;
+        addr.sin_port = ntohs(8734);
         char randomData[16];
         sendto(sock, randomData, 16, 0, (sockaddr*)&addr, sizeof(addr));
         close(sock);
@@ -320,6 +339,30 @@ HttpResponse RequestHandler::HandlePost(HttpRequest request, HttpPostProcessor**
 		*postProcessor = new NotificationProcessor(request);
         return HttpResponse();
     }
+    else if(ParseUrl(request.url, 1, "checksystem_notification")) 
+    {
+		static std::string userNameStr("username");
+		static std::string notificationStr("notification");
+
+		const char* userName = FindInMap(request.queryString, userNameStr);
+		if(!userName)
+			return HttpResponse(MHD_HTTP_BAD_REQUEST);
+
+		const char* notification = FindInMap(request.queryString, notificationStr);
+		if(!notification)
+			return HttpResponse(MHD_HTTP_BAD_REQUEST);
+
+        Notification* n = new Notification(userName, notification);
+        n->AddRef();
+        for(auto& iter : GTeams)
+        {
+            Team& team = iter.second;
+            team.AddNotification(n);
+        }
+        n->Release();
+
+        return HttpResponse(MHD_HTTP_OK);
+    }
 
     return HttpResponse(MHD_HTTP_NOT_FOUND);
 }
@@ -389,7 +432,7 @@ void NotificationProcessor::FinalizeRequest()
     {
         Team& team = iter.second;
         if(team.desc.network == sourceNetwork)
-        continue;
+            continue;
 
         team.AddNotification(notification);
     }

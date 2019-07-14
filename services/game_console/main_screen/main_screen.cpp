@@ -156,11 +156,9 @@ struct GameDesc
 struct NotificationsCtx
 {
     uint32_t auth;
-    char notification[256];
-    bool notificationIsReady;
 
     NotificationsCtx()
-        : auth(~0u), notificationIsReady(false), socket(-1), postRequest(NULL), getRequest(NULL), hasNotification(0)
+        : auth(~0u), socket(-1), postRequest(NULL), getRequest(NULL), pendingNotificationsNum(0), gotNotification(false)
     {
     }
 
@@ -224,9 +222,20 @@ struct NotificationsCtx
 
         if(getRequest && getRequest->done)
         {
-            notificationIsReady = getRequest->succeed;
+            gotNotification = getRequest->succeed;
             FreeGetRequest();
-            hasNotification--;
+            pendingNotificationsNum--;
+            if(gotNotification)
+            {
+                char* ptr = data;
+                api->memcpy(&userNameLen, ptr, sizeof(uint32_t));
+                ptr += sizeof(uint32_t);
+                userName = ptr;
+                ptr += userNameLen;
+                api->memcpy(&notificationLen, ptr, sizeof(uint32_t));
+                ptr += sizeof(uint32_t);
+                notification = ptr;
+            }
         }
 
         uint32_t serverIP = api->aton(kServerIP);
@@ -236,11 +245,37 @@ struct NotificationsCtx
         if(ret > 0 && addr.ip == serverIP)
         {
             api->printf("Notification is available\n");
-            hasNotification++;
+            pendingNotificationsNum++;
         }
 
-        if(hasNotification > 0 && !getRequest)
+        if(pendingNotificationsNum > 0 && !getRequest && !gotNotification)
             Get();
+    }
+
+    bool GotNotification()
+    {
+        return gotNotification;
+    }
+
+    const char* GetUserName(uint32_t& len)
+    {
+        len = userNameLen;
+        return userName;
+    }
+
+    const char* GetNotification(uint32_t& len)
+    {
+        len = notificationLen;
+        return notification;
+    }
+
+    void ClearNotification()
+    {
+        userNameLen = 0;
+        userName = NULL;
+        notificationLen = 0;
+        notification = NULL;
+        gotNotification = false;
     }
 
 private:
@@ -249,7 +284,14 @@ private:
     int socket;
     HTTPRequest* postRequest;
     HTTPRequest* getRequest;
-    int32_t hasNotification;
+    int32_t pendingNotificationsNum;
+
+    char data[256];
+    char* userName;
+    uint32_t userNameLen;
+    char* notification;
+    uint32_t notificationLen;
+    bool gotNotification;
 
     void FreePostRequest()
     {
@@ -271,7 +313,7 @@ private:
             return;
         getRequest->httpMethod = kHttpMethodGet;
         api->sprintf(getRequest->url, "http://%s:%u/notification?auth=%x", kServerIP, kServerPort, auth);
-        getRequest->responseData = (void*)notification;
+        getRequest->responseData = (void*)data;
         getRequest->responseDataCapacity = 512; // hahaha, should be 256
         if(!api->SendHTTPRequest(getRequest))
             FreeGetRequest();
@@ -402,11 +444,18 @@ int GameMain(API* api)
     NotificationsCtx notificationsCtx;
     if(!notificationsCtx.Init(api))
         return 1;
+    float notificationDrawTimer = 0.0f;
+    const float notificationDrawTime = 5.0f;
 
+    float timer = api->time();
     while(1)
     {
         api->SwapFramebuffer();
         api->GetTouchScreenState(&tsState);
+
+        float curTime = api->time();
+        float dt = curTime - timer;
+        timer = curTime;
 
         notificationsCtx.Update();
 
@@ -640,6 +689,40 @@ int GameMain(API* api)
 
             for(uint32_t g = 0; g < gamesCount; g++)
                 DrawIcon(api, screenRect, iconCache, games[g]);
+        }
+
+        if(notificationsCtx.GotNotification())
+        {
+            if(notificationDrawTimer < notificationDrawTime)
+            {
+                uint32_t userNameLen = 0;
+                const char* userName = notificationsCtx.GetUserName(userNameLen);
+                uint32_t notificationLen = 0;
+                const char* notification = notificationsCtx.GetNotification(notificationLen);
+
+                uint32_t ypos = 40;
+                uint32_t xpos = 40;
+                for(uint32_t i = 0; i < userNameLen; i++)
+                {
+                    api->LCD_DisplayChar(xpos, ypos, userName[i]);
+                    xpos += 17;
+                }
+                
+                ypos += 30;
+                xpos = 40;
+                for(uint32_t i = 0; i < notificationLen; i++)
+                {
+                    api->LCD_DisplayChar(xpos, ypos, notification[i]);
+                    xpos += 17;
+                }
+
+                notificationDrawTimer += dt;
+            }
+            else
+            {
+                notificationDrawTimer = 0.0f;
+                notificationsCtx.ClearNotification();
+            }
         }
     }
 }
