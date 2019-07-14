@@ -436,6 +436,7 @@ int GameMain(API* api)
     uint32_t gamesCount = 0;
 
     uint8_t* gameCodeMem = (uint8_t*)api->Malloc(kMaxGameCodeSize);
+    uint32_t curGame = ~0u;
 
     bool touchOnPrevFrame = false;
     uint16_t prevTouchX = 0, prevTouchY = 0;
@@ -615,6 +616,7 @@ int GameMain(API* api)
             {
                 state = kMainScreenLoadGameCode;
                 api->printf("Requested game code: %x\n", games[selectedGame].id);
+                curGame = selectedGame;
             }
         }
 
@@ -639,7 +641,7 @@ int GameMain(API* api)
             {
                 char buf[64];
                 api->memset(buf, 0, 64);
-                api->sprintf(buf, "Start game");
+                api->sprintf(buf, "Start game '%s'", games[curGame].name);
                 notificationsCtx.Post(api->GetIPAddress(), buf);
                 //ScopedRamExecutionLock make_ram_executable;
                 uint32_t baseAddr = 0;
@@ -655,6 +657,7 @@ int GameMain(API* api)
                 api->printf("Failed to load game code\n");
             }
 
+            curGame = ~0u;
             gamesCount = 0;
             iconCache.ClearGameIcons();
             request = RequestGamesList(api);
