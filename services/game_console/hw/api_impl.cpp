@@ -558,6 +558,14 @@ void APIImpl::LCD_DisplayStringAt(uint16_t xpos, uint16_t ypos, const char* text
 }
 
 
+void APIImpl::LCD_DisplayChar(uint16_t xpos, uint16_t ypos, char ascii)
+{
+    if(ascii < 0x20 || ascii > 0x7e)
+        ascii = 0x20;
+    BSP_LCD_DisplayChar(xpos, ypos, ascii);
+}
+
+
 void APIImpl::LCD_FillRect(const Rect& rect, uint32_t color)
 {
     BSP_LCD_FillRect(rect.x, rect.y, rect.width, rect.height, color);

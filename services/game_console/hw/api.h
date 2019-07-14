@@ -233,6 +233,7 @@ public:
     virtual void LCD_SetBackColor(uint32_t color) = 0;
     virtual void LCD_SetTextColor(uint32_t color) = 0;
     virtual void LCD_DisplayStringAt(uint16_t xpos, uint16_t ypos, const char* text, ETextAlignMode mode) = 0;
+    virtual void LCD_DisplayChar(uint16_t xpos, uint16_t ypos, char ascii) = 0;
     virtual void LCD_FillRect(const Rect& rect, uint32_t color) = 0;
     virtual void LCD_DrawImage(const Rect& rect, uint8_t* image, uint32_t pitch) = 0;
     virtual void LCD_DrawImageWithBlend(const Rect& rect, uint8_t* image, uint32_t pitch) = 0;

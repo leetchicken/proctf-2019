@@ -653,8 +653,8 @@ void BSP_LCD_ClearStringLine(uint32_t Line)
   */
 void BSP_LCD_DisplayChar(uint16_t Xpos, uint16_t Ypos, uint8_t Ascii)
 {
-  DrawChar(Xpos, Ypos, &DrawProp[ActiveLayer].pFont->table[(Ascii-' ') *\
-    DrawProp[ActiveLayer].pFont->Height * ((DrawProp[ActiveLayer].pFont->Width + 7) / 8)]);
+  uint32_t idx = (Ascii-' ') * DrawProp[ActiveLayer].pFont->Height * ((DrawProp[ActiveLayer].pFont->Width + 7) / 8);
+  DrawChar(Xpos, Ypos, &DrawProp[ActiveLayer].pFont->table[idx]);
 }
 
 /**
@@ -1529,12 +1529,11 @@ static void DrawChar(uint16_t Xpos, uint16_t Ypos, const uint8_t *c)
     {
       if(line & (1 << (width- j + offset- 1))) 
       {
-        BSP_LCD_DrawPixel((Xpos + j), Ypos, DrawProp[ActiveLayer].TextColor);
+        uint16_t xpos = Xpos + j;
+        uint16_t ypos = Ypos;
+        if(xpos < BSP_LCD_GetXSize() && ypos < BSP_LCD_GetYSize())
+          BSP_LCD_DrawPixel((Xpos + j), Ypos, DrawProp[ActiveLayer].TextColor);
       }
-      else
-      {
-        BSP_LCD_DrawPixel((Xpos + j), Ypos, DrawProp[ActiveLayer].BackColor);
-      } 
     }
     Ypos++;
   }
