@@ -2,6 +2,7 @@
 #include <pugixml.hpp>
 #include <arpa/inet.h>
 #include <mutex>
+#include <thread>
 #include <list>
 #include "httpserver.h"
 #include "png.h"
@@ -10,6 +11,16 @@ static const uint32_t kIconWidth = 172;
 static const uint32_t kIconHeight = 172;
 static const uint32_t kNetworkMask = 0x00FFFFFF;
 static const uint32_t kConsoleAddr = 0x06000000;
+
+
+float GetTime()
+{
+    timespec tp;
+    memset(&tp, 0, sizeof(tp));
+    clock_gettime(CLOCK_MONOTONIC, &tp);
+    return tp.tv_sec + tp.tv_nsec / 1000000000.0;
+}
+
 
 struct GameDesc
 {
@@ -83,7 +94,8 @@ struct Notification
 struct Team
 {
     TeamDesc desc;
-    float lastNotificationTime = 0.0f;
+    float lastTimeTeamPostNotification = 0.0f;
+    float lastConsoleNotifyTime = 0.0f;
     uint32_t auth = ~0u;
 
     static const uint32_t kNotificationQueueSize = 32;
@@ -99,20 +111,7 @@ struct Team
         notifications.push_back(n);
         n->AddRef();
 
-        int sock = socket(AF_INET, SOCK_DGRAM, 0);
-        if(sock < 0)
-        {
-            printf("  Failed to create socket\n");
-            return false;
-        }
-
-        sockaddr_in addr;
-        addr.sin_family = AF_INET;
-        addr.sin_addr.s_addr = desc.network | kConsoleAddr;
-        addr.sin_port = ntohs(8734);
-        char randomData[16];
-        sendto(sock, randomData, 16, 0, (sockaddr*)&addr, sizeof(addr));
-        close(sock);
+        NotifyConsole();
 
         return true;
     }
@@ -133,9 +132,37 @@ struct Team
         return notifications.size();
     }
 
+    void Update()
+    {
+        std::lock_guard<std::mutex> guard(mutex);
+        float dt = GetTime() - lastConsoleNotifyTime;
+        if(!notifications.empty() && dt > 5.0f)
+            NotifyConsole();
+    }
+
 private:
     std::mutex mutex;
     std::list<Notification*> notifications;
+
+    void NotifyConsole()
+    {
+        lastConsoleNotifyTime = GetTime();
+
+        int sock = socket(AF_INET, SOCK_DGRAM, 0);
+        if(sock < 0)
+        {
+            printf("  Failed to create socket\n");
+            return;
+        }
+
+        sockaddr_in addr;
+        addr.sin_family = AF_INET;
+        addr.sin_addr.s_addr = desc.network | kConsoleAddr;
+        addr.sin_port = ntohs(8734);
+        char randomData[16];
+        sendto(sock, randomData, 16, 0, (sockaddr*)&addr, sizeof(addr));
+        close(sock);
+    }
 };
 
 std::map<uint32_t, GameDesc> GGamesDatabase;
@@ -184,15 +211,6 @@ public:
 protected:
     virtual void FinalizeRequest();
 };
-
-
-float GetTime()
-{
-    timespec tp;
-    memset(&tp, 0, sizeof(tp));
-    clock_gettime(CLOCK_MONOTONIC, &tp);
-    return tp.tv_sec + tp.tv_nsec / 1000000000.0;
-}
 
 
 HttpResponse RequestHandler::HandleGet(HttpRequest request)
@@ -335,11 +353,14 @@ HttpResponse RequestHandler::HandleGet(HttpRequest request)
     else if(ParseUrl(request.url, 1, "checksystem_status"))
     {
         std::string data;
+        char buf[512];
+        sprintf(buf, "Current time: %f\n\n", GetTime());
+        data.append(buf);
+
         for(auto& iter : GTeams)
         {
             auto& team = iter.second;
             auto& desc = team.desc;
-            char buf[512];
 
             sprintf(buf, "Team%u %s\n", desc.number, desc.name.c_str());
             data.append(buf);
@@ -350,7 +371,10 @@ HttpResponse RequestHandler::HandleGet(HttpRequest request)
             sprintf(buf, "  Notifications in queue: %u\n", team.GetNotificationsInQueue());
             data.append(buf);
 
-            sprintf(buf, "  Last notification post time: %f\n", team.lastNotificationTime);
+            sprintf(buf, "  Last time team post notification: %f\n", team.lastTimeTeamPostNotification);
+            data.append(buf);
+
+            sprintf(buf, "  Last console notify time: %f\n", team.lastConsoleNotifyTime);
             data.append(buf);
 
             sprintf(buf, "  Auth: %x\n\n", team.auth);
@@ -451,9 +475,9 @@ void NotificationProcessor::FinalizeRequest()
     printf("  notification from Team %u %s\n", teamDesc.number, teamDesc.name.c_str());
 
     float curTime = GetTime();
-    if(curTime - sourceTeam.lastNotificationTime < 1.0f)
+    if(curTime - sourceTeam.lastTimeTeamPostNotification < 1.0f)
     {
-        sourceTeam.lastNotificationTime = curTime;
+        sourceTeam.lastTimeTeamPostNotification = curTime;
         printf("  too fast\n");
 
         const char* kTooFast = "Bad boy/girl, its too fast";
@@ -463,7 +487,7 @@ void NotificationProcessor::FinalizeRequest()
 
         return;
     }
-    sourceTeam.lastNotificationTime = curTime;
+    sourceTeam.lastTimeTeamPostNotification = curTime;
 
     Notification* notification = new Notification(m_content, m_contentLength);
     notification->AddRef();
@@ -550,6 +574,20 @@ bool LoadTeamsDatabase()
 }
 
 
+void UpdateThread()
+{
+    while(1)
+    {
+        for(auto& iter : GTeams)
+        {
+            Team& team = iter.second;
+            team.Update();
+        }
+        sleep(1);
+    }
+}
+
+
 int main()
 {
     if(!LoadGamesDatabase() || !LoadTeamsDatabase())
@@ -559,6 +597,8 @@ int main()
     HttpServer server(&handler);
 
     server.Start(8000);
+
+    std::thread updateThread(UpdateThread);
 
     while (1)
         sleep(1);
