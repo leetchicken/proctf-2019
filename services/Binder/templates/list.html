@@ -1,0 +1,39 @@
+<html>
+<head>
+<script src="{{ url_for('static', filename='jquery-3.4.1.js') }}">
+</script>
+<script>
+    $(document).ready(function(){
+      $("#messages a.runner").click(function(e){
+        var password = prompt("Enter password");
+        window.location="/run?message_id=" + $(e.target).attr("message_id")+
+          "&password="+password;
+      });
+
+    });
+</script>
+</head>
+<body>
+  <h1>Obfuscated messages</h1>
+  <div>
+    <form action="/upload" method="POST"
+                      enctype="multipart/form-data">
+      <input type='file' name="message"></input>
+      <input type='submit' value='Send'></input>
+    </form>
+  </div>
+  <table>
+    <thead>
+      <tr><td>Message id</td></tr>
+    </thead>
+    <tbody id="messages">
+      {% for message_id in messages %}
+        <tr><td>
+          <a class="runner" message_id="{{ message_id }}" href="#">{{ message_id }}</a>
+          <a class="getter" href="/get?message_id={{ message_id }}">download</a>
+        </td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</body>
+</html>
