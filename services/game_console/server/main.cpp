@@ -89,6 +89,25 @@ struct Notification
             delete this;
         return count;
     }
+
+    static bool Validate(void* data, uint32_t dataSize)
+    {
+        if(dataSize < sizeof(uint32_t))
+            return false;
+
+        char* ptr = (char*)data;
+        uint32_t userNameLen = 0, messageLen = 0;
+        memcpy(&userNameLen, ptr, sizeof(uint32_t));
+        ptr += sizeof(uint32_t);
+        ptr += userNameLen;
+
+        if(2 * sizeof(uint32_t) + userNameLen > dataSize)
+            return false;
+
+        memcpy(&messageLen, ptr, sizeof(uint32_t));
+        
+        return 2 * sizeof(uint32_t) + userNameLen + messageLen == dataSize;
+    }
 };
 
 struct Team
@@ -488,6 +507,13 @@ void NotificationProcessor::FinalizeRequest()
         return;
     }
     sourceTeam.lastTimeTeamPostNotification = curTime;
+
+    if(!Notification::Validate(m_content, m_contentLength))
+    {
+        printf("  corrupted notification\n");
+        Complete(HttpResponse(MHD_HTTP_BAD_REQUEST));
+        return;
+    }
 
     Notification* notification = new Notification(m_content, m_contentLength);
     notification->AddRef();
