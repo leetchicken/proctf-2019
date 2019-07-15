@@ -21,6 +21,19 @@ float GetTime()
     return tp.tv_sec + tp.tv_nsec / 1000000000.0;
 }
 
+using IPAddr = uint32_t;
+using NetworkAddr = uint32_t;
+using AuthKey = uint32_t;
+
+NetworkAddr SockaddrToNetworkAddr(in_addr a)
+{
+    return a.s_addr & kNetworkMask;
+}
+
+const char* inet_ntoa(IPAddr addr)
+{
+    return inet_ntoa(*(in_addr*)&addr);
+}
 
 struct GameDesc
 {
@@ -33,7 +46,7 @@ struct TeamDesc
     uint32_t number;
     std::string name;
     std::string networkStr;
-    uint32_t network;
+    NetworkAddr network;
 };
 
 struct Notification
@@ -110,21 +123,31 @@ struct Notification
     }
 };
 
-struct Team
+struct Console
 {
-    TeamDesc desc;
-    float lastTimeTeamPostNotification = 0.0f;
+    IPAddr ipAddr;
     float lastConsoleNotifyTime = 0.0f;
-    uint32_t auth = ~0u;
-
+    AuthKey authKey = ~0u;
+    uint16_t notifyPort = 0xffff;
     static const uint32_t kNotificationQueueSize = 32;
+
+    void Auth()
+    {
+        authKey = 0;
+        for(uint32_t i = 0; i < 4; i++)
+            authKey |= (rand() % 255) << (i * 8);
+
+        notifyPort = 0;
+        for(uint32_t i = 0; i < 2; i++)
+            notifyPort |= (rand() % 255) << (i * 8);
+    }
 
     bool AddNotification(Notification* n)
     {
         std::lock_guard<std::mutex> guard(mutex);
         if(notifications.size() >= kNotificationQueueSize)
         {
-            printf("  Team %u %s: notification queue overflowed\n", desc.number, desc.name.c_str());
+            printf("  Console %s: notification queue overflowed\n", inet_ntoa(ipAddr));
             return false;
         }
         notifications.push_back(n);
@@ -176,27 +199,94 @@ private:
 
         sockaddr_in addr;
         addr.sin_family = AF_INET;
-        addr.sin_addr.s_addr = desc.network | kConsoleAddr;
-        addr.sin_port = ntohs(8734);
+        addr.sin_addr.s_addr = ipAddr;
+        addr.sin_port = ntohs(notifyPort);
         char randomData[16];
         sendto(sock, randomData, 16, 0, (sockaddr*)&addr, sizeof(addr));
         close(sock);
     }
 };
 
-std::map<uint32_t, GameDesc> GGamesDatabase;
-std::map<uint32_t, Team> GTeams;
-std::map<uint32_t, uint32_t> GNetworkToTeamNumber;
-
-
-static uint32_t NetworkToTeam(const in_addr& sourceIp)
+struct Team
 {
-    uint32_t sourceNetwork = sourceIp.s_addr & kNetworkMask;
-    auto iter = GNetworkToTeamNumber.find(sourceNetwork);
-    if(iter == GNetworkToTeamNumber.end())
-        return ~0u;
-    return iter->second;
-}
+    TeamDesc desc;
+    float lastTimeTeamPostNotification = 0.0f;
+
+    Console* AddConsole(IPAddr consoleIp)
+    {
+        std::lock_guard<std::mutex> guard(mutex);
+        Console* console = new Console();
+        console->ipAddr = consoleIp;
+        consoles[consoleIp] = console;
+        return console;
+    }
+
+    Console* GetConsole(IPAddr consoleIp)
+    {
+        std::lock_guard<std::mutex> guard(mutex);
+        auto iter = consoles.find(consoleIp);
+        if(iter == consoles.end())
+            return nullptr;
+        return iter->second;
+    }
+
+    void AddNotification(Notification* n, IPAddr except = 0)
+    {
+        std::lock_guard<std::mutex> guard(mutex);
+        for(auto& iter : consoles)
+        {
+            if(iter.first == except)
+                continue;
+            iter.second->AddNotification(n);
+        }
+    }
+
+    void Update()
+    {
+        std::lock_guard<std::mutex> guard(mutex);
+        for(auto& iter : consoles)
+            iter.second->Update();
+    }
+
+    void DumpStats(std::string& out)
+    {
+        std::lock_guard<std::mutex> guard(mutex);
+
+        char buf[512];
+        sprintf(buf, "Team%u %s:\n", desc.number, desc.name.c_str());
+        out.append(buf);
+
+        sprintf(buf, "  Network: %s\n", desc.networkStr.c_str());
+        out.append(buf);
+
+        sprintf(buf, "  Last time team post notification: %f\n", lastTimeTeamPostNotification);
+        out.append(buf);
+
+        for(auto& iter : consoles)
+        {
+            auto& c = iter.second;
+
+            sprintf(buf, "  Console %s:\n", inet_ntoa(iter.first));
+            out.append(buf);
+
+            sprintf(buf, "    Notifications in queue: %u\n", c->GetNotificationsInQueue());
+            out.append(buf);
+
+            sprintf(buf, "    Last console notify time: %f\n", c->lastConsoleNotifyTime);
+            out.append(buf);
+
+            sprintf(buf, "    Notify port: %u\n", c->notifyPort);
+            out.append(buf);
+
+            sprintf(buf, "    Auth key: %x\n\n", c->authKey);
+            out.append(buf);
+        }
+    }
+
+private:
+    std::mutex mutex;
+    std::map<IPAddr, Console*> consoles;
+};
 
 
 class RequestHandler : public HttpRequestHandler
@@ -232,11 +322,115 @@ protected:
 };
 
 
+std::map<uint32_t, GameDesc> GGamesDatabase;
+std::map<NetworkAddr, Team> GTeams;
+std::mutex GConsolesGuard;
+std::map<AuthKey, Console*> GConsoles;
+
+
+static Team* FindTeam(in_addr ipAddr)
+{
+    NetworkAddr netAddr = SockaddrToNetworkAddr(ipAddr);
+    auto iter = GTeams.find(netAddr);
+    if(iter == GTeams.end())
+    {
+        printf("  ERROR: Unknown network: %s\n", inet_ntoa(ipAddr));
+        return nullptr;
+    }
+    return &iter->second;
+}
+
+
+static Console* GetConsole(AuthKey authKey)
+{
+    std::lock_guard<std::mutex> guard(GConsolesGuard);
+    auto iter = GConsoles.find(authKey);
+    if(iter == GConsoles.end())
+        return nullptr;
+    return iter->second;
+}
+
+
+static Console* CheckAuthority(const QueryString& queryString)
+{
+    static const std::string kAuth("auth");
+    AuthKey authKey = ~0u;
+    FindInMap(queryString, kAuth, authKey, 16);
+    printf("  auth key=%x\n", authKey);
+
+    auto console = GetConsole(authKey);
+    if(!console)
+    {
+        printf("  ERROR: Unauthorized access, auth key: %x\n", authKey);
+        return nullptr;
+    }
+
+    return console;
+}
+
+
 HttpResponse RequestHandler::HandleGet(HttpRequest request)
 {
     printf("  IP: %s\n", inet_ntoa(request.clientIp));
-    if (ParseUrl(request.url, 1, "list"))
+    if (ParseUrl(request.url, 1, "auth"))
     {
+        auto team = FindTeam(request.clientIp);
+        if(!team)
+            return HttpResponse(MHD_HTTP_FORBIDDEN);
+
+        Console* console = team->GetConsole(request.clientIp.s_addr);
+        if(console)
+        {
+            std::lock_guard<std::mutex> guard(GConsolesGuard);
+            printf("  found existing console, auth key: %x\n", console->authKey);
+            auto iter = GConsoles.find(console->authKey);
+            if(iter == GConsoles.end())
+            {
+                printf("  CRITICAL ERROR, console was not found\n");
+                exit(1);
+            }
+            GConsoles.erase(iter);
+        }
+        else
+        {
+            console = team->AddConsole(request.clientIp.s_addr);
+        }
+
+        console->Auth();
+        printf("  auth key=%x\n", console->authKey);
+        printf("  notify port=%u\n", console->notifyPort);
+
+        {
+            std::lock_guard<std::mutex> guard(GConsolesGuard);
+            if(GConsoles.find(console->authKey) !=  GConsoles.end())
+            {
+                printf("  CRITICAL ERROR, dublicate console was found, auth key: %x\n", console->authKey);
+                exit(1);
+            }
+            GConsoles[console->authKey] = console;
+        }
+
+        struct
+        {
+            uint32_t authKey;
+            uint16_t notifyPort;
+        } responseData;
+        responseData.authKey = console->authKey;
+        responseData.notifyPort = console->notifyPort;
+
+        HttpResponse response;
+        response.code = MHD_HTTP_OK;
+        response.headers.insert({"Content-Type", "application/octet-stream"});
+        response.content = (char*)malloc(sizeof(responseData));
+        response.contentLength = sizeof(responseData);
+        memcpy(response.content, &responseData, response.contentLength);
+        return response;
+    }
+    else if (ParseUrl(request.url, 1, "list"))
+    {
+        if(!CheckAuthority(request.queryString))
+            return HttpResponse(MHD_HTTP_UNAUTHORIZED);
+
         const uint32_t gamesNum = GGamesDatabase.size();
         const uint32_t kResponseCapacity = 1024;
         uint8_t* buf = (uint8_t*)malloc(kResponseCapacity);
@@ -262,6 +456,9 @@ HttpResponse RequestHandler::HandleGet(HttpRequest request)
     }
     else if(ParseUrl(request.url, 1, "icon"))
     {
+        if(!CheckAuthority(request.queryString))
+            return HttpResponse(MHD_HTTP_UNAUTHORIZED);
+
         static const std::string kId("id");
         uint32_t id = ~0u;
         FindInMap(request.queryString, kId, id, 16);
@@ -301,6 +498,9 @@ HttpResponse RequestHandler::HandleGet(HttpRequest request)
     }
     else if(ParseUrl(request.url, 1, "code"))
     {
+        if(!CheckAuthority(request.queryString))
+            return HttpResponse(MHD_HTTP_UNAUTHORIZED);
+
         static const std::string kId("id");
         uint32_t id = ~0u;
         FindInMap(request.queryString, kId, id, 16);
@@ -340,23 +540,11 @@ HttpResponse RequestHandler::HandleGet(HttpRequest request)
     }
     else if(ParseUrl(request.url, 1, "notification"))
     {
-        static const std::string kAuth("auth");
-        uint32_t auth = ~0u;
-        FindInMap(request.queryString, kAuth, auth, 16);
-        printf("  auth=%x\n", auth);
-
-        uint32_t teamNumber = NetworkToTeam(request.clientIp);
-        if(teamNumber == ~0u)
-        {
-            printf("  ERROR: Unknown network: %s\n", inet_ntoa(request.clientIp));
-            return HttpResponse(MHD_HTTP_FORBIDDEN);
-        }
-
-        Team& team = GTeams[teamNumber];
-        if(team.auth == ~0u || team.auth != auth)
+        auto console = CheckAuthority(request.queryString);
+        if(!console)
             return HttpResponse(MHD_HTTP_UNAUTHORIZED);
 
-        Notification* n = team.GetNotification();
+        Notification* n = console->GetNotification();
         if(!n)
             return HttpResponse(MHD_HTTP_OK);
 
@@ -379,25 +567,7 @@ HttpResponse RequestHandler::HandleGet(HttpRequest request)
         for(auto& iter : GTeams)
         {
             auto& team = iter.second;
-            auto& desc = team.desc;
-
-            sprintf(buf, "Team%u %s\n", desc.number, desc.name.c_str());
-            data.append(buf);
-
-            sprintf(buf, "  Network: %s\n", desc.networkStr.c_str());
-            data.append(buf);
-
-            sprintf(buf, "  Notifications in queue: %u\n", team.GetNotificationsInQueue());
-            data.append(buf);
-
-            sprintf(buf, "  Last time team post notification: %f\n", team.lastTimeTeamPostNotification);
-            data.append(buf);
-
-            sprintf(buf, "  Last console notify time: %f\n", team.lastConsoleNotifyTime);
-            data.append(buf);
-
-            sprintf(buf, "  Auth: %x\n\n", team.auth);
-            data.append(buf);
+            team.DumpStats(data);
         }
 
         HttpResponse response;
@@ -418,6 +588,9 @@ HttpResponse RequestHandler::HandlePost(HttpRequest request, HttpPostProcessor**
     printf("  IP: %s\n", inet_ntoa(request.clientIp));
     if(ParseUrl(request.url, 1, "notification")) 
     {
+        if(!CheckAuthority(request.queryString))
+            return HttpResponse(MHD_HTTP_UNAUTHORIZED);
+
 		*postProcessor = new NotificationProcessor(request);
         return HttpResponse();
     }
@@ -480,23 +653,15 @@ void NotificationProcessor::FinalizeRequest()
         return;
     }
 
-    uint32_t sourceNetwork = m_sourceIp.s_addr & kNetworkMask;
-    uint32_t sourceTeamNumber = NetworkToTeam(m_sourceIp);
-    if(sourceTeamNumber == ~0u)
-    {
-        printf("  ERROR: Unknown network: %s\n", inet_ntoa(m_sourceIp));
-        Complete(HttpResponse(MHD_HTTP_FORBIDDEN));
-    }
-
-    Team& sourceTeam = GTeams[sourceTeamNumber];
-    auto& teamDesc = sourceTeam.desc;
+    auto team = FindTeam(m_sourceIp);
+    auto& teamDesc = team->desc;
 
     printf("  notification from Team %u %s\n", teamDesc.number, teamDesc.name.c_str());
 
     float curTime = GetTime();
-    if(curTime - sourceTeam.lastTimeTeamPostNotification < 1.0f)
+    if(curTime - team->lastTimeTeamPostNotification < 1.0f)
     {
-        sourceTeam.lastTimeTeamPostNotification = curTime;
+        team->lastTimeTeamPostNotification = curTime;
         printf("  too fast\n");
 
         const char* kTooFast = "Bad boy/girl, its too fast";
@@ -506,7 +671,7 @@ void NotificationProcessor::FinalizeRequest()
 
         return;
     }
-    sourceTeam.lastTimeTeamPostNotification = curTime;
+    team->lastTimeTeamPostNotification = curTime;
 
     if(!Notification::Validate(m_content, m_contentLength))
     {
@@ -520,10 +685,7 @@ void NotificationProcessor::FinalizeRequest()
     for(auto& iter : GTeams)
     {
         Team& team = iter.second;
-        if(team.desc.network == sourceNetwork)
-            continue;
-
-        team.AddNotification(notification);
+        team.AddNotification(notification, m_sourceIp.s_addr);
     }
     notification->Release();
 
@@ -585,14 +747,16 @@ bool LoadTeamsDatabase()
     pugi::xml_node teamsNode = doc.child("Teams");
     for (pugi::xml_node teamNode = teamsNode.first_child(); teamNode; teamNode = teamNode.next_sibling())
     {
-        uint32_t number = teamNode.attribute("number").as_uint();
-        Team& team = GTeams[number];
+        const char* netStr = teamNode.attribute("net").as_string();
+        NetworkAddr net;
+        inet_aton(netStr, (in_addr*)&net);
+
+        Team& team = GTeams[net];
         auto& desc = team.desc;
-        desc.number = number;
+        desc.number = teamNode.attribute("number").as_uint();
         desc.name = teamNode.attribute("name").as_string();
         desc.networkStr = teamNode.attribute("net").as_string();
-        inet_aton(desc.networkStr.c_str(), (in_addr*)&desc.network);
-        GNetworkToTeamNumber.insert({desc.network, desc.number});
+        desc.network = net;
         printf("  %u %s %s(%08X)\n", desc.number, desc.name.c_str(), desc.networkStr.c_str(), desc.network);
     }
 
@@ -616,6 +780,8 @@ void UpdateThread()
 
 int main()
 {
+    srand(time(nullptr));
+
     if(!LoadGamesDatabase() || !LoadTeamsDatabase())
         return -1;
 
