@@ -742,7 +742,7 @@ bool LoadGamesDatabase()
 bool LoadTeamsDatabase()
 {
     pugi::xml_document doc;
-    if (!doc.load_file("teams.xml")) 
+    if (!doc.load_file("data/teams.xml")) 
     {
         printf("Failed to teams load database\n");
         return false;
