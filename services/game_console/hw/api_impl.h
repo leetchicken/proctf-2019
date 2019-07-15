@@ -8,9 +8,8 @@ class APIImpl : public API
 public:
     APIImpl();
 
-    void Init(EthernetInterface* ethInterface, uint8_t* sdram);
+    void Init(EthernetInterface* ethInterface);
 
-    uint8_t* GetSDRam();
     void* Malloc(uint32_t size);
     void Free(void* ptr);
 
@@ -71,7 +70,6 @@ public:
 private:
     int m_curFrameBuffer;
     EthernetInterface* m_ethInterface;
-    uint8_t* m_sdram;
     Timer m_timer;
     bool m_displayIsOn;
     TCPSocket* m_tcpSockets[32];

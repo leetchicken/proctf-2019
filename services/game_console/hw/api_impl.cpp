@@ -83,29 +83,21 @@ APIImpl::APIImpl()
 {
     m_curFrameBuffer = 0;
     m_ethInterface = NULL;
-    m_sdram = NULL;
     m_timer.start();
     m_displayIsOn = true;
 }
 
 
-void APIImpl::Init(EthernetInterface* ethInterface, uint8_t* sdram)
+void APIImpl::Init(EthernetInterface* ethInterface)
 {
     m_curFrameBuffer = 0;
     m_ethInterface = ethInterface;
-    m_sdram = sdram;
     GHttpThread.start(callback(HttpThread, m_ethInterface));
     memset(m_tcpSockets, 0, sizeof(m_tcpSockets));
     m_freeTcpSockets = ~0u;
     m_acceptedSockets = 0;
     memset(m_udpSockets, 0, sizeof(m_udpSockets));
     m_freeUdpSockets = ~0u;
-}
-
-
-uint8_t* APIImpl::GetSDRam()
-{
-    return m_sdram;
 }
 
 

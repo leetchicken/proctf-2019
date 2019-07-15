@@ -5,7 +5,6 @@
 #include "BlockDevice.h"
 #include "FATFileSystem.h"
 #include "api_impl.h"
- 
 
 APIImpl GAPIImpl;
 uint8_t* GSdram = NULL;
@@ -76,7 +75,7 @@ int main()
     BSP_PB_Init(BUTTON_KEY, BUTTON_MODE_GPIO);
     BSP_LED_Init(LED_GREEN);
     
-    GAPIImpl.Init(&GEthernet, GSdram);
+    GAPIImpl.Init(&GEthernet);
 
     FILE* f = fopen("/fs/code.bin", "r");
     if(!f)
@@ -97,5 +96,5 @@ int main()
 
     ScopedRamExecutionLock make_ram_executable;
     TGameMain gameMain = (TGameMain)&gameMainAddr[1];
-    gameMain(&GAPIImpl);
+    gameMain(&GAPIImpl, GSdram);
 }

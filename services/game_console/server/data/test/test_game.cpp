@@ -1,7 +1,7 @@
 #include "../../../hw/api.h"
 
 
-int GameMain(API* api)
+int GameMain(API* api, uint8_t* sdram)
 {
     for(uint32_t i = 0; i < 3; i++)
     {

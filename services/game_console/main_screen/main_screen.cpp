@@ -458,7 +458,7 @@ HTTPRequest* RequestGameCode(API* api, uint32_t authKey, uint32_t gameId, uint8_
 }
 
 
-int GameMain(API* api)
+int GameMain(API* api, uint8_t* sdram)
 {
     Rect screenRect;
     api->GetScreenRect(&screenRect);
@@ -474,7 +474,7 @@ int GameMain(API* api)
     EMainScreenState state = kMainScreenWaitForNetwork;
     uint32_t authKey = ~0u;
 
-    uint8_t* curSdram = api->GetSDRam();
+    uint8_t* curSdram = sdram;
     IconsManager iconCache(curSdram, api);
     curSdram = iconCache.Reset();
     bool evictIcon = false;
@@ -482,6 +482,7 @@ int GameMain(API* api)
 
     GameDesc* games = (GameDesc*)curSdram;
     uint32_t gamesCount = 0;
+    curSdram += sizeof(GameDesc) * kMaxGamesCount;
 
     uint8_t* gameCodeMem = (uint8_t*)api->Malloc(kMaxGameCodeSize);
     uint32_t curGame = ~0u;
@@ -722,7 +723,7 @@ int GameMain(API* api)
                 uint8_t* gameMainAddr = gameCodeMem + baseAddr + 4;
                 TGameMain gameMain;
                 gameMain = (TGameMain)&gameMainAddr[1];
-                gameMain(api);
+                gameMain(api, curSdram);
                 iconCache.Reset();
             }
             else

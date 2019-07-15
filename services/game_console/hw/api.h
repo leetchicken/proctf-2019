@@ -198,7 +198,6 @@ enum ESocketError
 class API
 {
 public:
-    virtual uint8_t* GetSDRam() = 0;
     virtual void* Malloc(uint32_t size) = 0;
     virtual void Free(void* ptr) = 0;
 
@@ -279,4 +278,4 @@ public:
     virtual float time() = 0;
 };
 
-typedef int (*TGameMain)(API*);
+typedef int (*TGameMain)(API*, uint8_t*);
