@@ -356,7 +356,7 @@ static Console* CheckAuthority(const QueryString& queryString)
     static const std::string kAuth("auth");
     AuthKey authKey = ~0u;
     FindInMap(queryString, kAuth, authKey, 16);
-    printf("  auth key=%x\n", authKey);
+    printf("  auth key: %x\n", authKey);
 
     auto console = GetConsole(authKey);
     if(!console)
@@ -397,8 +397,8 @@ HttpResponse RequestHandler::HandleGet(HttpRequest request)
         }
 
         console->Auth();
-        printf("  auth key=%x\n", console->authKey);
-        printf("  notify port=%u\n", console->notifyPort);
+        printf("  auth key: %x\n", console->authKey);
+        printf("  notify port: %u\n", console->notifyPort);
 
         {
             std::lock_guard<std::mutex> guard(GConsolesGuard);
@@ -462,7 +462,7 @@ HttpResponse RequestHandler::HandleGet(HttpRequest request)
         static const std::string kId("id");
         uint32_t id = ~0u;
         FindInMap(request.queryString, kId, id, 16);
-        printf("  id=%x\n", id);
+        printf("  id: %x\n", id);
 
         auto iter = GGamesDatabase.find(id);
         if(iter == GGamesDatabase.end())
@@ -504,7 +504,7 @@ HttpResponse RequestHandler::HandleGet(HttpRequest request)
         static const std::string kId("id");
         uint32_t id = ~0u;
         FindInMap(request.queryString, kId, id, 16);
-        printf("  id=%x\n", id);
+        printf("  id: %x\n", id);
 
         auto iter = GGamesDatabase.find(id);
         if(iter == GGamesDatabase.end())
@@ -654,6 +654,11 @@ void NotificationProcessor::FinalizeRequest()
     }
 
     auto team = FindTeam(m_sourceIp);
+    if(!team)
+    {
+        Complete(HttpResponse(MHD_HTTP_FORBIDDEN));
+        return;
+    }
     auto& teamDesc = team->desc;
 
     printf("  notification from Team %u %s\n", teamDesc.number, teamDesc.name.c_str());
