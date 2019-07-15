@@ -158,165 +158,166 @@ struct NotificationsCtx
     uint32_t auth;
 
     NotificationsCtx()
-        : auth(~0u), socket(-1), postRequest(NULL), getRequest(NULL), pendingNotificationsNum(0), gotNotification(false)
+        : auth(~0u), m_socket(-1), m_postRequest(NULL), m_getRequest(NULL), m_pendingNotificationsNum(0), m_gotNotification(false)
+        , m_userName(NULL), m_userNameLen(0), m_message(NULL), m_messageLen(0)
     {
     }
 
     bool Init(API* api)
     {
-        this->api = api;
+        m_api = api;
 
-        socket = api->socket(false);
-        if(socket < 0)
+        m_socket = api->socket(false);
+        if(m_socket < 0)
         {
             api->printf("Failed to open notifications socket, can not continue\n");
             return false;
         }
-        api->set_blocking(socket, false);
-        api->bind(socket, 0, 8734);
+        api->set_blocking(m_socket, false);
+        api->bind(m_socket, 0, 8734);
 
         return true;
     }
 
-    void Post(const char* userName, const char* notification)
+    void Post(const char* userName, const char* message)
     {
-        if(postRequest)
+        if(m_postRequest)
             return;
 
-        postRequest = api->AllocHTTPRequest();
-        if(!postRequest)
+        m_postRequest = m_api->AllocHTTPRequest();
+        if(!m_postRequest)
             return;
-        postRequest->httpMethod = kHttpMethodPost;
-        api->sprintf(postRequest->url, "http://%s:%u/notification", kServerIP, kServerPort);
-        uint32_t userNameLen = api->strlen(userName);
-        uint32_t notificationLen = api->strlen(notification);
-        postRequest->requestBodySize = userNameLen + notificationLen + sizeof(uint32_t) * 2;
-        postRequest->requestBody = api->Malloc(postRequest->requestBodySize);
-        uint8_t* ptr = (uint8_t*)postRequest->requestBody;
-        api->memset(ptr, 0, postRequest->requestBodySize);
+        m_postRequest->httpMethod = kHttpMethodPost;
+        m_api->sprintf(m_postRequest->url, "http://%s:%u/notification", kServerIP, kServerPort);
+        uint32_t userNameLen = m_api->strlen(userName);
+        uint32_t messageLen = m_api->strlen(message);
+        m_postRequest->requestBodySize = userNameLen + messageLen + sizeof(uint32_t) * 2;
+        m_postRequest->requestBody = m_api->Malloc(m_postRequest->requestBodySize);
+        uint8_t* ptr = (uint8_t*)m_postRequest->requestBody;
+        m_api->memset(ptr, 0, m_postRequest->requestBodySize);
 
-        api->memcpy(ptr, &userNameLen, sizeof(uint32_t));
+        m_api->memcpy(ptr, &userNameLen, sizeof(uint32_t));
         ptr += sizeof(uint32_t);
         if(userNameLen)
         {
-            api->memcpy(ptr, userName, userNameLen);
+            m_api->memcpy(ptr, userName, userNameLen);
             ptr += userNameLen;
         }
 
-        api->memcpy(ptr, &notificationLen, sizeof(uint32_t));
+        m_api->memcpy(ptr, &messageLen, sizeof(uint32_t));
         ptr += sizeof(uint32_t);
-        if(notificationLen)
+        if(messageLen)
         {
-            api->memcpy(ptr, notification, notificationLen);
-            ptr += notificationLen;
+            m_api->memcpy(ptr, message, messageLen);
+            ptr += messageLen;
         }
         
-        if(!api->SendHTTPRequest(postRequest))
+        if(!m_api->SendHTTPRequest(m_postRequest))
             FreePostRequest();
     }
 
     void Update()
     {
-        if(postRequest && postRequest->done)
+        if(m_postRequest && m_postRequest->done)
             FreePostRequest();
 
-        if(getRequest && getRequest->done)
+        if(m_getRequest && m_getRequest->done)
         {
-            gotNotification = false;
-            if(getRequest->succeed && getRequest->responseDataSize)
+            m_gotNotification = false;
+            if(m_getRequest->succeed && m_getRequest->responseDataSize)
             {
                 char* ptr = data;
-                api->memcpy(&userNameLen, ptr, sizeof(uint32_t));
+                m_api->memcpy(&m_userNameLen, ptr, sizeof(uint32_t));
                 ptr += sizeof(uint32_t);
-                userName = ptr;
-                ptr += userNameLen;
-                api->memcpy(&notificationLen, ptr, sizeof(uint32_t));
+                m_userName = ptr;
+                ptr += m_userNameLen;
+                m_api->memcpy(&m_messageLen, ptr, sizeof(uint32_t));
                 ptr += sizeof(uint32_t);
-                notification = ptr;
-                gotNotification = true;
+                m_message = ptr;
+                m_gotNotification = true;
             }
             FreeGetRequest();
-            pendingNotificationsNum--;
+            m_pendingNotificationsNum--;
         }
 
-        uint32_t serverIP = api->aton(kServerIP);
+        uint32_t serverIP = m_api->aton(kServerIP);
         char data[16];
         NetAddr addr;
-        int ret = api->recv(socket, data, 16, &addr);
+        int ret = m_api->recv(m_socket, data, 16, &addr);
         if(ret > 0 && addr.ip == serverIP)
         {
-            api->printf("Notification is available\n");
-            pendingNotificationsNum++;
+            m_api->printf("Notification is available\n");
+            m_pendingNotificationsNum++;
         }
 
-        if(pendingNotificationsNum > 0 && !getRequest && !gotNotification)
+        if(m_pendingNotificationsNum > 0 && !m_getRequest && !m_gotNotification)
             Get();
     }
 
     bool GotNotification()
     {
-        return gotNotification;
+        return m_gotNotification;
     }
 
     const char* GetUserName(uint32_t& len)
     {
-        len = userNameLen;
-        return userName;
+        len = m_userNameLen;
+        return m_userName;
     }
 
-    const char* GetNotification(uint32_t& len)
+    const char* GetMessage(uint32_t& len)
     {
-        len = notificationLen;
-        return notification;
+        len = m_messageLen;
+        return m_message;
     }
 
     void ClearNotification()
     {
-        userNameLen = 0;
-        userName = NULL;
-        notificationLen = 0;
-        notification = NULL;
-        gotNotification = false;
+        m_userNameLen = 0;
+        m_userName = NULL;
+        m_messageLen = 0;
+        m_message = NULL;
+        m_gotNotification = false;
     }
 
 private:
 
-    API* api;
-    int socket;
-    HTTPRequest* postRequest;
-    HTTPRequest* getRequest;
-    int32_t pendingNotificationsNum;
+    API* m_api;
+    int m_socket;
+    HTTPRequest* m_postRequest;
+    HTTPRequest* m_getRequest;
+    int32_t m_pendingNotificationsNum;
 
     char data[256];
-    char* userName;
-    uint32_t userNameLen;
-    char* notification;
-    uint32_t notificationLen;
-    bool gotNotification;
+    char* m_userName;
+    uint32_t m_userNameLen;
+    char* m_message;
+    uint32_t m_messageLen;
+    bool m_gotNotification;
 
     void FreePostRequest()
     {
-        api->Free(postRequest->requestBody);
-        api->FreeHTTPRequest(postRequest);
-        postRequest = NULL;
+        m_api->Free(m_postRequest->requestBody);
+        m_api->FreeHTTPRequest(m_postRequest);
+        m_postRequest = NULL;
     }
 
     void FreeGetRequest()
     {
-        api->FreeHTTPRequest(getRequest);
-        getRequest = NULL;
+        m_api->FreeHTTPRequest(m_getRequest);
+        m_getRequest = NULL;
     }
 
     void Get()
     {
-        getRequest = api->AllocHTTPRequest();
-        if(!getRequest)
+        m_getRequest = m_api->AllocHTTPRequest();
+        if(!m_getRequest)
             return;
-        getRequest->httpMethod = kHttpMethodGet;
-        api->sprintf(getRequest->url, "http://%s:%u/notification?auth=%x", kServerIP, kServerPort, auth);
-        getRequest->responseData = (void*)data;
-        getRequest->responseDataCapacity = 512; // hahaha, should be 256
-        if(!api->SendHTTPRequest(getRequest))
+        m_getRequest->httpMethod = kHttpMethodGet;
+        m_api->sprintf(m_getRequest->url, "http://%s:%u/notification?auth=%x", kServerIP, kServerPort, auth);
+        m_getRequest->responseData = (void*)data;
+        m_getRequest->responseDataCapacity = 512; // hahaha, should be 256
+        if(!m_api->SendHTTPRequest(m_getRequest))
             FreeGetRequest();
     }
 };
@@ -709,8 +710,8 @@ int GameMain(API* api)
             {
                 uint32_t userNameLen = 0;
                 const char* userName = notificationsCtx.GetUserName(userNameLen);
-                uint32_t notificationLen = 0;
-                const char* notification = notificationsCtx.GetNotification(notificationLen);
+                uint32_t messageLen = 0;
+                const char* message = notificationsCtx.GetMessage(messageLen);
 
                 uint32_t xpos = rect.x;
                 uint32_t ypos = rect.y;
@@ -727,9 +728,9 @@ int GameMain(API* api)
                 
                 ypos += fontInfo.charHeight;
                 xpos = rect.x;
-                for(uint32_t i = 0; i < notificationLen; i++)
+                for(uint32_t i = 0; i < messageLen; i++)
                 {
-                    api->LCD_DisplayChar(xpos, ypos, notification[i]);
+                    api->LCD_DisplayChar(xpos, ypos, message[i]);
                     xpos += fontInfo.charWidth;
                     if(xpos > rect.x + rect.width)
                     {

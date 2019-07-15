@@ -43,12 +43,12 @@ struct Notification
 
     mutable uint32_t refCount = 0;
 
-    Notification(const char* userName, const char* notificationStr)
+    Notification(const char* userName, const char* message)
     {
         uint32_t userNameLen = strlen(userName);
-        uint32_t notificationStrlen = strlen(notificationStr);
+        uint32_t messageLen = strlen(message);
 
-        notificationLen = sizeof(uint32_t) + userNameLen + sizeof(uint32_t) + notificationStrlen;
+        notificationLen = sizeof(uint32_t) + userNameLen + sizeof(uint32_t) + messageLen;
         notification = (char*)malloc(notificationLen);
 
         char* ptr = notification;
@@ -57,9 +57,9 @@ struct Notification
         memcpy(ptr, userName, userNameLen);
         ptr += userNameLen;
 
-        memcpy(ptr, &notificationStrlen, sizeof(uint32_t));
+        memcpy(ptr, &messageLen, sizeof(uint32_t));
         ptr += sizeof(uint32_t);
-        memcpy(ptr, notificationStr, notificationStrlen);
+        memcpy(ptr, message, messageLen);
     }
 
     Notification(void* data, uint32_t dataSize)
@@ -405,13 +405,13 @@ HttpResponse RequestHandler::HandlePost(HttpRequest request, HttpPostProcessor**
     else if(ParseUrl(request.url, 1, "checksystem_notification")) 
     {
 		static std::string userNameStr("username");
-		static std::string notificationStr("notification");
+		static std::string message("notification");
 
 		const char* userName = FindInMap(request.queryString, userNameStr);
 		if(!userName)
 			return HttpResponse(MHD_HTTP_BAD_REQUEST);
 
-		const char* notification = FindInMap(request.queryString, notificationStr);
+		const char* notification = FindInMap(request.queryString, message);
 		if(!notification)
 			return HttpResponse(MHD_HTTP_BAD_REQUEST);
 

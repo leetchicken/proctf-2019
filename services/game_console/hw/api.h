@@ -136,6 +136,7 @@ struct HTTPRequest
     bool done;
     bool succeed;
     uint32_t responseDataSize;
+    // standart HTTP status code, or 0 in case of error
     uint32_t statusCode;
     // do not modify!!
     void* internalData;
