@@ -155,10 +155,10 @@ struct GameDesc
 
 struct NotificationsCtx
 {
-    uint32_t auth;
+    uint32_t authKey;
 
     NotificationsCtx()
-        : auth(~0u), m_socket(-1), m_postRequest(NULL), m_getRequest(NULL), m_pendingNotificationsNum(0), m_gotNotification(false)
+        : authKey(~0u), m_socket(-1), m_postRequest(NULL), m_getRequest(NULL), m_pendingNotificationsNum(0), m_gotNotification(false)
         , m_userName(NULL), m_userNameLen(0), m_message(NULL), m_messageLen(0)
     {
     }
@@ -174,9 +174,18 @@ struct NotificationsCtx
             return false;
         }
         api->set_blocking(m_socket, false);
-        api->bind(m_socket, 0, 8734);
 
         return true;
+    }
+
+    void SetNotifyPort(uint16_t notifyPort)
+    {
+        m_api->bind(m_socket, 0, notifyPort);
+    }
+
+    void SetAuthKey(uint32_t k)
+    {
+        authKey = k;
     }
 
     void Post(const char* userName, const char* message)
@@ -188,7 +197,7 @@ struct NotificationsCtx
         if(!m_postRequest)
             return;
         m_postRequest->httpMethod = kHttpMethodPost;
-        m_api->sprintf(m_postRequest->url, "http://%s:%u/notification", kServerIP, kServerPort);
+        m_api->sprintf(m_postRequest->url, "http://%s:%u/notification?auth=%x", kServerIP, kServerPort, authKey);
         uint32_t userNameLen = m_api->strlen(userName);
         uint32_t messageLen = m_api->strlen(message);
         m_postRequest->requestBodySize = userNameLen + messageLen + sizeof(uint32_t) * 2;
@@ -314,7 +323,7 @@ private:
         if(!m_getRequest)
             return;
         m_getRequest->httpMethod = kHttpMethodGet;
-        m_api->sprintf(m_getRequest->url, "http://%s:%u/notification?auth=%x", kServerIP, kServerPort, auth);
+        m_api->sprintf(m_getRequest->url, "http://%s:%u/notification?auth=%x", kServerIP, kServerPort, authKey);
         m_getRequest->responseData = (void*)data;
         m_getRequest->responseDataCapacity = 512; // hahaha, should be 256
         if(!m_api->SendHTTPRequest(m_getRequest))
@@ -353,6 +362,7 @@ void DrawIcon(API* api, const Rect& screenRect, const IconsManager& iconMan, con
 enum EMainScreenState
 {
     kMainScreenReady = 0,
+    kMainScreenWaitAuthKey,
     kMainScreenWaitForNetwork,
     kMainScreenWaitGameList,
     kMainScreenLoadGameCode,
@@ -361,13 +371,13 @@ enum EMainScreenState
 };
 
 
-HTTPRequest* RequestGamesList(API* api)
+HTTPRequest* RequestAuthKey(API* api)
 {
     HTTPRequest* request = api->AllocHTTPRequest();
     if(!request)
         return NULL;
     request->httpMethod = kHttpMethodGet;
-    api->sprintf(request->url, "http://%s:%u/list", kServerIP, kServerPort);
+    api->sprintf(request->url, "http://%s:%u/auth", kServerIP, kServerPort);
     if(!api->SendHTTPRequest(request))
     {
         api->FreeHTTPRequest(request);
@@ -377,13 +387,46 @@ HTTPRequest* RequestGamesList(API* api)
 }
 
 
-HTTPRequest* RequestIcon(API* api, uint32_t gameId, uint8_t* iconAddr)
+bool ParseAuthResponse(API* api, HTTPRequest* r, uint32_t& authKey, uint16_t& notifyPort)
+{
+    if(!r->succeed)
+    {
+        authKey = ~0u;
+        return false;
+    }
+
+    char* ptr = (char*)r->responseData;
+    api->memcpy(&authKey, ptr, sizeof(uint32_t));
+    ptr += sizeof(uint32_t);
+    api->memcpy(&notifyPort, ptr, sizeof(uint16_t));
+
+    return true;
+}
+
+
+HTTPRequest* RequestGamesList(API* api, uint32_t authKey)
 {
     HTTPRequest* request = api->AllocHTTPRequest();
     if(!request)
         return NULL;
     request->httpMethod = kHttpMethodGet;
-    api->sprintf(request->url, "http://%s:%u/icon?id=%x", kServerIP, kServerPort, gameId);
+    api->sprintf(request->url, "http://%s:%u/list?auth=%x", kServerIP, kServerPort, authKey);
+    if(!api->SendHTTPRequest(request))
+    {
+        api->FreeHTTPRequest(request);
+        return NULL;
+    }
+    return request;
+}
+
+
+HTTPRequest* RequestIcon(API* api, uint32_t authKey, uint32_t gameId, uint8_t* iconAddr)
+{
+    HTTPRequest* request = api->AllocHTTPRequest();
+    if(!request)
+        return NULL;
+    request->httpMethod = kHttpMethodGet;
+    api->sprintf(request->url, "http://%s:%u/icon?auth=%x&id=%x", kServerIP, kServerPort, gameId, authKey);
     request->responseData = (void*)iconAddr;
     request->responseDataCapacity = kGameIconSize;
     if(!api->SendHTTPRequest(request))
@@ -395,13 +438,13 @@ HTTPRequest* RequestIcon(API* api, uint32_t gameId, uint8_t* iconAddr)
 }
 
 
-HTTPRequest* RequestGameCode(API* api, uint32_t gameId, uint8_t* codeAddr)
+HTTPRequest* RequestGameCode(API* api, uint32_t authKey, uint32_t gameId, uint8_t* codeAddr)
 {
     HTTPRequest* request = api->AllocHTTPRequest();
     if(!request)
         return NULL;
     request->httpMethod = kHttpMethodGet;
-    api->sprintf(request->url, "http://%s:%u/code?id=%x", kServerIP, kServerPort, gameId);
+    api->sprintf(request->url, "http://%s:%u/code?auth=%x&id=%x", kServerIP, kServerPort, gameId, authKey);
     request->responseData = (void*)codeAddr;
     request->responseDataCapacity = kMaxGameCodeSize;
     if(!api->SendHTTPRequest(request))
@@ -427,6 +470,7 @@ int GameMain(API* api)
 
     HTTPRequest* request = NULL;
     EMainScreenState state = kMainScreenWaitForNetwork;
+    uint32_t authKey = ~0u;
 
     uint8_t* curSdram = api->GetSDRam();
     IconsManager iconCache(curSdram, api);
@@ -509,11 +553,28 @@ int GameMain(API* api)
         if(state == kMainScreenWaitForNetwork && api->GetNetwokConnectionStatus() == kNetwokConnectionStatusGlobalUp)
         {
             api->printf("Connected to the network: '%s'\n", api->GetIPAddress());
-            request = RequestGamesList(api);
+            request = RequestAuthKey(api);
             if(request)
-                state = kMainScreenWaitGameList;
+                state = kMainScreenWaitAuthKey;
             else
                 state = kMainScreenReady;
+        }
+
+        if(state == kMainScreenWaitAuthKey && request->done)
+        {
+            uint16_t notifyPort = 0;
+            if(ParseAuthResponse(api, request, authKey, notifyPort))
+            {
+                notificationsCtx.SetNotifyPort(notifyPort);
+                notificationsCtx.SetAuthKey(authKey);
+                request = RequestGamesList(api, authKey);
+                state = kMainScreenWaitGameList;
+            }
+            else
+                state = kMainScreenReady;
+
+            api->FreeHTTPRequest(request);
+            request = NULL;
         }
 
         if(state == kMainScreenWaitGameList && request->done)
@@ -571,7 +632,7 @@ int GameMain(API* api)
                 if(iconIdx != ~0u)
                 {
                     uint8_t* iconAddr = iconCache.gameIcons[iconIdx].addr;
-                    request = RequestIcon(api, games[i].id, iconAddr);
+                    request = RequestIcon(api, authKey, games[i].id, iconAddr);
                     if(request)
                     {
                         games[i].iconAddr = iconAddr;
@@ -613,7 +674,7 @@ int GameMain(API* api)
 
         if(state == kMainScreenReady && selectedGame != ~0u)
         {
-            request = RequestGameCode(api, games[selectedGame].id, gameCodeMem);
+            request = RequestGameCode(api, authKey, games[selectedGame].id, gameCodeMem);
             if(request)
             {
                 state = kMainScreenLoadGameCode;
@@ -626,11 +687,17 @@ int GameMain(API* api)
         {
             gamesCount = 0;
             iconCache.ClearGameIcons();
-            request = RequestGamesList(api);
-            if(request)
+            if(authKey == ~0u)
             {
-                state = kMainScreenWaitGameList;
-                api->printf("Requested games list\n");
+                request = RequestAuthKey(api);
+                if(request)
+                    state = kMainScreenWaitAuthKey;
+            }
+            else
+            {
+                request = RequestGamesList(api, authKey);
+                if(request)
+                    state = kMainScreenWaitGameList;
             }
         }
 
@@ -662,16 +729,11 @@ int GameMain(API* api)
             curGame = ~0u;
             gamesCount = 0;
             iconCache.ClearGameIcons();
-            request = RequestGamesList(api);
+            request = RequestGamesList(api, authKey);
             if(request)
-            {
                 state = kMainScreenWaitGameList;
-                api->printf("Requested games list\n");
-            }
             else
-            {
                 state = kMainScreenReady;
-            }
         }
 
         // rendering
