@@ -47,7 +47,7 @@ struct Rect
         : x(x_), y(y_), width(width_), height(height_)
     {}
 
-    bool IsPointInside(int32_t px, int32_t py)
+    bool IsPointInside(int32_t px, int32_t py) const
     {
         return (px >= x) && (py >= y) && (px < (x + width)) && (py < (y + height));
     }
@@ -147,7 +147,8 @@ enum ETextAlignMode
 {
     kTextAlignLeft = 0,
     kTextAlignCenter,
-    kTextAlignRight
+    kTextAlignRight,
+    kTextAlignNone
 };
 
 
@@ -245,7 +246,6 @@ public:
     virtual int getpeername(int socket, NetAddr& addr) = 0;
     virtual void close(int socket) = 0;
 
-    virtual void SwapFramebuffer() = 0;
     virtual void LCD_OnOff(bool onOff) = 0;
     virtual bool LCD_IsOn() = 0;
     virtual void LCD_Clear(uint32_t color) = 0;
@@ -278,4 +278,5 @@ public:
     virtual float time() = 0;
 };
 
-typedef int (*TGameMain)(API*, uint8_t*);
+typedef void* (*TGameInit)(API*, uint8_t*);
+typedef bool (*TGameUpdate)(API*, void*);

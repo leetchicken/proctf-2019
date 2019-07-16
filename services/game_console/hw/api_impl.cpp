@@ -611,6 +611,9 @@ void APIImpl::LCD_DisplayStringAt(uint16_t xpos, uint16_t ypos, const char* text
         case kTextAlignRight:
             bspMode = RIGHT_MODE;
             break;
+        case kTextAlignNone:
+            bspMode = (Text_AlignModeTypdef)0;
+            break;
     }
     BSP_LCD_DisplayStringAt(xpos, ypos, (uint8_t*)text, bspMode);
 }

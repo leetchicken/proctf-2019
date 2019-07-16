@@ -67,6 +67,13 @@ void InitNetwork()
     GEthernet.connect();   
 }
 
+#define _XX_ 0
+
+#if _XX_
+extern void* GameInit(API*, uint8_t*);
+extern bool GameUpdate(API*, void*);
+#endif
+
  
 int main()
 {
@@ -77,6 +84,15 @@ int main()
     
     GAPIImpl.Init(&GEthernet);
 
+#if _XX_
+    ScopedRamExecutionLock make_ram_executable;
+    void* gameCtx = GameInit(&GAPIImpl, GSdram);
+    while(1)
+    {
+        GAPIImpl.SwapFramebuffer();
+        GameUpdate(&GAPIImpl, gameCtx);
+    }
+#else
     FILE* f = fopen("/fs/code.bin", "r");
     if(!f)
     {
@@ -90,11 +106,29 @@ int main()
     fread(code, 1, codeFileSize, f);
     fclose(f);
 
-    uint32_t baseAddr = 0;
-    memcpy(&baseAddr, code, 4);
-    uint8_t* gameMainAddr = code + baseAddr + 4;
+    uint8_t* ptr = code;
+
+    uint32_t gameInitOffset = 0;
+    memcpy(&gameInitOffset, ptr, sizeof(uint32_t));
+    ptr += sizeof(uint32_t);
+
+    uint32_t gameUpdateOffset = 0;
+    memcpy(&gameUpdateOffset, ptr, sizeof(uint32_t));
+    ptr += sizeof(uint32_t);
+
+    uint8_t* gameInitAddr = ptr + gameInitOffset;
+    uint8_t* gameUpdateAddr = ptr + gameUpdateOffset;
 
     ScopedRamExecutionLock make_ram_executable;
-    TGameMain gameMain = (TGameMain)&gameMainAddr[1];
-    gameMain(&GAPIImpl, GSdram);
+    TGameInit gameInit = (TGameInit)&gameInitAddr[1];
+    TGameUpdate gameUpdate = (TGameUpdate)&gameUpdateAddr[1];
+
+    void* gameCtx = gameInit(&GAPIImpl, GSdram);
+
+    while(1)
+    {
+        GAPIImpl.SwapFramebuffer();
+        gameUpdate(&GAPIImpl, gameCtx);
+    }
+#endif
 }
