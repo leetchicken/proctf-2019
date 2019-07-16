@@ -8,8 +8,8 @@ struct NotificationsCtx
     uint32_t authKey;
 
     NotificationsCtx()
-        : authKey(~0u), m_socket(-1), m_postRequest(NULL), m_getRequest(NULL), m_pendingNotificationsNum(0), m_gotNotification(false)
-        , m_userName(NULL), m_userNameLen(0), m_message(NULL), m_messageLen(0), drawTimer(0.0f)
+        : authKey(~0u), m_socket(-1), m_postRequest(NULL), m_getRequest(NULL), m_pendingNotificationsNum(0)
+        , m_userName(NULL), m_userNameLen(0), m_message(NULL), m_messageLen(0), m_gotNotification(false), drawTimer(0.0f)
     {
     }
 
@@ -99,7 +99,6 @@ struct NotificationsCtx
             m_pendingNotificationsNum--;
         }
 
-        uint32_t serverIP = m_api->aton(kServerIP);
         char data[16];
         NetAddr addr;
         int ret = m_api->recv(m_socket, data, 16, &addr);
@@ -127,8 +126,8 @@ struct NotificationsCtx
 
         if(drawTimer < kNotificationDrawTime)
         {
-            uint32_t xpos = rect.x;
-            uint32_t ypos = rect.y;
+            int32_t xpos = rect.x;
+            int32_t ypos = rect.y;
             for(uint32_t i = 0; i < m_userNameLen; i++)
             {
                 m_api->LCD_DisplayChar(xpos, ypos, m_userName[i]);
