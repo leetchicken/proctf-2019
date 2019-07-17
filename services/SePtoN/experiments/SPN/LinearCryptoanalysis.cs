@@ -29,6 +29,117 @@ namespace SPN
 			}
 		}
 
+		
+
+		public IEnumerable<Layer> ChooseBestPathsStartingFromSingleSBoxInRound0_Fixed(int maxSBoxesInLastRound, double thresholdBias)
+		{
+			var round = 0;
+			var roundLayerCandidates = new List<Layer>();
+			for(int round0sboxNum = 0; round0sboxNum < linearApproximationTables[0].Length; round0sboxNum++)
+			{
+				var linearApproximationTable = linearApproximationTables[0][round0sboxNum].table;
+
+				for(uint X = 0; X < linearApproximationTable.GetLength(0); X++)
+				{
+					var bestApproximations = ChooseBestApproximations(linearApproximationTable, X);
+
+					foreach(var approximation in bestApproximations)
+					{
+						roundLayerCandidates.Add(new Layer
+						{
+							roundNum = 0,
+							activatedSBoxes = new[] { (round0sboxNum, approximation.X, approximation.Y, approximation.probability) },
+							inputProbability = 1,
+							outputProbability = approximation.probability
+						});
+					}
+				}
+			}
+
+			while(round < SubstitutionPermutationNetwork.RoundsCount - 1)
+			{
+				var roundThreshold = thresholdBias * Math.Pow(2, SubstitutionPermutationNetwork.RoundsCount - round - 2);
+
+				Console.WriteLine($"Tracing round {round}, roundLayerCandidates {roundLayerCandidates.Count}");
+
+				var newRoundLayerCandidates = new List<Layer>();
+				for(var i = 0; i < roundLayerCandidates.Count; i++)
+				{
+					if(i > 0 && i % (roundLayerCandidates.Count / 4) == 0)
+					{
+						double minBias = newRoundLayerCandidates.Count > 0 ? newRoundLayerCandidates.Min(layer => layer.outputProbability.Bias()) : 0;
+						double maxBias = newRoundLayerCandidates.Count > 0 ? newRoundLayerCandidates.Max(layer => layer.outputProbability.Bias()) : 0;
+						Console.WriteLine($" done {i}\t=> newRoundLayerCandidates {newRoundLayerCandidates.Count},\tminBias {minBias} maxBias {maxBias} threshold {roundThreshold}");
+					}
+
+					newRoundLayerCandidates.AddRange(TraceRoundVariants(roundLayerCandidates[i], roundThreshold));
+				}
+
+				roundLayerCandidates = newRoundLayerCandidates;
+				round++;
+			}
+
+			return roundLayerCandidates
+				.Where(layer => layer.activatedSBoxes.Length <= maxSBoxesInLastRound)
+				.OrderByDescending(layer => layer.inputProbability.Bias())
+				.ThenBy(layer => layer.activatedSBoxes.Length);
+		}
+
+		private IEnumerable<Layer> TraceRoundVariants(Layer prevLayer, double roundThreshold)
+		{
+			var roundNum = prevLayer.roundNum + 1;
+			var inputProbability = prevLayer.outputProbability;
+
+			var sboxesWithInputs = prevLayer.activatedSBoxes
+				.SelectMany(activatedSBox => PermuteY(activatedSBox.Y, activatedSBox.sboxNum))
+				.GroupBy(kvp => kvp.Key)
+				.Select(grouping =>
+				{
+					var newSboxNum = grouping.Key;
+					uint newX = 0;
+					foreach(var kvp in grouping)
+					{
+						var newBitNum = kvp.Value;
+						newX |= SBox.GetUintWithNthBit(newBitNum);
+					}
+
+					return (newSboxNum, newX);
+				})
+				.ToList();
+
+			return GenerateLayers(prevLayer, roundNum, inputProbability, sboxesWithInputs, roundThreshold);
+		}
+
+		private IEnumerable<Layer> GenerateLayers(Layer prevLayer, int roundNum, double inputProbability, List<(int sboxNum, uint X)> sboxesWithInputs, double roundThreshold)
+		{
+			var activatedSBoxesVariants = sboxesWithInputs.Select(sboxWithInput =>
+			{
+				var bestApproximations = ChooseBestApproximations(linearApproximationTables[roundNum][sboxWithInput.sboxNum].table, sboxWithInput.X);
+				return bestApproximations.Select(bestApproximation => (sboxWithInput.sboxNum, bestApproximation.X, bestApproximation.Y, bestApproximation.probability));
+			}).ToList().CrossJoin();
+
+			return activatedSBoxesVariants.Select(variant =>
+			{
+				var activatedSBoxes = variant.ToArray();
+
+				double outputProbability = inputProbability;
+				foreach(var activatedSBox in activatedSBoxes)
+					outputProbability = 1 / 2.0d + 2 * (outputProbability - 1 / 2.0d) * (activatedSBox.probability - 1 / 2.0d);
+
+				if(Math.Abs(0.5 - outputProbability) < roundThreshold)
+					return null;
+
+				return new Layer
+				{
+					roundNum = roundNum,
+					inputProbability = inputProbability,
+					outputProbability = outputProbability,
+					prevLayer = prevLayer,
+					activatedSBoxes = activatedSBoxes
+				};
+			}).Where(layer => layer != null);
+		}
+
 		public IEnumerable<SBoxesWithPath> ChooseBestPathsStartingFromSingleSBoxInRound0(int maxSBoxesInLastRound, double thresholdBias)
 		{
 			this.maxSBoxesInLastRound = maxSBoxesInLastRound;
@@ -168,19 +279,76 @@ namespace SPN
 		}
 	}
 
+	public class Layer
+	{
+		public int roundNum;
+		public Layer prevLayer;
+		public double inputProbability;
+		public double outputProbability;
+		public (int sboxNum, uint X, uint Y, double probability)[] activatedSBoxes;
+
+		public int round0sboxNum
+		{
+			get
+			{
+				var prev = prevLayer;
+				while(prev.prevLayer != null)
+					prev = prev.prevLayer;
+
+				return prev.activatedSBoxes.Single().sboxNum;
+			}
+		}
+
+		public uint round0x
+		{
+			get
+			{
+				var prev = prevLayer;
+				while(prev.prevLayer != null)
+					prev = prev.prevLayer;
+
+				return prev.activatedSBoxes.Single().X;
+			}
+		}
+
+		public uint round0y
+		{
+			get
+			{
+				var prev = prevLayer;
+				while(prev.prevLayer != null)
+					prev = prev.prevLayer;
+
+				return prev.activatedSBoxes.Single().Y;
+			}
+		}
+
+		public uint inputBits
+		{
+			get
+			{
+				uint result = 0;
+				foreach(var activatedSBox in activatedSBoxes)
+					result |= SubstitutionPermutationNetwork.GetBitMask(activatedSBox.sboxNum, activatedSBox.X);
+				return result;
+			}
+		}
+
+		public List<int> ActivatedSboxesNums => activatedSBoxes.Select(tuple => tuple.sboxNum).ToList();
+	}
+
 	class SBoxesWithPath
 	{
 		public uint lastRoundSBoxes;
 		public uint lastRoundInputBits;
 
-		//NOTE для листового узла
 		public readonly int roundNum;
 		public readonly int sboxNum;
 		public readonly uint X;
 		public readonly uint Y;
 		public readonly double probability;
 
-		public List<SBoxesWithPath> children = new List<SBoxesWithPath>(); //внешний список содержит себе биты, на которые разветвился SBox. А внутренний - варианты резолвинга этого разветвления
+		public List<SBoxesWithPath> children = new List<SBoxesWithPath>();
 
 		public SBoxesWithPath(SBoxesWithPath firstChild, SBoxesWithPath fromOtherChildrenSBox, int roundNum, int sboxNum, uint X, uint Y, double? probability = null)
 		{
@@ -205,8 +373,6 @@ namespace SPN
 
 				this.probability = 1 / 2.0d + 2 * (firstChild.probability - 1 / 2.0d) * (fromOtherChildrenSBox.probability - 1 / 2.0d);
 			}
-
-			
 		}
 
 		public SBoxesWithPath(uint lastRoundSBoxes, uint lastRoundInputBits, int roundNum, int sboxNum, uint X, uint Y, double probability)
