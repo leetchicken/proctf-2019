@@ -12,7 +12,7 @@ namespace SPN
 		public static int RoundSBoxesCount => SBoxes.Length;
 		public static int BlockSizeBytes => (SBoxes.Length * SBox.BitSize) / 8;
 
-		public const int RoundsCount = 8; //NOTE can't be less than 2
+		public const int RoundsCount = 4; //NOTE can't be less than 2
 
 		private static uint[] SBoxDES = { 0xE, 0x4, 0xD, 0x1, 0x2, 0xF, 0xB, 0x8, 0x3, 0xA, 0x6, 0xC, 0x5, 0x9, 0x0, 0x7 };
 		private static uint[][] SBoxes = { SBoxDES, SBoxDES, SBoxDES, SBoxDES };

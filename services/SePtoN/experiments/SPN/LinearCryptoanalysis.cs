@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -31,7 +32,7 @@ namespace SPN
 
 		
 
-		public IEnumerable<Layer> ChooseBestPathsStartingFromSingleSBoxInRound0_Fixed(int maxSBoxesInLastRound, double thresholdBias)
+		public IEnumerable<Layer> ChooseBestPathsStartingFromSingleSBoxInRound0_Fixed(int maxSBoxesInLastRound, int maxSBoxesInRound, double thresholdBias)
 		{
 			var round = 0;
 			var roundLayerCandidates = new List<Layer>();
@@ -65,14 +66,15 @@ namespace SPN
 				var newRoundLayerCandidates = new List<Layer>();
 				for(var i = 0; i < roundLayerCandidates.Count; i++)
 				{
-					if(i > 0 && i % (roundLayerCandidates.Count / 4) == 0)
+					var fractionSize = roundLayerCandidates.Count / 4;
+					if(i > 0 && fractionSize > 0 && i % fractionSize == 0)
 					{
 						double minBias = newRoundLayerCandidates.Count > 0 ? newRoundLayerCandidates.Min(layer => layer.inputProbability.Bias()) : 0;
 						double maxBias = newRoundLayerCandidates.Count > 0 ? newRoundLayerCandidates.Max(layer => layer.inputProbability.Bias()) : 0;
 						Console.WriteLine($" done {i + 1}\t=> newRoundLayerCandidates {newRoundLayerCandidates.Count},\tminBias {minBias} maxBias {maxBias} threshold {roundThreshold}");
 					}
 
-					newRoundLayerCandidates.AddRange(TraceRoundVariants(roundLayerCandidates[i], roundThreshold));
+					newRoundLayerCandidates.AddRange(TraceRoundVariants(roundLayerCandidates[i], maxSBoxesInRound, roundThreshold));
 				}
 
 				roundLayerCandidates = newRoundLayerCandidates;
@@ -85,7 +87,7 @@ namespace SPN
 				.ThenBy(layer => layer.activatedSBoxes.Length);
 		}
 
-		private IEnumerable<Layer> TraceRoundVariants(Layer prevLayer, double roundThreshold)
+		private IEnumerable<Layer> TraceRoundVariants(Layer prevLayer, int maxSBoxesInRound, double roundThreshold)
 		{
 			var roundNum = prevLayer.roundNum + 1;
 			var inputProbability = prevLayer.outputProbability;
@@ -106,6 +108,9 @@ namespace SPN
 					return (newSboxNum, newX);
 				})
 				.ToList();
+
+			if(sboxesWithInputs.Count > maxSBoxesInRound)
+				return ImmutableArray<Layer>.Empty;
 
 			return GenerateLayers(prevLayer, roundNum, inputProbability, sboxesWithInputs, roundThreshold);
 		}

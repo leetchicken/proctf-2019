@@ -30,17 +30,18 @@ namespace SPN
 			HackCipher_Fixed(spn);
 		}
 
-		const double thresholdBias = 0.0002;
+		const double thresholdBias = 0.01;
 		const int maxSBoxesInLastRound = 2;
+		const int maxSBoxesInRound = 2 * maxSBoxesInLastRound;
 
-		const int iterationsCount = 1_000_000;
+		const int iterationsCount = 10_000;
 
 
 		private static void HackCipher_Fixed(SubstitutionPermutationNetwork spn)
 		{
 			var linearCryptoanalysis = new LinearCryptoanalysis(spn);
 
-			var bestLayerApproximations = linearCryptoanalysis.ChooseBestPathsStartingFromSingleSBoxInRound0_Fixed(maxSBoxesInLastRound, thresholdBias).ToList();
+			var bestLayerApproximations = linearCryptoanalysis.ChooseBestPathsStartingFromSingleSBoxInRound0_Fixed(maxSBoxesInLastRound, maxSBoxesInRound, thresholdBias).ToList();
 			foreach(var bestLayerApproximation in bestLayerApproximations)
 				HackApproximation_Fixed(spn, bestLayerApproximation);
 		}
