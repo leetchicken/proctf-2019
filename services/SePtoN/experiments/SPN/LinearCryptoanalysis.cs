@@ -67,9 +67,9 @@ namespace SPN
 				{
 					if(i > 0 && i % (roundLayerCandidates.Count / 4) == 0)
 					{
-						double minBias = newRoundLayerCandidates.Count > 0 ? newRoundLayerCandidates.Min(layer => layer.outputProbability.Bias()) : 0;
-						double maxBias = newRoundLayerCandidates.Count > 0 ? newRoundLayerCandidates.Max(layer => layer.outputProbability.Bias()) : 0;
-						Console.WriteLine($" done {i}\t=> newRoundLayerCandidates {newRoundLayerCandidates.Count},\tminBias {minBias} maxBias {maxBias} threshold {roundThreshold}");
+						double minBias = newRoundLayerCandidates.Count > 0 ? newRoundLayerCandidates.Min(layer => layer.inputProbability.Bias()) : 0;
+						double maxBias = newRoundLayerCandidates.Count > 0 ? newRoundLayerCandidates.Max(layer => layer.inputProbability.Bias()) : 0;
+						Console.WriteLine($" done {i + 1}\t=> newRoundLayerCandidates {newRoundLayerCandidates.Count},\tminBias {minBias} maxBias {maxBias} threshold {roundThreshold}");
 					}
 
 					newRoundLayerCandidates.AddRange(TraceRoundVariants(roundLayerCandidates[i], roundThreshold));
