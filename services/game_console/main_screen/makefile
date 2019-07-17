@@ -2,8 +2,9 @@ OPTS = -c -std=gnu++98 -fPIC -fno-rtti -fno-exceptions -fno-builtin -funsigned-c
 NAME = main_screen
 
 all:
-	arm-none-eabi-g++ $(OPTS) $(NAME).cpp -o $(NAME).o
-	arm-none-eabi-ld $(NAME).o -N -Ttext 0 -o $(NAME).elf
+	arm-none-eabi-g++ $(OPTS) main_screen.cpp -o main_screen.o
+	arm-none-eabi-g++ $(OPTS) notifications.cpp -o notifications.o
+	arm-none-eabi-ld main_screen.o notifications.o -N -Ttext 0 -o $(NAME).elf
 	arm-none-eabi-objcopy -O binary $(NAME).elf $(NAME).bin
 	python3 merge.py $(NAME)
 
