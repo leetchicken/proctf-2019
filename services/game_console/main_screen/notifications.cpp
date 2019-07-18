@@ -82,7 +82,6 @@ void NotificationsCtx::Update()
 
     if(m_getRequest && m_getRequest->done)
     {
-        m_gotNotification = false;
         if(m_getRequest->succeed && m_getRequest->responseDataSize)
         {
             // hahaha
@@ -99,6 +98,7 @@ void NotificationsCtx::Update()
             ptr += sizeof(uint32_t);
             m_message = ptr;
             m_gotNotification = true;
+            drawTimer = 0.0f;
         }
         FreeGetRequest();
         m_pendingNotificationsNum--;
@@ -113,8 +113,31 @@ void NotificationsCtx::Update()
         m_pendingNotificationsNum++;
     }
 
-    if(m_pendingNotificationsNum > 0 && !m_getRequest && !m_gotNotification)
+    if(m_pendingNotificationsNum > 0 && !m_getRequest)
         Get();
+}
+
+
+void DrawString(int32_t& xpos, int32_t& ypos, const char* str, uint32_t strLen, API* api, const FontInfo& fontInfo, const Rect& rect)
+{
+    for(uint32_t i = 0; i < strLen; i++)
+    {
+        char c = str[i];
+        if(c == '\n')
+        {
+            xpos = rect.x;
+            ypos += fontInfo.charHeight;
+            continue;
+        }
+
+        api->LCD_DisplayChar(xpos, ypos, c);
+        xpos += fontInfo.charWidth;
+        if(xpos > rect.x + rect.width)
+        {
+            xpos = rect.x;
+            ypos += fontInfo.charHeight;
+        }
+    }
 }
 
 
@@ -133,30 +156,15 @@ void NotificationsCtx::Render(float dt)
     if(drawTimer < kNotificationDrawTime)
     {
         int32_t xpos = rect.x;
+        /*float t = drawTimer / kNotificationDrawTime * 100.0f;
+        if (t > 1.0f) t = 1.0f;
+        int32_t ypos = t * (float)rect.y;*/
         int32_t ypos = rect.y;
-        for(uint32_t i = 0; i < m_userNameLen; i++)
-        {
-            m_api->LCD_DisplayChar(xpos, ypos, m_userName[i]);
-            xpos += fontInfo.charWidth;
-            if(xpos > rect.x + rect.width)
-            {
-                xpos = rect.x;
-                ypos += fontInfo.charHeight;
-            }
-        }
-        
+
+        DrawString(xpos, ypos, m_userName, m_userNameLen, m_api, fontInfo, rect);
         ypos += fontInfo.charHeight;
         xpos = rect.x;
-        for(uint32_t i = 0; i < m_messageLen; i++)
-        {
-            m_api->LCD_DisplayChar(xpos, ypos, m_message[i]);
-            xpos += fontInfo.charWidth;
-            if(xpos > rect.x + rect.width)
-            {
-                xpos = rect.x;
-                ypos += fontInfo.charHeight;
-            }
-        }
+        DrawString(xpos, ypos, m_message, m_messageLen, m_api, fontInfo, rect);
 
         drawTimer += dt;
     }

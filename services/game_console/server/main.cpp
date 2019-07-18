@@ -708,7 +708,7 @@ HttpResponse RequestHandler::HandlePost(HttpRequest request, HttpPostProcessor**
 			return HttpResponse(MHD_HTTP_BAD_REQUEST);
 
         char message[512];
-        sprintf(message, "Here is your flag, keep it safe %s", flag);
+        sprintf(message, "Here is your flag, keep it safe\n%s", flag);
 
         in_addr addr;
         inet_aton(addrStr, (in_addr*)&addr);
