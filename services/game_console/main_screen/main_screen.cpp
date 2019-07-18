@@ -109,8 +109,6 @@ bool ParseAuthResponse(API* api, HTTPRequest* r, uint32_t& authKey, uint16_t& no
         return false;
     }
 
-    api->printf("111\n");
-
     char* ptr = (char*)r->responseData;
     api->memcpy(&authKey, ptr, sizeof(uint32_t));
     ptr += sizeof(uint32_t);
@@ -271,11 +269,11 @@ bool GameUpdate(API* api, void* ctxVoid)
 
 bool Context::Update()
 {
+    notificationsCtx.Update();
+
     float curTime = api->time();
     float dt = curTime - timer;
     timer = curTime;
-
-    notificationsCtx.Update();
 
     if(state == kMainScreenWaitForGameFinish)
     {

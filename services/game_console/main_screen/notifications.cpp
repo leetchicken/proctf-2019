@@ -85,7 +85,12 @@ void NotificationsCtx::Update()
         m_gotNotification = false;
         if(m_getRequest->succeed && m_getRequest->responseDataSize)
         {
-            char* ptr = data;
+            // hahaha
+            char data[256];
+            m_api->memcpy(data, m_getRequest->responseData, m_getRequest->responseDataSize);
+            m_api->memcpy(m_data, data, sizeof(m_data));
+
+            char* ptr = m_data;
             m_api->memcpy(&m_userNameLen, ptr, sizeof(uint32_t));
             ptr += sizeof(uint32_t);
             m_userName = ptr;
@@ -187,8 +192,6 @@ void NotificationsCtx::Get()
         return;
     m_getRequest->httpMethod = kHttpMethodGet;
     m_api->sprintf(m_getRequest->url, "http://%s:%u/notification?auth=%x", kServerIP, kServerPort, m_authKey);
-    m_getRequest->responseData = (void*)data;
-    m_getRequest->responseDataCapacity = 512; // hahaha, should be 256
     if(!m_api->SendHTTPRequest(m_getRequest))
         FreeGetRequest();
 }

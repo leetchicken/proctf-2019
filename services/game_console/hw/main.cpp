@@ -93,6 +93,7 @@ int main()
         GameUpdate(&GAPIImpl, gameCtx);
     }
 #else
+    printf("Loading main screen application...\n");
     FILE* f = fopen("/fs/code.bin", "r");
     if(!f)
     {
@@ -123,7 +124,12 @@ int main()
     TGameInit gameInit = (TGameInit)&gameInitAddr[1];
     TGameUpdate gameUpdate = (TGameUpdate)&gameUpdateAddr[1];
 
+    printf("GameInit: %x\n", gameInitAddr);
+    printf("GameUpdate: %x\n", gameUpdateAddr);
+
     void* gameCtx = gameInit(&GAPIImpl, GSdram);
+
+    printf("Game context: %x\n", gameCtx);
 
     while(1)
     {
