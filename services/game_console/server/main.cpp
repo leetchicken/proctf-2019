@@ -262,6 +262,9 @@ struct Team
         sprintf(buf, "  Last time team post notification: %f\n", lastTimeTeamPostNotification);
         out.append(buf);
 
+        sprintf(buf, "  Number of flags: %u\n\n", (uint32_t)flags.size());
+        out.append(buf);
+
         for(auto& iter : consoles)
         {
             auto& c = iter.second;
@@ -283,9 +286,20 @@ struct Team
         }
     }
 
+    void PutFlag(const char* flagId, const char* flag)
+    {
+        flags.insert({flagId, flag});
+    }
+
+    const std::string& GetFlag(const char* flagId)
+    {
+        return flags[flagId];
+    }
+
 private:
     std::mutex mutex;
     std::map<IPAddr, Console*> consoles;
+    std::map<std::string, std::string> flags;
 };
 
 
@@ -328,13 +342,14 @@ std::mutex GConsolesGuard;
 std::map<AuthKey, Console*> GConsoles;
 
 
-static Team* FindTeam(in_addr ipAddr)
+static Team* FindTeam(in_addr ipAddr, bool showError = true)
 {
     NetworkAddr netAddr = SockaddrToNetworkAddr(ipAddr);
     auto iter = GTeams.find(netAddr);
     if(iter == GTeams.end())
     {
-        printf("  ERROR: Unknown network: %s\n", inet_ntoa(ipAddr));
+        if(showError)
+            printf("  ERROR: Unknown network: %s\n", inet_ntoa(ipAddr));
         return nullptr;
     }
     return &iter->second;
@@ -355,7 +370,11 @@ static Console* CheckAuthority(const QueryString& queryString)
 {
     static const std::string kAuth("auth");
     AuthKey authKey = ~0u;
-    FindInMap(queryString, kAuth, authKey, 16);
+    if(!FindInMap(queryString, kAuth, authKey, 16))
+    {
+        printf("  ERROR: Bad request\n");
+        return nullptr;
+    }
     printf("  auth key: %x\n", authKey);
 
     auto console = GetConsole(authKey);
@@ -461,7 +480,8 @@ HttpResponse RequestHandler::HandleGet(HttpRequest request)
 
         static const std::string kId("id");
         uint32_t id = ~0u;
-        FindInMap(request.queryString, kId, id, 16);
+        if(!FindInMap(request.queryString, kId, id, 16))
+            return HttpResponse(MHD_HTTP_BAD_REQUEST);
         printf("  id: %x\n", id);
 
         auto iter = GGamesDatabase.find(id);
@@ -503,7 +523,8 @@ HttpResponse RequestHandler::HandleGet(HttpRequest request)
 
         static const std::string kId("id");
         uint32_t id = ~0u;
-        FindInMap(request.queryString, kId, id, 16);
+        if(!FindInMap(request.queryString, kId, id, 16))
+            return HttpResponse(MHD_HTTP_BAD_REQUEST);
         printf("  id: %x\n", id);
 
         auto iter = GGamesDatabase.find(id);
@@ -559,6 +580,10 @@ HttpResponse RequestHandler::HandleGet(HttpRequest request)
     }
     else if(ParseUrl(request.url, 1, "checksystem_status"))
     {
+        auto team = FindTeam(request.clientIp, false);
+        if(team)
+            return HttpResponse(MHD_HTTP_FORBIDDEN);
+
         std::string data;
         char buf[512];
         sprintf(buf, "Current time: %f\n\n", GetTime());
@@ -576,6 +601,50 @@ HttpResponse RequestHandler::HandleGet(HttpRequest request)
         response.content = (char*)malloc(data.size());
         memcpy(response.content, data.c_str(), data.size());
         response.contentLength = data.size();
+        return response;
+    }
+    else if(ParseUrl(request.url, 1, "checksystem_getflag"))
+    {
+        auto team = FindTeam(request.clientIp, false);
+        if(team)
+        {
+            printf("  ERROR: Forbidden\n");
+            return HttpResponse(MHD_HTTP_FORBIDDEN);
+        }
+
+        static std::string kAddr("addr");
+		static std::string kFlagId("id");
+		static std::string kFlag("flag");
+
+        const char* addrStr = FindInMap(request.queryString, kAddr);
+		if(!addrStr)
+			return HttpResponse(MHD_HTTP_BAD_REQUEST);
+
+		const char* flagId = FindInMap(request.queryString, kFlagId);
+		if(!flagId)
+			return HttpResponse(MHD_HTTP_BAD_REQUEST);
+
+		in_addr addr;
+        inet_aton(addrStr, (in_addr*)&addr);
+        team = FindTeam(addr);
+        if(!team)
+        {
+            printf("  ERROR: Bad request\n");
+            return HttpResponse(MHD_HTTP_BAD_REQUEST);
+        }
+
+        auto& flag = team->GetFlag(flagId);
+        printf("  Flag '%s' with id '%s' for team '%s'\n", flag.c_str(), flagId, team->desc.name.c_str());
+
+        HttpResponse response;
+        response.code = MHD_HTTP_OK;
+        if(flag.size())
+        {
+            response.headers.insert({"Content-Type", "text/plain"});
+            response.content = (char*)malloc(flag.size());
+            memcpy(response.content, flag.c_str(), flag.size());
+            response.contentLength = flag.size();
+        }
         return response;
     }
 
@@ -596,18 +665,13 @@ HttpResponse RequestHandler::HandlePost(HttpRequest request, HttpPostProcessor**
     }
     else if(ParseUrl(request.url, 1, "checksystem_notification")) 
     {
-		static std::string userNameStr("username");
-		static std::string message("notification");
+		static std::string kMessage("message");
 
-		const char* userName = FindInMap(request.queryString, userNameStr);
-		if(!userName)
+		const char* message = FindInMap(request.queryString, kMessage);
+		if(!message)
 			return HttpResponse(MHD_HTTP_BAD_REQUEST);
 
-		const char* notification = FindInMap(request.queryString, message);
-		if(!notification)
-			return HttpResponse(MHD_HTTP_BAD_REQUEST);
-
-        Notification* n = new Notification(userName, notification);
+        Notification* n = new Notification("Hackerdom", message);
         n->AddRef();
         for(auto& iter : GTeams)
         {
@@ -615,6 +679,51 @@ HttpResponse RequestHandler::HandlePost(HttpRequest request, HttpPostProcessor**
             team.AddNotification(n);
         }
         n->Release();
+
+        return HttpResponse(MHD_HTTP_OK);
+    }
+    else if(ParseUrl(request.url, 1, "checksystem_putflag")) 
+    {
+        auto team = FindTeam(request.clientIp, false);
+        if(team)
+        {
+            printf(" ERROR: Forbidden\n");
+            return HttpResponse(MHD_HTTP_FORBIDDEN);
+        }
+
+        static std::string kAddr("addr");
+		static std::string kFlagId("id");
+		static std::string kFlag("flag");
+
+        const char* addrStr = FindInMap(request.queryString, kAddr);
+		if(!addrStr)
+			return HttpResponse(MHD_HTTP_BAD_REQUEST);
+
+		const char* flagId = FindInMap(request.queryString, kFlagId);
+		if(!flagId)
+			return HttpResponse(MHD_HTTP_BAD_REQUEST);
+
+		const char* flag = FindInMap(request.queryString, kFlag);
+		if(!flag)
+			return HttpResponse(MHD_HTTP_BAD_REQUEST);
+
+        char message[512];
+        sprintf(message, "Here is your flag, keep it safe %s", flag);
+
+        in_addr addr;
+        inet_aton(addrStr, (in_addr*)&addr);
+        team = FindTeam(addr);
+        if(!team)
+        {
+            printf("  ERROR: Bad request\n");
+            return HttpResponse(MHD_HTTP_BAD_REQUEST);
+        }
+
+        printf("  Flag '%s' with id '%s' for team '%s'\n", flag, flagId, team->desc.name.c_str());
+
+        team->PutFlag(flagId, flag);
+        Notification* n = new Notification("Hackerdom", message);
+        team->AddNotification(n);
 
         return HttpResponse(MHD_HTTP_OK);
     }
