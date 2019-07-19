@@ -19,7 +19,7 @@ namespace SPN
 
 			var spn = new SubstitutionPermutationNetwork(Key);
 
-			var plainTextString = "HW";
+			var plainTextString = new string('X', SubstitutionPermutationNetwork.BlockSizeBytes);
 			var plainText = Encoding.ASCII.GetBytes(plainTextString);
 			var encryptedBytes = spn.Encrypt(plainText);
 			var decryptedBytes = spn.Decrypt(encryptedBytes);
