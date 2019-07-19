@@ -4,3 +4,8 @@ services:
     build: ./front
     ports:
      - "8000:8000"
+
+  uploader:
+    build: ./uploader
+    ports:
+      - "5000:80"
