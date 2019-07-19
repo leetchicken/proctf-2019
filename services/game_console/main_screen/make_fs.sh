@@ -2,7 +2,6 @@
 mkdir /tmp/fs
 mount -o loop fs.bin /tmp/fs
 cp code.bin /tmp/fs
-cp mac /tmp/fs
 ../build_bmp/build_bmp assets/background.png /tmp/fs/background.bmp
 ../build_bmp/build_bmp assets/empty_icon.png /tmp/fs/empty_icon.bmp
 ../build_bmp/build_bmp assets/loading.png /tmp/fs/loading.bmp
