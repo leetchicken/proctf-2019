@@ -882,6 +882,22 @@ bool LoadTeamsDatabase()
         desc.checksystemAuthKey = teamNode.attribute("checksystemAuthKey").as_ullong();
         desc.checksystemPort = teamNode.attribute("checksystemPort").as_uint();
         printf("  %u %s %s(%08X) %llX %u\n", desc.number, desc.name.c_str(), desc.networkStr.c_str(), desc.network, desc.checksystemAuthKey, desc.checksystemPort);
+
+        IPAddr consoleAddr = desc.network | kConsoleAddr;
+        Console* console = team.AddConsole(consoleAddr);
+        console->Auth();
+        printf("    auth key: %x\n", console->authKey);
+        printf("    notify port: %u\n", console->notifyPort);
+
+        {
+            std::lock_guard<std::mutex> guard(GConsolesGuard);
+            if(GConsoles.find(console->authKey) != GConsoles.end())
+            {
+                printf("  CRITICAL ERROR, dublicate console was found, auth key: %x\n", console->authKey);
+                exit(1);
+            }
+            GConsoles[console->authKey] = console;
+        }
     }
 
     return true;

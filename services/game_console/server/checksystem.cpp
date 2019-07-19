@@ -187,7 +187,7 @@ bool Check(in_addr ip, uint16_t port, uint64_t authKey)
     // wait for connect
     while(1)
     {
-		ret = poll(&pollFd, 1, 1000);
+		ret = poll(&pollFd, 1, 3000);
         if(ret < 0)
         {
             printf("  ERROR: poll failed %s\n", strerror(errno));
