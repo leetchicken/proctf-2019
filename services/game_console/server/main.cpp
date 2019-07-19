@@ -4,6 +4,7 @@
 #include <mutex>
 #include <thread>
 #include <list>
+#include <unordered_map>
 #include "httpserver.h"
 #include "png.h"
 
@@ -336,10 +337,10 @@ protected:
 };
 
 
-std::map<uint32_t, GameDesc> GGamesDatabase;
-std::map<NetworkAddr, Team> GTeams;
+std::unordered_map<uint32_t, GameDesc> GGamesDatabase;
+std::unordered_map<NetworkAddr, Team> GTeams;
 std::mutex GConsolesGuard;
-std::map<AuthKey, Console*> GConsoles;
+std::unordered_map<AuthKey, Console*> GConsoles;
 
 
 static Team* FindTeam(in_addr ipAddr, bool showError = true)
@@ -421,7 +422,7 @@ HttpResponse RequestHandler::HandleGet(HttpRequest request)
 
         {
             std::lock_guard<std::mutex> guard(GConsolesGuard);
-            if(GConsoles.find(console->authKey) !=  GConsoles.end())
+            if(GConsoles.find(console->authKey) != GConsoles.end())
             {
                 printf("  CRITICAL ERROR, dublicate console was found, auth key: %x\n", console->authKey);
                 exit(1);
