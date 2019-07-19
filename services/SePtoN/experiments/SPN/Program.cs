@@ -30,26 +30,36 @@ namespace SPN
 			HackCipher_Fixed(spn);
 		}
 
-		const double thresholdBias = 0.01;
+		const double thresholdBias = 0.005;
 		const int maxSBoxesInLastRound = 2;
 		const int maxSBoxesInRound = 2 * maxSBoxesInLastRound;
 
-		const int iterationsCount = 1_000;
+		const int iterationsCount = 10_000;
 
 
 		private static void HackCipher_Fixed(SubstitutionPermutationNetwork spn)
 		{
 			var linearCryptoanalysis = new LinearCryptoanalysis(spn);
 
-			var bestLayerApproximations = linearCryptoanalysis.ChooseBestPathsStartingFromSingleSBoxInRound0_Fixed(maxSBoxesInLastRound, maxSBoxesInRound, thresholdBias).ToList();
-			foreach(var bestLayerApproximation in bestLayerApproximations)
-				HackApproximation_Fixed(spn, bestLayerApproximation);
+			var bestLayerApproximations = linearCryptoanalysis.ChooseBestPathsStartingFromSingleSBoxInRound0(maxSBoxesInLastRound, maxSBoxesInRound, thresholdBias).ToList();
+			Console.WriteLine($"Total approximations: {bestLayerApproximations.Count}");
+
+			var plains = Enumerable.Range(0, iterationsCount).Select(i => GenerateRandomPlainText()).ToArray();
+			var encs = plains.Select(plain => spn.Encrypt(plain)).ToArray();
+
+			foreach(var approximationsGroup in bestLayerApproximations.Where(layer => layer.round0sboxNum % 2 == 0 && layer.round0x == 0x8).GroupBy(layer => layer.ActivatedSboxesNums.Aggregate("", (s, num) => s + num)).OrderBy(group => group.Key))
+			{
+				foreach(var approximation in approximationsGroup.OrderByDescending(layer => layer.inputProbability.Bias()).Take(1))
+				{
+					HackApproximation_Fixed(plains, encs, approximation);
+				}
+			}
 		}
 
 
-		private static void HackApproximation_Fixed(SubstitutionPermutationNetwork spn, Layer bestLayerApproximation)
+		private static void HackApproximation_Fixed(byte[][] plains, byte[][] encs, Layer bestLayerApproximation)
 		{
-			Console.WriteLine($"\nBEST OPTION: round0sboxNum {bestLayerApproximation.round0sboxNum}\tX {bestLayerApproximation.round0x}\tY {bestLayerApproximation.round0y}\tbias {Math.Abs(0.5 - bestLayerApproximation.inputProbability)}\tSBoxes {string.Join(",", bestLayerApproximation.ActivatedSboxesNums)}\tLastRoundInputBits {SubstitutionPermutationNetwork.GetBitString(bestLayerApproximation.inputBits)}");
+			Console.WriteLine($"\nBEST OPTION: round0sboxNum {bestLayerApproximation.round0sboxNum}\tround0x {bestLayerApproximation.round0x}\tround0y {bestLayerApproximation.round0y}\tbias {bestLayerApproximation.inputProbability.Bias()}\toutSBoxes {string.Join(",", bestLayerApproximation.ActivatedSboxesNums)}");
 
 			var targetPartialSubkeys = GenerateTargetPartialSubkeys(bestLayerApproximation.ActivatedSboxesNums)
 				.Select(targetPartialSubkey => (targetPartialSubkey, SubstitutionPermutationNetwork.GetBytesBigEndian(targetPartialSubkey)))
@@ -59,24 +69,25 @@ namespace SPN
 				.ToDictionary(u => u.Item1, u => 0);
 			var hackingSubstitutionPermutationNetwork = new SubstitutionPermutationNetwork(SubstitutionPermutationNetwork.GenerateRandomKey());
 
-			for(int it = 0; it < iterationsCount; it++)
+			for(int i = 0; i < iterationsCount; i++)
 			{
-				if(it > 0 && it % (iterationsCount / 4) == 0)
+				if(i > 0 && i % (iterationsCount / 4) == 0)
 				{
-					Console.WriteLine($" done {it} iterations of {iterationsCount}");
+					Console.WriteLine($" done {i} iterations of {iterationsCount}");
 				}
-				HackIteration(spn, bestLayerApproximation.round0sboxNum, bestLayerApproximation.round0x, bestLayerApproximation.inputBits, targetPartialSubkeys, hackingSubstitutionPermutationNetwork, keyProbabilities);
+
+				var plain = plains[i];
+				var enc = encs[i];
+
+				HackIteration(plain, enc, bestLayerApproximation.round0sboxNum, bestLayerApproximation.round0x, bestLayerApproximation.inputBits, targetPartialSubkeys, hackingSubstitutionPermutationNetwork, keyProbabilities);
 			}
 
 			PrintApproximation_Fixed(bestLayerApproximation, keyProbabilities);
 		}
 
-		private static void HackIteration(SubstitutionPermutationNetwork spn, int round0sboxNum, uint round0x, uint lastRoundInputBits, List<(uint, byte[])> targetPartialSubkeys, SubstitutionPermutationNetwork hackingSubstitutionPermutationNetwork, Dictionary<uint, int> keyProbabilities)
+		private static void HackIteration(byte[] plain, byte[] enc, int round0sboxNum, uint round0x, uint lastRoundInputBits, List<(uint, byte[])> targetPartialSubkeys, SubstitutionPermutationNetwork hackingSubstitutionPermutationNetwork, Dictionary<uint, int> keyProbabilities)
 		{
-			var plainText = GenerateRandomPlainText();
-			var enc = spn.Encrypt(plainText);
-
-			var p_setBitsCount = SubstitutionPermutationNetwork.CountBits(SubstitutionPermutationNetwork.GetUintBigEndian(plainText) & (round0x << ((SubstitutionPermutationNetwork.RoundSBoxesCount - round0sboxNum - 1) * SBox.BitSize)));
+			var p_setBitsCount = SubstitutionPermutationNetwork.CountBits(SubstitutionPermutationNetwork.GetUintBigEndian(plain) & (round0x << ((SubstitutionPermutationNetwork.RoundSBoxesCount - round0sboxNum - 1) * SBox.BitSize)));
 
 			var encUnkeyed = new byte[enc.Length];
 			foreach(var (targetPartialSubkey, subkeyBytes) in targetPartialSubkeys)

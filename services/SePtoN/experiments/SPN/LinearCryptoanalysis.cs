@@ -32,7 +32,7 @@ namespace SPN
 
 		
 
-		public IEnumerable<Layer> ChooseBestPathsStartingFromSingleSBoxInRound0_Fixed(int maxSBoxesInLastRound, int maxSBoxesInRound, double thresholdBias)
+		public IEnumerable<Layer> ChooseBestPathsStartingFromSingleSBoxInRound0(int maxSBoxesInLastRound, int maxSBoxesInRound, double thresholdBias)
 		{
 			var round = 0;
 			var roundLayerCandidates = new List<Layer>();
@@ -226,6 +226,6 @@ namespace SPN
 			}
 		}
 
-		public List<int> ActivatedSboxesNums => activatedSBoxes.Select(tuple => tuple.sboxNum).ToList();
+		public List<int> ActivatedSboxesNums => activatedSBoxes.Select(tuple => tuple.sboxNum).OrderBy(i => i).ToList();
 	}
 }
