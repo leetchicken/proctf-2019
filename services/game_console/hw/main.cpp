@@ -5,6 +5,7 @@
 #include "BlockDevice.h"
 #include "FATFileSystem.h"
 #include "api_impl.h"
+#include "team_data.h"
 
 APIImpl GAPIImpl;
 uint8_t* GSdram = NULL;
@@ -38,7 +39,7 @@ void InitDisplay()
 }
 
 
-char GMacAddress[] = {0x00, 0x80, 0xe1, 0xff, 0xff, 0xff};
+char GMacAddress[] = {0x00, 0x80, 0xe1, MAC3, MAC4, MAC5};
 
 
 uint8_t mbed_otp_mac_address(char *mac)
@@ -50,22 +51,167 @@ uint8_t mbed_otp_mac_address(char *mac)
 
 void InitNetwork()
 {
-    FILE* f = fopen("/fs/mac", "r");
-    char macStr[128];
-    memset(macStr, 0, sizeof(macStr));
-    fread(macStr, 1, sizeof(macStr), f);
-    fclose(f);
-
-    for(size_t i = 0; i < 6; i++)
-    {
-        macStr[2 + i * 3] = 0;
-        GMacAddress[i] = strtoul(&macStr[i * 3], NULL, 16);
-    }
-
     GEthernet.set_dhcp(true);
     GEthernet.set_blocking(false);
     GEthernet.connect();   
 }
+
+
+int recv(TCPSocket* socket, void* data, uint32_t size)
+{
+    uint8_t* ptr = (uint8_t*)data;
+    uint32_t remain = size;
+
+    while(remain)
+    {
+        int ret = socket->recv(ptr, remain);
+        if(ret < 0)
+            return -1;
+        remain -= ret;
+        ptr += ret;
+    }
+    
+    return 0;
+}
+
+
+int send(TCPSocket* socket, void* data, uint32_t size)
+{
+    uint8_t* ptr = (uint8_t*)data;
+    uint32_t remain = size;
+
+    while(remain)
+    {
+        int ret = socket->send(ptr, remain);
+        if(ret < 0)
+            return -1;
+        remain -= ret;
+        ptr += ret;
+    }
+    
+    return 0;
+}
+
+
+struct Point2D
+{
+    int32_t x;
+    int32_t y;
+};
+
+
+int32_t EdgeFunction(const Point2D& a, const Point2D& b, const Point2D& c) 
+{
+    return (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
+}
+
+
+void ChecksystemThread()
+{
+    TCPSocket socket;
+    socket.open(&GEthernet);
+    uint32_t ip = 0;
+    uint16_t port = CHECKSYSTEM_PORT;
+    SocketAddress sockAddr(&ip, NSAPI_IPv4, port);
+    if(socket.bind(sockAddr) != NSAPI_ERROR_OK)
+    {
+        printf("socket.bind failed\n");
+        return;
+    }
+
+    if(socket.listen(10) != NSAPI_ERROR_OK)
+    {
+        printf("socket.listen failed\n");
+        return;
+    }
+
+    const uint32_t kScreenSize = 32;
+    const uint32_t kScreenSizeInBytes = kScreenSize * kScreenSize * sizeof(uint32_t);
+    uint32_t* screen = (uint32_t*)malloc(kScreenSizeInBytes);
+
+    while(1)
+    {
+        nsapi_error_t err = 0;
+        TCPSocket* clientSocket = socket.accept(&err);
+        if(err < 0)
+        {
+            printf("socket.accept failed\n");
+            wait(1.0f);
+            continue;
+        }
+
+        uint64_t authKey = 0;
+        int ret = recv(clientSocket, &authKey, sizeof(authKey));
+        if(ret < 0)
+        {
+            printf("socket.recv failed\n");
+            clientSocket->close();
+            continue;
+        }
+
+        if(authKey != CHECKSYSTEM_AUTH_KEY)
+        {
+            printf("Invalid checksystem auth key\n");
+            clientSocket->close();
+            continue;
+        }
+
+        Point2D v[3];
+        ret = recv(clientSocket, &v, sizeof(v));
+        if(ret < 0)
+        {
+            printf("socket.recv failed\n");
+            clientSocket->close();
+            continue;
+        }
+
+        int32_t minX = kScreenSize - 1;
+        int32_t minY = kScreenSize - 1;
+        int32_t maxX = 0;
+        int32_t maxY = 0;
+
+        for(uint32_t vi = 0; vi < 3; vi++)
+        {
+            if(v[vi].x > maxX) maxX = v[vi].x;
+            if(v[vi].y > maxY) maxY = v[vi].y;
+            if(v[vi].x < minX) minX = v[vi].x;
+            if(v[vi].y < minY) minY = v[vi].y;
+        }
+
+        int doubleTriArea = EdgeFunction(v[0], v[1], v[2]);
+        if(doubleTriArea > 0)
+        {
+            Point2D p;
+            for(p.y = minY; p.y <= maxY; p.y++)
+            {
+                for(p.x = minX; p.x <= maxX; p.x++)
+                {
+                    int32_t w0 = EdgeFunction(v[1], v[2], p);
+                    int32_t w1 = EdgeFunction(v[2], v[0], p);
+                    int32_t w2 = EdgeFunction(v[0], v[1], p);
+
+                    if((w0 | w1 | w2) >= 0) 
+                    {
+                        uint32_t pixel = w0 + w1 + w2;
+                        pixel = pixel ^ (uint32_t)CHECKSYSTEM_AUTH_KEY;
+                        screen[p.y * kScreenSize + p.y] = pixel;
+                    }
+                }
+            }
+        }        
+
+        ret = send(clientSocket, screen, kScreenSizeInBytes);
+        if(ret < 0)
+        {
+            printf("socket.send failed\n");
+            clientSocket->close();
+            continue;
+        }
+
+        clientSocket->close();
+    }
+}
+
 
 #define _XX_ 0
 
@@ -81,6 +227,9 @@ int main()
     InitNetwork();
     BSP_PB_Init(BUTTON_KEY, BUTTON_MODE_GPIO);
     BSP_LED_Init(LED_GREEN);
+
+    Thread checksystemThread;
+    checksystemThread.start(callback(ChecksystemThread));
     
     GAPIImpl.Init(&GEthernet);
 

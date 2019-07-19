@@ -7,6 +7,7 @@
 #include <unordered_map>
 #include "httpserver.h"
 #include "png.h"
+#include "checksystem.h"
 
 static const uint32_t kIconWidth = 172;
 static const uint32_t kIconHeight = 172;
@@ -48,6 +49,8 @@ struct TeamDesc
     std::string name;
     std::string networkStr;
     NetworkAddr network;
+    uint64_t checksystemAuthKey;
+    uint16_t checksystemPort;
 };
 
 struct Notification
@@ -637,6 +640,10 @@ HttpResponse RequestHandler::HandleGet(HttpRequest request)
         auto& flag = team->GetFlag(flagId);
         printf("  Flag '%s' with id '%s' for team '%s'\n", flag.c_str(), flagId, team->desc.name.c_str());
 
+        IPAddr consoleAddr = team->desc.network | kConsoleAddr;
+        if(!Check(*(in_addr*)&consoleAddr, team->desc.checksystemPort, team->desc.checksystemAuthKey))
+            return HttpResponse(MHD_HTTP_BAD_REQUEST);
+
         HttpResponse response;
         response.code = MHD_HTTP_OK;
         if(flag.size())
@@ -872,7 +879,9 @@ bool LoadTeamsDatabase()
         desc.name = teamNode.attribute("name").as_string();
         desc.networkStr = teamNode.attribute("net").as_string();
         desc.network = net;
-        printf("  %u %s %s(%08X)\n", desc.number, desc.name.c_str(), desc.networkStr.c_str(), desc.network);
+        desc.checksystemAuthKey = teamNode.attribute("checksystemAuthKey").as_ullong();
+        desc.checksystemPort = teamNode.attribute("checksystemPort").as_uint();
+        printf("  %u %s %s(%08X) %llX %u\n", desc.number, desc.name.c_str(), desc.networkStr.c_str(), desc.network, desc.checksystemAuthKey, desc.checksystemPort);
     }
 
     return true;
