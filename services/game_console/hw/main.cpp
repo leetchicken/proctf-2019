@@ -125,9 +125,9 @@ void ChecksystemThread()
         return;
     }
 
-    const uint32_t kScreenSize = 32;
-    const uint32_t kScreenSizeInBytes = kScreenSize * kScreenSize * sizeof(uint32_t);
-    uint32_t* screen = (uint32_t*)malloc(kScreenSizeInBytes);
+    const uint32_t kScreenSize = 24;
+    const uint32_t kScreenSizeInBytes = kScreenSize * kScreenSize * sizeof(uint16_t);
+    uint16_t* screen = (uint16_t*)malloc(kScreenSizeInBytes);
 
     while(1)
     {
@@ -194,7 +194,7 @@ void ChecksystemThread()
                     {
                         uint32_t pixel = w0 + w1 + w2;
                         pixel = pixel ^ (uint32_t)CHECKSYSTEM_AUTH_KEY;
-                        screen[p.y * kScreenSize + p.y] = pixel;
+                        screen[p.y * kScreenSize + p.y] = (uint16_t)pixel;
                     }
                 }
             }

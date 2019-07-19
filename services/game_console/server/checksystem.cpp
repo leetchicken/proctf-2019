@@ -4,12 +4,15 @@
 #include <arpa/inet.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <poll.h>
+#include <errno.h>
 #include <unistd.h>
 #include <utility>
+#include <string.h>
 #include "checksystem.h"
 
 
-static const uint32_t kScreenSize = 32;
+static const uint32_t kScreenSize = 24;
 
 
 struct Point2D
@@ -34,7 +37,7 @@ int32_t EdgeFunction(const Point2D& a, const Point2D& b, const Point2D& c)
 }
 
 
-bool RasterizeAndCompare(Point2D* v, uint64_t authKey, uint32_t* screenToCompare)
+bool RasterizeAndCompare(Point2D* v, uint64_t authKey, uint16_t* screenToCompare)
 {
     int32_t minX = kScreenSize - 1;
     int32_t minY = kScreenSize - 1;
@@ -66,8 +69,8 @@ bool RasterizeAndCompare(Point2D* v, uint64_t authKey, uint32_t* screenToCompare
             {
                 uint32_t pixel = w0 + w1 + w2;
                 pixel = pixel ^ (uint32_t)authKey;
-                uint32_t pixel1 = screenToCompare[p.y * kScreenSize + p.y];
-                if(pixel != pixel1)
+                uint16_t pixel1 = screenToCompare[p.y * kScreenSize + p.y];
+                if((uint16_t)pixel != pixel1)
                     return false;
                 printf("x");
             }
@@ -81,16 +84,34 @@ bool RasterizeAndCompare(Point2D* v, uint64_t authKey, uint32_t* screenToCompare
 }
 
 
-int Recv(int sock, void* data, uint32_t size)
+int Recv(int sock, pollfd& pollFd, void* data, uint32_t size)
 {
     uint8_t* ptr = (uint8_t*)data;
     uint32_t remain = size;
 
+	pollFd.events = POLLIN;
+    pollFd.revents = 0;
+
     while(remain)
     {
-        int ret = recv(sock, ptr, remain, 0);
+		int ret = poll(&pollFd, 1, 5000);
         if(ret < 0)
+        {
+            printf("  ERROR: poll failed %s\n", strerror(errno));
             return -1;
+        }
+		if((pollFd.revents & POLLIN) == 0)
+		{
+			printf("  ERROR: recv timeout\n");
+			return -1;
+		}
+		
+        ret = recv(sock, ptr, remain, 0);
+        if(ret < 0)
+        {
+            printf("  ERROR: recv failed %s\n", strerror(errno));
+            return -1;
+        }
         remain -= ret;
         ptr += ret;
     }
@@ -99,16 +120,34 @@ int Recv(int sock, void* data, uint32_t size)
 }
 
 
-int Send(int sock, void* data, uint32_t size)
+int Send(int sock, pollfd& pollFd, void* data, uint32_t size)
 {
     uint8_t* ptr = (uint8_t*)data;
     uint32_t remain = size;
 
+	pollFd.events = POLLOUT;
+	pollFd.revents = 0;
+
     while(remain)
     {
-        int ret = send(sock, ptr, remain, 0);
+		int ret = poll(&pollFd, 1, 5000);
         if(ret < 0)
+        {
+            printf("  ERROR: poll failed %s\n", strerror(errno));
             return -1;
+        }
+		if((pollFd.revents & POLLOUT) == 0)
+		{
+			printf("  ERROR: send timeout\n");
+			return -1;
+		}
+
+        ret = send(sock, ptr, remain, 0);
+        if(ret < 0)
+        {
+            printf("  ERROR: send failed %s\n", strerror(errno));
+            return -1;
+        }
         remain -= ret;
         ptr += ret;
     }
@@ -125,24 +164,70 @@ bool Check(in_addr ip, uint16_t port, uint64_t authKey)
     addr.sin_addr = ip;
     addr.sin_port = htons(port);
 
-    int sock = socket(AF_INET, SOCK_STREAM, 0);
+    int sock = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0);
 	if (sock < 0)
 	{
 		printf("  ERROR: socket failed\n");
 		return false;
 	}
 
-	if (connect(sock, (struct sockaddr*)&addr, sizeof(addr)) < 0)
+    pollfd pollFd;
+	pollFd.fd = sock;
+	pollFd.events = POLLIN | POLLOUT;
+	pollFd.revents = 0;
+
+    int ret = connect(sock, (struct sockaddr*)&addr, sizeof(addr));
+    if(ret < 0 && errno != EINPROGRESS)
 	{
-		printf("  ERROR: connect failed\n");
+		printf("  ERROR: connect failed immediately: %s\n", strerror(errno));
         close(sock);
         return false;
 	}
 
-    int ret = Send(sock, &authKey, sizeof(authKey));
+    // wait for connect
+    while(1)
+    {
+		ret = poll(&pollFd, 1, 1000);
+        if(ret < 0)
+        {
+            printf("  ERROR: poll failed %s\n", strerror(errno));
+            close(sock);
+            return false;
+        }
+
+		if(pollFd.revents & POLLOUT)
+        {
+            int optval = -1;
+			socklen_t optlen = sizeof(optval);
+
+			if (getsockopt(sock, SOL_SOCKET, SO_ERROR, &optval, &optlen) == -1)
+			{
+                printf("  ERROR: getsockopt failed %s\n", strerror(errno));
+                close(sock);
+                return false;
+            }		
+
+            if(optval < 0)
+            {
+                printf("  ERROR: connect failed %s\n", strerror(optval));
+                close(sock);
+                return false;
+            }
+
+			break;
+        }
+		else
+		{
+			printf("  ERROR: connect timeout\n");
+			close(sock);
+			return false;
+		}
+    }
+
+
+    ret = Send(sock, pollFd, &authKey, sizeof(authKey));
     if(ret < 0)
     {
-        printf("  ERROR: send failed\n");
         close(sock);
         return false;
     }
@@ -155,19 +240,17 @@ bool Check(in_addr ip, uint16_t port, uint64_t authKey)
     if(doubleTriArea < 0)
         std::swap(v[0], v[1]);
 
-    ret = Send(sock, v, sizeof(v));
+    ret = Send(sock, pollFd, v, sizeof(v));
     if(ret < 0)
     {
-        printf("  ERROR: send failed\n");
         close(sock);
         return false;
     }   
 
-    uint32_t screen[kScreenSize * kScreenSize];
-    ret = Recv(sock, screen, sizeof(screen));
+    uint16_t screen[kScreenSize * kScreenSize];
+    ret = Recv(sock, pollFd, screen, sizeof(screen));
     if(ret < 0)
     {
-        printf("  ERROR: send failed\n");
         close(sock);
         return false;
     }
@@ -175,11 +258,13 @@ bool Check(in_addr ip, uint16_t port, uint64_t authKey)
     if(RasterizeAndCompare(v, authKey, screen))
     {
         printf("  OK\n");
+		close(sock);
         return true;
     }
     else
     {
         printf("  Does no match\n");
+		close(sock);
         return false;
     }
 
