@@ -9,3 +9,8 @@ services:
     build: ./uploader
     ports:
       - "5000:80"
+
+  storage:
+    build: ./storage
+    ports:
+      - "9000:9000"
