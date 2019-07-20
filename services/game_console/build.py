@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import os
 import re
 import subprocess
@@ -35,7 +36,6 @@ os.system("mkdir BUILD/server/data")
 os.system("cp server/data/*.xml BUILD/server/data")
 print("")
 
-
 gamesXml = ET.ElementTree(file="server/data/games.xml").getroot()
 for game in gamesXml:
 	name = game.get("name")
@@ -44,7 +44,7 @@ for game in gamesXml:
 		exit(1)
 	os.system("mkdir BUILD/server/data/%s" % name)
 	os.system("cp server/data/%s/code.bin BUILD/server/data/%s/" % (name, name))
-	os.system("cp server/data/%s/icon.png BUILD/server/data/%s/" % (name, name))
+	os.system("cp server/data/%s/*.png BUILD/server/data/%s/" % (name, name))
 	print("")
 
 print("Build main_screen")
@@ -55,8 +55,22 @@ if os.system("cd main_screen; sudo ./make_fs.sh") != 0:
 os.system("cp main_screen/fs.bin BUILD/")
 print("")
 
-print("Build firmware")
-if os.system("cd hw; ./compile.sh --profile release") != 0:
-	exit(1)
-os.system("cp hw/BUILD/DISCO_F746NG/GCC_ARM/hw.bin BUILD/")
+teamsXml = ET.ElementTree(file="server/data/teams.xml").getroot()
+for team in teamsXml:
+	name = team.get("name")
+	print("Build firmware for team " + name)
+	checksystemAuthKey = team.get("checksystemAuthKey")
+	checksystemPort = team.get("checksystemPort")
+	mac5 = team.get("mac5")
+	
+	team_data = "#define MAC5 %s\n" % mac5 
+	team_data += "#define USER_NAME \"%s\"\n" % name
+	team_data += "#define CHECKSYSTEM_PORT %s\n" % checksystemPort
+	team_data += "#define CHECKSYSTEM_AUTH_KEY %s\n" % checksystemAuthKey 
+	open("hw/team_data.h", "w").write(team_data)
+
+	if os.system("cd hw; ./compile.sh --profile release") != 0:
+		exit(1)
+	os.system("mkdir BUILD/%s; cp hw/BUILD/DISCO_F746NG/GCC_ARM/hw.bin BUILD/%s/" % (name, name))
+	print("")
 

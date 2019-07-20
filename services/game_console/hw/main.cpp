@@ -39,7 +39,7 @@ void InitDisplay()
 }
 
 
-char GMacAddress[] = {0x00, 0x80, 0xe1, MAC3, MAC4, MAC5};
+char GMacAddress[] = {0x00, 0x80, 0xe1, 0x00, 0x00, MAC5};
 
 
 uint8_t mbed_otp_mac_address(char *mac)
