@@ -84,13 +84,15 @@ bool RasterizeAndCompare(Point2D* v, uint64_t authKey, uint16_t* screenToCompare
 }
 
 
-int Recv(int sock, pollfd& pollFd, void* data, uint32_t size)
+int Recv(int sock, void* data, uint32_t size)
 {
     uint8_t* ptr = (uint8_t*)data;
     uint32_t remain = size;
 
+	pollfd pollFd;
+	pollFd.fd = sock;
 	pollFd.events = POLLIN;
-    pollFd.revents = 0;
+	pollFd.revents = 0;
 
     while(remain)
     {
@@ -120,11 +122,13 @@ int Recv(int sock, pollfd& pollFd, void* data, uint32_t size)
 }
 
 
-int Send(int sock, pollfd& pollFd, void* data, uint32_t size)
+int Send(int sock, void* data, uint32_t size)
 {
     uint8_t* ptr = (uint8_t*)data;
     uint32_t remain = size;
 
+	pollfd pollFd;
+	pollFd.fd = sock;
 	pollFd.events = POLLOUT;
 	pollFd.revents = 0;
 
@@ -171,11 +175,6 @@ bool Check(in_addr ip, uint16_t port, uint64_t authKey)
 		return false;
 	}
 
-    pollfd pollFd;
-	pollFd.fd = sock;
-	pollFd.events = POLLIN | POLLOUT;
-	pollFd.revents = 0;
-
     int ret = connect(sock, (struct sockaddr*)&addr, sizeof(addr));
     if(ret < 0 && errno != EINPROGRESS)
 	{
@@ -185,6 +184,10 @@ bool Check(in_addr ip, uint16_t port, uint64_t authKey)
 	}
 
     // wait for connect
+	pollfd pollFd;
+	pollFd.fd = sock;
+	pollFd.events = POLLIN | POLLOUT;
+	pollFd.revents = 0;
     while(1)
     {
 		ret = poll(&pollFd, 1, 3000);
@@ -225,7 +228,7 @@ bool Check(in_addr ip, uint16_t port, uint64_t authKey)
     }
 
 
-    ret = Send(sock, pollFd, &authKey, sizeof(authKey));
+	ret = Send(sock, &authKey, sizeof(authKey));
     if(ret < 0)
     {
         close(sock);
@@ -240,7 +243,7 @@ bool Check(in_addr ip, uint16_t port, uint64_t authKey)
     if(doubleTriArea < 0)
         std::swap(v[0], v[1]);
 
-    ret = Send(sock, pollFd, v, sizeof(v));
+	ret = Send(sock, v, sizeof(v));
     if(ret < 0)
     {
         close(sock);
@@ -248,7 +251,7 @@ bool Check(in_addr ip, uint16_t port, uint64_t authKey)
     }   
 
     uint16_t screen[kScreenSize * kScreenSize];
-    ret = Recv(sock, pollFd, screen, sizeof(screen));
+	ret = Recv(sock, screen, sizeof(screen));
     if(ret < 0)
     {
         close(sock);
