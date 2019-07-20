@@ -881,13 +881,16 @@ bool LoadTeamsDatabase()
         desc.network = net;
         desc.checksystemAuthKey = teamNode.attribute("checksystemAuthKey").as_ullong();
         desc.checksystemPort = teamNode.attribute("checksystemPort").as_uint();
-        printf("  %u %s %s(%08X) %llX %u\n", desc.number, desc.name.c_str(), desc.networkStr.c_str(), desc.network, desc.checksystemAuthKey, desc.checksystemPort);
+        printf("  %u %s\n", desc.number, desc.name.c_str());
+        printf("    network: %s(%08X)\n", desc.networkStr.c_str(), desc.network);
+        printf("    checksystem auth key: %llX\n", desc.checksystemAuthKey);
+        printf("    checksystem port: %u\n", desc.checksystemPort);
 
         IPAddr consoleAddr = desc.network | kConsoleAddr;
         Console* console = team.AddConsole(consoleAddr);
         console->Auth();
-        printf("    auth key: %x\n", console->authKey);
-        printf("    notify port: %u\n", console->notifyPort);
+        printf("    console auth key: %x\n", console->authKey);
+        printf("    console notify port: %u\n", console->notifyPort);
 
         {
             std::lock_guard<std::mutex> guard(GConsolesGuard);

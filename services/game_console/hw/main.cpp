@@ -65,7 +65,7 @@ int recv(TCPSocket* socket, void* data, uint32_t size)
     while(remain)
     {
         int ret = socket->recv(ptr, remain);
-        if(ret < 0)
+        if(ret <= 0)
             return -1;
         remain -= ret;
         ptr += ret;
@@ -83,7 +83,7 @@ int send(TCPSocket* socket, void* data, uint32_t size)
     while(remain)
     {
         int ret = socket->send(ptr, remain);
-        if(ret < 0)
+        if(ret <= 0)
             return -1;
         remain -= ret;
         ptr += ret;
@@ -139,6 +139,8 @@ void ChecksystemThread()
             wait(1.0f);
             continue;
         }
+
+        clientSocket->set_timeout(3000);
 
         uint64_t authKey = 0;
         int ret = recv(clientSocket, &authKey, sizeof(authKey));

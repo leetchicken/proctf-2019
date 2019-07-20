@@ -109,6 +109,11 @@ int Recv(int sock, void* data, uint32_t size)
 		}
 		
         ret = recv(sock, ptr, remain, 0);
+        if(ret == 0)
+        {
+            printf("  ERROR: connection closed by peer\n");
+            return -1;
+        }
         if(ret < 0)
         {
             printf("  ERROR: recv failed %s\n", strerror(errno));
