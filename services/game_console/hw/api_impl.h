@@ -8,10 +8,12 @@ class APIImpl : public API
 public:
     APIImpl();
 
-    void Init(EthernetInterface* ethInterface);
+    void Init(EthernetInterface* ethInterface, const char* username);
 
     void* Malloc(uint32_t size);
     void Free(void* ptr);
+
+    const char* GetUserName();
 
     void GetScreenRect(Rect* rect);
     void GetTouchScreenState(TouchScreenState* state);
@@ -39,6 +41,7 @@ public:
     void LCD_OnOff(bool onOff);
     bool LCD_IsOn();
     void LCD_Clear(uint32_t color);
+    void LCD_DrawPixel(uint32_t x, uint32_t y, uint32_t pixel);
     void LCD_SetBackColor(uint32_t color);
     void LCD_SetTextColor(uint32_t color);
     void LCD_SetFont(EFont font);
@@ -67,9 +70,12 @@ public:
     void sleep(float t);
     float time();
 
+    double floatToDouble(float f);
+
 private:
     int m_curFrameBuffer;
     EthernetInterface* m_ethInterface;
+    char m_userName[256];
     Timer m_timer;
     bool m_displayIsOn;
     TCPSocket* m_tcpSockets[32];

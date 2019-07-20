@@ -1,5 +1,6 @@
 #define MAC3 0x00
 #define MAC4 0x00
 #define MAC5 0x01
+#define USER_NAME "Username"
 #define CHECKSYSTEM_PORT 3333
 #define CHECKSYSTEM_AUTH_KEY 0xAABBCCDDEEFFAABB

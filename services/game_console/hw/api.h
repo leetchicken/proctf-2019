@@ -202,6 +202,8 @@ public:
     virtual void* Malloc(uint32_t size) = 0;
     virtual void Free(void* ptr) = 0;
 
+    virtual const char* GetUserName() = 0;
+
     virtual void GetScreenRect(Rect* rect) = 0;
     virtual void GetTouchScreenState(TouchScreenState* state) = 0;
 
@@ -249,6 +251,7 @@ public:
     virtual void LCD_OnOff(bool onOff) = 0;
     virtual bool LCD_IsOn() = 0;
     virtual void LCD_Clear(uint32_t color) = 0;
+    virtual void LCD_DrawPixel(uint32_t x, uint32_t y, uint32_t pixel) = 0;
     virtual void LCD_SetBackColor(uint32_t color) = 0;
     virtual void LCD_SetTextColor(uint32_t color) = 0;
     virtual void LCD_SetFont(EFont font) = 0;
@@ -276,6 +279,8 @@ public:
     virtual void printf(const char* formatStr, ...) = 0;
     virtual void sleep(float t) = 0;
     virtual float time() = 0;
+
+    virtual double floatToDouble(float f) = 0;
 };
 
 typedef void* (*TGameInit)(API*, uint8_t*);

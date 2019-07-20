@@ -233,7 +233,9 @@ int main()
     Thread checksystemThread;
     checksystemThread.start(callback(ChecksystemThread));
     
-    GAPIImpl.Init(&GEthernet);
+    GAPIImpl.Init(&GEthernet, USER_NAME);
+
+    printf("User name: %s\n", USER_NAME);
 
 #if _XX_
     ScopedRamExecutionLock make_ram_executable;

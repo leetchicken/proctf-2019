@@ -1,5 +1,5 @@
 OPTS = -c -std=gnu++98 -fPIC -fno-rtti -fno-exceptions -fno-builtin -funsigned-char -fno-delete-null-pointer-checks -fomit-frame-pointer -O2 -mcpu=cortex-m7 -mthumb -mfpu=fpv5-sp-d16 -mfloat-abi=softfp
-NAME = test_game
+NAME = main
 
 all:
 	arm-none-eabi-g++ $(OPTS) $(NAME).cpp -o $(NAME).o

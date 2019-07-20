@@ -88,7 +88,7 @@ APIImpl::APIImpl()
 }
 
 
-void APIImpl::Init(EthernetInterface* ethInterface)
+void APIImpl::Init(EthernetInterface* ethInterface, const char* userName)
 {
     m_curFrameBuffer = 0;
     m_ethInterface = ethInterface;
@@ -98,6 +98,7 @@ void APIImpl::Init(EthernetInterface* ethInterface)
     m_acceptedSockets = 0;
     memset(m_udpSockets, 0, sizeof(m_udpSockets));
     m_freeUdpSockets = ~0u;
+    strcpy(m_userName, userName);
 }
 
 
@@ -110,6 +111,12 @@ void* APIImpl::Malloc(uint32_t size)
 void APIImpl::Free(void* ptr)
 {
     free(ptr);
+}
+
+
+const char* APIImpl::GetUserName()
+{
+    return m_userName;
 }
 
 
@@ -531,6 +538,12 @@ void APIImpl::LCD_Clear(uint32_t color)
 }
 
 
+void APIImpl::LCD_DrawPixel(uint32_t x, uint32_t y, uint32_t pixel)
+{
+    BSP_LCD_DrawPixel(x, y, pixel);
+}
+
+
 void APIImpl::LCD_SetBackColor(uint32_t color)
 {
     BSP_LCD_SetBackColor(color);
@@ -696,7 +709,12 @@ void APIImpl::fclose(void* file)
 
 void* APIImpl::memcpy(void* dst, const void* src, uint32_t size)
 {
-    return ::memcpy(dst, src, size);
+    uint8_t* dstByte = (uint8_t*)dst;
+    uint8_t* srcByte = (uint8_t*)src;
+    for(uint32_t i = 0; i < size; i++)
+        dstByte[i] = srcByte[i];
+
+    return dst;
 }
 
 
@@ -745,4 +763,10 @@ void APIImpl::sleep(float t)
 float APIImpl::time()
 {
     return (float)m_timer.read_ms() / 1000.0f;
+}
+
+
+double APIImpl::floatToDouble(float f)
+{
+    return (double)f;
 }

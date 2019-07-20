@@ -494,7 +494,7 @@ bool Context::Update()
             api->memset(buf, 0, 64);
             api->sprintf(buf, "Start game '%s'", games[curGame].name);
             api->printf(buf);
-            notificationsCtx.Post(api->GetIPAddress(), buf);
+            notificationsCtx.Post(api->GetUserName(), buf);
 
             uint8_t* ptr = gameCodeMem;
 
