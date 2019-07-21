@@ -74,7 +74,7 @@ bool Context::Update(API* api)
     Rect screenRect;
     api->GetScreenRect(&screenRect);
 
-    if(tsState.touchDetected)
+    if(tsState.touchDetected && logoRect.IsPointInside(tsState.touchX[0], tsState.touchY[0]))
     {
         if(!touchOnPrevFrame)
         {
