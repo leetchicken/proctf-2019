@@ -215,7 +215,7 @@ bool Check(in_addr ip, uint16_t port, uint64_t authKey)
                 return false;
             }		
 
-            if(optval < 0)
+			if(optval != 0)
             {
                 printf("  ERROR: connect failed %s\n", strerror(optval));
                 close(sock);
