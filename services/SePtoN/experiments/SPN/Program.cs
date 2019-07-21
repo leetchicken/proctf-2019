@@ -30,11 +30,11 @@ namespace SPN
 			HackCipher_Fixed(spn);
 		}
 
-		const double thresholdBias = 0.005;
+		const double thresholdBias = 0.004;
 		const int maxSBoxesInLastRound = 2;
 		const int maxSBoxesInRound = 2 * maxSBoxesInLastRound;
 
-		const int iterationsCount = 10_000;
+		const int iterationsCount = 65536;
 
 
 		private static void HackCipher_Fixed(SubstitutionPermutationNetwork spn)
@@ -47,9 +47,12 @@ namespace SPN
 			var plains = Enumerable.Range(0, iterationsCount).Select(i => GenerateRandomPlainText()).ToArray();
 			var encs = plains.Select(plain => spn.Encrypt(plain)).ToArray();
 
-			foreach(var approximationsGroup in bestLayerApproximations.Where(layer => layer.round0sboxNum % 2 == 0 && layer.round0x == 0x8).GroupBy(layer => layer.ActivatedSboxesNums.Aggregate("", (s, num) => s + num)).OrderBy(group => group.Key))
+			foreach(var approximationsGroup in bestLayerApproximations
+													.Where(layer => layer.round0sboxNum % 2 == 0 && layer.round0x == 0x8)
+													.GroupBy(layer => layer.ActivatedSboxesNums.Aggregate("", (s, num) => s + num))
+													.OrderBy(group => group.Key))
 			{
-				foreach(var approximation in approximationsGroup.OrderByDescending(layer => layer.inputProbability.Bias()).Take(1))
+				foreach(var approximation in approximationsGroup.Distinct().OrderByDescending(layer => layer.inputProbability.Bias()).Take(3))
 				{
 					HackApproximation_Fixed(plains, encs, approximation);
 				}
@@ -59,7 +62,7 @@ namespace SPN
 
 		private static void HackApproximation_Fixed(byte[][] plains, byte[][] encs, Layer bestLayerApproximation)
 		{
-			Console.WriteLine($"\nBEST OPTION: round0sboxNum {bestLayerApproximation.round0sboxNum}\tround0x {bestLayerApproximation.round0x}\tround0y {bestLayerApproximation.round0y}\tbias {bestLayerApproximation.inputProbability.Bias()}\toutSBoxes {string.Join(",", bestLayerApproximation.ActivatedSboxesNums)}");
+			Console.WriteLine($"\nBEST OPTION: round0sboxNum {bestLayerApproximation.round0sboxNum}\tround0x {bestLayerApproximation.round0x}\tround0y {bestLayerApproximation.round0y}\tbias {bestLayerApproximation.inputProbability.Bias()}\toutSBoxes {string.Join(",", bestLayerApproximation.ActivatedSboxesNums)}\tLastRoundInputBits {SubstitutionPermutationNetwork.GetBitString(bestLayerApproximation.inputBits)}");
 
 			var targetPartialSubkeys = GenerateTargetPartialSubkeys(bestLayerApproximation.ActivatedSboxesNums)
 				.Select(targetPartialSubkey => (targetPartialSubkey, SubstitutionPermutationNetwork.GetBytesBigEndian(targetPartialSubkey)))
@@ -85,9 +88,9 @@ namespace SPN
 			PrintApproximation_Fixed(bestLayerApproximation, keyProbabilities);
 		}
 
-		private static void HackIteration(byte[] plain, byte[] enc, int round0sboxNum, uint round0x, uint lastRoundInputBits, List<(uint, byte[])> targetPartialSubkeys, SubstitutionPermutationNetwork hackingSubstitutionPermutationNetwork, Dictionary<uint, int> keyProbabilities)
+		private static void HackIteration(byte[] plain, byte[] enc, int round0sboxNum, ulong round0x, ulong lastRoundInputBits, List<(ulong, byte[])> targetPartialSubkeys, SubstitutionPermutationNetwork hackingSubstitutionPermutationNetwork, Dictionary<ulong, int> keyProbabilities)
 		{
-			var p_setBitsCount = SubstitutionPermutationNetwork.CountBits(SubstitutionPermutationNetwork.GetUintBigEndian(plain) & (round0x << ((SubstitutionPermutationNetwork.RoundSBoxesCount - round0sboxNum - 1) * SBox.BitSize)));
+			var p_setBitsCount = SubstitutionPermutationNetwork.CountBits(SubstitutionPermutationNetwork.GetUlongBigEndian(plain) & (round0x << ((SubstitutionPermutationNetwork.RoundSBoxesCount - round0sboxNum - 1) * SBox.BitSize)));
 
 			var encUnkeyed = new byte[enc.Length];
 			foreach(var (targetPartialSubkey, subkeyBytes) in targetPartialSubkeys)
@@ -97,14 +100,14 @@ namespace SPN
 
 				hackingSubstitutionPermutationNetwork.DecryptRound(encUnkeyed, null, hackingSubstitutionPermutationNetwork.sboxes[SubstitutionPermutationNetwork.RoundsCount - 1], true, true);
 
-				var u_setBitsCount = SubstitutionPermutationNetwork.CountBits(lastRoundInputBits & SubstitutionPermutationNetwork.GetUintBigEndian(encUnkeyed));
+				var u_setBitsCount = SubstitutionPermutationNetwork.CountBits(lastRoundInputBits & SubstitutionPermutationNetwork.GetUlongBigEndian(encUnkeyed));
 
 				if((p_setBitsCount + u_setBitsCount) % 2 == 0)
 					keyProbabilities[targetPartialSubkey]++;
 			}
 		}
 
-		private static void PrintApproximation_Fixed(Layer bestLayerApproximation, Dictionary<uint, int> keyProbabilities)
+		private static void PrintApproximation_Fixed(Layer bestLayerApproximation, Dictionary<ulong, int> keyProbabilities)
 		{
 			Console.WriteLine($"ITERATIONS DONE: {iterationsCount}");
 			Console.ForegroundColor = ConsoleColor.Blue;
@@ -144,17 +147,17 @@ namespace SPN
 			}
 		}
 
-		private static List<uint> GenerateTargetPartialSubkeys(List<int> vulnerableLastRoundSBoxesNums)
+		private static List<ulong> GenerateTargetPartialSubkeys(List<int> vulnerableLastRoundSBoxesNums)
 		{
-			var targetPartialSubkeys = new List<uint> { 0 };
+			var targetPartialSubkeys = new List<ulong> { 0u };
 
 			while(vulnerableLastRoundSBoxesNums.Count > 0)
 			{
 				var sBoxNum = vulnerableLastRoundSBoxesNums.Last();
 
-				var newTargetPartialSubkeys = new List<uint>();
+				var newTargetPartialSubkeys = new List<ulong>();
 				foreach(var targetPartialSubkey in targetPartialSubkeys)
-					for(uint v = 0; v < 1 << SBox.BitSize; v++)
+					for(ulong v = 0; v < 1u << SBox.BitSize; v++)
 						newTargetPartialSubkeys.Add(targetPartialSubkey | SubstitutionPermutationNetwork.GetBitMask(sBoxNum, v));
 				targetPartialSubkeys = newTargetPartialSubkeys;
 

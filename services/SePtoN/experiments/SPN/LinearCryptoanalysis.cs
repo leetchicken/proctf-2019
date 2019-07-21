@@ -40,7 +40,7 @@ namespace SPN
 			{
 				var linearApproximationTable = linearApproximationTables[0][round0sboxNum].table;
 
-				for(uint X = 0; X < linearApproximationTable.GetLength(0); X++)
+				for(ulong X = 0; X < (ulong)linearApproximationTable.GetLength(0); X++)
 				{
 					var bestApproximations = ChooseBestApproximations(linearApproximationTable, X);
 
@@ -48,7 +48,7 @@ namespace SPN
 					{
 						roundLayerCandidates.Add(new Layer
 						{
-							roundNum = 0,
+							roundNum = round,
 							activatedSBoxes = new[] { (round0sboxNum, approximation.X, approximation.Y, approximation.probability) },
 							inputProbability = 1,
 							outputProbability = approximation.probability
@@ -98,11 +98,11 @@ namespace SPN
 				.Select(grouping =>
 				{
 					var newSboxNum = grouping.Key;
-					uint newX = 0;
+					ulong newX = 0;
 					foreach(var kvp in grouping)
 					{
 						var newBitNum = kvp.Value;
-						newX |= SBox.GetUintWithNthBit(newBitNum);
+						newX |= SBox.GetUlongWithNthBit(newBitNum);
 					}
 
 					return (newSboxNum, newX);
@@ -115,7 +115,7 @@ namespace SPN
 			return GenerateLayers(prevLayer, roundNum, inputProbability, sboxesWithInputs, roundThreshold);
 		}
 
-		private IEnumerable<Layer> GenerateLayers(Layer prevLayer, int roundNum, double inputProbability, List<(int sboxNum, uint X)> sboxesWithInputs, double roundThreshold)
+		private IEnumerable<Layer> GenerateLayers(Layer prevLayer, int roundNum, double inputProbability, List<(int sboxNum, ulong X)> sboxesWithInputs, double roundThreshold)
 		{
 			var activatedSBoxesVariants = sboxesWithInputs.Select(sboxWithInput =>
 			{
@@ -125,7 +125,7 @@ namespace SPN
 
 			return activatedSBoxesVariants.Select(variant =>
 			{
-				var activatedSBoxes = variant.ToArray();
+				var activatedSBoxes = variant.OrderBy(tuple => tuple.sboxNum).ToArray();
 
 				double outputProbability = inputProbability;
 				foreach(var activatedSBox in activatedSBoxes)
@@ -145,7 +145,7 @@ namespace SPN
 			}).Where(layer => layer != null);
 		}
 
-		private List<KeyValuePair<int, int>> PermuteY(uint Y, int sboxNum)
+		private List<KeyValuePair<int, int>> PermuteY(ulong Y, int sboxNum)
 		{
 			var outputBits = Enumerable.Range(0, SBox.BitSize)
 				.Where(bitNum => SBox.IsNthBitSet(Y, bitNum))
@@ -155,12 +155,12 @@ namespace SPN
 			return outputBits;
 		}
 
-		private List<(uint X, uint Y, double probability)> ChooseBestApproximations(double[,] linearApproximationTable, uint X)
+		private List<(ulong X, ulong Y, double probability)> ChooseBestApproximations(double[,] linearApproximationTable, ulong X)
 		{
-			var result = new List<(uint, uint, double)>();
+			var result = new List<(ulong, ulong, double)>();
 
 			//NOTE в левом верхнем углу всегда максимум, пропускаем первый столбец
-			for(uint y = 1; y < linearApproximationTable.GetLength(1); y++)
+			for(ulong y = 1; y < (ulong)linearApproximationTable.GetLength(1); y++)
 			{
 				var probability = linearApproximationTable[X, y];
 				if(Math.Abs(probability) != 1 / 2.0d)
@@ -177,7 +177,36 @@ namespace SPN
 		public Layer prevLayer;
 		public double inputProbability;
 		public double outputProbability;
-		public (int sboxNum, uint X, uint Y, double probability)[] activatedSBoxes;
+		public (int sboxNum, ulong X, ulong Y, double probability)[] activatedSBoxes;
+
+		public override bool Equals(object obj)
+		{
+			var rhs = obj as Layer;
+			if(rhs == null)
+				return false;
+			if(roundNum != rhs.roundNum || inputProbability != rhs.inputProbability || round0sboxNum != rhs.round0sboxNum || round0x != rhs.round0x || round0y != rhs.round0y || activatedSBoxes.Length != rhs.activatedSBoxes.Length)
+				return false;
+
+			return activatedSBoxes.Select(tuple => (tuple.sboxNum, tuple.X)).SequenceEqual(rhs.activatedSBoxes.Select(tuple => (tuple.sboxNum, tuple.X)));
+		}
+
+		public override int GetHashCode()
+		{
+			return roundNum;
+		}
+
+		public string Print()
+		{
+			var layer = this;
+			var stack = new Stack<string>();
+			while(layer != null)
+			{
+				var asStr = string.Join(',', layer.activatedSBoxes.Select(tuple => $"({tuple.sboxNum}:{tuple.X}:{tuple.Y}:{tuple.probability})"));
+				stack.Push($"{layer.roundNum}\t{layer.inputProbability}\t{layer.outputProbability}\t{asStr}");
+				layer = layer.prevLayer;
+			}
+			return string.Join("\n", stack);
+		}
 
 		public int round0sboxNum
 		{
@@ -191,7 +220,7 @@ namespace SPN
 			}
 		}
 
-		public uint round0x
+		public ulong round0x
 		{
 			get
 			{
@@ -203,7 +232,7 @@ namespace SPN
 			}
 		}
 
-		public uint round0y
+		public ulong round0y
 		{
 			get
 			{
@@ -215,17 +244,17 @@ namespace SPN
 			}
 		}
 
-		public uint inputBits
+		public ulong inputBits
 		{
 			get
 			{
-				uint result = 0;
+				ulong result = 0;
 				foreach(var activatedSBox in activatedSBoxes)
 					result |= SubstitutionPermutationNetwork.GetBitMask(activatedSBox.sboxNum, activatedSBox.X);
 				return result;
 			}
 		}
 
-		public List<int> ActivatedSboxesNums => activatedSBoxes.Select(tuple => tuple.sboxNum).OrderBy(i => i).ToList();
+		public List<int> ActivatedSboxesNums => activatedSBoxes.Select(tuple => tuple.sboxNum).ToList();
 	}
 }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
+using System.Linq;
+
 
 namespace SPN
 {
@@ -26,6 +27,11 @@ namespace SPN
 				}
 				return best;
 			}
+		}
+
+		public static IEnumerable<T> Distinct<T, TKey>(this IEnumerable<T> enumerable, Func<T, TKey> comparand)
+		{
+			return enumerable.Distinct(new GenericComparer<T, TKey>(comparand));
 		}
 	}
 }
