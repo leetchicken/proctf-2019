@@ -4,7 +4,9 @@
 #include <mutex>
 #include <thread>
 #include <list>
+#include <vector>
 #include <unordered_map>
+#include <dirent.h>
 #include "httpserver.h"
 #include "png.h"
 #include "checksystem.h"
@@ -41,6 +43,7 @@ struct GameDesc
 {
     std::string name;
     std::string desc;
+    std::vector<std::string> assets;
 };
 
 struct TeamDesc
@@ -465,6 +468,9 @@ HttpResponse RequestHandler::HandleGet(HttpRequest request)
         {
             memcpy(ptr, (void*)&gameIter.first, 4);
             ptr += 4;
+            uint32_t assetsNum = gameIter.second.assets.size(); 
+            memcpy(ptr, (void*)&assetsNum, 4);
+            ptr += 4;
             uint32_t len = gameIter.second.name.length() + 1;
             memcpy(ptr, gameIter.second.name.c_str(), len);
             ptr += len;
@@ -518,6 +524,64 @@ HttpResponse RequestHandler::HandleGet(HttpRequest request)
         response.contentLength = kIconWidth * kIconHeight * 4;
         response.content = (char*)malloc(response.contentLength);
         ABGR_to_ARGB(icon.abgr, (ARGB*)response.content, icon.width, icon.height);
+        return response;
+    }
+    else if(ParseUrl(request.url, 1, "asset"))
+    {
+        if(!CheckAuthority(request.queryString))
+            return HttpResponse(MHD_HTTP_UNAUTHORIZED);
+
+        static const std::string kId("id");
+        static const std::string kIndex("index");
+
+        uint32_t id = ~0u;
+        if(!FindInMap(request.queryString, kId, id, 16))
+            return HttpResponse(MHD_HTTP_BAD_REQUEST);
+        printf("  id: %x\n", id);
+
+        uint32_t index = ~0u;
+        if(!FindInMap(request.queryString, kIndex, index, 10))
+            return HttpResponse(MHD_HTTP_BAD_REQUEST);
+        printf("  index: %u\n", index);
+
+        auto iter = GGamesDatabase.find(id);
+        if(iter == GGamesDatabase.end())
+        {
+            printf("  unknown game\n");
+            return HttpResponse(MHD_HTTP_NOT_FOUND);
+        }
+
+        if(index >= iter->second.assets.size())
+        {
+            printf("  invalid asset index\n");
+            return HttpResponse(MHD_HTTP_NOT_FOUND);
+        }
+
+        std::string& assetName = iter->second.assets[index];
+        std::string assetFilePath = "data/";
+        assetFilePath.append(iter->second.name);
+        assetFilePath.append("/");
+        assetFilePath.append(assetName.c_str());
+        printf("  %s\n", assetFilePath.c_str());
+        Image asset;
+        if(!read_png(assetFilePath.c_str(), asset))
+        {
+            printf("  failed to read asset\n");
+            return HttpResponse(MHD_HTTP_INTERNAL_SERVER_ERROR);
+        }
+
+        HttpResponse response;
+        response.code = MHD_HTTP_OK;
+        response.headers.insert({"Content-Type", "application/octet-stream"});
+        response.contentLength = assetName.length() + 1 + asset.width * asset.height * 4;
+        response.content = (char*)malloc(response.contentLength);
+        memset(response.content, 0, response.contentLength);
+
+        char* ptr = response.content;
+        memcpy(ptr, assetName.c_str(), assetName.length());
+        ptr += assetName.length() + 1;
+        ABGR_to_ARGB(asset.abgr, (ARGB*)ptr, asset.width, asset.height);
+
         return response;
     }
     else if(ParseUrl(request.url, 1, "code"))
@@ -831,6 +895,46 @@ void NotificationProcessor::IteratePostData(const char* uploadData, size_t uploa
     }
 }
 
+
+bool EnumerateAssets(const char* gameName, std::vector<std::string>& assets)
+{
+    char dirName[256];
+    sprintf(dirName, "data/%s", gameName);
+
+    DIR *dir;
+    dirent *ent;
+    if ((dir = opendir(dirName)) != NULL) 
+    {
+        while ((ent = readdir(dir)) != NULL) 
+        {
+            if(ent->d_type != DT_REG)
+                continue;
+
+            if(strcmp(ent->d_name, "icon.png") == 0)
+                continue;
+
+            int len = strlen(ent->d_name);
+            if(len < 4) // less than ".png"
+                continue;
+
+            const char* ext = ent->d_name + (len - 4);
+            if(strcmp(ext, ".png") != 0)
+                continue;
+
+            assets.push_back(ent->d_name);
+        }
+        closedir(dir);
+    } 
+    else 
+    {
+        printf("Failed to open directory %s\n", dirName);
+        return false;
+    }
+
+    return true;
+}
+
+
 bool LoadGamesDatabase()
 {
     pugi::xml_document doc;
@@ -848,8 +952,15 @@ bool LoadGamesDatabase()
         GameDesc desc;
         desc.name = gameNode.attribute("name").as_string();
         desc.desc = gameNode.attribute("desc").as_string();
+        if(!EnumerateAssets(desc.name.c_str(), desc.assets))
+            return false;
         GGamesDatabase.insert({id, desc});
         printf("  %x %s '%s'\n", id, desc.name.c_str(), desc.desc.c_str());
+        printf("  assets:\n");
+        if(desc.assets.empty())
+            printf("   <none>\n");
+        for(auto& assetName : desc.assets)
+            printf("   %s\n", assetName.c_str());
     }
 
     return true;

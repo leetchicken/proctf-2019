@@ -19,6 +19,7 @@ struct GameDesc
 {
     Rect uiRect;
     uint32_t id;
+    uint32_t assetsNum;
     char name[32];
     uint8_t* iconAddr;
     uint32_t iconIndex;
@@ -78,6 +79,7 @@ enum EMainScreenState
     kMainScreenWaitAuthKey,
     kMainScreenWaitForNetwork,
     kMainScreenWaitGameList,
+    kMainScreenLoadGameAsset,
     kMainScreenLoadGameCode,
     kMainScreenWaitForGameFinish,
 
@@ -152,6 +154,24 @@ HTTPRequest* RequestIcon(API* api, uint32_t authKey, uint32_t gameId, uint8_t* i
 }
 
 
+HTTPRequest* RequestGameAsset(API* api, uint32_t authKey, uint32_t gameId, uint32_t assetIndex, uint8_t* assetData)
+{
+    HTTPRequest* request = api->AllocHTTPRequest();
+    if(!request)
+        return NULL;
+    request->httpMethod = kHttpMethodGet;
+    api->sprintf(request->url, "http://%s:%u/asset?auth=%x&id=%x&index=%u", kServerIP, kServerPort, authKey, gameId, assetIndex);
+    request->responseData = (void*)assetData;
+    request->responseDataCapacity = kMaxGameAssetSize;
+    if(!api->SendHTTPRequest(request))
+    {
+        api->FreeHTTPRequest(request);
+        return NULL;
+    }
+    return request;
+}
+
+
 HTTPRequest* RequestGameCode(API* api, uint32_t authKey, uint32_t gameId, uint8_t* codeAddr)
 {
     HTTPRequest* request = api->AllocHTTPRequest();
@@ -195,6 +215,7 @@ struct Context
 
     uint8_t* gameCodeMem;
     uint32_t curGame;
+    uint32_t curAssetLoading;
     TGameUpdate gameUpdate;
     void* gameCtx;
 
@@ -231,6 +252,7 @@ struct Context
 
         gameCodeMem = (uint8_t*)api->Malloc(kMaxGameCodeSize);
         curGame = ~0u;
+        curAssetLoading = ~0u;
         gameUpdate = NULL;
         gameCtx = NULL;
 
@@ -285,6 +307,7 @@ bool Context::Update()
 
         state = kMainScreenReady;
         curGame = ~0u;
+        curAssetLoading = ~0u;
     }
 
     api->GetTouchScreenState(&tsState);
@@ -375,6 +398,8 @@ bool Context::Update()
                 desc = GameDesc();
                 api->memcpy(&desc.id, response, 4);
                 response += 4;
+                api->memcpy(&desc.assetsNum, response, 4);
+                response += 4;
                 uint32_t strLen = api->strlen((char*)response);
                 api->memcpy(desc.name, response, strLen + 1);
                 response += strLen + 1;
@@ -386,15 +411,14 @@ bool Context::Update()
                 games[i].ResetIconState();
             }
 
-            state = kMainScreenReady;
             api->printf("Received games list\n");
         }
         else
         {
             api->printf("Error occured while loading games list\n");
-            state = kMainScreenReady;
         }            
 
+        state = kMainScreenReady;
         api->FreeHTTPRequest(request);
         request = NULL;
     }
@@ -459,12 +483,27 @@ bool Context::Update()
 
     if(state == kMainScreenReady && selectedGame != ~0u)
     {
-        request = RequestGameCode(api, authKey, games[selectedGame].id, gameCodeMem);
-        if(request)
+        GameDesc& desc = games[selectedGame];
+        if(desc.assetsNum)
         {
-            state = kMainScreenLoadGameCode;
-            api->printf("Requested game code: %x\n", games[selectedGame].id);
-            curGame = selectedGame;
+            curAssetLoading = 0;
+            request = RequestGameAsset(api, authKey, desc.id, curAssetLoading, curSdram);
+            if(request)
+            {
+                state = kMainScreenLoadGameAsset;
+                api->printf("Requested game asset: %x %u/%u\n", desc.id, curAssetLoading, desc.assetsNum);
+                curGame = selectedGame;
+            }
+        }
+        else
+        {
+            request = RequestGameCode(api, authKey, desc.id, gameCodeMem);
+            if(request)
+            {
+                state = kMainScreenLoadGameCode;
+                api->printf("Requested game code: %x\n", desc.id);
+                curGame = selectedGame;
+            }
         }
     }
 
@@ -483,6 +522,72 @@ bool Context::Update()
             request = RequestGamesList(api, authKey);
             if(request)
                 state = kMainScreenWaitGameList;
+        }
+    }
+
+    if(state == kMainScreenLoadGameAsset && request->done)
+    {
+        GameDesc& desc = games[curGame];
+        if(request->succeed)
+        {
+            const char* name = (char*)request->responseData;
+            uint32_t nameLen = api->strlen(name);
+            uint8_t* asset = (uint8_t*)request->responseData + nameLen + 1;
+            uint32_t assetSize = request->responseDataSize - nameLen - 1;
+
+            api->FreeHTTPRequest(request);
+            request = NULL;
+
+            api->printf("Asset loaded: %s %u bytes\n", name, assetSize);
+
+            char assetPath[256];
+            api->sprintf(assetPath, "/fs/%s", name);
+            void* f = api->fopen(assetPath, "w");
+            if(!f)
+            {
+                api->printf("Failed to create file %s\n", name);
+                state = kMainScreenReady;
+                curGame = ~0u;
+            }
+
+            if(api->fwrite(asset, assetSize, f) != assetSize)
+            {
+                api->printf("Failed to create file %s\n", name);
+                state = kMainScreenReady;
+                curGame = ~0u;
+            }
+
+            api->fclose(f);
+
+            curAssetLoading++;
+
+            if(curAssetLoading == desc.assetsNum)
+            {
+                request = RequestGameCode(api, authKey, desc.id, gameCodeMem);
+                if(request)
+                {
+                    state = kMainScreenLoadGameCode;
+                    api->printf("Requested game code: %x\n", desc.id);
+                }
+            }
+            else
+            {
+                request = RequestGameAsset(api, authKey, desc.id, curAssetLoading, curSdram);
+                if(request)
+                    api->printf("Requested game asset: %x %u/%u\n", desc.id, curAssetLoading, desc.assetsNum);
+            }
+
+            if(!request)
+                state = kMainScreenReady;
+        }
+        else
+        {
+            api->printf("Failed to load game asset %u/%u\n", curAssetLoading, desc.assetsNum);
+            state = kMainScreenReady;
+            curGame = ~0u;
+
+            api->FreeHTTPRequest(request);
+            request = NULL;
         }
     }
 
@@ -527,7 +632,7 @@ bool Context::Update()
     }
 
     // rendering
-    if(state == kMainScreenLoadGameCode)
+    if(state == kMainScreenLoadGameCode || state == kMainScreenLoadGameAsset)
     {
         api->LCD_Clear(0x00000000);
         api->LCD_SetBackColor(0x00000000);
