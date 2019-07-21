@@ -557,7 +557,7 @@ HttpResponse RequestHandler::HandleGet(HttpRequest request)
             return HttpResponse(MHD_HTTP_NOT_FOUND);
         }
 
-        std::string& assetName = iter->second.assets[index];
+        std::string assetName = iter->second.assets[index];
         std::string assetFilePath = "data/";
         assetFilePath.append(iter->second.name);
         assetFilePath.append("/");
@@ -569,6 +569,9 @@ HttpResponse RequestHandler::HandleGet(HttpRequest request)
             printf("  failed to read asset\n");
             return HttpResponse(MHD_HTTP_INTERNAL_SERVER_ERROR);
         }
+
+        char* extension = assetName.data() + (assetName.length() - 3);
+        strcpy(extension, "bmp");
 
         HttpResponse response;
         response.code = MHD_HTTP_OK;

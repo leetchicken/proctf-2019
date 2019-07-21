@@ -36,7 +36,7 @@ void* GameInit(API* api, uint8_t* sdram)
     ctx->prevTime = api->time();
 
     ctx->logo = sdram;
-    void* f = api->fopen("/fs/logo.png", "r");
+    void* f = api->fopen("/fs/logo.bmp", "r");
     uint32_t fileSize = api->fsize(f);
     api->fread(ctx->logo, fileSize, f);
     api->fclose(f);
