@@ -12,11 +12,23 @@ MemoryPool<HTTPRequest, 64> GRequestsPool;
 Queue<HTTPRequest, 64> GRequestsQueue;
 
 
+// its so funny, memcpy is broken, so use our own
+void* MemCopy(void* dst, const void* src, uint32_t size)
+{
+    uint8_t* dstByte = (uint8_t*)dst;
+    uint8_t* srcByte = (uint8_t*)src;
+    for(uint32_t i = 0; i < size; i++)
+        dstByte[i] = srcByte[i];
+
+    return dst;
+}
+
+
 uint8_t* GHttpBodyCallbackPtr = NULL;
 uint32_t GHttpBodySize = 0;
 void HttpBodyCallback(const char* data, uint32_t data_len) 
 {
-    memcpy(GHttpBodyCallbackPtr, data, data_len);
+    MemCopy(GHttpBodyCallbackPtr, data, data_len);
     GHttpBodyCallbackPtr += data_len;
     GHttpBodySize += data_len;
 }
@@ -63,6 +75,7 @@ void HttpThread(EthernetInterface* ethInterface)
                 }
                 request->statusCode = httpResponse->get_status_code();
                 request->succeed = httpResponse->get_status_code() == 200;
+                request->internalData = (void*)httpRequest;
                 request->done = true;
             }
             else
@@ -70,10 +83,9 @@ void HttpThread(EthernetInterface* ethInterface)
                 printf("Http request failed (error code %d)\n", httpRequest->get_error());
                 request->statusCode = 0;
                 request->succeed = false;
+                request->internalData = (void*)httpRequest;
                 request->done = true;
             }
-
-            request->internalData = (void*)httpRequest;
         }
     }
 }
@@ -132,11 +144,11 @@ void APIImpl::GetTouchScreenState(TouchScreenState* state)
     BSP_TS_GetState(&bspState);
 
     state->touchDetected = bspState.touchDetected;
-    memcpy(state->touchX, bspState.touchX, sizeof(state->touchX));
-    memcpy(state->touchY, bspState.touchY, sizeof(state->touchY));
-    memcpy(state->touchWeight, bspState.touchWeight, sizeof(state->touchWeight));
-    memcpy(state->touchEventId, bspState.touchEventId, sizeof(state->touchEventId));
-    memcpy(state->touchArea, bspState.touchArea, sizeof(state->touchArea));
+    MemCopy(state->touchX, bspState.touchX, sizeof(state->touchX));
+    MemCopy(state->touchY, bspState.touchY, sizeof(state->touchY));
+    MemCopy(state->touchWeight, bspState.touchWeight, sizeof(state->touchWeight));
+    MemCopy(state->touchEventId, bspState.touchEventId, sizeof(state->touchEventId));
+    MemCopy(state->touchArea, bspState.touchArea, sizeof(state->touchArea));
 }
 
 
@@ -191,7 +203,7 @@ uint32_t APIImpl::aton(const char* ip)
 {
     uint32_t ret;
     SocketAddress addr(ip);
-    memcpy(&ret, addr.get_ip_bytes(), 4);
+    MemCopy(&ret, addr.get_ip_bytes(), 4);
     return ret;
 }
 
@@ -358,7 +370,7 @@ int APIImpl::recv(int socket, void* data, uint32_t size, NetAddr* addr)
         int ret = m_udpSockets[socketIdx]->recvfrom(&sockAddr, data, size);
         if(addr)
         {
-            memcpy(&addr->ip, sockAddr.get_ip_bytes(), 4);
+            MemCopy(&addr->ip, sockAddr.get_ip_bytes(), 4);
             addr->port = sockAddr.get_port();
         }
         return ConvertSocketRetVal(ret);
@@ -470,7 +482,7 @@ int APIImpl::getpeername(int socket, NetAddr& addr)
     if(err < 0)
         return ConvertSocketRetVal(err);
 
-    memcpy(&addr.ip, sockAddr.get_ip_bytes(), 4);
+    MemCopy(&addr.ip, sockAddr.get_ip_bytes(), 4);
     addr.port = sockAddr.get_port();
     return kSocketErrorOk;
 }
@@ -709,12 +721,7 @@ void APIImpl::fclose(void* file)
 
 void* APIImpl::memcpy(void* dst, const void* src, uint32_t size)
 {
-    uint8_t* dstByte = (uint8_t*)dst;
-    uint8_t* srcByte = (uint8_t*)src;
-    for(uint32_t i = 0; i < size; i++)
-        dstByte[i] = srcByte[i];
-
-    return dst;
+    return MemCopy(dst, src, size);
 }
 
 
