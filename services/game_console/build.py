@@ -36,6 +36,8 @@ os.system("mkdir BUILD/server/data")
 os.system("cp server/data/*.xml BUILD/server/data")
 print("")
 
+os.system("mkdir BUILD/SDK; cp SDK.md BUILD/SDK/")
+
 gamesXml = ET.ElementTree(file="server/data/games.xml").getroot()
 for game in gamesXml:
 	name = game.get("name")
@@ -45,6 +47,13 @@ for game in gamesXml:
 	os.system("mkdir BUILD/server/data/%s" % name)
 	os.system("cp server/data/%s/code.bin BUILD/server/data/%s/" % (name, name))
 	os.system("cp server/data/%s/*.png BUILD/server/data/%s/" % (name, name))
+
+	os.system("mkdir BUILD/SDK/%s" % name)
+	os.system("cp server/data/%s/*.h BUILD/SDK/%s/" % (name, name))
+	os.system("cp server/data/%s/*.cpp BUILD/SDK/%s/" % (name, name))
+	os.system("cp server/data/%s/*.png BUILD/SDK/%s/" % (name, name))
+	os.system("cp server/data/%s/makefile BUILD/SDK/%s/" % (name, name))
+	os.system("cp server/data/%s/merge.py BUILD/SDK/%s/" % (name, name))
 	print("")
 
 print("Build main_screen")

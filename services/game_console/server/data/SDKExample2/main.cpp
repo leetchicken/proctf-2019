@@ -1,4 +1,4 @@
-#include "../../../hw/api.h"
+#include "api.h"
 
 
 static const uint32_t kLogoWidth = 128;
