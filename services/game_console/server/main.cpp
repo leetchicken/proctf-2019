@@ -10,295 +10,16 @@
 #include "httpserver.h"
 #include "png.h"
 #include "checksystem.h"
-
-static const uint32_t kIconWidth = 172;
-static const uint32_t kIconHeight = 172;
-static const uint32_t kNetworkMask = 0x00FFFFFF;
-static const uint32_t kConsoleAddr = 0x06000000;
-static const uint16_t kHttpPort = 8000;
-static const uint16_t kNotifyPort = 8001;
-
-
-float GetTime()
-{
-    timespec tp;
-    memset(&tp, 0, sizeof(tp));
-    clock_gettime(CLOCK_MONOTONIC, &tp);
-    return tp.tv_sec + tp.tv_nsec / 1000000000.0;
-}
-
-using IPAddr = uint32_t;
-using NetworkAddr = uint32_t;
-using AuthKey = uint32_t;
-
-NetworkAddr SockaddrToNetworkAddr(in_addr a)
-{
-    return a.s_addr & kNetworkMask;
-}
-
-const char* inet_ntoa(IPAddr addr)
-{
-    return inet_ntoa(*(in_addr*)&addr);
-}
+#include "misc.h"
+#include "notification.h"
+#include "console.h"
+#include "team.h"
 
 struct GameDesc
 {
     std::string name;
     std::string desc;
     std::vector<std::string> assets;
-};
-
-struct TeamDesc
-{
-    uint32_t number;
-    std::string name;
-    std::string networkStr;
-    NetworkAddr network;
-    uint64_t checksystemAuthKey;
-    uint16_t checksystemPort;
-};
-
-struct Notification
-{
-    char* notification = nullptr;
-    uint32_t notificationLen = 0;
-
-    mutable uint32_t refCount = 0;
-
-    Notification(const char* userName, const char* message)
-    {
-        uint32_t userNameLen = strlen(userName);
-        uint32_t messageLen = strlen(message);
-
-        notificationLen = sizeof(uint32_t) + userNameLen + sizeof(uint32_t) + messageLen;
-        notification = (char*)malloc(notificationLen);
-
-        char* ptr = notification;
-        memcpy(ptr, &userNameLen, sizeof(uint32_t));
-        ptr += sizeof(uint32_t);
-        memcpy(ptr, userName, userNameLen);
-        ptr += userNameLen;
-
-        memcpy(ptr, &messageLen, sizeof(uint32_t));
-        ptr += sizeof(uint32_t);
-        memcpy(ptr, message, messageLen);
-    }
-
-    Notification(void* data, uint32_t dataSize)
-    {
-        notification = (char*)malloc(dataSize);
-        memcpy(notification, data, dataSize);
-        notificationLen = dataSize;
-    }
-
-    ~Notification()
-    {
-        if(notification)
-            free(notification);
-        notification = nullptr;
-        notificationLen = 0;
-    }
-
-    void AddRef() const
-    {
-        __sync_add_and_fetch(&refCount, 1);
-    }
-
-    uint32_t Release() const
-    {
-        uint32_t count = __sync_sub_and_fetch(&refCount, 1);
-        if ((int32_t)count <= 0)
-            delete this;
-        return count;
-    }
-
-    static bool Validate(void* data, uint32_t dataSize)
-    {
-        if(dataSize < sizeof(uint32_t))
-            return false;
-
-        char* ptr = (char*)data;
-        uint32_t userNameLen = 0, messageLen = 0;
-        memcpy(&userNameLen, ptr, sizeof(uint32_t));
-        ptr += sizeof(uint32_t);
-        ptr += userNameLen;
-
-        if(2 * sizeof(uint32_t) + userNameLen > dataSize)
-            return false;
-
-        memcpy(&messageLen, ptr, sizeof(uint32_t));
-        
-        return 2 * sizeof(uint32_t) + userNameLen + messageLen == dataSize;
-    }
-};
-
-struct Console
-{
-    IPAddr ipAddr;
-    float lastConsoleNotifyTime = 0.0f;
-    AuthKey authKey = ~0u;
-    static const uint32_t kNotificationQueueSize = 32;
-
-    void Auth()
-    {
-        authKey = 0;
-        for(uint32_t i = 0; i < 4; i++)
-            authKey |= (rand() % 255) << (i * 8);
-    }
-
-    bool AddNotification(Notification* n)
-    {
-        std::lock_guard<std::mutex> guard(mutex);
-        if(notifications.size() >= kNotificationQueueSize)
-        {
-            printf("  Console %s: notification queue overflowed\n", inet_ntoa(ipAddr));
-            return false;
-        }
-        notifications.push_back(n);
-        n->AddRef();
-
-        NotifyConsole();
-
-        return true;
-    }
-
-    Notification* GetNotification()
-    {
-        std::lock_guard<std::mutex> guard(mutex);
-        if(notifications.empty())
-            return nullptr;
-        auto* retVal = notifications.front();
-        notifications.pop_front();
-        return retVal;
-    }
-
-    uint32_t GetNotificationsInQueue()
-    {
-        std::lock_guard<std::mutex> guard(mutex);
-        return notifications.size();
-    }
-
-    void Update()
-    {
-        std::lock_guard<std::mutex> guard(mutex);
-        float dt = GetTime() - lastConsoleNotifyTime;
-        if(!notifications.empty() && dt > 5.0f)
-            NotifyConsole();
-    }
-
-    void SetNotifySocket(int sock)
-    {
-        if(notifySocket >= 0)
-            close(notifySocket);
-        notifySocket = sock;
-    }
-
-private:
-    std::mutex mutex;
-    std::list<Notification*> notifications;
-    int notifySocket = -1;
-
-    void NotifyConsole()
-    {
-        lastConsoleNotifyTime = GetTime();
-        if(notifySocket >= 0)
-        {
-            char randomData[16];
-            send(notifySocket, randomData, sizeof(randomData), 0);
-        }
-    }
-};
-
-struct Team
-{
-    TeamDesc desc;
-    float lastTimeTeamPostNotification = 0.0f;
-
-    Console* AddConsole(IPAddr consoleIp)
-    {
-        std::lock_guard<std::mutex> guard(mutex);
-        Console* console = new Console();
-        console->ipAddr = consoleIp;
-        consoles[consoleIp] = console;
-        return console;
-    }
-
-    Console* GetConsole(IPAddr consoleIp)
-    {
-        std::lock_guard<std::mutex> guard(mutex);
-        auto iter = consoles.find(consoleIp);
-        if(iter == consoles.end())
-            return nullptr;
-        return iter->second;
-    }
-
-    void AddNotification(Notification* n, IPAddr except = 0)
-    {
-        std::lock_guard<std::mutex> guard(mutex);
-        for(auto& iter : consoles)
-        {
-            if(iter.first == except)
-                continue;
-            iter.second->AddNotification(n);
-        }
-    }
-
-    void Update()
-    {
-        std::lock_guard<std::mutex> guard(mutex);
-        for(auto& iter : consoles)
-            iter.second->Update();
-    }
-
-    void DumpStats(std::string& out)
-    {
-        std::lock_guard<std::mutex> guard(mutex);
-
-        char buf[512];
-        sprintf(buf, "Team%u %s:\n", desc.number, desc.name.c_str());
-        out.append(buf);
-
-        sprintf(buf, "  Network: %s\n", desc.networkStr.c_str());
-        out.append(buf);
-
-        sprintf(buf, "  Last time team post notification: %f\n", lastTimeTeamPostNotification);
-        out.append(buf);
-
-        sprintf(buf, "  Number of flags: %u\n\n", (uint32_t)flags.size());
-        out.append(buf);
-
-        for(auto& iter : consoles)
-        {
-            auto& c = iter.second;
-
-            sprintf(buf, "  Console %s:\n", inet_ntoa(iter.first));
-            out.append(buf);
-
-            sprintf(buf, "    Notifications in queue: %u\n", c->GetNotificationsInQueue());
-            out.append(buf);
-
-            sprintf(buf, "    Last console notify time: %f\n", c->lastConsoleNotifyTime);
-            out.append(buf);
-
-            sprintf(buf, "    Auth key: %x\n\n", c->authKey);
-            out.append(buf);
-        }
-    }
-
-    void PutFlag(const char* flagId, const char* flag)
-    {
-        flags.insert({flagId, flag});
-    }
-
-    const std::string& GetFlag(const char* flagId)
-    {
-        return flags[flagId];
-    }
-
-private:
-    std::mutex mutex;
-    std::map<IPAddr, Console*> consoles;
-    std::map<std::string, std::string> flags;
 };
 
 
@@ -414,7 +135,7 @@ HttpResponse RequestHandler::HandleGet(HttpRequest request)
             console = team->AddConsole(request.clientIp.s_addr);
         }
 
-        console->Auth();
+        console->GenerateAuthKey();
         printf("  auth key: %x\n", console->authKey);
 
         {
@@ -999,7 +720,7 @@ bool LoadTeamsDatabase()
 
         IPAddr consoleAddr = desc.network | kConsoleAddr;
         Console* console = team.AddConsole(consoleAddr);
-        console->Auth();
+        console->GenerateAuthKey();
         printf("    console auth key: %x\n", console->authKey);
 
         {
