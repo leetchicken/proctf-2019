@@ -7,7 +7,6 @@ struct NotificationsCtx
 {
     NotificationsCtx();
     bool Init(API* api);
-    void SetNotifyPort(uint16_t notifyPort);
     void SetAuthKey(uint32_t k);
     void Post(const char* userName, const char* message);
     void Update();
@@ -32,6 +31,7 @@ private:
 
     float drawTimer;
 
+    void Connect();
     void FreePostRequest();
     void FreeGetRequest();
     void Get();

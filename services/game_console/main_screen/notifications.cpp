@@ -12,28 +12,14 @@ NotificationsCtx::NotificationsCtx()
 bool NotificationsCtx::Init(API* api)
 {
     m_api = api;
-
-    m_socket = api->socket(false);
-    if(m_socket < 0)
-    {
-        api->printf("Failed to open notifications socket, can not continue\n");
-        return false;
-    }
-    api->set_blocking(m_socket, false);
-
     return true;
-}
-
-
-void NotificationsCtx::SetNotifyPort(uint16_t notifyPort)
-{
-    m_api->bind(m_socket, 0, notifyPort);
 }
 
 
 void NotificationsCtx::SetAuthKey(uint32_t k)
 {
     m_authKey = k;
+    Connect();
 }
 
 
@@ -104,13 +90,17 @@ void NotificationsCtx::Update()
         m_pendingNotificationsNum--;
     }
 
-    char data[16];
-    NetAddr addr;
-    int ret = m_api->recv(m_socket, data, 16, &addr);
-    if(ret > 0)
+    uint8_t buf[16];
+    int ret = m_api->recv(m_socket, buf, sizeof(buf), NULL);
+    if(ret == sizeof(buf))
     {
         m_api->printf("Notification is available\n");
         m_pendingNotificationsNum++;
+    }
+    else if(ret == 0 || ret == kSocketErrorConnectionLost)
+    {
+        m_api->close(m_socket);
+        Connect();
     }
 
     if(m_pendingNotificationsNum > 0 && !m_getRequest)
@@ -177,6 +167,22 @@ void NotificationsCtx::Render(float dt)
         m_message = NULL;
         m_gotNotification = false;
     }
+}
+
+
+void NotificationsCtx::Connect()
+{
+    m_socket = m_api->socket(true);
+    if(m_socket < 0)
+    {
+        m_api->printf("Failed to open notifications socket\n");
+        return;
+    }
+    m_api->set_blocking(m_socket, false);
+    NetAddr addr;
+    addr.ip = m_api->aton(kServerIP);
+    addr.port = kServerNotifyPort;
+    m_api->connect(m_socket, addr);
 }
 
 

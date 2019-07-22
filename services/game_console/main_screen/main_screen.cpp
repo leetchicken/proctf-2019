@@ -190,7 +190,7 @@ HTTPRequest* RequestAuthKey(API* api)
 }
 
 
-bool ParseAuthResponse(API* api, HTTPRequest* r, uint32_t& authKey, uint16_t& notifyPort)
+bool ParseAuthResponse(API* api, HTTPRequest* r, uint32_t& authKey)
 {
     if(!r->succeed)
     {
@@ -198,11 +198,7 @@ bool ParseAuthResponse(API* api, HTTPRequest* r, uint32_t& authKey, uint16_t& no
         return false;
     }
 
-    char* ptr = (char*)r->responseData;
-    api->memcpy(&authKey, ptr, sizeof(uint32_t));
-    ptr += sizeof(uint32_t);
-    api->memcpy(&notifyPort, ptr, sizeof(uint16_t));
-
+    api->memcpy(&authKey, r->responseData, sizeof(uint32_t));
     return true;
 }
 
@@ -599,11 +595,9 @@ bool Context::Update()
 
     if(m_state == kMainScreenWaitAuthKey && m_request->done)
     {
-        uint16_t notifyPort = 0;
-        if(ParseAuthResponse(m_api, m_request, m_authKey, notifyPort))
+        if(ParseAuthResponse(m_api, m_request, m_authKey))
         {
             m_api->FreeHTTPRequest(m_request);
-            m_notificationsCtx.SetNotifyPort(notifyPort);
             m_notificationsCtx.SetAuthKey(m_authKey);
             m_request = RequestGamesList(m_api, m_authKey);
             m_state = kMainScreenWaitGameList;

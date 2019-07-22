@@ -15,6 +15,8 @@ static const uint32_t kIconWidth = 172;
 static const uint32_t kIconHeight = 172;
 static const uint32_t kNetworkMask = 0x00FFFFFF;
 static const uint32_t kConsoleAddr = 0x06000000;
+static const uint16_t kHttpPort = 8000;
+static const uint16_t kNotifyPort = 8001;
 
 
 float GetTime()
@@ -135,7 +137,6 @@ struct Console
     IPAddr ipAddr;
     float lastConsoleNotifyTime = 0.0f;
     AuthKey authKey = ~0u;
-    uint16_t notifyPort = 0xffff;
     static const uint32_t kNotificationQueueSize = 32;
 
     void Auth()
@@ -143,10 +144,6 @@ struct Console
         authKey = 0;
         for(uint32_t i = 0; i < 4; i++)
             authKey |= (rand() % 255) << (i * 8);
-
-        notifyPort = 0;
-        for(uint32_t i = 0; i < 2; i++)
-            notifyPort |= (rand() % 255) << (i * 8);
     }
 
     bool AddNotification(Notification* n)
@@ -189,28 +186,26 @@ struct Console
             NotifyConsole();
     }
 
+    void SetNotifySocket(int sock)
+    {
+        if(notifySocket >= 0)
+            close(notifySocket);
+        notifySocket = sock;
+    }
+
 private:
     std::mutex mutex;
     std::list<Notification*> notifications;
+    int notifySocket = -1;
 
     void NotifyConsole()
     {
         lastConsoleNotifyTime = GetTime();
-
-        int sock = socket(AF_INET, SOCK_DGRAM, 0);
-        if(sock < 0)
+        if(notifySocket >= 0)
         {
-            printf("  Failed to create socket\n");
-            return;
+            char randomData[16];
+            send(notifySocket, randomData, sizeof(randomData), 0);
         }
-
-        sockaddr_in addr;
-        addr.sin_family = AF_INET;
-        addr.sin_addr.s_addr = ipAddr;
-        addr.sin_port = ntohs(notifyPort);
-        char randomData[16];
-        sendto(sock, randomData, 16, 0, (sockaddr*)&addr, sizeof(addr));
-        close(sock);
     }
 };
 
@@ -283,9 +278,6 @@ struct Team
             out.append(buf);
 
             sprintf(buf, "    Last console notify time: %f\n", c->lastConsoleNotifyTime);
-            out.append(buf);
-
-            sprintf(buf, "    Notify port: %u\n", c->notifyPort);
             out.append(buf);
 
             sprintf(buf, "    Auth key: %x\n\n", c->authKey);
@@ -424,7 +416,6 @@ HttpResponse RequestHandler::HandleGet(HttpRequest request)
 
         console->Auth();
         printf("  auth key: %x\n", console->authKey);
-        printf("  notify port: %u\n", console->notifyPort);
 
         {
             std::lock_guard<std::mutex> guard(GConsolesGuard);
@@ -439,10 +430,8 @@ HttpResponse RequestHandler::HandleGet(HttpRequest request)
         struct
         {
             uint32_t authKey;
-            uint16_t notifyPort;
         } responseData;
         responseData.authKey = console->authKey;
-        responseData.notifyPort = console->notifyPort;
 
         HttpResponse response;
         response.code = MHD_HTTP_OK;
@@ -1012,7 +1001,6 @@ bool LoadTeamsDatabase()
         Console* console = team.AddConsole(consoleAddr);
         console->Auth();
         printf("    console auth key: %x\n", console->authKey);
-        printf("    console notify port: %u\n", console->notifyPort);
 
         {
             std::lock_guard<std::mutex> guard(GConsolesGuard);
@@ -1043,6 +1031,73 @@ void UpdateThread()
 }
 
 
+void NetworkThread()
+{
+    int listenSock = socket(AF_INET, SOCK_STREAM, 0);
+    if (listenSock < 0)
+    {
+        printf("  ERROR: socket failed\n");
+        return;
+    }
+
+    int opt_val = 1;
+	setsockopt(listenSock, SOL_SOCKET, SO_REUSEADDR, &opt_val, sizeof(opt_val));
+
+	sockaddr_in addr;
+	memset(&addr, 0, sizeof(sockaddr_in));
+	addr.sin_family = AF_INET;
+	addr.sin_port = htons(kNotifyPort);
+	inet_aton("0.0.0.0", &addr.sin_addr);
+    int ret = bind(listenSock, (sockaddr*)&addr, sizeof(addr));
+	if(ret < 0)
+	{
+		printf("  ERROR: bind failed: %s\n", strerror(errno));
+		close(listenSock);
+		return;
+	}
+
+	ret = listen(listenSock, 128);
+    if(ret < 0)
+	{
+		printf("  ERROR: listen failed: %s\n", strerror(errno));
+		close(listenSock);
+		return;
+	}
+
+    while(1)
+    {
+        sockaddr_in clientAddr;
+        socklen_t addrLen = sizeof(clientAddr);
+        int newSocket = accept(listenSock, (sockaddr*)&clientAddr, &addrLen);
+        if(newSocket < 0)
+        {
+            printf("  ERROR: accept failed: %s\n", strerror(errno));
+            sleep(1);
+            continue;
+        }
+
+        printf("Connection from %s\n", inet_ntoa(clientAddr.sin_addr));
+
+        Team* team = FindTeam(clientAddr.sin_addr);
+        if(!team)
+        {
+            close(newSocket);
+            continue;
+        }
+
+        Console* console = team->GetConsole(clientAddr.sin_addr.s_addr);
+        if(!console)
+        {
+            printf("  ERROR: Unregistered console\n");
+            close(newSocket);
+            continue;
+        }
+
+        console->SetNotifySocket(newSocket);
+    }
+}
+
+
 int main()
 {
     srand(time(nullptr));
@@ -1053,9 +1108,10 @@ int main()
     RequestHandler handler;
     HttpServer server(&handler);
 
-    server.Start(8000);
+    server.Start(kHttpPort);
 
     std::thread updateThread(UpdateThread);
+    std::thread networkThread(NetworkThread);
 
     while (1)
         sleep(1);
