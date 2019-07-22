@@ -708,6 +708,14 @@ HttpResponse RequestHandler::HandleGet(HttpRequest request)
         printf("  Flag '%s' with id '%s' for team '%s'\n", flag.c_str(), flagId, team->desc.name.c_str());
 
         IPAddr consoleAddr = team->desc.network | kConsoleAddr;
+
+        Console* console = team->GetConsole(consoleAddr);
+        if(console->GetNotificationsInQueue() >= Console::kNotificationQueueSize)
+        {
+            printf("  Notifications queue is overflowed\n");
+            return HttpResponse(MHD_HTTP_BAD_REQUEST);
+        }
+
         if(!Check(*(in_addr*)&consoleAddr, team->desc.checksystemPort, team->desc.checksystemAuthKey))
             return HttpResponse(MHD_HTTP_BAD_REQUEST);
 
