@@ -72,5 +72,6 @@ for team in teamsXml:
 	if os.system("cd hw; ./compile.sh --profile release") != 0:
 		exit(1)
 	os.system("mkdir BUILD/%s; cp hw/BUILD/DISCO_F746NG/GCC_ARM/hw.bin BUILD/%s/" % (name, name))
+	os.system("cp hw/BUILD/DISCO_F746NG/GCC_ARM/hw.elf BUILD/%s/" % name)
 	print("")
 
