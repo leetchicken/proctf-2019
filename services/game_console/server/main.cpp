@@ -453,6 +453,12 @@ HttpResponse RequestHandler::HandlePost(HttpRequest request, HttpPostProcessor**
         if(!CheckAuthority(request.queryString))
             return HttpResponse(MHD_HTTP_UNAUTHORIZED);
 
+        uint32_t contentLength;
+        static const std::string kContentLength("content-length");
+        FindInMap(request.headers, kContentLength, contentLength);
+        if(contentLength == 0 || contentLength > kMaxNotificationSize)
+            return HttpResponse(MHD_HTTP_BAD_REQUEST);
+
 		*postProcessor = new NotificationProcessor(request);
         return HttpResponse();
     }
