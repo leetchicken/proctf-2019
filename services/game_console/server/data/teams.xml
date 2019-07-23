@@ -1,3 +1,3 @@
 <Teams>
-    <Team number ="0" name="test0" net="192.168.0.0"/>
+    <Team number ="0" name="test0" net="192.168.0.0" mac5="0x00"/>
 </Teams>
