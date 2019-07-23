@@ -1,5 +1,6 @@
 #include "console.h"
 #include <unistd.h>
+#include <string.h>
 
 
 void Console::GenerateAuthKey()
@@ -68,7 +69,9 @@ void Console::NotifyConsole()
     lastConsoleNotifyTime = GetTime();
     if(notifySocket >= 0)
     {
-        char randomData[16];
-        send(notifySocket, randomData, sizeof(randomData), 0);
+        char data[16];
+        uint32_t num = notifications.size();
+        memcpy(data, &num, sizeof(num));
+        send(notifySocket, data, sizeof(data), 0);
     }
 }

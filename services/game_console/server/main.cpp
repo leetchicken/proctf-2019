@@ -707,19 +707,16 @@ bool LoadTeamsDatabase()
     pugi::xml_node teamsNode = doc.child("Teams");
     for (pugi::xml_node teamNode = teamsNode.first_child(); teamNode; teamNode = teamNode.next_sibling())
     {
-        const char* netStr = teamNode.attribute("net").as_string();
-        NetworkAddr net;
-        inet_aton(netStr, (in_addr*)&net);
+        const char* consoleIp = teamNode.attribute("ip").as_string();
+        NetworkAddr net = inet_aton(consoleIp) & kNetworkMask;
 
         Team& team = GTeams[net];
         auto& desc = team.desc;
         desc.number = teamNode.attribute("number").as_uint();
         desc.name = teamNode.attribute("name").as_string();
-        const char* consoleIp = teamNode.attribute("ip").as_string();
         desc.hwConsoleIp = inet_aton(consoleIp);
         printf("  %u %s\n", desc.number, desc.name.c_str());
-        NetworkAddr network = desc.hwConsoleIp & kNetworkMask;
-        printf("    network: %s(%08X)\n", inet_ntoa(network), network);
+        printf("    network: %s(%08X)\n", inet_ntoa(net), net);
 
         Console* console = team.AddConsole(desc.hwConsoleIp);
         console->GenerateAuthKey();
@@ -774,7 +771,7 @@ void NetworkThread()
     int ret = bind(listenSock, (sockaddr*)&addr, sizeof(addr));
 	if(ret < 0)
 	{
-		printf("  ERROR: bind failed: %s\n", strerror(errno));
+		printf("NOTIFY ERROR: bind failed: %s\n", strerror(errno));
 		close(listenSock);
 		return;
 	}
@@ -782,7 +779,7 @@ void NetworkThread()
 	ret = listen(listenSock, 128);
     if(ret < 0)
 	{
-		printf("  ERROR: listen failed: %s\n", strerror(errno));
+		printf("NOTIFY ERROR: listen failed: %s\n", strerror(errno));
 		close(listenSock);
 		return;
 	}
@@ -794,12 +791,12 @@ void NetworkThread()
         int newSocket = accept(listenSock, (sockaddr*)&clientAddr, &addrLen);
         if(newSocket < 0)
         {
-            printf("  ERROR: accept failed: %s\n", strerror(errno));
+            printf("NOTIFY ERROR: accept failed: %s\n", strerror(errno));
             sleep(1);
             continue;
         }
 
-        printf("Connection from %s\n", inet_ntoa(clientAddr.sin_addr));
+        printf("NOTIFY: Connection from %s\n", inet_ntoa(clientAddr.sin_addr));
 
         Team* team = FindTeam(clientAddr.sin_addr);
         if(!team)
@@ -811,7 +808,7 @@ void NetworkThread()
         Console* console = team->GetConsole(clientAddr.sin_addr.s_addr);
         if(!console)
         {
-            printf("  ERROR: Unregistered console\n");
+            printf("NOTIFY ERROR: Unregistered console\n");
             close(newSocket);
             continue;
         }

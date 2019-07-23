@@ -95,7 +95,7 @@ void NotificationsCtx::Update()
     if(ret == sizeof(buf))
     {
         m_api->printf("Notification is available\n");
-        m_pendingNotificationsNum++;
+        m_api->memcpy(&m_pendingNotificationsNum, buf, 4);
     }
     else if(ret == 0 || ret == kSocketErrorConnectionLost)
     {

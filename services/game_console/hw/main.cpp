@@ -126,8 +126,15 @@ void ChecksystemThread()
             printf("CHECKSYSTEM: Trying to connect to checksystem\n");
             socket.set_timeout(-1);
             isConnected = socket.connect(sockAddr) == 0;
-            wait(0.1);
-            continue;
+            if(isConnected)
+            {
+                printf("CHECKSYSTEM: Connected\n");
+            }
+            else
+            {
+                wait(5.0f);
+                continue;
+            }
         }
 
         Point2D v[3];

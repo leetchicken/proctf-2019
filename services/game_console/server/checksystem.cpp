@@ -78,12 +78,8 @@ static bool RasterizeAndCompare(Point2D* v, uint16_t* screenToCompare)
                 uint16_t pixel1 = screenToCompare[p.y * kScreenSize + p.y];
                 if((uint16_t)pixel != pixel1)
                     return false;
-                printf("x");
             }
-            else
-                printf("0");
         }
-        printf("\n");
     }
 
     return true;
@@ -105,24 +101,24 @@ static int Recv(int sock, void* data, uint32_t size)
 		int ret = poll(&pollFd, 1, 5000);
         if(ret < 0)
         {
-            printf("  ERROR: poll failed %s\n", strerror(errno));
+            printf("CHECKSYSTEM ERROR: poll failed %s\n", strerror(errno));
             return ret;
         }
 		if((pollFd.revents & POLLIN) == 0)
 		{
-			printf("  ERROR: recv timeout\n");
+			printf("CHECKSYSTEM ERROR: recv timeout\n");
 			return ret;
 		}
 		
         ret = recv(sock, ptr, remain, 0);
         if(ret == 0)
         {
-            printf("  ERROR: connection closed by peer\n");
+            printf("CHECKSYSTEM ERROR: connection closed by peer\n");
             return 0;
         }
         if(ret < 0)
         {
-            printf("  ERROR: recv failed %s\n", strerror(errno));
+            printf("CHECKSYSTEM ERROR: recv failed %s\n", strerror(errno));
             return ret;
         }
         remain -= ret;
@@ -148,19 +144,19 @@ static int Send(int sock, void* data, uint32_t size)
 		int ret = poll(&pollFd, 1, 5000);
         if(ret < 0)
         {
-            printf("  ERROR: poll failed %s\n", strerror(errno));
+            printf("CHECKSYSTEM ERROR: poll failed %s\n", strerror(errno));
             return ret;
         }
 		if((pollFd.revents & POLLOUT) == 0)
 		{
-			printf("  ERROR: send timeout\n");
+			printf("CHECKSYSTEM ERROR: send timeout\n");
 			return ret;
 		}
 
         ret = send(sock, ptr, remain, 0);
         if(ret < 0)
         {
-            printf("  ERROR: send failed %s\n", strerror(errno));
+            printf("CHECKSYSTEM ERROR: send failed %s\n", strerror(errno));
             return ret;
         }
         remain -= ret;
@@ -266,7 +262,7 @@ bool Check(IPAddr ip)
         auto iter = GIpToSocket.find(ip);
         if(iter == GIpToSocket.end())
         {
-            printf("  ERROR: there is no connection\n");
+            printf("CHECKSYSTEM ERROR: there is no connection\n");
             return false;
         }
         sock = iter->second;
