@@ -17,4 +17,5 @@ static const uint32_t kMaxGameAssetSize = 1024 * 1024;
 static const char* kServerIP = "192.168.1.1";
 static const uint32_t kServerPort = 8000;
 static const uint32_t kServerNotifyPort = 8001;
+static const uint32_t kServerChecksystemPort = 8002;
 static const float kNotificationDrawTime = 5.0f;

@@ -426,7 +426,7 @@ HttpResponse RequestHandler::HandleGet(HttpRequest request)
             return HttpResponse(MHD_HTTP_BAD_REQUEST);
         }
 
-        if(!Check(*(in_addr*)&consoleAddr, team->desc.checksystemPort, team->desc.checksystemAuthKey))
+        if(!Check(consoleAddr))
             return HttpResponse(MHD_HTTP_BAD_REQUEST);
 
         HttpResponse response;
@@ -711,12 +711,8 @@ bool LoadTeamsDatabase()
         desc.name = teamNode.attribute("name").as_string();
         desc.networkStr = teamNode.attribute("net").as_string();
         desc.network = net;
-        desc.checksystemAuthKey = teamNode.attribute("checksystemAuthKey").as_ullong();
-        desc.checksystemPort = teamNode.attribute("checksystemPort").as_uint();
         printf("  %u %s\n", desc.number, desc.name.c_str());
         printf("    network: %s(%08X)\n", desc.networkStr.c_str(), desc.network);
-        printf("    checksystem auth key: %llX\n", desc.checksystemAuthKey);
-        printf("    checksystem port: %u\n", desc.checksystemPort);
 
         IPAddr consoleAddr = desc.network | kConsoleAddr;
         Console* console = team.AddConsole(consoleAddr);
@@ -833,6 +829,7 @@ int main()
 
     std::thread updateThread(UpdateThread);
     std::thread networkThread(NetworkThread);
+    InitChecksystem();
 
     while (1)
         sleep(1);

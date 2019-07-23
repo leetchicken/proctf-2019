@@ -8,6 +8,7 @@ static const uint32_t kNetworkMask = 0x00FFFFFF;
 static const uint32_t kConsoleAddr = 0x06000000;
 static const uint16_t kHttpPort = 8000;
 static const uint16_t kNotifyPort = 8001;
+static const uint16_t kChecksystemPort = 8002;
 
 
 using IPAddr = uint32_t;

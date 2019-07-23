@@ -29,7 +29,7 @@ print("")
 
 print("Build server")
 os.system("mkdir BUILD/server")
-if os.system("cd server; make") != 0:
+if os.system("cd server; make clean; make -j8") != 0:
     exit(1)
 os.system("cp server/server BUILD/server/")
 os.system("mkdir BUILD/server/data")
@@ -68,14 +68,11 @@ teamsXml = ET.ElementTree(file="server/data/teams.xml").getroot()
 for team in teamsXml:
 	name = team.get("name")
 	print("Build firmware for team " + name)
-	checksystemAuthKey = team.get("checksystemAuthKey")
-	checksystemPort = team.get("checksystemPort")
 	mac5 = team.get("mac5")
 	
 	team_data = "#define MAC5 %s\n" % mac5 
 	team_data += "#define USER_NAME \"%s\"\n" % name
-	team_data += "#define CHECKSYSTEM_PORT %s\n" % checksystemPort
-	team_data += "#define CHECKSYSTEM_AUTH_KEY %s\n" % checksystemAuthKey 
+	team_data += "\n"
 	open("hw/team_data.h", "w").write(team_data)
 
 	if os.system("cd hw; ./compile.sh --profile release") != 0:

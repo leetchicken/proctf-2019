@@ -14,8 +14,6 @@ struct TeamDesc
     std::string name;
     std::string networkStr;
     NetworkAddr network;
-    uint64_t checksystemAuthKey;
-    uint16_t checksystemPort;
 };
 
 struct Team

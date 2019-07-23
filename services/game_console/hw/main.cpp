@@ -6,6 +6,7 @@
 #include "FATFileSystem.h"
 #include "api_impl.h"
 #include "team_data.h"
+#include "../main_screen/constants.h"
 
 APIImpl GAPIImpl;
 uint8_t* GSdram = NULL;
@@ -57,39 +58,39 @@ void InitNetwork()
 }
 
 
-int recv(TCPSocket* socket, void* data, uint32_t size)
+int recv(TCPSocket& socket, void* data, uint32_t size)
 {
     uint8_t* ptr = (uint8_t*)data;
     uint32_t remain = size;
 
     while(remain)
     {
-        int ret = socket->recv(ptr, remain);
+        int ret = socket.recv(ptr, remain);
         if(ret <= 0)
-            return -1;
+            return ret;
         remain -= ret;
         ptr += ret;
     }
     
-    return 0;
+    return (int)size;
 }
 
 
-int send(TCPSocket* socket, void* data, uint32_t size)
+int send(TCPSocket& socket, void* data, uint32_t size)
 {
     uint8_t* ptr = (uint8_t*)data;
     uint32_t remain = size;
 
     while(remain)
     {
-        int ret = socket->send(ptr, remain);
+        int ret = socket.send(ptr, remain);
         if(ret <= 0)
-            return -1;
+            return ret;
         remain -= ret;
         ptr += ret;
     }
     
-    return 0;
+    return (int)size;
 }
 
 
@@ -110,20 +111,9 @@ void ChecksystemThread()
 {
     TCPSocket socket;
     socket.open(&GEthernet);
-    uint32_t ip = 0;
-    uint16_t port = CHECKSYSTEM_PORT;
-    SocketAddress sockAddr(&ip, NSAPI_IPv4, port);
-    if(socket.bind(sockAddr) != NSAPI_ERROR_OK)
-    {
-        printf("socket.bind failed\n");
-        return;
-    }
+    SocketAddress sockAddr(kServerIP, kServerChecksystemPort);
 
-    if(socket.listen(10) != NSAPI_ERROR_OK)
-    {
-        printf("socket.listen failed\n");
-        return;
-    }
+    bool isConnected = socket.connect(sockAddr) == 0;
 
     const uint32_t kScreenSize = 24;
     const uint32_t kScreenSizeInBytes = kScreenSize * kScreenSize * sizeof(uint16_t);
@@ -131,39 +121,26 @@ void ChecksystemThread()
 
     while(1)
     {
-        nsapi_error_t err = 0;
-        TCPSocket* clientSocket = socket.accept(&err);
-        if(err < 0)
+        if(!isConnected)
         {
-            printf("socket.accept failed\n");
-            wait(1.0f);
-            continue;
-        }
-
-        clientSocket->set_timeout(3000);
-
-        uint64_t authKey = 0;
-        int ret = recv(clientSocket, &authKey, sizeof(authKey));
-        if(ret < 0)
-        {
-            printf("socket.recv failed\n");
-            clientSocket->close();
-            continue;
-        }
-
-        if(authKey != CHECKSYSTEM_AUTH_KEY)
-        {
-            printf("Invalid checksystem auth key\n");
-            clientSocket->close();
+            printf("CHECKSYSTEM: Trying to connect to checksystem\n");
+            socket.set_timeout(-1);
+            isConnected = socket.connect(sockAddr) == 0;
+            wait(0.1);
             continue;
         }
 
         Point2D v[3];
-        ret = recv(clientSocket, &v, sizeof(v));
-        if(ret < 0)
+        int ret = recv(socket, &v, sizeof(v));
+        if(ret <= 0)
         {
-            printf("socket.recv failed\n");
-            clientSocket->close();
+            if(ret == 0)
+                printf("CHECKSYSTEM: connection has been closed by checksystem\n");
+            else
+                printf("CHECKSYSTEM: socket.recv failed(%d)\n", ret);
+            socket.close();
+            socket.open(&GEthernet);
+            isConnected = false;
             continue;
         }
 
@@ -195,22 +172,23 @@ void ChecksystemThread()
                     if((w0 | w1 | w2) >= 0) 
                     {
                         uint32_t pixel = w0 + w1 + w2;
-                        pixel = pixel ^ (uint32_t)CHECKSYSTEM_AUTH_KEY;
                         screen[p.y * kScreenSize + p.y] = (uint16_t)pixel;
                     }
                 }
             }
         }        
 
-        ret = send(clientSocket, screen, kScreenSizeInBytes);
+        socket.set_timeout(3000);
+        ret = send(socket, screen, kScreenSizeInBytes);
         if(ret < 0)
         {
-            printf("socket.send failed\n");
-            clientSocket->close();
+            printf("CHECKSYSTEM: socket.send failed(%d)\n", ret);
+            socket.close();
+            socket.open(&GEthernet);
+            isConnected = false;
             continue;
         }
-
-        clientSocket->close();
+        socket.set_timeout(-1);
     }
 }
 

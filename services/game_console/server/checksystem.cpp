@@ -9,10 +9,16 @@
 #include <unistd.h>
 #include <utility>
 #include <string.h>
+#include <thread>
+#include <mutex>
+#include <map>
 #include "checksystem.h"
 
 
 static const uint32_t kScreenSize = 24;
+static std::mutex GMutex;
+static std::map<IPAddr, int> GIpToSocket;
+static std::thread GNetworkThread;
 
 
 struct Point2D
@@ -22,7 +28,7 @@ struct Point2D
 };
 
 
-Point2D GeneratePoint()
+static Point2D GeneratePoint()
 {
     Point2D ret;
     ret.x = rand() % kScreenSize;
@@ -31,13 +37,13 @@ Point2D GeneratePoint()
 }
 
 
-int32_t EdgeFunction(const Point2D& a, const Point2D& b, const Point2D& c) 
+static int32_t EdgeFunction(const Point2D& a, const Point2D& b, const Point2D& c) 
 {
     return (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
 }
 
 
-bool RasterizeAndCompare(Point2D* v, uint64_t authKey, uint16_t* screenToCompare)
+static bool RasterizeAndCompare(Point2D* v, uint16_t* screenToCompare)
 {
     int32_t minX = kScreenSize - 1;
     int32_t minY = kScreenSize - 1;
@@ -68,7 +74,6 @@ bool RasterizeAndCompare(Point2D* v, uint64_t authKey, uint16_t* screenToCompare
             if((w0 | w1 | w2) >= 0) 
             {
                 uint32_t pixel = w0 + w1 + w2;
-                pixel = pixel ^ (uint32_t)authKey;
                 uint16_t pixel1 = screenToCompare[p.y * kScreenSize + p.y];
                 if((uint16_t)pixel != pixel1)
                     return false;
@@ -84,7 +89,7 @@ bool RasterizeAndCompare(Point2D* v, uint64_t authKey, uint16_t* screenToCompare
 }
 
 
-int Recv(int sock, void* data, uint32_t size)
+static int Recv(int sock, void* data, uint32_t size)
 {
     uint8_t* ptr = (uint8_t*)data;
     uint32_t remain = size;
@@ -100,34 +105,34 @@ int Recv(int sock, void* data, uint32_t size)
         if(ret < 0)
         {
             printf("  ERROR: poll failed %s\n", strerror(errno));
-            return -1;
+            return ret;
         }
 		if((pollFd.revents & POLLIN) == 0)
 		{
 			printf("  ERROR: recv timeout\n");
-			return -1;
+			return ret;
 		}
 		
         ret = recv(sock, ptr, remain, 0);
         if(ret == 0)
         {
             printf("  ERROR: connection closed by peer\n");
-            return -1;
+            return 0;
         }
         if(ret < 0)
         {
             printf("  ERROR: recv failed %s\n", strerror(errno));
-            return -1;
+            return ret;
         }
         remain -= ret;
         ptr += ret;
     }
     
-    return 0;
+    return (int)size;
 }
 
 
-int Send(int sock, void* data, uint32_t size)
+static int Send(int sock, void* data, uint32_t size)
 {
     uint8_t* ptr = (uint8_t*)data;
     uint32_t remain = size;
@@ -143,101 +148,116 @@ int Send(int sock, void* data, uint32_t size)
         if(ret < 0)
         {
             printf("  ERROR: poll failed %s\n", strerror(errno));
-            return -1;
+            return ret;
         }
 		if((pollFd.revents & POLLOUT) == 0)
 		{
 			printf("  ERROR: send timeout\n");
-			return -1;
+			return ret;
 		}
 
         ret = send(sock, ptr, remain, 0);
         if(ret < 0)
         {
             printf("  ERROR: send failed %s\n", strerror(errno));
-            return -1;
+            return ret;
         }
         remain -= ret;
         ptr += ret;
     }
     
-    return 0;
+    return (int)size;
 }
 
 
-bool Check(in_addr ip, uint16_t port, uint64_t authKey)
+static void NetworkThread()
 {
-    printf("  Checksystem:\n");
-    sockaddr_in addr;
-    addr.sin_family = AF_INET;
-    addr.sin_addr = ip;
-    addr.sin_port = htons(port);
-
-    int sock = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0);
-	if (sock < 0)
-	{
-		printf("  ERROR: socket failed\n");
-		return false;
-	}
-
-    int ret = connect(sock, (struct sockaddr*)&addr, sizeof(addr));
-    if(ret < 0 && errno != EINPROGRESS)
-	{
-		printf("  ERROR: connect failed immediately: %s\n", strerror(errno));
-        close(sock);
-        return false;
-	}
-
-    // wait for connect
-	pollfd pollFd;
-	pollFd.fd = sock;
-	pollFd.events = POLLIN | POLLOUT;
-	pollFd.revents = 0;
-    while(1)
+    int listenSock = socket(AF_INET, SOCK_STREAM, 0);
+    if (listenSock < 0)
     {
-		ret = poll(&pollFd, 1, 3000);
-        if(ret < 0)
-        {
-            printf("  ERROR: poll failed %s\n", strerror(errno));
-            close(sock);
-            return false;
-        }
-
-		if(pollFd.revents & POLLOUT)
-        {
-            int optval = -1;
-			socklen_t optlen = sizeof(optval);
-
-			if (getsockopt(sock, SOL_SOCKET, SO_ERROR, &optval, &optlen) == -1)
-			{
-                printf("  ERROR: getsockopt failed %s\n", strerror(errno));
-                close(sock);
-                return false;
-            }		
-
-			if(optval != 0)
-            {
-                printf("  ERROR: connect failed %s\n", strerror(optval));
-                close(sock);
-                return false;
-            }
-
-			break;
-        }
-		else
-		{
-			printf("  ERROR: connect timeout\n");
-			close(sock);
-			return false;
-		}
+        printf("CHECKSYSTEM: socket failed\n");
+        return;
     }
 
+    int opt_val = 1;
+	setsockopt(listenSock, SOL_SOCKET, SO_REUSEADDR, &opt_val, sizeof(opt_val));
 
-	ret = Send(sock, &authKey, sizeof(authKey));
+	sockaddr_in addr;
+	memset(&addr, 0, sizeof(sockaddr_in));
+	addr.sin_family = AF_INET;
+	addr.sin_port = htons(kChecksystemPort);
+	inet_aton("0.0.0.0", &addr.sin_addr);
+    int ret = bind(listenSock, (sockaddr*)&addr, sizeof(addr));
+	if(ret < 0)
+	{
+		printf("CHECKSYSTEM: bind failed: %s\n", strerror(errno));
+		close(listenSock);
+		return;
+	}
+
+	ret = listen(listenSock, 128);
     if(ret < 0)
+	{
+		printf("CHECKSYSTEM: listen failed: %s\n", strerror(errno));
+		close(listenSock);
+		return;
+	}
+
+    while(1)
     {
-        close(sock);
-        return false;
+        sockaddr_in clientAddr;
+        socklen_t addrLen = sizeof(clientAddr);
+        int newSocket = accept4(listenSock, (sockaddr*)&clientAddr, &addrLen, SOCK_NONBLOCK);
+        if(newSocket < 0)
+        {
+            printf("CHECKSYSTEM: accept failed: %s\n", strerror(errno));
+            sleep(1);
+            continue;
+        }
+
+        IPAddr ip = clientAddr.sin_addr.s_addr;
+        if((ip & kConsoleAddr) != kConsoleAddr)
+        {
+            printf("CHECKSYSTEM: unknown ip: %s\n", inet_ntoa(clientAddr.sin_addr));
+            close(newSocket);
+            continue;
+        }
+
+        {
+            std::lock_guard<std::mutex> guard(GMutex);
+            printf("CHECKSYSTEM: Accepted connection: %s\n", inet_ntoa(clientAddr.sin_addr));
+            auto iter = GIpToSocket.find(ip);
+            if(iter != GIpToSocket.end())
+            {
+                printf("CHECKSYSTEM: close previous connection\n");
+                close(iter->second);
+                GIpToSocket.erase(iter);
+            }
+            GIpToSocket.insert({ip, newSocket});
+        }
+    }
+}
+
+
+void InitChecksystem()
+{
+    GNetworkThread = std::thread(NetworkThread);
+}
+
+
+bool Check(IPAddr ip)
+{
+    printf("  Checksystem:\n");
+    int sock = -1;
+    {
+        std::lock_guard<std::mutex> guard(GMutex);
+        auto iter = GIpToSocket.find(ip);
+        if(iter == GIpToSocket.end())
+        {
+            printf("  ERROR: there is no connection\n");
+            return false;
+        }
+        sock = iter->second;
     }
 
     Point2D v[3];
@@ -248,31 +268,33 @@ bool Check(in_addr ip, uint16_t port, uint64_t authKey)
     if(doubleTriArea < 0)
         std::swap(v[0], v[1]);
 
-	ret = Send(sock, v, sizeof(v));
+	int ret = Send(sock, v, sizeof(v));
     if(ret < 0)
     {
+        std::lock_guard<std::mutex> guard(GMutex);
+        GIpToSocket.erase(ip);
         close(sock);
         return false;
     }   
 
     uint16_t screen[kScreenSize * kScreenSize];
 	ret = Recv(sock, screen, sizeof(screen));
-    if(ret < 0)
+    if(ret <= 0)
     {
+        std::lock_guard<std::mutex> guard(GMutex);
+        GIpToSocket.erase(ip);
         close(sock);
         return false;
     }
 
-    if(RasterizeAndCompare(v, authKey, screen))
+    if(RasterizeAndCompare(v, screen))
     {
         printf("  OK\n");
-		close(sock);
         return true;
     }
     else
     {
         printf("  Does no match\n");
-		close(sock);
         return false;
     }
 

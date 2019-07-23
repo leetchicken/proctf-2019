@@ -1,3 +1,5 @@
 #pragma once
+#include "misc.h"
 
-bool Check(in_addr ip, uint16_t port, uint64_t authKey);
+void InitChecksystem();
+bool Check(IPAddr ip);
