@@ -44,7 +44,7 @@ static int32_t EdgeFunction(const Point2D& a, const Point2D& b, const Point2D& c
 }
 
 
-static bool RasterizeAndCompare(Point2D* v, uint16_t* screenToCompare)
+static bool RasterizeAndCompare(Point2D* v, uint32_t valToCompare)
 {
     int32_t minX = kScreenSize - 1;
     int32_t minY = kScreenSize - 1;
@@ -64,6 +64,7 @@ static bool RasterizeAndCompare(Point2D* v, uint16_t* screenToCompare)
         return true;
 
     Point2D p;
+    uint32_t result = 0;
     for(p.y = minY; p.y <= maxY; p.y++)
     {
         for(p.x = minX; p.x <= maxX; p.x++)
@@ -75,14 +76,12 @@ static bool RasterizeAndCompare(Point2D* v, uint16_t* screenToCompare)
             if((w0 | w1 | w2) >= 0) 
             {
                 uint32_t pixel = w0 + w1 + w2;
-                uint16_t pixel1 = screenToCompare[p.y * kScreenSize + p.y];
-                if((uint16_t)pixel != pixel1)
-                    return false;
+                result ^= pixel;
             }
         }
     }
 
-    return true;
+    return result == valToCompare;
 }
 
 
@@ -285,8 +284,8 @@ bool Check(IPAddr ip)
         return false;
     }   
 
-    uint16_t screen[kScreenSize * kScreenSize];
-	ret = Recv(sock, screen, sizeof(screen));
+    uint32_t result;
+	ret = Recv(sock, &result, sizeof(result));
     if(ret <= 0)
     {
         std::lock_guard<std::mutex> guard(GMutex);
@@ -295,7 +294,7 @@ bool Check(IPAddr ip)
         return false;
     }
 
-    if(RasterizeAndCompare(v, screen))
+    if(RasterizeAndCompare(v, result))
     {
         printf("  OK\n");
         return true;

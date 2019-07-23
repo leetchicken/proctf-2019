@@ -116,8 +116,6 @@ void ChecksystemThread()
     bool isConnected = socket.connect(sockAddr) == 0;
 
     const uint32_t kScreenSize = 24;
-    const uint32_t kScreenSizeInBytes = kScreenSize * kScreenSize * sizeof(uint16_t);
-    uint16_t* screen = (uint16_t*)malloc(kScreenSizeInBytes);
 
     while(1)
     {
@@ -164,6 +162,8 @@ void ChecksystemThread()
             if(v[vi].y < minY) minY = v[vi].y;
         }
 
+        uint32_t result = 0;
+
         int doubleTriArea = EdgeFunction(v[0], v[1], v[2]);
         if(doubleTriArea > 0)
         {
@@ -179,14 +179,14 @@ void ChecksystemThread()
                     if((w0 | w1 | w2) >= 0) 
                     {
                         uint32_t pixel = w0 + w1 + w2;
-                        screen[p.y * kScreenSize + p.y] = (uint16_t)pixel;
+                        result ^= pixel;
                     }
                 }
             }
         }        
 
         socket.set_timeout(3000);
-        ret = send(socket, screen, kScreenSizeInBytes);
+        ret = send(socket, &result, sizeof(result));
         if(ret < 0)
         {
             printf("CHECKSYSTEM: socket.send failed(%d)\n", ret);
