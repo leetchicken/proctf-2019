@@ -21,3 +21,11 @@ const char* inet_ntoa(IPAddr addr)
 {
     return inet_ntoa(*(in_addr*)&addr);
 }
+
+
+IPAddr inet_aton(const char* addrStr)
+{
+    in_addr addr;
+    inet_aton(addrStr, &addr);
+    return addr.s_addr;
+}

@@ -49,7 +49,8 @@ void Team::DumpStats(std::string& out)
     sprintf(buf, "Team%u %s:\n", desc.number, desc.name.c_str());
     out.append(buf);
 
-    sprintf(buf, "  Network: %s\n", desc.networkStr.c_str());
+    NetworkAddr network = desc.hwConsoleIp & kNetworkMask;
+    sprintf(buf, "  Network: %s\n", inet_ntoa(network));
     out.append(buf);
 
     sprintf(buf, "  Last time team post notification: %f\n", lastTimeTeamPostNotification);

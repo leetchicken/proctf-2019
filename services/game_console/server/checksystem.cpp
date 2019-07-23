@@ -19,6 +19,7 @@ static const uint32_t kScreenSize = 24;
 static std::mutex GMutex;
 static std::map<IPAddr, int> GIpToSocket;
 static std::thread GNetworkThread;
+static std::vector<IPAddr> GConsolesIp;
 
 
 struct Point2D
@@ -216,16 +217,26 @@ static void NetworkThread()
         }
 
         IPAddr ip = clientAddr.sin_addr.s_addr;
-        if((ip & kConsoleAddr) != kConsoleAddr)
+        bool isIpValid = false;
+        for(auto validIp : GConsolesIp)
         {
-            printf("CHECKSYSTEM: unknown ip: %s\n", inet_ntoa(clientAddr.sin_addr));
+            if(validIp != ip)
+                continue;
+            
+            isIpValid = true;
+            break;
+        }
+
+        if(!isIpValid)
+        {
+            printf("CHECKSYSTEM: unknown ip: %s\n", inet_ntoa(ip));
             close(newSocket);
             continue;
         }
 
         {
             std::lock_guard<std::mutex> guard(GMutex);
-            printf("CHECKSYSTEM: Accepted connection: %s\n", inet_ntoa(clientAddr.sin_addr));
+            printf("CHECKSYSTEM: Accepted connection: %s\n", inet_ntoa(ip));
             auto iter = GIpToSocket.find(ip);
             if(iter != GIpToSocket.end())
             {
@@ -239,8 +250,9 @@ static void NetworkThread()
 }
 
 
-void InitChecksystem()
+void InitChecksystem(const std::vector<IPAddr>& consolesIp)
 {
+    GConsolesIp = consolesIp;
     GNetworkThread = std::thread(NetworkThread);
 }
 

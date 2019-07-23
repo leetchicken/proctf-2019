@@ -417,7 +417,7 @@ HttpResponse RequestHandler::HandleGet(HttpRequest request)
         auto& flag = team->GetFlag(flagId);
         printf("  Flag '%s' with id '%s' for team '%s'\n", flag.c_str(), flagId, team->desc.name.c_str());
 
-        IPAddr consoleAddr = team->desc.network | kConsoleAddr;
+        IPAddr consoleAddr = team->desc.hwConsoleIp;
 
         Console* console = team->GetConsole(consoleAddr);
         if(console->GetNotificationsInQueue() >= Console::kNotificationQueueSize)
@@ -709,13 +709,13 @@ bool LoadTeamsDatabase()
         auto& desc = team.desc;
         desc.number = teamNode.attribute("number").as_uint();
         desc.name = teamNode.attribute("name").as_string();
-        desc.networkStr = teamNode.attribute("net").as_string();
-        desc.network = net;
+        const char* consoleIp = teamNode.attribute("ip").as_string();
+        desc.hwConsoleIp = inet_aton(consoleIp);
         printf("  %u %s\n", desc.number, desc.name.c_str());
-        printf("    network: %s(%08X)\n", desc.networkStr.c_str(), desc.network);
+        NetworkAddr network = desc.hwConsoleIp & kNetworkMask;
+        printf("    network: %s(%08X)\n", inet_ntoa(network), network);
 
-        IPAddr consoleAddr = desc.network | kConsoleAddr;
-        Console* console = team.AddConsole(consoleAddr);
+        Console* console = team.AddConsole(desc.hwConsoleIp);
         console->GenerateAuthKey();
         printf("    console auth key: %x\n", console->authKey);
 
@@ -829,7 +829,11 @@ int main()
 
     std::thread updateThread(UpdateThread);
     std::thread networkThread(NetworkThread);
-    InitChecksystem();
+
+    std::vector<IPAddr> consolesIp;
+    for(auto& iter : GTeams)
+        consolesIp.push_back(iter.second.desc.hwConsoleIp);
+    InitChecksystem(consolesIp);
 
     while (1)
         sleep(1);

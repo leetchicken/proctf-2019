@@ -12,7 +12,7 @@ struct TeamDesc
 {
     uint32_t number;
     std::string name;
-    std::string networkStr;
+    IPAddr hwConsoleIp;
     NetworkAddr network;
 };
 
