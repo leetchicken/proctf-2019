@@ -194,7 +194,7 @@
             var algosEl = document.getElementById("algo_list")
             algosEl.innerText = ""
 
-            for(algo in allAlgos) {
+            for(algo in allAlgos.slice(0, 256)) {
                 var algoEl = document.createElement("option")
                 algoEl.classList.add("algo_list_item")
                 algoEl.innerText = allAlgos[algo]
