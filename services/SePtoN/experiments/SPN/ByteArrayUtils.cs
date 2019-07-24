@@ -25,16 +25,16 @@ namespace SPN
 			for(int i = 0; i < count; i++)
 			{
 				var b = bytes[offset + i];
-				var hb = b >> 4;
+				var hb = (byte)(b >> 4);
 				array[i << 1] = ToHex4B(hb);
-				var lb = b & 0xf;
+				var lb = (byte)(b & 0xf);
 				array[(i << 1) + 1] = ToHex4B(lb);
 			}
 			return new string(array);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static char ToHex4B(int b)
+		public static char ToHex4B(this byte b)
 		{
 			return (char)(b > 9 ? b + ByteA - 10 : b + Byte0);
 		}

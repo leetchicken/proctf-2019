@@ -47,20 +47,59 @@ namespace SPN
 			var plains = Enumerable.Range(0, iterationsCount).Select(i => GenerateRandomPlainText()).ToArray();
 			var encs = plains.Select(plain => spn.Encrypt(plain)).ToArray();
 
+			var solutions = new List<Solution>();
 			foreach(var approximationsGroup in bestLayerApproximations
 													.Where(layer => layer.round0sboxNum % 2 == 0 && layer.round0x == 0x8)
 													.GroupBy(layer => layer.ActivatedSboxesNums.Aggregate("", (s, num) => s + num))
 													.OrderBy(group => group.Key))
 			{
 				foreach(var approximation in approximationsGroup.Distinct().OrderByDescending(layer => layer.inputProbability.Bias()).Take(3))
+					solutions.AddRange(HackApproximation_Fixed(plains, encs, approximation));
+			}
+
+			PrintSolution(solutions);
+		}
+
+		private static void PrintSolution(List<Solution> solutions)
+		{
+			var keyCandidate = new string(' ',2 * Key.Length).ToCharArray();
+			var lines = new List<char[]>();
+
+			foreach(var sboxNumGroup in solutions.GroupBy(solution => solution.SBoxNum).OrderBy(grouping => grouping.Key))
+			{
+				var hexNum = sboxNumGroup.Key;
+
+				var candidates = sboxNumGroup
+					.GroupBy(solution => solution.Byte)
+					.Select(g =>
+						{
+							var sumScores = g.Aggregate(0.0, (s, solution) => s + solution.score);
+							return (g, sumScores);
+						})
+					.OrderByDescending(tuple => tuple.sumScores)
+					.ToList();
+
+
+				for(int i = 0; i < candidates.Count; i++)
 				{
-					HackApproximation_Fixed(plains, encs, approximation);
+					var group = candidates[i];
+					if(lines.Count == i)
+						lines.Add(keyCandidate.ToArray());
+
+					lines[i][hexNum] = group.g.Key.ToHex4B();
+
+//					Console.WriteLine($"{sboxNumGroup.Key}: {group.g.Key.ToHex4B()} = {group.sumScores}");
 				}
+			}
+
+			foreach(var line in lines)
+			{
+				Console.WriteLine(new string(line));
 			}
 		}
 
 
-		private static void HackApproximation_Fixed(byte[][] plains, byte[][] encs, Layer bestLayerApproximation)
+		private static List<Solution> HackApproximation_Fixed(byte[][] plains, byte[][] encs, Layer bestLayerApproximation)
 		{
 			Console.WriteLine($"\nBEST OPTION: round0sboxNum {bestLayerApproximation.round0sboxNum}\tround0x {bestLayerApproximation.round0x}\tround0y {bestLayerApproximation.round0y}\tbias {bestLayerApproximation.inputProbability.Bias()}\toutSBoxes {string.Join(",", bestLayerApproximation.ActivatedSboxesNums)}\tLastRoundInputBits {SubstitutionPermutationNetwork.GetBitString(bestLayerApproximation.inputBits)}");
 
@@ -85,7 +124,7 @@ namespace SPN
 				HackIteration(plain, enc, bestLayerApproximation.round0sboxNum, bestLayerApproximation.round0x, bestLayerApproximation.inputBits, targetPartialSubkeys, hackingSubstitutionPermutationNetwork, keyProbabilities);
 			}
 
-			PrintApproximation_Fixed(bestLayerApproximation, keyProbabilities);
+			return PrintApproximation_Fixed(bestLayerApproximation, keyProbabilities);
 		}
 
 		private static void HackIteration(byte[] plain, byte[] enc, int round0sboxNum, ulong round0x, ulong lastRoundInputBits, List<(ulong, byte[])> targetPartialSubkeys, SubstitutionPermutationNetwork hackingSubstitutionPermutationNetwork, Dictionary<ulong, int> keyProbabilities)
@@ -107,7 +146,7 @@ namespace SPN
 			}
 		}
 
-		private static void PrintApproximation_Fixed(Layer bestLayerApproximation, Dictionary<ulong, int> keyProbabilities)
+		private static List<Solution> PrintApproximation_Fixed(Layer bestLayerApproximation, Dictionary<ulong, int> keyProbabilities)
 		{
 			Console.WriteLine($"ITERATIONS DONE: {iterationsCount}");
 			Console.ForegroundColor = ConsoleColor.Blue;
@@ -127,6 +166,8 @@ namespace SPN
 //				return;
 			}
 
+			var solutions = new List<Solution>();
+			int groupNum = 0;
 			int prevBias = -1;
 			var prefix = "";
 			foreach(var kvp in keyValuePairs.Take(16))
@@ -137,14 +178,24 @@ namespace SPN
 				var bias = Math.Abs(iterationsCount / 2 - kvp.Value);
 
 				if(bias != prevBias && prevBias != -1)
+				{
 					prefix = prefix == " " ? "" : " ";
+					groupNum++;
+				}
 
 				if(isValidKey)
 					Console.ForegroundColor = ConsoleColor.Green;
 				Console.WriteLine($"{prefix}{keyBytes.ToHexUpperCase()} : {bias}");
 				Console.ResetColor();
 				prevBias = bias;
+
+				if(groupNum < 3)
+				{
+					solutions.AddRange(GetSolutions(keyBytes, bestLayerApproximation.ActivatedSboxesNums, groupNum));
+				}
 			}
+
+			return solutions;
 		}
 
 		private static List<ulong> GenerateTargetPartialSubkeys(List<int> vulnerableLastRoundSBoxesNums)
@@ -174,6 +225,21 @@ namespace SPN
 			return block;
 		}
 
+		private static IEnumerable<Solution> GetSolutions(byte[] got, List<int> activatedSboxesNums, int groupNum)
+		{
+			foreach(var sBoxNum in activatedSboxesNums)
+			{
+				var byteNum = sBoxNum / 2;
+				var b = (byte)(got[byteNum] >> (sBoxNum % 2 == 0 ? 4 : 0));
+				yield return new Solution
+				{
+					Byte = b,
+					SBoxNum = sBoxNum,
+					score = 1 / Math.Pow(2, groupNum)
+				};
+			}
+		}
+
 		private static bool IsValidKey(byte[] expected, byte[] got, ICollection<int> lastRoundSBoxesNums)
 		{
 			foreach(var sBoxNum in lastRoundSBoxesNums)
@@ -184,5 +250,12 @@ namespace SPN
 			}
 			return true;
 		}
+	}
+
+	class Solution
+	{
+		public int SBoxNum;
+		public byte Byte;
+		public double score;
 	}
 }
