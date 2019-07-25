@@ -10,6 +10,8 @@
 Thread GHttpThread;
 MemoryPool<HTTPRequest, 64> GRequestsPool;
 Queue<HTTPRequest, 64> GRequestsQueue;
+MemoryPool<TCPSocket, 32> GTCPSocketsPool;
+MemoryPool<UDPSocket, 32> GUDPSocketsPool;
 
 
 // its so funny, memcpy is broken, so use our own
@@ -285,7 +287,7 @@ int APIImpl::socket(bool tcp)
             return kSocketErrorNoMemory;
         int sockIdx = __builtin_ctz(m_freeTcpSockets);
         m_freeTcpSockets &= ~(1 << sockIdx);
-        m_tcpSockets[sockIdx] = new TCPSocket();
+        m_tcpSockets[sockIdx] = GTCPSocketsPool.alloc();
         int err = m_tcpSockets[sockIdx]->open(m_ethInterface);
         if(err < 0)
             return ConvertSocketRetVal(err);
@@ -297,7 +299,7 @@ int APIImpl::socket(bool tcp)
             return kSocketErrorNoMemory;
         int sockIdx = __builtin_ctz(m_freeUdpSockets);
         m_freeUdpSockets &= ~(1 << sockIdx);
-        m_udpSockets[sockIdx] = new UDPSocket();
+        m_udpSockets[sockIdx] = GUDPSocketsPool.alloc();
         int err = m_udpSockets[sockIdx]->open(m_ethInterface);
         if(err < 0)
             return ConvertSocketRetVal(err);
@@ -499,7 +501,7 @@ void APIImpl::close(int socket)
         m_tcpSockets[socketIdx]->close();
         bool acceptedSock = (m_acceptedSockets & (1 << socketIdx)) > 0;
         if(!acceptedSock)
-            delete m_tcpSockets[socketIdx];
+            GTCPSocketsPool.free(m_tcpSockets[socketIdx]);
         m_tcpSockets[socketIdx] = NULL;
         m_freeTcpSockets |= 1 << socketIdx;
         m_acceptedSockets &= ~(1 << socketIdx);  
@@ -508,7 +510,7 @@ void APIImpl::close(int socket)
     else
     {
         m_udpSockets[socketIdx]->close();
-        delete m_udpSockets[socketIdx];
+        GUDPSocketsPool.free(m_udpSockets[socketIdx]);
         m_freeUdpSockets |= 1 << socketIdx;
         m_udpSockets[socketIdx] = NULL;
     }
