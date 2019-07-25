@@ -266,10 +266,6 @@ static int ConvertSocketRetVal(nsapi_size_or_error_t sizeOrError)
             return kSocketErrorAlready;   
         case NSAPI_ERROR_IS_CONNECTED:
             return kSocketErrorIsConnected;      
-        case NSAPI_ERROR_CONNECTION_LOST:
-            return kSocketErrorConnectionLost;  
-        case NSAPI_ERROR_CONNECTION_TIMEOUT:
-            return kSocketErrorConnectionTimeout;
     }
 
     if(sizeOrError < 0)

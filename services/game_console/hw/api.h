@@ -191,8 +191,6 @@ enum ESocketError
     kSocketErrorInProgress         = -3,     /*!< operation (eg connect) in progress */
     kSocketErrorAlready            = -4,     /*!< operation (eg connect) already in progress */
     kSocketErrorIsConnected        = -5,     /*!< socket is already connected */
-    kSocketErrorConnectionLost     = -6,     /*!< connection lost */
-    kSocketErrorConnectionTimeout  = -7,     /*!< connection timed out */
 };
 
 
