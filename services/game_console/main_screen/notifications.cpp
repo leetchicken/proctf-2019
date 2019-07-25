@@ -186,6 +186,9 @@ void NotificationsCtx::Get()
 
 void NotificationsCtx::CheckForNewNotifications()
 {
+    if(m_api->GetNetwokConnectionStatus() != kNetwokConnectionStatusGlobalUp)
+        return;
+
     if(m_socket < 0)
     {
         m_socket = m_api->socket(true);
