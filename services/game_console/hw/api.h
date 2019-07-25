@@ -186,11 +186,13 @@ enum ESocketError
     kSocketErrorNoSocket           = -5,     /*!< socket not available for use */
     kSocketErrorNoAddress          = -6,     /*!< IP address is not known */
     kSocketErrorNoMemory           = -7,     /*!< memory resource not available */
-    kSocketErrorDnsFailure         = -9,     /*!< DNS failed to complete successfully */
-    kSocketErrorDeviceError        = -2,     /*!< failure interfacing with the network processor */
-    kSocketErrorInProgress         = -3,     /*!< operation (eg connect) in progress */
-    kSocketErrorAlready            = -4,     /*!< operation (eg connect) already in progress */
-    kSocketErrorIsConnected        = -5,     /*!< socket is already connected */
+    kSocketErrorDnsFailure         = -8,     /*!< DNS failed to complete successfully */
+    kSocketErrorDeviceError        = -9,     /*!< failure interfacing with the network processor */
+    kSocketErrorInProgress         = -10,     /*!< operation (eg connect) in progress */
+    kSocketErrorAlready            = -11,     /*!< operation (eg connect) already in progress */
+    kSocketErrorIsConnected        = -12,     /*!< socket is already connected */
+    kSocketErrorTimeout             = -13,      /*!< operation timed out */
+    kSocketErrorUnknown             = -14,
 };
 
 
