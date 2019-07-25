@@ -19,7 +19,7 @@ bool NotificationsCtx::Init(API* api)
 void NotificationsCtx::SetAuthKey(uint32_t k)
 {
     m_authKey = k;
-    Connect();
+    CheckForNewNotifications();
 }
 
 
@@ -90,18 +90,7 @@ void NotificationsCtx::Update()
         m_pendingNotificationsNum--;
     }
 
-    uint8_t buf[16];
-    int ret = m_api->recv(m_socket, buf, sizeof(buf), NULL);
-    if(ret == sizeof(buf))
-    {
-        m_api->printf("Notification is available\n");
-        m_api->memcpy(&m_pendingNotificationsNum, buf, 4);
-    }
-    else if(ret == 0 || ret == kSocketErrorConnectionLost)
-    {
-        m_api->close(m_socket);
-        Connect();
-    }
+    CheckForNewNotifications();
 
     if(m_pendingNotificationsNum > 0 && !m_getRequest)
         Get();
@@ -170,22 +159,6 @@ void NotificationsCtx::Render(float dt)
 }
 
 
-void NotificationsCtx::Connect()
-{
-    m_socket = m_api->socket(true);
-    if(m_socket < 0)
-    {
-        m_api->printf("Failed to open notifications socket\n");
-        return;
-    }
-    m_api->set_blocking(m_socket, false);
-    NetAddr addr;
-    addr.ip = m_api->aton(kServerIP);
-    addr.port = kServerNotifyPort;
-    m_api->connect(m_socket, addr);
-}
-
-
 void NotificationsCtx::FreePostRequest()
 {
     m_api->Free(m_postRequest->requestBody);
@@ -208,4 +181,49 @@ void NotificationsCtx::Get()
     m_api->sprintf(m_getRequest->url, "http://%s:%u/notification?auth=%x", kServerIP, kServerPort, m_authKey);
     if(!m_api->SendHTTPRequest(m_getRequest))
         FreeGetRequest();
+}
+
+
+void NotificationsCtx::CheckForNewNotifications()
+{
+    if(m_socket < 0)
+    {
+        m_socket = m_api->socket(true);
+        if(m_socket < 0)
+        {
+            m_api->printf("Failed to open notifications socket\n");
+            return;
+        }
+        m_api->set_blocking(m_socket, false);
+    }
+
+    NetAddr addr;
+    addr.ip = m_api->aton(kServerIP);
+    addr.port = kServerNotifyPort;
+    int ret = m_api->connect(m_socket, addr);
+    if(ret == kSocketErrorInProgress || ret == kSocketErrorAlready)
+    {
+        return;
+    }
+    else if(ret != 0 && ret != kSocketErrorIsConnected)
+    {
+        m_api->printf("NOTIFY: connect err = %d\n", ret);
+        m_api->close(m_socket);
+        m_socket = -1;
+        return;
+    }
+
+    uint8_t buf[16];
+    ret = m_api->recv(m_socket, buf, sizeof(buf), NULL);
+    if(ret == sizeof(buf))
+    {
+        m_api->printf("Notification is available\n");
+        m_api->memcpy(&m_pendingNotificationsNum, buf, 4);
+    }
+    else if(ret != kSocketErrorWouldBlock)
+    {
+        m_api->printf("NOTIFY: recv err = %d\n", ret);
+        m_api->close(m_socket);
+        m_socket = -1;
+    }
 }

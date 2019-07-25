@@ -58,14 +58,14 @@ void InitNetwork()
 }
 
 
-int recv(TCPSocket& socket, void* data, uint32_t size)
+int recv(TCPSocket* socket, void* data, uint32_t size)
 {
     uint8_t* ptr = (uint8_t*)data;
     uint32_t remain = size;
 
     while(remain)
     {
-        int ret = socket.recv(ptr, remain);
+        int ret = socket->recv(ptr, remain);
         if(ret <= 0)
             return ret;
         remain -= ret;
@@ -76,14 +76,14 @@ int recv(TCPSocket& socket, void* data, uint32_t size)
 }
 
 
-int send(TCPSocket& socket, void* data, uint32_t size)
+int send(TCPSocket* socket, void* data, uint32_t size)
 {
     uint8_t* ptr = (uint8_t*)data;
     uint32_t remain = size;
 
     while(remain)
     {
-        int ret = socket.send(ptr, remain);
+        int ret = socket->send(ptr, remain);
         if(ret <= 0)
             return ret;
         remain -= ret;
@@ -117,27 +117,29 @@ int32_t EdgeFunction(const Point2D& a, const Point2D& b, const Point2D& c)
 
 void ChecksystemThread()
 {
-    TCPSocket socket;
-    socket.open(&GEthernet);
+    MemoryPool<TCPSocket, 1> socketPool;
+    TCPSocket* socket = nullptr;
     SocketAddress sockAddr(kServerIP, kServerChecksystemPort);
-
-    bool isConnected = socket.connect(sockAddr) == 0;
 
     const uint32_t kScreenSize = 24;
 
     while(1)
     {
-        if(!isConnected)
+        if(!socket)
         {
             CS_PRINTF("CHECKSYSTEM: Trying to connect to checksystem\n");
-            socket.set_timeout(-1);
-            isConnected = socket.connect(sockAddr) == 0;
-            if(isConnected)
+            socket = socketPool.alloc();
+            socket->open(&GEthernet);
+            socket->set_timeout(-1);
+            int ret = socket->connect(sockAddr);
+            if(ret == 0)
             {
                 CS_PRINTF("CHECKSYSTEM: Connected\n");
             }
             else
             {
+                socketPool.free(socket);
+                socket = nullptr;
                 wait(5.0f);
                 continue;
             }
@@ -155,9 +157,8 @@ void ChecksystemThread()
             {
                 CS_PRINTF("CHECKSYSTEM: socket.recv failed(%d)\n", ret);
             }
-            socket.close();
-            socket.open(&GEthernet);
-            isConnected = false;
+            socketPool.free(socket);
+            socket = nullptr;
             continue;
         }
 
@@ -197,17 +198,16 @@ void ChecksystemThread()
             }
         }        
 
-        socket.set_timeout(3000);
+        socket->set_timeout(3000);
         ret = send(socket, &result, sizeof(result));
         if(ret < 0)
         {
             CS_PRINTF("CHECKSYSTEM: socket.send failed(%d)\n", ret);
-            socket.close();
-            socket.open(&GEthernet);
-            isConnected = false;
+            socketPool.free(socket);
+            socket = nullptr;
             continue;
         }
-        socket.set_timeout(-1);
+        socket->set_timeout(-1);
     }
 }
 

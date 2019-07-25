@@ -31,8 +31,8 @@ private:
 
     float drawTimer;
 
-    void Connect();
     void FreePostRequest();
     void FreeGetRequest();
     void Get();
+    void CheckForNewNotifications();
 };
