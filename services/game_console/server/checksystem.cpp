@@ -4,8 +4,6 @@
 #include <arpa/inet.h>
 #include <sys/types.h>
 #include <sys/socket.h>
-#include <poll.h>
-#include <errno.h>
 #include <unistd.h>
 #include <utility>
 #include <string.h>
@@ -82,87 +80,6 @@ static bool RasterizeAndCompare(Point2D* v, uint32_t valToCompare)
     }
 
     return result == valToCompare;
-}
-
-
-static int Recv(int sock, void* data, uint32_t size)
-{
-    uint8_t* ptr = (uint8_t*)data;
-    uint32_t remain = size;
-
-	pollfd pollFd;
-	pollFd.fd = sock;
-	pollFd.events = POLLIN;
-	pollFd.revents = 0;
-
-    while(remain)
-    {
-		int ret = poll(&pollFd, 1, 5000);
-        if(ret < 0)
-        {
-            printf("CHECKSYSTEM ERROR: poll failed %s\n", strerror(errno));
-            return ret;
-        }
-		if((pollFd.revents & POLLIN) == 0)
-		{
-			printf("CHECKSYSTEM ERROR: recv timeout\n");
-			return ret;
-		}
-		
-        ret = recv(sock, ptr, remain, 0);
-        if(ret == 0)
-        {
-            printf("CHECKSYSTEM ERROR: connection closed by peer\n");
-            return 0;
-        }
-        if(ret < 0)
-        {
-            printf("CHECKSYSTEM ERROR: recv failed %s\n", strerror(errno));
-            return ret;
-        }
-        remain -= ret;
-        ptr += ret;
-    }
-    
-    return (int)size;
-}
-
-
-static int Send(int sock, void* data, uint32_t size)
-{
-    uint8_t* ptr = (uint8_t*)data;
-    uint32_t remain = size;
-
-	pollfd pollFd;
-	pollFd.fd = sock;
-	pollFd.events = POLLOUT;
-	pollFd.revents = 0;
-
-    while(remain)
-    {
-		int ret = poll(&pollFd, 1, 5000);
-        if(ret < 0)
-        {
-            printf("CHECKSYSTEM ERROR: poll failed %s\n", strerror(errno));
-            return ret;
-        }
-		if((pollFd.revents & POLLOUT) == 0)
-		{
-			printf("CHECKSYSTEM ERROR: send timeout\n");
-			return ret;
-		}
-
-        ret = send(sock, ptr, remain, 0);
-        if(ret < 0)
-        {
-            printf("CHECKSYSTEM ERROR: send failed %s\n", strerror(errno));
-            return ret;
-        }
-        remain -= ret;
-        ptr += ret;
-    }
-    
-    return (int)size;
 }
 
 

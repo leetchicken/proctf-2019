@@ -788,7 +788,7 @@ void NetworkThread()
     {
         sockaddr_in clientAddr;
         socklen_t addrLen = sizeof(clientAddr);
-        int newSocket = accept(listenSock, (sockaddr*)&clientAddr, &addrLen);
+        int newSocket = accept4(listenSock, (sockaddr*)&clientAddr, &addrLen, SOCK_NONBLOCK);
         if(newSocket < 0)
         {
             printf("NOTIFY ERROR: accept failed: %s\n", strerror(errno));

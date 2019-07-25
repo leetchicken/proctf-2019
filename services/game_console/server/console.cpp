@@ -72,6 +72,6 @@ void Console::NotifyConsole()
         char data[16];
         uint32_t num = notifications.size();
         memcpy(data, &num, sizeof(num));
-        send(notifySocket, data, sizeof(data), 0);
+        Send(notifySocket, data, sizeof(data), 5000);
     }
 }

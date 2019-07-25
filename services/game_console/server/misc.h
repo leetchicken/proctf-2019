@@ -19,3 +19,7 @@ float GetTime();
 NetworkAddr SockaddrToNetworkAddr(in_addr a);
 const char* inet_ntoa(IPAddr addr);
 IPAddr inet_aton(const char*);
+
+// Recv/Send with timeout
+int Recv(int sock, void* data, uint32_t size, uint32_t timeout = 5000);
+int Send(int sock, const void* data, uint32_t size, uint32_t timeout = 5000);
