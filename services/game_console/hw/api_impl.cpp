@@ -285,24 +285,32 @@ int APIImpl::socket(bool tcp)
     {
         if(m_freeTcpSockets == 0)
             return kSocketErrorNoMemory;
-        int sockIdx = __builtin_ctz(m_freeTcpSockets);
-        m_freeTcpSockets &= ~(1 << sockIdx);
-        m_tcpSockets[sockIdx] = GTCPSocketsPool.alloc();
-        int err = m_tcpSockets[sockIdx]->open(m_ethInterface);
+        TCPSocket* socket = GTCPSocketsPool.alloc();
+        int err = socket->open(m_ethInterface);
         if(err < 0)
+        {
+            GTCPSocketsPool.free(socket);
             return ConvertSocketRetVal(err);
+        }
+        int sockIdx = __builtin_ctz(m_freeTcpSockets);
+        m_tcpSockets[sockIdx] = socket;
+        m_freeTcpSockets &= ~(1 << sockIdx);
         return sockIdx;
     }
     else
     {
         if(m_freeUdpSockets == 0)
             return kSocketErrorNoMemory;
-        int sockIdx = __builtin_ctz(m_freeUdpSockets);
-        m_freeUdpSockets &= ~(1 << sockIdx);
-        m_udpSockets[sockIdx] = GUDPSocketsPool.alloc();
-        int err = m_udpSockets[sockIdx]->open(m_ethInterface);
+        UDPSocket* socket = GUDPSocketsPool.alloc();
+        int err = socket->open(m_ethInterface);
         if(err < 0)
+        {
+            GUDPSocketsPool.free(socket);
             return ConvertSocketRetVal(err);
+        }
+        int sockIdx = __builtin_ctz(m_freeUdpSockets);
+        m_udpSockets[sockIdx] = socket;
+        m_freeUdpSockets &= ~(1 << sockIdx);
         return sockIdx + 32;
     }
 
