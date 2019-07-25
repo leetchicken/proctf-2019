@@ -115,9 +115,25 @@ int32_t EdgeFunction(const Point2D& a, const Point2D& b, const Point2D& c)
 #endif
 
 
+MemoryPool<TCPSocket, 1> GSocketPool;
+
+
+TCPSocket* AllocSocket()
+{
+    return new(GSocketPool.alloc()) TCPSocket();
+}
+
+
+void FreeSocket(TCPSocket*& sock)
+{
+    sock->~TCPSocket();
+    GSocketPool.free(sock);
+    sock = nullptr;
+}
+
+
 void ChecksystemThread()
 {
-    MemoryPool<TCPSocket, 1> socketPool;
     TCPSocket* socket = nullptr;
     SocketAddress sockAddr(kServerIP, kServerChecksystemPort);
 
@@ -128,7 +144,7 @@ void ChecksystemThread()
         if(!socket)
         {
             CS_PRINTF("CHECKSYSTEM: Trying to connect to checksystem\n");
-            socket = socketPool.alloc();
+            socket = AllocSocket();
             socket->open(&GEthernet);
             socket->set_timeout(-1);
             int ret = socket->connect(sockAddr);
@@ -138,8 +154,7 @@ void ChecksystemThread()
             }
             else
             {
-                socketPool.free(socket);
-                socket = nullptr;
+                FreeSocket(socket);
                 wait(5.0f);
                 continue;
             }
@@ -157,8 +172,7 @@ void ChecksystemThread()
             {
                 CS_PRINTF("CHECKSYSTEM: socket.recv failed(%d)\n", ret);
             }
-            socketPool.free(socket);
-            socket = nullptr;
+            FreeSocket(socket);
             continue;
         }
 
@@ -203,8 +217,7 @@ void ChecksystemThread()
         if(ret < 0)
         {
             CS_PRINTF("CHECKSYSTEM: socket.send failed(%d)\n", ret);
-            socketPool.free(socket);
-            socket = nullptr;
+            FreeSocket(socket);
             continue;
         }
         socket->set_timeout(-1);

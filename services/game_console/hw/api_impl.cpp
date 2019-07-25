@@ -281,7 +281,7 @@ int APIImpl::socket(bool tcp)
     {
         if(m_freeTcpSockets == 0)
             return kSocketErrorNoMemory;
-        TCPSocket* socket = GTCPSocketsPool.alloc();
+        TCPSocket* socket = new(GTCPSocketsPool.alloc()) TCPSocket();
         int err = socket->open(m_ethInterface);
         if(err < 0)
         {
@@ -297,7 +297,7 @@ int APIImpl::socket(bool tcp)
     {
         if(m_freeUdpSockets == 0)
             return kSocketErrorNoMemory;
-        UDPSocket* socket = GUDPSocketsPool.alloc();
+        UDPSocket* socket = new(GUDPSocketsPool.alloc()) UDPSocket();
         int err = socket->open(m_ethInterface);
         if(err < 0)
         {
@@ -505,7 +505,10 @@ void APIImpl::close(int socket)
         m_tcpSockets[socketIdx]->close();
         bool acceptedSock = (m_acceptedSockets & (1 << socketIdx)) > 0;
         if(!acceptedSock)
+        {
+            m_tcpSockets[socketIdx]->~TCPSocket();
             GTCPSocketsPool.free(m_tcpSockets[socketIdx]);
+        }
         m_tcpSockets[socketIdx] = NULL;
         m_freeTcpSockets |= 1 << socketIdx;
         m_acceptedSockets &= ~(1 << socketIdx);  
@@ -514,6 +517,7 @@ void APIImpl::close(int socket)
     else
     {
         m_udpSockets[socketIdx]->close();
+        m_udpSockets[socketIdx]->~UDPSocket();
         GUDPSocketsPool.free(m_udpSockets[socketIdx]);
         m_freeUdpSockets |= 1 << socketIdx;
         m_udpSockets[socketIdx] = NULL;
