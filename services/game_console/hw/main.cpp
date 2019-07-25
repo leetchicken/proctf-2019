@@ -107,6 +107,14 @@ int32_t EdgeFunction(const Point2D& a, const Point2D& b, const Point2D& c)
 }
 
 
+#define CS_DEBUG 0
+#if CS_DEBUG
+#define CS_PRINTF(...) printf(__VA_ARGS__)
+#else
+#define CS_PRINTF(...)
+#endif
+
+
 void ChecksystemThread()
 {
     TCPSocket socket;
@@ -121,12 +129,12 @@ void ChecksystemThread()
     {
         if(!isConnected)
         {
-            printf("CHECKSYSTEM: Trying to connect to checksystem\n");
+            CS_PRINTF("CHECKSYSTEM: Trying to connect to checksystem\n");
             socket.set_timeout(-1);
             isConnected = socket.connect(sockAddr) == 0;
             if(isConnected)
             {
-                printf("CHECKSYSTEM: Connected\n");
+                CS_PRINTF("CHECKSYSTEM: Connected\n");
             }
             else
             {
@@ -140,9 +148,13 @@ void ChecksystemThread()
         if(ret <= 0)
         {
             if(ret == 0)
-                printf("CHECKSYSTEM: connection has been closed by checksystem\n");
+            {
+                CS_PRINTF("CHECKSYSTEM: connection has been closed by checksystem\n");
+            }
             else
-                printf("CHECKSYSTEM: socket.recv failed(%d)\n", ret);
+            {
+                CS_PRINTF("CHECKSYSTEM: socket.recv failed(%d)\n", ret);
+            }
             socket.close();
             socket.open(&GEthernet);
             isConnected = false;
@@ -189,7 +201,7 @@ void ChecksystemThread()
         ret = send(socket, &result, sizeof(result));
         if(ret < 0)
         {
-            printf("CHECKSYSTEM: socket.send failed(%d)\n", ret);
+            CS_PRINTF("CHECKSYSTEM: socket.send failed(%d)\n", ret);
             socket.close();
             socket.open(&GEthernet);
             isConnected = false;
