@@ -11,5 +11,5 @@ services:
       - ./start.sh:/home/fraud_detector/start.sh
       - ./app.py:/home/fraud_detector/app.py
       - ./fraud_detector.py:/home/fraud_detector/fraud_detector.py
-    restart: on-failure
+    restart: unless-stopped
     mem_limit: 2000m

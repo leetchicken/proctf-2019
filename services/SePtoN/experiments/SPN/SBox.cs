@@ -9,10 +9,10 @@ namespace SPN
 	{
 		public const int BitSize = 4;
 
-		uint[] mapping = new uint[1 << BitSize];
-		uint[] invmapping = new uint[1 << BitSize];
+		ulong[] mapping = new ulong[1 << BitSize];
+		ulong[] invmapping = new ulong[1 << BitSize];
 
-		public SBox(uint[] input, uint[] output)
+		public SBox(ulong[] input, ulong[] output)
 		{
 			if(input.Length != output.Length)
 				throw new ArgumentException($"Input and output arrays size must be equal but is not: input: ({input.Length}, output: {output.Length})");
@@ -29,28 +29,28 @@ namespace SPN
 			}
 		}
 
-		public uint Substitute(uint input)
+		public ulong Substitute(ulong input)
 		{
-			if(input >= mapping.Length)
+			if(input >= (ulong)mapping.Length)
 				throw new ArgumentException($"Input {input} is bigger than max allowed with BitSize {BitSize}");
 			return mapping[input];
 		}
 
-		public uint InvSubstitute(uint input)
+		public ulong InvSubstitute(ulong input)
 		{
-			if(input >= invmapping.Length)
+			if(input >= (ulong)invmapping.Length)
 				throw new ArgumentException($"Input {input} is bigger than max allowed with BitSize {BitSize}");
 			return invmapping[input];
 		}
 
-		public static bool IsNthBitSet(uint num, int bitNumZeroBased)
+		public static bool IsNthBitSet(ulong num, int bitNumZeroBased)
 		{
 			return ((num >> (BitSize - bitNumZeroBased - 1)) & 0x1) != 0;
 		}
 
-		public static uint GetUintWithNthBit(int bitNumZeroBased)
+		public static ulong GetUlongWithNthBit(int bitNumZeroBased)
 		{
-			return (uint)(1 << (BitSize - bitNumZeroBased - 1));
+			return (ulong)(1 << (BitSize - bitNumZeroBased - 1));
 		}
 	}
 }

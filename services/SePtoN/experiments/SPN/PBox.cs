@@ -51,8 +51,8 @@ namespace SPN
 
 		private ulong PermuteInternal(ulong input, int[] bitNumbers)
 		{
-			if(input >> outputBitNumbersZeroBased.Length != 0)
-				throw new ArgumentException($"input {input} is out of range, must have no more than {outputBitNumbersZeroBased.Length} least significant bits set");
+//			if(input >> outputBitNumbersZeroBased.Length != 0)
+//				throw new ArgumentException($"input {input} is out of range, must have no more than {outputBitNumbersZeroBased.Length} least significant bits set");
 
 			ulong result = 0;
 			for(int i = 0; i < outputBitNumbersZeroBased.Length; i++)
