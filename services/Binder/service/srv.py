@@ -8,15 +8,18 @@ from logging.handlers import RotatingFileHandler
 import subprocess as sp
 from stat import S_ISREG, ST_CTIME, ST_MODE
 import os, sys, time, re
+from flask_session import Session
+import hashlib,datetime
+
 
 app = Flask(__name__)
 app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
-formatter = logging.logging.Formatter("[%(asctime)s] {%(pathname)s:%(lineno)d} %(levelname)s - %(message)s")
-handler = RotatingFileHandler("log.txt", maxBytes=10000000, backupCount=5)
-handler.setFormatter(formatter)
-app.logger.addHandler(handler)
-app.logger.setLevel(logging.logging.INFO)
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
+app.config['SESSION_TYPE'] = 'filesystem'
+app.config['PERMANENT_SESSION_LIFETIME'] = datetime.timedelta(hours=15)
+app.config['SESSION_FILE_THRESHOLD'] = 10000
+sess = Session()
+sess.init_app(app)
 
 def id_gen(size=6, chars=string.ascii_uppercase + string.digits):
     return ''.join(random.choice(chars) for _ in range(size))
@@ -26,10 +29,25 @@ def id_gen(size=6, chars=string.ascii_uppercase + string.digits):
 def index():
     return redirect("/list")
 
+def verify_challange(chal,ans,ln):
+    sum = hashlib.md5()
+    sum.update((chal + ans).encode('utf-8'))
+    res = sum.digest()
+    for i in range(ln):
+        if res[i]!=0:
+            return False
+    return True
+
 @app.route('/upload',methods=['POST'])
 def upload():
     if not 'message' in request.files:
         return render_template("error.html",message="No message field in request")
+    if not "challange" in request.values:
+        return render_template("error.html",message="No challange provided")
+    if not verify_challange(session['challange'],\
+                            request.values['challange'],3):
+        return render_template("error.html",message="Invalid answer")
+
     f=request.files['message']
     message_id = id_gen(12)
     fname = message_id + ".elf"
@@ -40,17 +58,18 @@ def upload():
 
 @app.route('/list')
 def list_mes():
+    session['challange'] = id_gen(8)
     dirpath = "messages"
     entries = (os.path.join(dirpath, fn) for fn in os.listdir(dirpath))
     entries = ((os.stat(path), path) for path in entries)
     entries = ((stat[ST_CTIME], path) for stat, path in entries if S_ISREG(stat[ST_MODE]))
     messages = []
     for cdate, path in sorted(entries):
-        print(time.ctime(cdate), os.path.basename(path))
+        #print(time.ctime(cdate), os.path.basename(path))
         bn=os.path.basename(path)
         fn = os.path.splitext(bn)
         messages.append(fn[0])
-    return render_template("list.html",messages=messages)
+    return render_template("list.html",messages=messages,challange=session['challange'])
 
 @app.route('/get')
 def get_mes():

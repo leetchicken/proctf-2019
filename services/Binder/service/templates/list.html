@@ -15,10 +15,19 @@
 </head>
 <body>
   <h1>Obfuscated messages</h1>
+  <p>
+    Welcome to the message storing service. You can upload any file with message, protected with
+    password. Your file must be runnable with password as argument.
+  </p>
   <div>
     <form action="/upload" method="POST"
                       enctype="multipart/form-data">
       <input type='file' name="message"></input>
+      <div>
+        <p> Enter 8-length string for which md5("{{challange}}"+string)[0:3]=="\x00\x00\x00"
+        <input type='text' name="challange"></input>
+        </p>
+      </div>
       <input type='submit' value='Send'></input>
     </form>
   </div>

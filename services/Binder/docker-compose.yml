@@ -1,0 +1,10 @@
+version : '2'
+
+services:
+  binder:
+    build: .
+    restart: always
+    volumes:
+      - ./service:/home/service
+    ports:
+      - 3010:3010
