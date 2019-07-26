@@ -2,7 +2,7 @@
 
 
 NotificationsCtx::NotificationsCtx()
-        : m_socket(-1), m_postRequest(NULL), m_getRequest(NULL), m_pendingNotificationsNum(0)
+        : m_socket(-1), m_postRequest(NULL), m_getRequest(NULL), m_pendingNotificationsNum(0), m_lastConnectTime(0.0f)
         , m_authKey(~0u), m_userName(NULL), m_userNameLen(0), m_message(NULL), m_messageLen(0)
         , m_gotNotification(false), drawTimer(0.0f)
 {
@@ -189,6 +189,10 @@ void NotificationsCtx::CheckForNewNotifications()
     if(m_api->GetNetwokConnectionStatus() != kNetwokConnectionStatusGlobalUp)
         return;
 
+    float dt = m_api->time() - m_lastConnectTime;
+    if(m_socket < 0 && dt < 0.5f)
+        return;
+
     if(m_socket < 0)
     {
         m_socket = m_api->socket(true);
@@ -200,6 +204,7 @@ void NotificationsCtx::CheckForNewNotifications()
             return;
         }
         m_api->set_blocking(m_socket, false);
+        m_lastConnectTime = m_api->time();
     }
 
     NetAddr addr;
@@ -217,6 +222,7 @@ void NotificationsCtx::CheckForNewNotifications()
 #endif
         m_api->close(m_socket);
         m_socket = -1;
+        m_lastConnectTime = m_api->time();
         return;
     }
 

@@ -19,6 +19,7 @@ private:
     HTTPRequest* m_postRequest;
     HTTPRequest* m_getRequest;
     int32_t m_pendingNotificationsNum;
+    float m_lastConnectTime;
 
     uint32_t m_authKey;
 
