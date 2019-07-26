@@ -140,10 +140,12 @@ void NotificationsCtx::Render(float dt)
         int32_t ypos = t * (float)rect.y;*/
         int32_t ypos = rect.y;
 
-        DrawString(xpos, ypos, m_userName, m_userNameLen, m_api, fontInfo, rect);
+        uint32_t strLen = m_api->strlen(m_userName);
+        DrawString(xpos, ypos, m_userName, strLen, m_api, fontInfo, rect);
         ypos += fontInfo.charHeight;
         xpos = rect.x;
-        DrawString(xpos, ypos, m_message, m_messageLen, m_api, fontInfo, rect);
+        strLen = m_api->strlen(m_message);
+        DrawString(xpos, ypos, m_message, strLen, m_api, fontInfo, rect);
 
         drawTimer += dt;
     }
