@@ -69,9 +69,21 @@ void Console::NotifyConsole()
     lastConsoleNotifyTime = GetTime();
     if(notifySocket >= 0)
     {
-        char data[16];
+        uint8_t data[16];
+        for(uint32_t i = 0; i < sizeof(data); i++)
+            data[i] = rand();
         uint32_t num = notifications.size();
         memcpy(data, &num, sizeof(num));
         Send(notifySocket, data, sizeof(data), 5000);
+
+        const uint32_t kKeys[4] = {0x1dd232c4, 0xc8cc0ca2, 0xc439178e, 0x19950a80};
+
+        uint32_t response[4];
+        int ret = Recv(notifySocket, response, sizeof(response), 5000);
+        if(ret != sizeof(response))
+        {
+            close(notifySocket);
+            notifySocket = -1;
+        }
     }
 }

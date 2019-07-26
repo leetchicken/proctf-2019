@@ -226,6 +226,21 @@ void NotificationsCtx::CheckForNewNotifications()
     {
         m_api->printf("Notification is available\n");
         m_api->memcpy(&m_pendingNotificationsNum, buf, 4);
+
+        const uint32_t kKeys[4] = {0x1dd232c4, 0xc8cc0ca2, 0xc439178e, 0x19950a80};
+    
+        uint32_t response[4];
+        m_api->memcpy(response, buf, sizeof(response));
+        response[0] ^= kKeys[0];
+        for(uint32_t i = 1; i < 4; i++)
+            response[i] ^= kKeys[i] + response[i - 1];
+        m_api->send(m_socket, response, sizeof(response));
+
+#ifdef TARGET_DEBUG
+        for(uint32_t i = 0; i < 4; i++)
+            m_api->printf("%08x", response[i]);
+        m_api->printf("\n");
+#endif
     }
     else if(ret != kSocketErrorWouldBlock)
     {
