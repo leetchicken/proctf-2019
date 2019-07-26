@@ -15,14 +15,24 @@ MemoryPool<UDPSocket, 32> GUDPSocketsPool;
 
 
 // its so funny, memcpy is broken, so use our own
-void* MemCopy(void* dst, const void* src, uint32_t size)
+void* MemCopy(void* __restrict dst, const void* __restrict src, uint32_t size)
 {
-    uint8_t* dstByte = (uint8_t*)dst;
-    uint8_t* srcByte = (uint8_t*)src;
-    for(uint32_t i = 0; i < size; i++)
-        dstByte[i] = srcByte[i];
+	uint32_t* dstDword = (uint32_t*)dst;
+	uint32_t* srcDword = (uint32_t*)src;
+	uint32_t numDwords = size / 4;
+	for(uint32_t i = 0; i < numDwords; i++)
+		dstDword[i] = srcDword[i];
 
-    return dst;
+	uint32_t numBytes = size % 4;
+	if(numBytes)
+	{
+		uint8_t* dstByte = (uint8_t*)(dstDword + numDwords);
+		uint8_t* srcByte = (uint8_t*)(srcDword + numDwords);
+		for(uint32_t i = 0; i < numBytes; i++)
+			dstByte[i] = srcByte[i];
+	}
+
+	return dst;
 }
 
 
