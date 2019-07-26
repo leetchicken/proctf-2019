@@ -73,8 +73,9 @@ static bool RasterizeAndCompare(Point2D* v, uint32_t valToCompare)
 
             if((w0 | w1 | w2) >= 0) 
             {
-                uint32_t pixel = w0 + w1 + w2;
-                result ^= pixel;
+                result += w0;
+                result += w1 << std::min(p.x, 31);
+                result += w2 << std::min(p.x + p.y, 31);
             }
         }
     }

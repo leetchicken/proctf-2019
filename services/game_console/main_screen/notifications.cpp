@@ -194,7 +194,9 @@ void NotificationsCtx::CheckForNewNotifications()
         m_socket = m_api->socket(true);
         if(m_socket < 0)
         {
+#ifdef TARGET_DEBUG
             m_api->printf("Failed to open notifications socket\n");
+#endif
             return;
         }
         m_api->set_blocking(m_socket, false);
@@ -210,7 +212,9 @@ void NotificationsCtx::CheckForNewNotifications()
     }
     else if(ret != 0 && ret != kSocketErrorIsConnected)
     {
+#ifdef TARGET_DEBUG
         m_api->printf("NOTIFY: connect err = %d\n", ret);
+#endif
         m_api->close(m_socket);
         m_socket = -1;
         return;
@@ -225,7 +229,9 @@ void NotificationsCtx::CheckForNewNotifications()
     }
     else if(ret != kSocketErrorWouldBlock)
     {
+#ifdef TARGET_DEBUG
         m_api->printf("NOTIFY: recv err = %d\n", ret);
+#endif
         m_api->close(m_socket);
         m_socket = -1;
     }

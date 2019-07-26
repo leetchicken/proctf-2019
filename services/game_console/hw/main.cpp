@@ -58,42 +58,6 @@ void InitNetwork()
 }
 
 
-int recv(TCPSocket* socket, void* data, uint32_t size)
-{
-    uint8_t* ptr = (uint8_t*)data;
-    uint32_t remain = size;
-
-    while(remain)
-    {
-        int ret = socket->recv(ptr, remain);
-        if(ret <= 0)
-            return ret;
-        remain -= ret;
-        ptr += ret;
-    }
-    
-    return (int)size;
-}
-
-
-int send(TCPSocket* socket, void* data, uint32_t size)
-{
-    uint8_t* ptr = (uint8_t*)data;
-    uint32_t remain = size;
-
-    while(remain)
-    {
-        int ret = socket->send(ptr, remain);
-        if(ret <= 0)
-            return ret;
-        remain -= ret;
-        ptr += ret;
-    }
-    
-    return (int)size;
-}
-
-
 struct Point2D
 {
     int32_t x;
@@ -106,9 +70,8 @@ int32_t EdgeFunction(const Point2D& a, const Point2D& b, const Point2D& c)
     return (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
 }
 
-
 #define CS_DEBUG 0
-#if CS_DEBUG
+#if CS_DEBUG || defined(TARGET_DEBUG)
 #define CS_PRINTF(...) printf(__VA_ARGS__)
 #else
 #define CS_PRINTF(...)
@@ -138,41 +101,49 @@ void ChecksystemThread()
     SocketAddress sockAddr(kServerIP, kServerChecksystemPort);
 
     const uint32_t kScreenSize = 24;
+    const float kWaitTime = 0.5f;
 
     while(1)
     {
+        if(GEthernet.get_connection_status() != NSAPI_STATUS_GLOBAL_UP)
+        {
+            wait(kWaitTime);
+            continue;
+        }
+
         if(!socket)
         {
-            CS_PRINTF("CHECKSYSTEM: Trying to connect to checksystem\n");
             socket = AllocSocket();
             socket->open(&GEthernet);
-            socket->set_timeout(-1);
-            int ret = socket->connect(sockAddr);
-            if(ret == 0)
-            {
-                CS_PRINTF("CHECKSYSTEM: Connected\n");
-            }
-            else
-            {
-                FreeSocket(socket);
-                wait(5.0f);
-                continue;
-            }
+            socket->set_blocking(false);
+        }
+
+        int ret = socket->connect(sockAddr);
+        if(ret == NSAPI_ERROR_IN_PROGRESS || ret == NSAPI_ERROR_ALREADY)
+        {
+            wait(kWaitTime);
+            continue;
+        }
+        else if(ret != 0 && ret != NSAPI_ERROR_IS_CONNECTED)
+        {
+            CS_PRINTF("CHECKSYSTEM: connect err = %d\n", ret);
+            FreeSocket(socket);
+            wait(kWaitTime);
+            continue;
         }
 
         Point2D v[3];
-        int ret = recv(socket, &v, sizeof(v));
-        if(ret <= 0)
+        ret = socket->recv(&v, sizeof(v));
+        if(ret == NSAPI_ERROR_WOULD_BLOCK)
         {
-            if(ret == 0)
-            {
-                CS_PRINTF("CHECKSYSTEM: connection has been closed by checksystem\n");
-            }
-            else
-            {
-                CS_PRINTF("CHECKSYSTEM: socket.recv failed(%d)\n", ret);
-            }
+            wait(kWaitTime);
+            continue;
+        }
+        else if(ret != sizeof(v))
+        {
+            CS_PRINTF("CHECKSYSTEM: recv err = %d\n", ret);
             FreeSocket(socket);
+            wait(kWaitTime);
             continue;
         }
 
@@ -190,6 +161,7 @@ void ChecksystemThread()
         }
 
         uint32_t result = 0;
+        const int32_t kMaxShift = 31;
 
         int doubleTriArea = EdgeFunction(v[0], v[1], v[2]);
         if(doubleTriArea > 0)
@@ -205,22 +177,15 @@ void ChecksystemThread()
 
                     if((w0 | w1 | w2) >= 0) 
                     {
-                        uint32_t pixel = w0 + w1 + w2;
-                        result ^= pixel;
+                        result += w0;
+                        result += w1 << std::min(p.x, kMaxShift);
+                        result += w2 << std::min(p.x + p.y, kMaxShift);
                     }
                 }
             }
         }        
 
-        socket->set_timeout(3000);
-        ret = send(socket, &result, sizeof(result));
-        if(ret < 0)
-        {
-            CS_PRINTF("CHECKSYSTEM: socket.send failed(%d)\n", ret);
-            FreeSocket(socket);
-            continue;
-        }
-        socket->set_timeout(-1);
+        ret = socket->send(&result, sizeof(result));
     }
 }
 
