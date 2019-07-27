@@ -56,7 +56,7 @@ protected:
 };
 
 
-std::unordered_map<uint32_t, GameDesc> GGamesDatabase;
+std::map<uint32_t, GameDesc> GGamesDatabase;
 std::unordered_map<NetworkAddr, Team> GTeams;
 std::mutex GConsolesGuard;
 std::unordered_map<AuthKey, Console*> GConsoles;
