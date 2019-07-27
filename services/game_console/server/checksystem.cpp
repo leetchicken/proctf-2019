@@ -12,13 +12,17 @@
 #include <map>
 #include "checksystem.h"
 
+struct HwConsole
+{
+    int socket = -1;
+    IPAddr addr = ~0u;
+};
 
 static const uint32_t kScreenSize = 32;
 static const uint32_t kBitsForCoord = 5;
 static std::mutex GMutex;
-static std::map<IPAddr, int> GIpToSocket;
+static std::map<NetworkAddr, HwConsole> GConsoles;
 static std::thread GNetworkThread;
-static std::vector<IPAddr> GConsolesIp;
 
 
 struct Point2D
@@ -87,6 +91,44 @@ static bool RasterizeAndCompare(Point2D* v, uint32_t valToCompare)
 }
 
 
+bool Check(int sock)
+{
+    Point2D v[3];
+    Point2D encodedV[3];
+    for(uint32_t i = 0; i < 3; i++)
+        v[i] = GeneratePoint(encodedV[i]);
+
+    int doubleTriArea = EdgeFunction(v[0], v[1], v[2]);
+    if(doubleTriArea < 0)
+    {
+        std::swap(v[0], v[1]);
+        std::swap(encodedV[0], encodedV[1]);
+    }
+
+	int ret = Send(sock, encodedV, sizeof(encodedV));
+    if(ret < 0)
+        return false; 
+
+    uint32_t result;
+	ret = Recv(sock, &result, sizeof(result));
+    if(ret <= 0)
+        return false;
+
+    if(RasterizeAndCompare(v, result))
+    {
+        printf("CHECKSYSTEM: OK\n");
+        return true;
+    }
+    else
+    {
+        printf("CHECKSYSTEM: Does no match\n");
+        return false;
+    }
+
+    return false;
+}
+
+
 static void NetworkThread()
 {
     int listenSock = socket(AF_INET, SOCK_STREAM, 0);
@@ -132,103 +174,80 @@ static void NetworkThread()
             continue;
         }
 
-        IPAddr ip = clientAddr.sin_addr.s_addr;
-        bool isIpValid = false;
-        for(auto validIp : GConsolesIp)
-        {
-            if(validIp != ip)
-                continue;
-            
-            isIpValid = true;
-            break;
-        }
+        printf("CHECKSYSTEM: Accepted connection: %s\n", inet_ntoa(clientAddr.sin_addr));
 
-        if(!isIpValid)
+        if(!Check(newSocket))
         {
-            printf("CHECKSYSTEM: unknown ip: %s\n", inet_ntoa(ip));
             close(newSocket);
+            printf("CHECKSYSTEM: Is HW Console - no\n");
             continue;
         }
+        printf("CHECKSYSTEM: Is HW Console - yes\n");
+
+        NetworkAddr netAddr = SockaddrToNetworkAddr(clientAddr.sin_addr);
 
         {
             std::lock_guard<std::mutex> guard(GMutex);
-            printf("CHECKSYSTEM: Accepted connection: %s\n", inet_ntoa(ip));
-            auto iter = GIpToSocket.find(ip);
-            if(iter != GIpToSocket.end())
+            auto iter = GConsoles.find(netAddr);
+            if(iter == GConsoles.end())
+            {
+                printf("CHECKSYSTEM: Unknown network: %s\n", inet_ntoa(netAddr));
+                close(newSocket);
+                continue;
+            }
+            if(iter->second.socket >= 0)
             {
                 printf("CHECKSYSTEM: close previous connection\n");
-                close(iter->second);
-                GIpToSocket.erase(iter);
+                close(iter->second.socket);
             }
-            GIpToSocket.insert({ip, newSocket});
+            iter->second.socket = newSocket;
+            iter->second.addr = clientAddr.sin_addr.s_addr;
         }
     }
 }
 
 
-void InitChecksystem(const std::vector<IPAddr>& consolesIp)
+void InitChecksystem(const std::vector<NetworkAddr>& teamsNet)
 {
-    GConsolesIp = consolesIp;
+    for(auto& net : teamsNet)
+        GConsoles.insert({net, HwConsole()});
     GNetworkThread = std::thread(NetworkThread);
 }
 
 
-bool Check(IPAddr ip)
+IPAddr GetHwConsoleIp(NetworkAddr teamNet)
 {
-    printf("  Checksystem:\n");
+    std::lock_guard<std::mutex> guard(GMutex);
+    auto iter = GConsoles.find(teamNet);
+    if(iter == GConsoles.end())
+        return ~0u;
+    return iter->second.addr;
+}
+
+
+bool Check(NetworkAddr teamNet)
+{
     int sock = -1;
     {
         std::lock_guard<std::mutex> guard(GMutex);
-        auto iter = GIpToSocket.find(ip);
-        if(iter == GIpToSocket.end())
+        auto iter = GConsoles.find(teamNet);
+        if(iter == GConsoles.end())
         {
-            printf("CHECKSYSTEM ERROR: there is no connection\n");
+            printf("CHECKSYSTEM: unkown network passed\n");
             return false;
         }
-        sock = iter->second;
+        sock = iter->second.socket;
     }
 
-    Point2D v[3];
-    Point2D encodedV[3];
-    for(uint32_t i = 0; i < 3; i++)
-        v[i] = GeneratePoint(encodedV[i]);
-
-    int doubleTriArea = EdgeFunction(v[0], v[1], v[2]);
-    if(doubleTriArea < 0)
-    {
-        std::swap(v[0], v[1]);
-        std::swap(encodedV[0], encodedV[1]);
-    }
-
-	int ret = Send(sock, encodedV, sizeof(encodedV));
-    if(ret < 0)
+    bool ret = Check(sock);
+    if(!ret)
     {
         std::lock_guard<std::mutex> guard(GMutex);
-        GIpToSocket.erase(ip);
-        close(sock);
-        return false;
-    }   
-
-    uint32_t result;
-	ret = Recv(sock, &result, sizeof(result));
-    if(ret <= 0)
-    {
-        std::lock_guard<std::mutex> guard(GMutex);
-        GIpToSocket.erase(ip);
-        close(sock);
-        return false;
+        auto iter = GConsoles.find(teamNet);
+        close(iter->second.socket);
+        iter->second.socket = -1;
+        iter->second.addr = ~0u;
     }
 
-    if(RasterizeAndCompare(v, result))
-    {
-        printf("  OK\n");
-        return true;
-    }
-    else
-    {
-        printf("  Does no match\n");
-        return false;
-    }
-
-    return false;
+    return ret;
 }

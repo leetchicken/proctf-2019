@@ -417,17 +417,28 @@ HttpResponse RequestHandler::HandleGet(HttpRequest request)
         auto& flag = team->GetFlag(flagId);
         printf("  Flag '%s' with id '%s' for team '%s'\n", flag.c_str(), flagId, team->desc.name.c_str());
 
-        IPAddr consoleAddr = team->desc.hwConsoleIp;
+        IPAddr consoleAddr = GetHwConsoleIp(team->desc.network);
+        if(consoleAddr == ~0u)
+        {
+            printf("  ERROR: team does not have registerd hw console\n");
+            return HttpResponse(MHD_HTTP_BAD_REQUEST);
+        }
 
-        Console* console = team->GetConsole(consoleAddr);
+        if(!Check(team->desc.network))
+            return HttpResponse(MHD_HTTP_BAD_REQUEST);
+
+		Console* console = team->GetConsole(consoleAddr);
+        if(!console)
+        {
+            printf("  ERROR: hw console is not registered\n");
+            return HttpResponse(MHD_HTTP_BAD_REQUEST);
+        }
+
         if(console->GetNotificationsInQueue() >= Console::kNotificationQueueSize)
         {
             printf("  Notifications queue is overflowed\n");
             return HttpResponse(MHD_HTTP_BAD_REQUEST);
         }
-
-        if(!Check(consoleAddr))
-            return HttpResponse(MHD_HTTP_BAD_REQUEST);
 
         HttpResponse response;
         response.code = MHD_HTTP_OK;
@@ -707,30 +718,16 @@ bool LoadTeamsDatabase()
     pugi::xml_node teamsNode = doc.child("Teams");
     for (pugi::xml_node teamNode = teamsNode.first_child(); teamNode; teamNode = teamNode.next_sibling())
     {
-        const char* consoleIp = teamNode.attribute("ip").as_string();
-        NetworkAddr net = inet_aton(consoleIp) & kNetworkMask;
+        const char* netStr = teamNode.attribute("net").as_string();
+        NetworkAddr net = inet_aton(netStr);
 
         Team& team = GTeams[net];
         auto& desc = team.desc;
         desc.number = teamNode.attribute("number").as_uint();
         desc.name = teamNode.attribute("name").as_string();
-        desc.hwConsoleIp = inet_aton(consoleIp);
+		desc.network = net;
         printf("  %u %s\n", desc.number, desc.name.c_str());
-        printf("    network: %s(%08X)\n", inet_ntoa(net), net);
-
-        Console* console = team.AddConsole(desc.hwConsoleIp);
-        console->GenerateAuthKey();
-        printf("    console auth key: %x\n", console->authKey);
-
-        {
-            std::lock_guard<std::mutex> guard(GConsolesGuard);
-            if(GConsoles.find(console->authKey) != GConsoles.end())
-            {
-                printf("  CRITICAL ERROR, dublicate console was found, auth key: %x\n", console->authKey);
-                exit(1);
-            }
-            GConsoles[console->authKey] = console;
-        }
+        printf("    network: %s(%08X)\n", netStr, net);
     }
 
     return true;
@@ -756,7 +753,7 @@ void NetworkThread()
     int listenSock = socket(AF_INET, SOCK_STREAM, 0);
     if (listenSock < 0)
     {
-        printf("  ERROR: socket failed\n");
+        printf("NOTIFY: socket failed\n");
         return;
     }
 
@@ -771,7 +768,7 @@ void NetworkThread()
     int ret = bind(listenSock, (sockaddr*)&addr, sizeof(addr));
 	if(ret < 0)
 	{
-		printf("NOTIFY ERROR: bind failed: %s\n", strerror(errno));
+		printf("NOTIFY: bind failed: %s\n", strerror(errno));
 		close(listenSock);
 		return;
 	}
@@ -779,7 +776,7 @@ void NetworkThread()
 	ret = listen(listenSock, 128);
     if(ret < 0)
 	{
-		printf("NOTIFY ERROR: listen failed: %s\n", strerror(errno));
+		printf("NOTIFY: listen failed: %s\n", strerror(errno));
 		close(listenSock);
 		return;
 	}
@@ -791,7 +788,7 @@ void NetworkThread()
         int newSocket = accept4(listenSock, (sockaddr*)&clientAddr, &addrLen, SOCK_NONBLOCK);
         if(newSocket < 0)
         {
-            printf("NOTIFY ERROR: accept failed: %s\n", strerror(errno));
+            printf("NOTIFY: accept failed: %s\n", strerror(errno));
             sleep(1);
             continue;
         }
@@ -808,7 +805,7 @@ void NetworkThread()
         Console* console = team->GetConsole(clientAddr.sin_addr.s_addr);
         if(!console)
         {
-            printf("NOTIFY ERROR: Unregistered console\n");
+            printf("NOTIFY: Unregistered console\n");
             close(newSocket);
             continue;
         }
@@ -833,10 +830,10 @@ int main()
     std::thread updateThread(UpdateThread);
     std::thread networkThread(NetworkThread);
 
-    std::vector<IPAddr> consolesIp;
+    std::vector<NetworkAddr> teamsNet;
     for(auto& iter : GTeams)
-        consolesIp.push_back(iter.second.desc.hwConsoleIp);
-    InitChecksystem(consolesIp);
+        teamsNet.push_back(iter.second.desc.network);
+    InitChecksystem(teamsNet);
 
     while (1)
         sleep(1);
