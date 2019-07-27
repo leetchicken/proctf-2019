@@ -1,0 +1,2364 @@
+
+main_screen.elf:     file format elf32-littlearm
+
+
+Disassembly of section .text:
+
+00000000 <FillRect(API*, Rect const&, Rect, unsigned long)>:
+       0:	b082      	sub	sp, #8
+       2:	e92d 41f0 	stmdb	sp!, {r4, r5, r6, r7, r8, lr}
+       6:	680c      	ldr	r4, [r1, #0]
+       8:	ae06      	add	r6, sp, #24
+       a:	4615      	mov	r5, r2
+       c:	42a2      	cmp	r2, r4
+       e:	e886 000c 	stmia.w	r6, {r2, r3}
+      12:	da07      	bge.n	24 <FillRect(API*, Rect const&, Rect, unsigned long)+0x24>
+      14:	1aa5      	subs	r5, r4, r2
+      16:	9b08      	ldr	r3, [sp, #32]
+      18:	9406      	str	r4, [sp, #24]
+      1a:	1b5b      	subs	r3, r3, r5
+      1c:	4625      	mov	r5, r4
+      1e:	bf48      	it	mi
+      20:	2300      	movmi	r3, #0
+      22:	9308      	str	r3, [sp, #32]
+      24:	f8d1 c008 	ldr.w	ip, [r1, #8]
+      28:	4464      	add	r4, ip
+      2a:	42ac      	cmp	r4, r5
+      2c:	dd39      	ble.n	a2 <FillRect(API*, Rect const&, Rect, unsigned long)+0xa2>
+      2e:	9e08      	ldr	r6, [sp, #32]
+      30:	eb05 0e06 	add.w	lr, r5, r6
+      34:	9a07      	ldr	r2, [sp, #28]
+      36:	684b      	ldr	r3, [r1, #4]
+      38:	429a      	cmp	r2, r3
+      3a:	da07      	bge.n	4c <FillRect(API*, Rect const&, Rect, unsigned long)+0x4c>
+      3c:	9f09      	ldr	r7, [sp, #36]	; 0x24
+      3e:	1a9a      	subs	r2, r3, r2
+      40:	9307      	str	r3, [sp, #28]
+      42:	1aba      	subs	r2, r7, r2
+      44:	bf48      	it	mi
+      46:	2200      	movmi	r2, #0
+      48:	9209      	str	r2, [sp, #36]	; 0x24
+      4a:	461a      	mov	r2, r3
+      4c:	68c9      	ldr	r1, [r1, #12]
+      4e:	440b      	add	r3, r1
+      50:	4293      	cmp	r3, r2
+      52:	dc1a      	bgt.n	8a <FillRect(API*, Rect const&, Rect, unsigned long)+0x8a>
+      54:	2700      	movs	r7, #0
+      56:	4574      	cmp	r4, lr
+      58:	9307      	str	r3, [sp, #28]
+      5a:	9709      	str	r7, [sp, #36]	; 0x24
+      5c:	da11      	bge.n	82 <FillRect(API*, Rect const&, Rect, unsigned long)+0x82>
+      5e:	ebac 0605 	sub.w	r6, ip, r5
+      62:	4698      	mov	r8, r3
+      64:	461a      	mov	r2, r3
+      66:	9608      	str	r6, [sp, #32]
+      68:	4543      	cmp	r3, r8
+      6a:	da17      	bge.n	9c <FillRect(API*, Rect const&, Rect, unsigned long)+0x9c>
+      6c:	1a8a      	subs	r2, r1, r2
+      6e:	fb06 f602 	mul.w	r6, r6, r2
+      72:	9209      	str	r2, [sp, #36]	; 0x24
+      74:	b12e      	cbz	r6, 82 <FillRect(API*, Rect const&, Rect, unsigned long)+0x82>
+      76:	6803      	ldr	r3, [r0, #0]
+      78:	a906      	add	r1, sp, #24
+      7a:	9a0a      	ldr	r2, [sp, #40]	; 0x28
+      7c:	f8d3 3080 	ldr.w	r3, [r3, #128]	; 0x80
+      80:	4798      	blx	r3
+      82:	e8bd 41f0 	ldmia.w	sp!, {r4, r5, r6, r7, r8, lr}
+      86:	b002      	add	sp, #8
+      88:	4770      	bx	lr
+      8a:	9f09      	ldr	r7, [sp, #36]	; 0x24
+      8c:	4574      	cmp	r4, lr
+      8e:	eb02 0807 	add.w	r8, r2, r7
+      92:	dae9      	bge.n	68 <FillRect(API*, Rect const&, Rect, unsigned long)+0x68>
+      94:	ebac 0605 	sub.w	r6, ip, r5
+      98:	9608      	str	r6, [sp, #32]
+      9a:	e7e5      	b.n	68 <FillRect(API*, Rect const&, Rect, unsigned long)+0x68>
+      9c:	fb07 f606 	mul.w	r6, r7, r6
+      a0:	e7e8      	b.n	74 <FillRect(API*, Rect const&, Rect, unsigned long)+0x74>
+      a2:	2300      	movs	r3, #0
+      a4:	46a6      	mov	lr, r4
+      a6:	4625      	mov	r5, r4
+      a8:	9406      	str	r4, [sp, #24]
+      aa:	461e      	mov	r6, r3
+      ac:	9308      	str	r3, [sp, #32]
+      ae:	e7c1      	b.n	34 <FillRect(API*, Rect const&, Rect, unsigned long)+0x34>
+
+000000b0 <DrawIcon(API*, Rect const&, IconsManager const&, GameDesc const&)>:
+      b0:	e92d 4ff0 	stmdb	sp!, {r4, r5, r6, r7, r8, r9, sl, fp, lr}
+      b4:	4694      	mov	ip, r2
+      b6:	680c      	ldr	r4, [r1, #0]
+      b8:	b085      	sub	sp, #20
+      ba:	461d      	mov	r5, r3
+      bc:	4607      	mov	r7, r0
+      be:	468e      	mov	lr, r1
+      c0:	466e      	mov	r6, sp
+      c2:	cb0f      	ldmia	r3, {r0, r1, r2, r3}
+      c4:	42a0      	cmp	r0, r4
+      c6:	e886 000f 	stmia.w	r6, {r0, r1, r2, r3}
+      ca:	da06      	bge.n	da <DrawIcon(API*, Rect const&, IconsManager const&, GameDesc const&)+0x2a>
+      cc:	1a20      	subs	r0, r4, r0
+      ce:	9400      	str	r4, [sp, #0]
+      d0:	1a13      	subs	r3, r2, r0
+      d2:	4620      	mov	r0, r4
+      d4:	bf48      	it	mi
+      d6:	2300      	movmi	r3, #0
+      d8:	9302      	str	r3, [sp, #8]
+      da:	f8de 9008 	ldr.w	r9, [lr, #8]
+      de:	444c      	add	r4, r9
+      e0:	4284      	cmp	r4, r0
+      e2:	dd51      	ble.n	188 <DrawIcon(API*, Rect const&, IconsManager const&, GameDesc const&)+0xd8>
+      e4:	f8dd 8008 	ldr.w	r8, [sp, #8]
+      e8:	eb00 0a08 	add.w	sl, r0, r8
+      ec:	9a01      	ldr	r2, [sp, #4]
+      ee:	f8de 3004 	ldr.w	r3, [lr, #4]
+      f2:	429a      	cmp	r2, r3
+      f4:	da06      	bge.n	104 <DrawIcon(API*, Rect const&, IconsManager const&, GameDesc const&)+0x54>
+      f6:	1a9a      	subs	r2, r3, r2
+      f8:	9903      	ldr	r1, [sp, #12]
+      fa:	1a89      	subs	r1, r1, r2
+      fc:	d441      	bmi.n	182 <DrawIcon(API*, Rect const&, IconsManager const&, GameDesc const&)+0xd2>
+      fe:	9103      	str	r1, [sp, #12]
+     100:	461a      	mov	r2, r3
+     102:	9301      	str	r3, [sp, #4]
+     104:	f8de e00c 	ldr.w	lr, [lr, #12]
+     108:	eb03 010e 	add.w	r1, r3, lr
+     10c:	4291      	cmp	r1, r2
+     10e:	dc2b      	bgt.n	168 <DrawIcon(API*, Rect const&, IconsManager const&, GameDesc const&)+0xb8>
+     110:	2300      	movs	r3, #0
+     112:	4554      	cmp	r4, sl
+     114:	9101      	str	r1, [sp, #4]
+     116:	9303      	str	r3, [sp, #12]
+     118:	da23      	bge.n	162 <DrawIcon(API*, Rect const&, IconsManager const&, GameDesc const&)+0xb2>
+     11a:	eba9 0800 	sub.w	r8, r9, r0
+     11e:	468b      	mov	fp, r1
+     120:	460a      	mov	r2, r1
+     122:	f8cd 8008 	str.w	r8, [sp, #8]
+     126:	4559      	cmp	r1, fp
+     128:	da28      	bge.n	17c <DrawIcon(API*, Rect const&, IconsManager const&, GameDesc const&)+0xcc>
+     12a:	ebae 0202 	sub.w	r2, lr, r2
+     12e:	fb08 f302 	mul.w	r3, r8, r2
+     132:	9203      	str	r2, [sp, #12]
+     134:	b1ab      	cbz	r3, 162 <DrawIcon(API*, Rect const&, IconsManager const&, GameDesc const&)+0xb2>
+     136:	f895 3040 	ldrb.w	r3, [r5, #64]	; 0x40
+     13a:	f8dc 202c 	ldr.w	r2, [ip, #44]	; 0x2c
+     13e:	2b02      	cmp	r3, #2
+     140:	682b      	ldr	r3, [r5, #0]
+     142:	bf08      	it	eq
+     144:	6baa      	ldreq	r2, [r5, #56]	; 0x38
+     146:	2b00      	cmp	r3, #0
+     148:	da03      	bge.n	152 <DrawIcon(API*, Rect const&, IconsManager const&, GameDesc const&)+0xa2>
+     14a:	ebc3 7383 	rsb	r3, r3, r3, lsl #30
+     14e:	eb02 0283 	add.w	r2, r2, r3, lsl #2
+     152:	683b      	ldr	r3, [r7, #0]
+     154:	4638      	mov	r0, r7
+     156:	4631      	mov	r1, r6
+     158:	f8d3 4088 	ldr.w	r4, [r3, #136]	; 0x88
+     15c:	f44f 732c 	mov.w	r3, #688	; 0x2b0
+     160:	47a0      	blx	r4
+     162:	b005      	add	sp, #20
+     164:	e8bd 8ff0 	ldmia.w	sp!, {r4, r5, r6, r7, r8, r9, sl, fp, pc}
+     168:	9b03      	ldr	r3, [sp, #12]
+     16a:	4554      	cmp	r4, sl
+     16c:	eb02 0b03 	add.w	fp, r2, r3
+     170:	dad9      	bge.n	126 <DrawIcon(API*, Rect const&, IconsManager const&, GameDesc const&)+0x76>
+     172:	eba9 0800 	sub.w	r8, r9, r0
+     176:	f8cd 8008 	str.w	r8, [sp, #8]
+     17a:	e7d4      	b.n	126 <DrawIcon(API*, Rect const&, IconsManager const&, GameDesc const&)+0x76>
+     17c:	fb03 f308 	mul.w	r3, r3, r8
+     180:	e7d8      	b.n	134 <DrawIcon(API*, Rect const&, IconsManager const&, GameDesc const&)+0x84>
+     182:	2200      	movs	r2, #0
+     184:	9203      	str	r2, [sp, #12]
+     186:	e7bb      	b.n	100 <DrawIcon(API*, Rect const&, IconsManager const&, GameDesc const&)+0x50>
+     188:	2300      	movs	r3, #0
+     18a:	46a2      	mov	sl, r4
+     18c:	4620      	mov	r0, r4
+     18e:	9400      	str	r4, [sp, #0]
+     190:	4698      	mov	r8, r3
+     192:	9302      	str	r3, [sp, #8]
+     194:	e7aa      	b.n	ec <DrawIcon(API*, Rect const&, IconsManager const&, GameDesc const&)+0x3c>
+     196:	bf00      	nop
+
+00000198 <RequestAuthKey(API*)>:
+     198:	6803      	ldr	r3, [r0, #0]
+     19a:	b570      	push	{r4, r5, r6, lr}
+     19c:	69db      	ldr	r3, [r3, #28]
+     19e:	b082      	sub	sp, #8
+     1a0:	4604      	mov	r4, r0
+     1a2:	4798      	blx	r3
+     1a4:	4605      	mov	r5, r0
+     1a6:	b1a8      	cbz	r0, 1d4 <RequestAuthKey(API*)+0x3c>
+     1a8:	4629      	mov	r1, r5
+     1aa:	2000      	movs	r0, #0
+     1ac:	f44f 52fa 	mov.w	r2, #8000	; 0x1f40
+     1b0:	4b0e      	ldr	r3, [pc, #56]	; (1ec <RequestAuthKey(API*)+0x54>)
+     1b2:	f801 0b01 	strb.w	r0, [r1], #1
+     1b6:	4620      	mov	r0, r4
+     1b8:	6826      	ldr	r6, [r4, #0]
+     1ba:	447b      	add	r3, pc
+     1bc:	9200      	str	r2, [sp, #0]
+     1be:	4a0c      	ldr	r2, [pc, #48]	; (1f0 <RequestAuthKey(API*)+0x58>)
+     1c0:	f8d6 60b8 	ldr.w	r6, [r6, #184]	; 0xb8
+     1c4:	447a      	add	r2, pc
+     1c6:	47b0      	blx	r6
+     1c8:	6823      	ldr	r3, [r4, #0]
+     1ca:	4629      	mov	r1, r5
+     1cc:	4620      	mov	r0, r4
+     1ce:	6a1b      	ldr	r3, [r3, #32]
+     1d0:	4798      	blx	r3
+     1d2:	b110      	cbz	r0, 1da <RequestAuthKey(API*)+0x42>
+     1d4:	4628      	mov	r0, r5
+     1d6:	b002      	add	sp, #8
+     1d8:	bd70      	pop	{r4, r5, r6, pc}
+     1da:	6823      	ldr	r3, [r4, #0]
+     1dc:	4629      	mov	r1, r5
+     1de:	4605      	mov	r5, r0
+     1e0:	4620      	mov	r0, r4
+     1e2:	6a5b      	ldr	r3, [r3, #36]	; 0x24
+     1e4:	4798      	blx	r3
+     1e6:	4628      	mov	r0, r5
+     1e8:	b002      	add	sp, #8
+     1ea:	bd70      	pop	{r4, r5, r6, pc}
+     1ec:	000015be 	.word	0x000015be
+     1f0:	000015c0 	.word	0x000015c0
+
+000001f4 <ParseAuthResponse(API*, HTTPRequest*, unsigned long&)>:
+     1f4:	b538      	push	{r3, r4, r5, lr}
+     1f6:	f891 4055 	ldrb.w	r4, [r1, #85]	; 0x55
+     1fa:	b14c      	cbz	r4, 210 <ParseAuthResponse(API*, HTTPRequest*, unsigned long&)+0x1c>
+     1fc:	460b      	mov	r3, r1
+     1fe:	6805      	ldr	r5, [r0, #0]
+     200:	4611      	mov	r1, r2
+     202:	f8d5 50a8 	ldr.w	r5, [r5, #168]	; 0xa8
+     206:	6cda      	ldr	r2, [r3, #76]	; 0x4c
+     208:	2304      	movs	r3, #4
+     20a:	47a8      	blx	r5
+     20c:	4620      	mov	r0, r4
+     20e:	bd38      	pop	{r3, r4, r5, pc}
+     210:	f04f 33ff 	mov.w	r3, #4294967295	; 0xffffffff
+     214:	4620      	mov	r0, r4
+     216:	6013      	str	r3, [r2, #0]
+     218:	bd38      	pop	{r3, r4, r5, pc}
+     21a:	bf00      	nop
+
+0000021c <ParseGamesList(API*, HTTPRequest*, GameDesc*, unsigned long&)>:
+     21c:	e92d 4ff0 	stmdb	sp!, {r4, r5, r6, r7, r8, r9, sl, fp, lr}
+     220:	469b      	mov	fp, r3
+     222:	b083      	sub	sp, #12
+     224:	6ccb      	ldr	r3, [r1, #76]	; 0x4c
+     226:	4605      	mov	r5, r0
+     228:	6804      	ldr	r4, [r0, #0]
+     22a:	4659      	mov	r1, fp
+     22c:	9201      	str	r2, [sp, #4]
+     22e:	461a      	mov	r2, r3
+     230:	2304      	movs	r3, #4
+     232:	f8d4 40a8 	ldr.w	r4, [r4, #168]	; 0xa8
+     236:	18d6      	adds	r6, r2, r3
+     238:	47a0      	blx	r4
+     23a:	f8db 3000 	ldr.w	r3, [fp]
+     23e:	2b00      	cmp	r3, #0
+     240:	d058      	beq.n	2f4 <ParseGamesList(API*, HTTPRequest*, GameDesc*, unsigned long&)+0xd8>
+     242:	f04f 0a00 	mov.w	sl, #0
+     246:	9b01      	ldr	r3, [sp, #4]
+     248:	46d0      	mov	r8, sl
+     24a:	f103 0414 	add.w	r4, r3, #20
+     24e:	27ac      	movs	r7, #172	; 0xac
+     250:	223c      	movs	r2, #60	; 0x3c
+     252:	f844 8c14 	str.w	r8, [r4, #-20]
+     256:	1f21      	subs	r1, r4, #4
+     258:	f844 2c10 	str.w	r2, [r4, #-16]
+     25c:	2304      	movs	r3, #4
+     25e:	f884 8004 	strb.w	r8, [r4, #4]
+     262:	4632      	mov	r2, r6
+     264:	f8c4 8024 	str.w	r8, [r4, #36]	; 0x24
+     268:	4628      	mov	r0, r5
+     26a:	f884 802c 	strb.w	r8, [r4, #44]	; 0x2c
+     26e:	f106 0908 	add.w	r9, r6, #8
+     272:	f8c4 8030 	str.w	r8, [r4, #48]	; 0x30
+     276:	f10a 0a01 	add.w	sl, sl, #1
+     27a:	e944 7703 	strd	r7, r7, [r4, #-12]
+     27e:	f04f 37ff 	mov.w	r7, #4294967295	; 0xffffffff
+     282:	f844 7c04 	str.w	r7, [r4, #-4]
+     286:	62a7      	str	r7, [r4, #40]	; 0x28
+     288:	682f      	ldr	r7, [r5, #0]
+     28a:	f8d7 70a8 	ldr.w	r7, [r7, #168]	; 0xa8
+     28e:	47b8      	blx	r7
+     290:	6829      	ldr	r1, [r5, #0]
+     292:	2304      	movs	r3, #4
+     294:	4628      	mov	r0, r5
+     296:	18f2      	adds	r2, r6, r3
+     298:	f8d1 60a8 	ldr.w	r6, [r1, #168]	; 0xa8
+     29c:	4621      	mov	r1, r4
+     29e:	47b0      	blx	r6
+     2a0:	682b      	ldr	r3, [r5, #0]
+     2a2:	4649      	mov	r1, r9
+     2a4:	4628      	mov	r0, r5
+     2a6:	f8d3 30b0 	ldr.w	r3, [r3, #176]	; 0xb0
+     2aa:	4798      	blx	r3
+     2ac:	682b      	ldr	r3, [r5, #0]
+     2ae:	1c46      	adds	r6, r0, #1
+     2b0:	1d21      	adds	r1, r4, #4
+     2b2:	f8d3 70a8 	ldr.w	r7, [r3, #168]	; 0xa8
+     2b6:	464a      	mov	r2, r9
+     2b8:	4633      	mov	r3, r6
+     2ba:	4628      	mov	r0, r5
+     2bc:	47b8      	blx	r7
+     2be:	f8db 3000 	ldr.w	r3, [fp]
+     2c2:	444e      	add	r6, r9
+     2c4:	3448      	adds	r4, #72	; 0x48
+     2c6:	4553      	cmp	r3, sl
+     2c8:	d8c1      	bhi.n	24e <ParseGamesList(API*, HTTPRequest*, GameDesc*, unsigned long&)+0x32>
+     2ca:	b19b      	cbz	r3, 2f4 <ParseGamesList(API*, HTTPRequest*, GameDesc*, unsigned long&)+0xd8>
+     2cc:	2100      	movs	r1, #0
+     2ce:	9b01      	ldr	r3, [sp, #4]
+     2d0:	f04f 32ff 	mov.w	r2, #4294967295	; 0xffffffff
+     2d4:	2414      	movs	r4, #20
+     2d6:	4608      	mov	r0, r1
+     2d8:	601c      	str	r4, [r3, #0]
+     2da:	3101      	adds	r1, #1
+     2dc:	6398      	str	r0, [r3, #56]	; 0x38
+     2de:	34c0      	adds	r4, #192	; 0xc0
+     2e0:	63da      	str	r2, [r3, #60]	; 0x3c
+     2e2:	3348      	adds	r3, #72	; 0x48
+     2e4:	f803 0c08 	strb.w	r0, [r3, #-8]
+     2e8:	f843 0c04 	str.w	r0, [r3, #-4]
+     2ec:	f8db 5000 	ldr.w	r5, [fp]
+     2f0:	428d      	cmp	r5, r1
+     2f2:	d8f1      	bhi.n	2d8 <ParseGamesList(API*, HTTPRequest*, GameDesc*, unsigned long&)+0xbc>
+     2f4:	b003      	add	sp, #12
+     2f6:	e8bd 8ff0 	ldmia.w	sp!, {r4, r5, r6, r7, r8, r9, sl, fp, pc}
+     2fa:	bf00      	nop
+
+000002fc <RequestGamesList(API*, unsigned long)>:
+     2fc:	6803      	ldr	r3, [r0, #0]
+     2fe:	b5f0      	push	{r4, r5, r6, r7, lr}
+     300:	69db      	ldr	r3, [r3, #28]
+     302:	b083      	sub	sp, #12
+     304:	4604      	mov	r4, r0
+     306:	460e      	mov	r6, r1
+     308:	4798      	blx	r3
+     30a:	4605      	mov	r5, r0
+     30c:	b1b0      	cbz	r0, 33c <RequestGamesList(API*, unsigned long)+0x40>
+     30e:	4629      	mov	r1, r5
+     310:	2000      	movs	r0, #0
+     312:	f44f 52fa 	mov.w	r2, #8000	; 0x1f40
+     316:	4b0f      	ldr	r3, [pc, #60]	; (354 <RequestGamesList(API*, unsigned long)+0x58>)
+     318:	f801 0b01 	strb.w	r0, [r1], #1
+     31c:	4620      	mov	r0, r4
+     31e:	6827      	ldr	r7, [r4, #0]
+     320:	447b      	add	r3, pc
+     322:	e9cd 2600 	strd	r2, r6, [sp]
+     326:	4a0c      	ldr	r2, [pc, #48]	; (358 <RequestGamesList(API*, unsigned long)+0x5c>)
+     328:	f8d7 60b8 	ldr.w	r6, [r7, #184]	; 0xb8
+     32c:	447a      	add	r2, pc
+     32e:	47b0      	blx	r6
+     330:	6823      	ldr	r3, [r4, #0]
+     332:	4629      	mov	r1, r5
+     334:	4620      	mov	r0, r4
+     336:	6a1b      	ldr	r3, [r3, #32]
+     338:	4798      	blx	r3
+     33a:	b110      	cbz	r0, 342 <RequestGamesList(API*, unsigned long)+0x46>
+     33c:	4628      	mov	r0, r5
+     33e:	b003      	add	sp, #12
+     340:	bdf0      	pop	{r4, r5, r6, r7, pc}
+     342:	6823      	ldr	r3, [r4, #0]
+     344:	4629      	mov	r1, r5
+     346:	4605      	mov	r5, r0
+     348:	4620      	mov	r0, r4
+     34a:	6a5b      	ldr	r3, [r3, #36]	; 0x24
+     34c:	4798      	blx	r3
+     34e:	4628      	mov	r0, r5
+     350:	b003      	add	sp, #12
+     352:	bdf0      	pop	{r4, r5, r6, r7, pc}
+     354:	00001458 	.word	0x00001458
+     358:	0000146c 	.word	0x0000146c
+
+0000035c <RequestIcon(API*, unsigned long, unsigned long, unsigned char*)>:
+     35c:	e92d 41f0 	stmdb	sp!, {r4, r5, r6, r7, r8, lr}
+     360:	461e      	mov	r6, r3
+     362:	6803      	ldr	r3, [r0, #0]
+     364:	b084      	sub	sp, #16
+     366:	4605      	mov	r5, r0
+     368:	69db      	ldr	r3, [r3, #28]
+     36a:	460f      	mov	r7, r1
+     36c:	4690      	mov	r8, r2
+     36e:	4798      	blx	r3
+     370:	4604      	mov	r4, r0
+     372:	b1e0      	cbz	r0, 3ae <RequestIcon(API*, unsigned long, unsigned long, unsigned char*)+0x52>
+     374:	4621      	mov	r1, r4
+     376:	2000      	movs	r0, #0
+     378:	f44f 52fa 	mov.w	r2, #8000	; 0x1f40
+     37c:	4b14      	ldr	r3, [pc, #80]	; (3d0 <RequestIcon(API*, unsigned long, unsigned long, unsigned char*)+0x74>)
+     37e:	f801 0b01 	strb.w	r0, [r1], #1
+     382:	4628      	mov	r0, r5
+     384:	f8d5 c000 	ldr.w	ip, [r5]
+     388:	447b      	add	r3, pc
+     38a:	f8cd 8008 	str.w	r8, [sp, #8]
+     38e:	e9cd 2700 	strd	r2, r7, [sp]
+     392:	4a10      	ldr	r2, [pc, #64]	; (3d4 <RequestIcon(API*, unsigned long, unsigned long, unsigned char*)+0x78>)
+     394:	f8dc 70b8 	ldr.w	r7, [ip, #184]	; 0xb8
+     398:	447a      	add	r2, pc
+     39a:	47b8      	blx	r7
+     39c:	4b0b      	ldr	r3, [pc, #44]	; (3cc <RequestIcon(API*, unsigned long, unsigned long, unsigned char*)+0x70>)
+     39e:	64e6      	str	r6, [r4, #76]	; 0x4c
+     3a0:	4621      	mov	r1, r4
+     3a2:	6523      	str	r3, [r4, #80]	; 0x50
+     3a4:	4628      	mov	r0, r5
+     3a6:	682b      	ldr	r3, [r5, #0]
+     3a8:	6a1b      	ldr	r3, [r3, #32]
+     3aa:	4798      	blx	r3
+     3ac:	b118      	cbz	r0, 3b6 <RequestIcon(API*, unsigned long, unsigned long, unsigned char*)+0x5a>
+     3ae:	4620      	mov	r0, r4
+     3b0:	b004      	add	sp, #16
+     3b2:	e8bd 81f0 	ldmia.w	sp!, {r4, r5, r6, r7, r8, pc}
+     3b6:	682b      	ldr	r3, [r5, #0]
+     3b8:	4621      	mov	r1, r4
+     3ba:	4604      	mov	r4, r0
+     3bc:	4628      	mov	r0, r5
+     3be:	6a5b      	ldr	r3, [r3, #36]	; 0x24
+     3c0:	4798      	blx	r3
+     3c2:	4620      	mov	r0, r4
+     3c4:	b004      	add	sp, #16
+     3c6:	e8bd 81f0 	ldmia.w	sp!, {r4, r5, r6, r7, r8, pc}
+     3ca:	bf00      	nop
+     3cc:	0001ce40 	.word	0x0001ce40
+     3d0:	000013f0 	.word	0x000013f0
+     3d4:	0000141c 	.word	0x0000141c
+
+000003d8 <RequestGameAsset(API*, unsigned long, unsigned long, unsigned long, unsigned char*)>:
+     3d8:	e92d 41f0 	stmdb	sp!, {r4, r5, r6, r7, r8, lr}
+     3dc:	460e      	mov	r6, r1
+     3de:	6801      	ldr	r1, [r0, #0]
+     3e0:	b084      	sub	sp, #16
+     3e2:	4605      	mov	r5, r0
+     3e4:	69c9      	ldr	r1, [r1, #28]
+     3e6:	4617      	mov	r7, r2
+     3e8:	4698      	mov	r8, r3
+     3ea:	4788      	blx	r1
+     3ec:	4604      	mov	r4, r0
+     3ee:	b1f0      	cbz	r0, 42e <RequestGameAsset(API*, unsigned long, unsigned long, unsigned long, unsigned char*)+0x56>
+     3f0:	4601      	mov	r1, r0
+     3f2:	2200      	movs	r2, #0
+     3f4:	f44f 53fa 	mov.w	r3, #8000	; 0x1f40
+     3f8:	4628      	mov	r0, r5
+     3fa:	f801 2b01 	strb.w	r2, [r1], #1
+     3fe:	682a      	ldr	r2, [r5, #0]
+     400:	9300      	str	r3, [sp, #0]
+     402:	f8cd 800c 	str.w	r8, [sp, #12]
+     406:	4b11      	ldr	r3, [pc, #68]	; (44c <RequestGameAsset(API*, unsigned long, unsigned long, unsigned long, unsigned char*)+0x74>)
+     408:	e9cd 6701 	strd	r6, r7, [sp, #4]
+     40c:	f8d2 60b8 	ldr.w	r6, [r2, #184]	; 0xb8
+     410:	447b      	add	r3, pc
+     412:	4a0f      	ldr	r2, [pc, #60]	; (450 <RequestGameAsset(API*, unsigned long, unsigned long, unsigned long, unsigned char*)+0x78>)
+     414:	447a      	add	r2, pc
+     416:	47b0      	blx	r6
+     418:	f44f 1380 	mov.w	r3, #1048576	; 0x100000
+     41c:	9a0a      	ldr	r2, [sp, #40]	; 0x28
+     41e:	4621      	mov	r1, r4
+     420:	6523      	str	r3, [r4, #80]	; 0x50
+     422:	4628      	mov	r0, r5
+     424:	64e2      	str	r2, [r4, #76]	; 0x4c
+     426:	682b      	ldr	r3, [r5, #0]
+     428:	6a1b      	ldr	r3, [r3, #32]
+     42a:	4798      	blx	r3
+     42c:	b118      	cbz	r0, 436 <RequestGameAsset(API*, unsigned long, unsigned long, unsigned long, unsigned char*)+0x5e>
+     42e:	4620      	mov	r0, r4
+     430:	b004      	add	sp, #16
+     432:	e8bd 81f0 	ldmia.w	sp!, {r4, r5, r6, r7, r8, pc}
+     436:	682b      	ldr	r3, [r5, #0]
+     438:	4621      	mov	r1, r4
+     43a:	4604      	mov	r4, r0
+     43c:	4628      	mov	r0, r5
+     43e:	6a5b      	ldr	r3, [r3, #36]	; 0x24
+     440:	4798      	blx	r3
+     442:	4620      	mov	r0, r4
+     444:	b004      	add	sp, #16
+     446:	e8bd 81f0 	ldmia.w	sp!, {r4, r5, r6, r7, r8, pc}
+     44a:	bf00      	nop
+     44c:	00001368 	.word	0x00001368
+     450:	000013c0 	.word	0x000013c0
+
+00000454 <RequestGameCode(API*, unsigned long, unsigned long, unsigned char*)>:
+     454:	e92d 41f0 	stmdb	sp!, {r4, r5, r6, r7, r8, lr}
+     458:	461e      	mov	r6, r3
+     45a:	6803      	ldr	r3, [r0, #0]
+     45c:	b084      	sub	sp, #16
+     45e:	4605      	mov	r5, r0
+     460:	69db      	ldr	r3, [r3, #28]
+     462:	460f      	mov	r7, r1
+     464:	4690      	mov	r8, r2
+     466:	4798      	blx	r3
+     468:	4604      	mov	r4, r0
+     46a:	b1e8      	cbz	r0, 4a8 <RequestGameCode(API*, unsigned long, unsigned long, unsigned char*)+0x54>
+     46c:	4621      	mov	r1, r4
+     46e:	2000      	movs	r0, #0
+     470:	f44f 52fa 	mov.w	r2, #8000	; 0x1f40
+     474:	4b13      	ldr	r3, [pc, #76]	; (4c4 <RequestGameCode(API*, unsigned long, unsigned long, unsigned char*)+0x70>)
+     476:	f801 0b01 	strb.w	r0, [r1], #1
+     47a:	4628      	mov	r0, r5
+     47c:	f8d5 c000 	ldr.w	ip, [r5]
+     480:	447b      	add	r3, pc
+     482:	f8cd 8008 	str.w	r8, [sp, #8]
+     486:	e9cd 2700 	strd	r2, r7, [sp]
+     48a:	4a0f      	ldr	r2, [pc, #60]	; (4c8 <RequestGameCode(API*, unsigned long, unsigned long, unsigned char*)+0x74>)
+     48c:	f8dc 70b8 	ldr.w	r7, [ip, #184]	; 0xb8
+     490:	447a      	add	r2, pc
+     492:	47b8      	blx	r7
+     494:	f44f 6380 	mov.w	r3, #1024	; 0x400
+     498:	64e6      	str	r6, [r4, #76]	; 0x4c
+     49a:	4621      	mov	r1, r4
+     49c:	6523      	str	r3, [r4, #80]	; 0x50
+     49e:	4628      	mov	r0, r5
+     4a0:	682b      	ldr	r3, [r5, #0]
+     4a2:	6a1b      	ldr	r3, [r3, #32]
+     4a4:	4798      	blx	r3
+     4a6:	b118      	cbz	r0, 4b0 <RequestGameCode(API*, unsigned long, unsigned long, unsigned char*)+0x5c>
+     4a8:	4620      	mov	r0, r4
+     4aa:	b004      	add	sp, #16
+     4ac:	e8bd 81f0 	ldmia.w	sp!, {r4, r5, r6, r7, r8, pc}
+     4b0:	682b      	ldr	r3, [r5, #0]
+     4b2:	4621      	mov	r1, r4
+     4b4:	4604      	mov	r4, r0
+     4b6:	4628      	mov	r0, r5
+     4b8:	6a5b      	ldr	r3, [r3, #36]	; 0x24
+     4ba:	4798      	blx	r3
+     4bc:	4620      	mov	r0, r4
+     4be:	b004      	add	sp, #16
+     4c0:	e8bd 81f0 	ldmia.w	sp!, {r4, r5, r6, r7, r8, pc}
+     4c4:	000012f8 	.word	0x000012f8
+     4c8:	00001370 	.word	0x00001370
+
+000004cc <Context::OnGameSelected(unsigned long)>:
+     4cc:	f890 3080 	ldrb.w	r3, [r0, #128]	; 0x80
+     4d0:	2b00      	cmp	r3, #0
+     4d2:	d144      	bne.n	55e <Context::OnGameSelected(unsigned long)+0x92>
+     4d4:	eb01 02c1 	add.w	r2, r1, r1, lsl #3
+     4d8:	b5f0      	push	{r4, r5, r6, r7, lr}
+     4da:	f8d0 60d4 	ldr.w	r6, [r0, #212]	; 0xd4
+     4de:	4604      	mov	r4, r0
+     4e0:	460d      	mov	r5, r1
+     4e2:	b083      	sub	sp, #12
+     4e4:	eb06 06c2 	add.w	r6, r6, r2, lsl #3
+     4e8:	6800      	ldr	r0, [r0, #0]
+     4ea:	f8d4 1084 	ldr.w	r1, [r4, #132]	; 0x84
+     4ee:	6972      	ldr	r2, [r6, #20]
+     4f0:	b1ea      	cbz	r2, 52e <Context::OnGameSelected(unsigned long)+0x62>
+     4f2:	f8d4 7088 	ldr.w	r7, [r4, #136]	; 0x88
+     4f6:	f8c4 30e4 	str.w	r3, [r4, #228]	; 0xe4
+     4fa:	6932      	ldr	r2, [r6, #16]
+     4fc:	9700      	str	r7, [sp, #0]
+     4fe:	f7ff ff6b 	bl	3d8 <RequestGameAsset(API*, unsigned long, unsigned long, unsigned long, unsigned char*)>
+     502:	67e0      	str	r0, [r4, #124]	; 0x7c
+     504:	b178      	cbz	r0, 526 <Context::OnGameSelected(unsigned long)+0x5a>
+     506:	6821      	ldr	r1, [r4, #0]
+     508:	2204      	movs	r2, #4
+     50a:	f8d4 30e4 	ldr.w	r3, [r4, #228]	; 0xe4
+     50e:	f884 2080 	strb.w	r2, [r4, #128]	; 0x80
+     512:	4608      	mov	r0, r1
+     514:	e9d6 2704 	ldrd	r2, r7, [r6, #16]
+     518:	680e      	ldr	r6, [r1, #0]
+     51a:	4911      	ldr	r1, [pc, #68]	; (560 <Context::OnGameSelected(unsigned long)+0x94>)
+     51c:	9700      	str	r7, [sp, #0]
+     51e:	4479      	add	r1, pc
+     520:	f8d6 60bc 	ldr.w	r6, [r6, #188]	; 0xbc
+     524:	47b0      	blx	r6
+     526:	f8c4 50e0 	str.w	r5, [r4, #224]	; 0xe0
+     52a:	b003      	add	sp, #12
+     52c:	bdf0      	pop	{r4, r5, r6, r7, pc}
+     52e:	f8d4 30dc 	ldr.w	r3, [r4, #220]	; 0xdc
+     532:	6932      	ldr	r2, [r6, #16]
+     534:	f7ff ff8e 	bl	454 <RequestGameCode(API*, unsigned long, unsigned long, unsigned char*)>
+     538:	67e0      	str	r0, [r4, #124]	; 0x7c
+     53a:	2800      	cmp	r0, #0
+     53c:	d0f3      	beq.n	526 <Context::OnGameSelected(unsigned long)+0x5a>
+     53e:	6823      	ldr	r3, [r4, #0]
+     540:	2205      	movs	r2, #5
+     542:	4908      	ldr	r1, [pc, #32]	; (564 <Context::OnGameSelected(unsigned long)+0x98>)
+     544:	f884 2080 	strb.w	r2, [r4, #128]	; 0x80
+     548:	4618      	mov	r0, r3
+     54a:	681b      	ldr	r3, [r3, #0]
+     54c:	4479      	add	r1, pc
+     54e:	6932      	ldr	r2, [r6, #16]
+     550:	f8d3 30bc 	ldr.w	r3, [r3, #188]	; 0xbc
+     554:	4798      	blx	r3
+     556:	f8c4 50e0 	str.w	r5, [r4, #224]	; 0xe0
+     55a:	b003      	add	sp, #12
+     55c:	bdf0      	pop	{r4, r5, r6, r7, pc}
+     55e:	4770      	bx	lr
+     560:	00001302 	.word	0x00001302
+     564:	000012f4 	.word	0x000012f4
+
+00000568 <Context::OnUpdatePressed()>:
+     568:	f890 3080 	ldrb.w	r3, [r0, #128]	; 0x80
+     56c:	b9e3      	cbnz	r3, 5a8 <Context::OnUpdatePressed()+0x40>
+     56e:	f8d0 30d0 	ldr.w	r3, [r0, #208]	; 0xd0
+     572:	b9cb      	cbnz	r3, 5a8 <Context::OnUpdatePressed()+0x40>
+     574:	2204      	movs	r2, #4
+     576:	b570      	push	{r4, r5, r6, lr}
+     578:	4604      	mov	r4, r0
+     57a:	2601      	movs	r6, #1
+     57c:	2002      	movs	r0, #2
+     57e:	2503      	movs	r5, #3
+     580:	f8d4 1084 	ldr.w	r1, [r4, #132]	; 0x84
+     584:	f8c4 30d8 	str.w	r3, [r4, #216]	; 0xd8
+     588:	f8c4 30a0 	str.w	r3, [r4, #160]	; 0xa0
+     58c:	1c4b      	adds	r3, r1, #1
+     58e:	e9c4 6029 	strd	r6, r0, [r4, #164]	; 0xa4
+     592:	e9c4 522b 	strd	r5, r2, [r4, #172]	; 0xac
+     596:	6820      	ldr	r0, [r4, #0]
+     598:	d007      	beq.n	5aa <Context::OnUpdatePressed()+0x42>
+     59a:	f7ff feaf 	bl	2fc <RequestGamesList(API*, unsigned long)>
+     59e:	67e0      	str	r0, [r4, #124]	; 0x7c
+     5a0:	b108      	cbz	r0, 5a6 <Context::OnUpdatePressed()+0x3e>
+     5a2:	f884 5080 	strb.w	r5, [r4, #128]	; 0x80
+     5a6:	bd70      	pop	{r4, r5, r6, pc}
+     5a8:	4770      	bx	lr
+     5aa:	f7ff fdf5 	bl	198 <RequestAuthKey(API*)>
+     5ae:	67e0      	str	r0, [r4, #124]	; 0x7c
+     5b0:	2800      	cmp	r0, #0
+     5b2:	d0f8      	beq.n	5a6 <Context::OnUpdatePressed()+0x3e>
+     5b4:	f884 6080 	strb.w	r6, [r4, #128]	; 0x80
+     5b8:	bd70      	pop	{r4, r5, r6, pc}
+     5ba:	bf00      	nop
+
+000005bc <Context::ProcessInput()>:
+     5bc:	4601      	mov	r1, r0
+     5be:	b5f8      	push	{r3, r4, r5, r6, r7, lr}
+     5c0:	4604      	mov	r4, r0
+     5c2:	f851 0b14 	ldr.w	r0, [r1], #20
+     5c6:	6803      	ldr	r3, [r0, #0]
+     5c8:	691b      	ldr	r3, [r3, #16]
+     5ca:	4798      	blx	r3
+     5cc:	f894 30f0 	ldrb.w	r3, [r4, #240]	; 0xf0
+     5d0:	b92b      	cbnz	r3, 5de <Context::ProcessInput()+0x22>
+     5d2:	7d22      	ldrb	r2, [r4, #20]
+     5d4:	2a01      	cmp	r2, #1
+     5d6:	d045      	beq.n	664 <Context::ProcessInput()+0xa8>
+     5d8:	f884 30f0 	strb.w	r3, [r4, #240]	; 0xf0
+     5dc:	bdf8      	pop	{r3, r4, r5, r6, r7, pc}
+     5de:	7d25      	ldrb	r5, [r4, #20]
+     5e0:	2d00      	cmp	r5, #0
+     5e2:	d139      	bne.n	658 <Context::ProcessInput()+0x9c>
+     5e4:	6820      	ldr	r0, [r4, #0]
+     5e6:	6803      	ldr	r3, [r0, #0]
+     5e8:	f8d3 30c4 	ldr.w	r3, [r3, #196]	; 0xc4
+     5ec:	4798      	blx	r3
+     5ee:	edd4 7a3e 	vldr	s15, [r4, #248]	; 0xf8
+     5f2:	ee06 0a90 	vmov	s13, r0
+     5f6:	ed9f 7a4d 	vldr	s14, [pc, #308]	; 72c <Context::ProcessInput()+0x170>
+     5fa:	ee76 7ae7 	vsub.f32	s15, s13, s15
+     5fe:	eef4 7ac7 	vcmpe.f32	s15, s14
+     602:	eef1 fa10 	vmrs	APSR_nzcv, fpscr
+     606:	d523      	bpl.n	650 <Context::ProcessInput()+0x94>
+     608:	f8d4 60d8 	ldr.w	r6, [r4, #216]	; 0xd8
+     60c:	f8b4 00f2 	ldrh.w	r0, [r4, #242]	; 0xf2
+     610:	f8b4 c0f4 	ldrh.w	ip, [r4, #244]	; 0xf4
+     614:	2e00      	cmp	r6, #0
+     616:	d044      	beq.n	6a2 <Context::ProcessInput()+0xe6>
+     618:	4629      	mov	r1, r5
+     61a:	f8d4 30d4 	ldr.w	r3, [r4, #212]	; 0xd4
+     61e:	681a      	ldr	r2, [r3, #0]
+     620:	4282      	cmp	r2, r0
+     622:	dc3a      	bgt.n	69a <Context::ProcessInput()+0xde>
+     624:	685d      	ldr	r5, [r3, #4]
+     626:	4565      	cmp	r5, ip
+     628:	dc37      	bgt.n	69a <Context::ProcessInput()+0xde>
+     62a:	689f      	ldr	r7, [r3, #8]
+     62c:	443a      	add	r2, r7
+     62e:	4290      	cmp	r0, r2
+     630:	da33      	bge.n	69a <Context::ProcessInput()+0xde>
+     632:	68da      	ldr	r2, [r3, #12]
+     634:	4415      	add	r5, r2
+     636:	4565      	cmp	r5, ip
+     638:	dd2f      	ble.n	69a <Context::ProcessInput()+0xde>
+     63a:	7d25      	ldrb	r5, [r4, #20]
+     63c:	2300      	movs	r3, #0
+     63e:	2d01      	cmp	r5, #1
+     640:	f884 30f0 	strb.w	r3, [r4, #240]	; 0xf0
+     644:	d046      	beq.n	6d4 <Context::ProcessInput()+0x118>
+     646:	4620      	mov	r0, r4
+     648:	e8bd 40f8 	ldmia.w	sp!, {r3, r4, r5, r6, r7, lr}
+     64c:	f7ff bf3e 	b.w	4cc <Context::OnGameSelected(unsigned long)>
+     650:	f894 30f0 	ldrb.w	r3, [r4, #240]	; 0xf0
+     654:	7d25      	ldrb	r5, [r4, #20]
+     656:	b18b      	cbz	r3, 67c <Context::ProcessInput()+0xc0>
+     658:	2d01      	cmp	r5, #1
+     65a:	d048      	beq.n	6ee <Context::ProcessInput()+0x132>
+     65c:	2300      	movs	r3, #0
+     65e:	f884 30f0 	strb.w	r3, [r4, #240]	; 0xf0
+     662:	bdf8      	pop	{r3, r4, r5, r6, r7, pc}
+     664:	6820      	ldr	r0, [r4, #0]
+     666:	6803      	ldr	r3, [r0, #0]
+     668:	f8d3 30c4 	ldr.w	r3, [r3, #196]	; 0xc4
+     66c:	4798      	blx	r3
+     66e:	f894 30f0 	ldrb.w	r3, [r4, #240]	; 0xf0
+     672:	f8c4 00f8 	str.w	r0, [r4, #248]	; 0xf8
+     676:	2b00      	cmp	r3, #0
+     678:	d1b1      	bne.n	5de <Context::ProcessInput()+0x22>
+     67a:	7d25      	ldrb	r5, [r4, #20]
+     67c:	2300      	movs	r3, #0
+     67e:	2d01      	cmp	r5, #1
+     680:	f884 30f0 	strb.w	r3, [r4, #240]	; 0xf0
+     684:	d1aa      	bne.n	5dc <Context::ProcessInput()+0x20>
+     686:	8ae1      	ldrh	r1, [r4, #22]
+     688:	2301      	movs	r3, #1
+     68a:	8c22      	ldrh	r2, [r4, #32]
+     68c:	f8a4 10f2 	strh.w	r1, [r4, #242]	; 0xf2
+     690:	f8a4 20f4 	strh.w	r2, [r4, #244]	; 0xf4
+     694:	f884 30f0 	strb.w	r3, [r4, #240]	; 0xf0
+     698:	bdf8      	pop	{r3, r4, r5, r6, r7, pc}
+     69a:	3101      	adds	r1, #1
+     69c:	3348      	adds	r3, #72	; 0x48
+     69e:	42b1      	cmp	r1, r6
+     6a0:	d1bd      	bne.n	61e <Context::ProcessInput()+0x62>
+     6a2:	6ee3      	ldr	r3, [r4, #108]	; 0x6c
+     6a4:	7d25      	ldrb	r5, [r4, #20]
+     6a6:	4298      	cmp	r0, r3
+     6a8:	dbe8      	blt.n	67c <Context::ProcessInput()+0xc0>
+     6aa:	6f22      	ldr	r2, [r4, #112]	; 0x70
+     6ac:	4562      	cmp	r2, ip
+     6ae:	dce5      	bgt.n	67c <Context::ProcessInput()+0xc0>
+     6b0:	6f61      	ldr	r1, [r4, #116]	; 0x74
+     6b2:	440b      	add	r3, r1
+     6b4:	4298      	cmp	r0, r3
+     6b6:	dae1      	bge.n	67c <Context::ProcessInput()+0xc0>
+     6b8:	6fa1      	ldr	r1, [r4, #120]	; 0x78
+     6ba:	2300      	movs	r3, #0
+     6bc:	2d01      	cmp	r5, #1
+     6be:	440a      	add	r2, r1
+     6c0:	f884 30f0 	strb.w	r3, [r4, #240]	; 0xf0
+     6c4:	d029      	beq.n	71a <Context::ProcessInput()+0x15e>
+     6c6:	4562      	cmp	r2, ip
+     6c8:	dd88      	ble.n	5dc <Context::ProcessInput()+0x20>
+     6ca:	4620      	mov	r0, r4
+     6cc:	e8bd 40f8 	ldmia.w	sp!, {r3, r4, r5, r6, r7, lr}
+     6d0:	f7ff bf4a 	b.w	568 <Context::OnUpdatePressed()>
+     6d4:	8ae2      	ldrh	r2, [r4, #22]
+     6d6:	4620      	mov	r0, r4
+     6d8:	8c23      	ldrh	r3, [r4, #32]
+     6da:	f884 50f0 	strb.w	r5, [r4, #240]	; 0xf0
+     6de:	f8a4 20f2 	strh.w	r2, [r4, #242]	; 0xf2
+     6e2:	f8a4 30f4 	strh.w	r3, [r4, #244]	; 0xf4
+     6e6:	e8bd 40f8 	ldmia.w	sp!, {r3, r4, r5, r6, r7, lr}
+     6ea:	f7ff beef 	b.w	4cc <Context::OnGameSelected(unsigned long)>
+     6ee:	8ae5      	ldrh	r5, [r4, #22]
+     6f0:	f8b4 20f2 	ldrh.w	r2, [r4, #242]	; 0xf2
+     6f4:	f8d4 30d8 	ldr.w	r3, [r4, #216]	; 0xd8
+     6f8:	1aad      	subs	r5, r5, r2
+     6fa:	2b00      	cmp	r3, #0
+     6fc:	d0c3      	beq.n	686 <Context::ProcessInput()+0xca>
+     6fe:	2300      	movs	r3, #0
+     700:	4619      	mov	r1, r3
+     702:	f8d4 00d4 	ldr.w	r0, [r4, #212]	; 0xd4
+     706:	3101      	adds	r1, #1
+     708:	58c2      	ldr	r2, [r0, r3]
+     70a:	442a      	add	r2, r5
+     70c:	50c2      	str	r2, [r0, r3]
+     70e:	3348      	adds	r3, #72	; 0x48
+     710:	f8d4 20d8 	ldr.w	r2, [r4, #216]	; 0xd8
+     714:	428a      	cmp	r2, r1
+     716:	d8f4      	bhi.n	702 <Context::ProcessInput()+0x146>
+     718:	e7af      	b.n	67a <Context::ProcessInput()+0xbe>
+     71a:	8ae1      	ldrh	r1, [r4, #22]
+     71c:	8c23      	ldrh	r3, [r4, #32]
+     71e:	f884 50f0 	strb.w	r5, [r4, #240]	; 0xf0
+     722:	f8a4 10f2 	strh.w	r1, [r4, #242]	; 0xf2
+     726:	f8a4 30f4 	strh.w	r3, [r4, #244]	; 0xf4
+     72a:	e7cc      	b.n	6c6 <Context::ProcessInput()+0x10a>
+     72c:	3dcccccd 	.word	0x3dcccccd
+
+00000730 <Context::UpdateIcons()>:
+     730:	e92d 4ff8 	stmdb	sp!, {r3, r4, r5, r6, r7, r8, r9, sl, fp, lr}
+     734:	f8d0 30d8 	ldr.w	r3, [r0, #216]	; 0xd8
+     738:	2b00      	cmp	r3, #0
+     73a:	f000 80cd 	beq.w	8d8 <Context::UpdateIcons()+0x1a8>
+     73e:	2600      	movs	r6, #0
+     740:	4604      	mov	r4, r0
+     742:	4637      	mov	r7, r6
+     744:	e03f      	b.n	7c6 <Context::UpdateIcons()+0x96>
+     746:	eb05 0a01 	add.w	sl, r5, r1
+     74a:	68a2      	ldr	r2, [r4, #8]
+     74c:	4562      	cmp	r2, ip
+     74e:	dd06      	ble.n	75e <Context::UpdateIcons()+0x2e>
+     750:	eba2 0e0c 	sub.w	lr, r2, ip
+     754:	4694      	mov	ip, r2
+     756:	eba8 080e 	sub.w	r8, r8, lr
+     75a:	ea28 78e8 	bic.w	r8, r8, r8, asr #31
+     75e:	f8d4 e010 	ldr.w	lr, [r4, #16]
+     762:	4472      	add	r2, lr
+     764:	4594      	cmp	ip, r2
+     766:	db47      	blt.n	7f8 <Context::UpdateIcons()+0xc8>
+     768:	4553      	cmp	r3, sl
+     76a:	f2c0 80bd 	blt.w	8e8 <Context::UpdateIcons()+0x1b8>
+     76e:	f894 30cc 	ldrb.w	r3, [r4, #204]	; 0xcc
+     772:	f890 2040 	ldrb.w	r2, [r0, #64]	; 0x40
+     776:	b1eb      	cbz	r3, 7b4 <Context::UpdateIcons()+0x84>
+     778:	2a02      	cmp	r2, #2
+     77a:	d11b      	bne.n	7b4 <Context::UpdateIcons()+0x84>
+     77c:	f8d4 30b0 	ldr.w	r3, [r4, #176]	; 0xb0
+     780:	6bc1      	ldr	r1, [r0, #60]	; 0x3c
+     782:	eb04 0283 	add.w	r2, r4, r3, lsl #2
+     786:	3301      	adds	r3, #1
+     788:	f8c2 10a0 	str.w	r1, [r2, #160]	; 0xa0
+     78c:	2200      	movs	r2, #0
+     78e:	f8c4 30b0 	str.w	r3, [r4, #176]	; 0xb0
+     792:	f04f 33ff 	mov.w	r3, #4294967295	; 0xffffffff
+     796:	e9c0 230e 	strd	r2, r3, [r0, #56]	; 0x38
+     79a:	f04f 0200 	mov.w	r2, #0
+     79e:	2300      	movs	r3, #0
+     7a0:	f880 2040 	strb.w	r2, [r0, #64]	; 0x40
+     7a4:	6443      	str	r3, [r0, #68]	; 0x44
+     7a6:	f8d4 00d4 	ldr.w	r0, [r4, #212]	; 0xd4
+     7aa:	f884 20cc 	strb.w	r2, [r4, #204]	; 0xcc
+     7ae:	4430      	add	r0, r6
+     7b0:	f890 2040 	ldrb.w	r2, [r0, #64]	; 0x40
+     7b4:	2a01      	cmp	r2, #1
+     7b6:	d06f      	beq.n	898 <Context::UpdateIcons()+0x168>
+     7b8:	3701      	adds	r7, #1
+     7ba:	f8d4 30d8 	ldr.w	r3, [r4, #216]	; 0xd8
+     7be:	3648      	adds	r6, #72	; 0x48
+     7c0:	42bb      	cmp	r3, r7
+     7c2:	f240 8089 	bls.w	8d8 <Context::UpdateIcons()+0x1a8>
+     7c6:	f8d4 20d4 	ldr.w	r2, [r4, #212]	; 0xd4
+     7ca:	6863      	ldr	r3, [r4, #4]
+     7cc:	5995      	ldr	r5, [r2, r6]
+     7ce:	1990      	adds	r0, r2, r6
+     7d0:	42ab      	cmp	r3, r5
+     7d2:	f8d0 800c 	ldr.w	r8, [r0, #12]
+     7d6:	e9d0 c101 	ldrd	ip, r1, [r0, #4]
+     7da:	dd04      	ble.n	7e6 <Context::UpdateIcons()+0xb6>
+     7dc:	1b5a      	subs	r2, r3, r5
+     7de:	461d      	mov	r5, r3
+     7e0:	1a89      	subs	r1, r1, r2
+     7e2:	ea21 71e1 	bic.w	r1, r1, r1, asr #31
+     7e6:	f8d4 900c 	ldr.w	r9, [r4, #12]
+     7ea:	444b      	add	r3, r9
+     7ec:	429d      	cmp	r5, r3
+     7ee:	dbaa      	blt.n	746 <Context::UpdateIcons()+0x16>
+     7f0:	469a      	mov	sl, r3
+     7f2:	461d      	mov	r5, r3
+     7f4:	2100      	movs	r1, #0
+     7f6:	e7a8      	b.n	74a <Context::UpdateIcons()+0x1a>
+     7f8:	4553      	cmp	r3, sl
+     7fa:	eb0c 0b08 	add.w	fp, ip, r8
+     7fe:	da01      	bge.n	804 <Context::UpdateIcons()+0xd4>
+     800:	eba9 0105 	sub.w	r1, r9, r5
+     804:	455a      	cmp	r2, fp
+     806:	da6c      	bge.n	8e2 <Context::UpdateIcons()+0x1b2>
+     808:	ebae 030c 	sub.w	r3, lr, ip
+     80c:	fb01 f303 	mul.w	r3, r1, r3
+     810:	f894 10cc 	ldrb.w	r1, [r4, #204]	; 0xcc
+     814:	f890 2040 	ldrb.w	r2, [r0, #64]	; 0x40
+     818:	2900      	cmp	r1, #0
+     81a:	d05f      	beq.n	8dc <Context::UpdateIcons()+0x1ac>
+     81c:	2b00      	cmp	r3, #0
+     81e:	d0ab      	beq.n	778 <Context::UpdateIcons()+0x48>
+     820:	2a00      	cmp	r2, #0
+     822:	d1c7      	bne.n	7b4 <Context::UpdateIcons()+0x84>
+     824:	f8d4 30b0 	ldr.w	r3, [r4, #176]	; 0xb0
+     828:	2b00      	cmp	r3, #0
+     82a:	d062      	beq.n	8f2 <Context::UpdateIcons()+0x1c2>
+     82c:	eb04 0283 	add.w	r2, r4, r3, lsl #2
+     830:	3b01      	subs	r3, #1
+     832:	f8d2 509c 	ldr.w	r5, [r2, #156]	; 0x9c
+     836:	f8c4 30b0 	str.w	r3, [r4, #176]	; 0xb0
+     83a:	1c6b      	adds	r3, r5, #1
+     83c:	d059      	beq.n	8f2 <Context::UpdateIcons()+0x1c2>
+     83e:	eb04 0385 	add.w	r3, r4, r5, lsl #2
+     842:	6902      	ldr	r2, [r0, #16]
+     844:	f8d4 1084 	ldr.w	r1, [r4, #132]	; 0x84
+     848:	f8d3 8090 	ldr.w	r8, [r3, #144]	; 0x90
+     84c:	6820      	ldr	r0, [r4, #0]
+     84e:	4643      	mov	r3, r8
+     850:	f7ff fd84 	bl	35c <RequestIcon(API*, unsigned long, unsigned long, unsigned char*)>
+     854:	67e0      	str	r0, [r4, #124]	; 0x7c
+     856:	2800      	cmp	r0, #0
+     858:	d06b      	beq.n	932 <Context::UpdateIcons()+0x202>
+     85a:	f8d4 30d4 	ldr.w	r3, [r4, #212]	; 0xd4
+     85e:	f04f 0201 	mov.w	r2, #1
+     862:	4433      	add	r3, r6
+     864:	f8c3 8038 	str.w	r8, [r3, #56]	; 0x38
+     868:	f8d4 30d4 	ldr.w	r3, [r4, #212]	; 0xd4
+     86c:	4433      	add	r3, r6
+     86e:	63dd      	str	r5, [r3, #60]	; 0x3c
+     870:	f8d4 30d4 	ldr.w	r3, [r4, #212]	; 0xd4
+     874:	4433      	add	r3, r6
+     876:	f883 2040 	strb.w	r2, [r3, #64]	; 0x40
+     87a:	f8d4 30d4 	ldr.w	r3, [r4, #212]	; 0xd4
+     87e:	6fe2      	ldr	r2, [r4, #124]	; 0x7c
+     880:	4433      	add	r3, r6
+     882:	645a      	str	r2, [r3, #68]	; 0x44
+     884:	e9d4 3034 	ldrd	r3, r0, [r4, #208]	; 0xd0
+     888:	3301      	adds	r3, #1
+     88a:	4430      	add	r0, r6
+     88c:	f8c4 30d0 	str.w	r3, [r4, #208]	; 0xd0
+     890:	f890 2040 	ldrb.w	r2, [r0, #64]	; 0x40
+     894:	2a01      	cmp	r2, #1
+     896:	d18f      	bne.n	7b8 <Context::UpdateIcons()+0x88>
+     898:	6c41      	ldr	r1, [r0, #68]	; 0x44
+     89a:	f891 3054 	ldrb.w	r3, [r1, #84]	; 0x54
+     89e:	2b00      	cmp	r3, #0
+     8a0:	d08a      	beq.n	7b8 <Context::UpdateIcons()+0x88>
+     8a2:	f891 3055 	ldrb.w	r3, [r1, #85]	; 0x55
+     8a6:	b35b      	cbz	r3, 900 <Context::UpdateIcons()+0x1d0>
+     8a8:	2302      	movs	r3, #2
+     8aa:	f880 3040 	strb.w	r3, [r0, #64]	; 0x40
+     8ae:	6820      	ldr	r0, [r4, #0]
+     8b0:	3701      	adds	r7, #1
+     8b2:	6803      	ldr	r3, [r0, #0]
+     8b4:	6a5b      	ldr	r3, [r3, #36]	; 0x24
+     8b6:	4798      	blx	r3
+     8b8:	f8d4 30d4 	ldr.w	r3, [r4, #212]	; 0xd4
+     8bc:	2200      	movs	r2, #0
+     8be:	4433      	add	r3, r6
+     8c0:	3648      	adds	r6, #72	; 0x48
+     8c2:	645a      	str	r2, [r3, #68]	; 0x44
+     8c4:	f8d4 30d0 	ldr.w	r3, [r4, #208]	; 0xd0
+     8c8:	3b01      	subs	r3, #1
+     8ca:	f8c4 30d0 	str.w	r3, [r4, #208]	; 0xd0
+     8ce:	f8d4 30d8 	ldr.w	r3, [r4, #216]	; 0xd8
+     8d2:	42bb      	cmp	r3, r7
+     8d4:	f63f af77 	bhi.w	7c6 <Context::UpdateIcons()+0x96>
+     8d8:	e8bd 8ff8 	ldmia.w	sp!, {r3, r4, r5, r6, r7, r8, r9, sl, fp, pc}
+     8dc:	2b00      	cmp	r3, #0
+     8de:	d19f      	bne.n	820 <Context::UpdateIcons()+0xf0>
+     8e0:	e768      	b.n	7b4 <Context::UpdateIcons()+0x84>
+     8e2:	fb08 f301 	mul.w	r3, r8, r1
+     8e6:	e793      	b.n	810 <Context::UpdateIcons()+0xe0>
+     8e8:	4693      	mov	fp, r2
+     8ea:	4694      	mov	ip, r2
+     8ec:	f04f 0800 	mov.w	r8, #0
+     8f0:	e786      	b.n	800 <Context::UpdateIcons()+0xd0>
+     8f2:	f04f 0301 	mov.w	r3, #1
+     8f6:	f884 30cc 	strb.w	r3, [r4, #204]	; 0xcc
+     8fa:	f890 2040 	ldrb.w	r2, [r0, #64]	; 0x40
+     8fe:	e759      	b.n	7b4 <Context::UpdateIcons()+0x84>
+     900:	f8d4 20b0 	ldr.w	r2, [r4, #176]	; 0xb0
+     904:	f04f 0c03 	mov.w	ip, #3
+     908:	6bc5      	ldr	r5, [r0, #60]	; 0x3c
+     90a:	eb04 0e82 	add.w	lr, r4, r2, lsl #2
+     90e:	3201      	adds	r2, #1
+     910:	f8ce 50a0 	str.w	r5, [lr, #160]	; 0xa0
+     914:	f8c4 20b0 	str.w	r2, [r4, #176]	; 0xb0
+     918:	f04f 32ff 	mov.w	r2, #4294967295	; 0xffffffff
+     91c:	6383      	str	r3, [r0, #56]	; 0x38
+     91e:	63c2      	str	r2, [r0, #60]	; 0x3c
+     920:	f880 3040 	strb.w	r3, [r0, #64]	; 0x40
+     924:	6443      	str	r3, [r0, #68]	; 0x44
+     926:	f8d4 30d4 	ldr.w	r3, [r4, #212]	; 0xd4
+     92a:	4433      	add	r3, r6
+     92c:	f883 c040 	strb.w	ip, [r3, #64]	; 0x40
+     930:	e7bd      	b.n	8ae <Context::UpdateIcons()+0x17e>
+     932:	f8d4 30b0 	ldr.w	r3, [r4, #176]	; 0xb0
+     936:	eb04 0283 	add.w	r2, r4, r3, lsl #2
+     93a:	3301      	adds	r3, #1
+     93c:	f8c2 50a0 	str.w	r5, [r2, #160]	; 0xa0
+     940:	f8d4 00d4 	ldr.w	r0, [r4, #212]	; 0xd4
+     944:	f8c4 30b0 	str.w	r3, [r4, #176]	; 0xb0
+     948:	4430      	add	r0, r6
+     94a:	f890 2040 	ldrb.w	r2, [r0, #64]	; 0x40
+     94e:	e731      	b.n	7b4 <Context::UpdateIcons()+0x84>
+
+00000950 <Context::ProcessLoadedAsset()>:
+     950:	e92d 47f0 	stmdb	sp!, {r4, r5, r6, r7, r8, r9, sl, lr}
+     954:	6fc1      	ldr	r1, [r0, #124]	; 0x7c
+     956:	4604      	mov	r4, r0
+     958:	6800      	ldr	r0, [r0, #0]
+     95a:	b0c2      	sub	sp, #264	; 0x108
+     95c:	f891 5055 	ldrb.w	r5, [r1, #85]	; 0x55
+     960:	6803      	ldr	r3, [r0, #0]
+     962:	2d00      	cmp	r5, #0
+     964:	f000 8086 	beq.w	a74 <Context::ProcessLoadedAsset()+0x124>
+     968:	f8d1 804c 	ldr.w	r8, [r1, #76]	; 0x4c
+     96c:	2500      	movs	r5, #0
+     96e:	f8d3 30b0 	ldr.w	r3, [r3, #176]	; 0xb0
+     972:	4641      	mov	r1, r8
+     974:	4798      	blx	r3
+     976:	6fe3      	ldr	r3, [r4, #124]	; 0x7c
+     978:	4602      	mov	r2, r0
+     97a:	6820      	ldr	r0, [r4, #0]
+     97c:	6d9e      	ldr	r6, [r3, #88]	; 0x58
+     97e:	4619      	mov	r1, r3
+     980:	f8d0 c000 	ldr.w	ip, [r0]
+     984:	1c57      	adds	r7, r2, #1
+     986:	3e01      	subs	r6, #1
+     988:	f8d3 904c 	ldr.w	r9, [r3, #76]	; 0x4c
+     98c:	f8dc 3024 	ldr.w	r3, [ip, #36]	; 0x24
+     990:	1ab6      	subs	r6, r6, r2
+     992:	4798      	blx	r3
+     994:	6820      	ldr	r0, [r4, #0]
+     996:	44b9      	add	r9, r7
+     998:	67e5      	str	r5, [r4, #124]	; 0x7c
+     99a:	4633      	mov	r3, r6
+     99c:	6807      	ldr	r7, [r0, #0]
+     99e:	4642      	mov	r2, r8
+     9a0:	4947      	ldr	r1, [pc, #284]	; (ac0 <Context::ProcessLoadedAsset()+0x170>)
+     9a2:	f8d7 70bc 	ldr.w	r7, [r7, #188]	; 0xbc
+     9a6:	4479      	add	r1, pc
+     9a8:	47b8      	blx	r7
+     9aa:	6820      	ldr	r0, [r4, #0]
+     9ac:	af02      	add	r7, sp, #8
+     9ae:	4a45      	ldr	r2, [pc, #276]	; (ac4 <Context::ProcessLoadedAsset()+0x174>)
+     9b0:	f8d0 c000 	ldr.w	ip, [r0]
+     9b4:	4643      	mov	r3, r8
+     9b6:	4639      	mov	r1, r7
+     9b8:	447a      	add	r2, pc
+     9ba:	f8dc a0b8 	ldr.w	sl, [ip, #184]	; 0xb8
+     9be:	47d0      	blx	sl
+     9c0:	6820      	ldr	r0, [r4, #0]
+     9c2:	4a41      	ldr	r2, [pc, #260]	; (ac8 <Context::ProcessLoadedAsset()+0x178>)
+     9c4:	4639      	mov	r1, r7
+     9c6:	6803      	ldr	r3, [r0, #0]
+     9c8:	447a      	add	r2, pc
+     9ca:	f8d3 3094 	ldr.w	r3, [r3, #148]	; 0x94
+     9ce:	4798      	blx	r3
+     9d0:	4607      	mov	r7, r0
+     9d2:	6820      	ldr	r0, [r4, #0]
+     9d4:	2f00      	cmp	r7, #0
+     9d6:	d06d      	beq.n	ab4 <Context::ProcessLoadedAsset()+0x164>
+     9d8:	f8d0 c000 	ldr.w	ip, [r0]
+     9dc:	4649      	mov	r1, r9
+     9de:	463b      	mov	r3, r7
+     9e0:	4632      	mov	r2, r6
+     9e2:	f8dc 909c 	ldr.w	r9, [ip, #156]	; 0x9c
+     9e6:	47c8      	blx	r9
+     9e8:	42b0      	cmp	r0, r6
+     9ea:	6820      	ldr	r0, [r4, #0]
+     9ec:	d010      	beq.n	a10 <Context::ProcessLoadedAsset()+0xc0>
+     9ee:	4937      	ldr	r1, [pc, #220]	; (acc <Context::ProcessLoadedAsset()+0x17c>)
+     9f0:	4642      	mov	r2, r8
+     9f2:	4479      	add	r1, pc
+     9f4:	6803      	ldr	r3, [r0, #0]
+     9f6:	f8d3 30bc 	ldr.w	r3, [r3, #188]	; 0xbc
+     9fa:	4798      	blx	r3
+     9fc:	6820      	ldr	r0, [r4, #0]
+     9fe:	4639      	mov	r1, r7
+     a00:	6803      	ldr	r3, [r0, #0]
+     a02:	f8d3 30a4 	ldr.w	r3, [r3, #164]	; 0xa4
+     a06:	4798      	blx	r3
+     a08:	4628      	mov	r0, r5
+     a0a:	b042      	add	sp, #264	; 0x108
+     a0c:	e8bd 87f0 	ldmia.w	sp!, {r4, r5, r6, r7, r8, r9, sl, pc}
+     a10:	6803      	ldr	r3, [r0, #0]
+     a12:	4639      	mov	r1, r7
+     a14:	f8d3 30a4 	ldr.w	r3, [r3, #164]	; 0xa4
+     a18:	4798      	blx	r3
+     a1a:	f8d4 60e0 	ldr.w	r6, [r4, #224]	; 0xe0
+     a1e:	f8d4 20d4 	ldr.w	r2, [r4, #212]	; 0xd4
+     a22:	f8d4 30e4 	ldr.w	r3, [r4, #228]	; 0xe4
+     a26:	eb06 06c6 	add.w	r6, r6, r6, lsl #3
+     a2a:	3301      	adds	r3, #1
+     a2c:	eb02 06c6 	add.w	r6, r2, r6, lsl #3
+     a30:	f8c4 30e4 	str.w	r3, [r4, #228]	; 0xe4
+     a34:	6972      	ldr	r2, [r6, #20]
+     a36:	4293      	cmp	r3, r2
+     a38:	d023      	beq.n	a82 <Context::ProcessLoadedAsset()+0x132>
+     a3a:	6932      	ldr	r2, [r6, #16]
+     a3c:	e9d4 1021 	ldrd	r1, r0, [r4, #132]	; 0x84
+     a40:	9000      	str	r0, [sp, #0]
+     a42:	6820      	ldr	r0, [r4, #0]
+     a44:	f7ff fcc8 	bl	3d8 <RequestGameAsset(API*, unsigned long, unsigned long, unsigned long, unsigned char*)>
+     a48:	67e0      	str	r0, [r4, #124]	; 0x7c
+     a4a:	b160      	cbz	r0, a66 <Context::ProcessLoadedAsset()+0x116>
+     a4c:	6820      	ldr	r0, [r4, #0]
+     a4e:	6971      	ldr	r1, [r6, #20]
+     a50:	6805      	ldr	r5, [r0, #0]
+     a52:	6932      	ldr	r2, [r6, #16]
+     a54:	f8d4 30e4 	ldr.w	r3, [r4, #228]	; 0xe4
+     a58:	9100      	str	r1, [sp, #0]
+     a5a:	491d      	ldr	r1, [pc, #116]	; (ad0 <Context::ProcessLoadedAsset()+0x180>)
+     a5c:	f8d5 50bc 	ldr.w	r5, [r5, #188]	; 0xbc
+     a60:	4479      	add	r1, pc
+     a62:	47a8      	blx	r5
+     a64:	6fe0      	ldr	r0, [r4, #124]	; 0x7c
+     a66:	1c05      	adds	r5, r0, #0
+     a68:	bf18      	it	ne
+     a6a:	2501      	movne	r5, #1
+     a6c:	4628      	mov	r0, r5
+     a6e:	b042      	add	sp, #264	; 0x108
+     a70:	e8bd 87f0 	ldmia.w	sp!, {r4, r5, r6, r7, r8, r9, sl, pc}
+     a74:	6a5b      	ldr	r3, [r3, #36]	; 0x24
+     a76:	4798      	blx	r3
+     a78:	4628      	mov	r0, r5
+     a7a:	67e5      	str	r5, [r4, #124]	; 0x7c
+     a7c:	b042      	add	sp, #264	; 0x108
+     a7e:	e8bd 87f0 	ldmia.w	sp!, {r4, r5, r6, r7, r8, r9, sl, pc}
+     a82:	f8d4 30dc 	ldr.w	r3, [r4, #220]	; 0xdc
+     a86:	6932      	ldr	r2, [r6, #16]
+     a88:	f8d4 1084 	ldr.w	r1, [r4, #132]	; 0x84
+     a8c:	6820      	ldr	r0, [r4, #0]
+     a8e:	f7ff fce1 	bl	454 <RequestGameCode(API*, unsigned long, unsigned long, unsigned char*)>
+     a92:	67e0      	str	r0, [r4, #124]	; 0x7c
+     a94:	2800      	cmp	r0, #0
+     a96:	d0e6      	beq.n	a66 <Context::ProcessLoadedAsset()+0x116>
+     a98:	6823      	ldr	r3, [r4, #0]
+     a9a:	2205      	movs	r2, #5
+     a9c:	490d      	ldr	r1, [pc, #52]	; (ad4 <Context::ProcessLoadedAsset()+0x184>)
+     a9e:	f884 2080 	strb.w	r2, [r4, #128]	; 0x80
+     aa2:	4618      	mov	r0, r3
+     aa4:	681b      	ldr	r3, [r3, #0]
+     aa6:	4479      	add	r1, pc
+     aa8:	6932      	ldr	r2, [r6, #16]
+     aaa:	f8d3 30bc 	ldr.w	r3, [r3, #188]	; 0xbc
+     aae:	4798      	blx	r3
+     ab0:	6fe0      	ldr	r0, [r4, #124]	; 0x7c
+     ab2:	e7d8      	b.n	a66 <Context::ProcessLoadedAsset()+0x116>
+     ab4:	4908      	ldr	r1, [pc, #32]	; (ad8 <Context::ProcessLoadedAsset()+0x188>)
+     ab6:	4642      	mov	r2, r8
+     ab8:	463d      	mov	r5, r7
+     aba:	4479      	add	r1, pc
+     abc:	e79a      	b.n	9f4 <Context::ProcessLoadedAsset()+0xa4>
+     abe:	bf00      	nop
+     ac0:	00000eb6 	.word	0x00000eb6
+     ac4:	00000ec0 	.word	0x00000ec0
+     ac8:	00000eb8 	.word	0x00000eb8
+     acc:	00000e92 	.word	0x00000e92
+     ad0:	00000dc0 	.word	0x00000dc0
+     ad4:	00000d9a 	.word	0x00000d9a
+     ad8:	00000dca 	.word	0x00000dca
+
+00000adc <Context::Render(float)>:
+     adc:	e92d 41f0 	stmdb	sp!, {r4, r5, r6, r7, r8, lr}
+     ae0:	f890 3080 	ldrb.w	r3, [r0, #128]	; 0x80
+     ae4:	4604      	mov	r4, r0
+     ae6:	6800      	ldr	r0, [r0, #0]
+     ae8:	b082      	sub	sp, #8
+     aea:	3b04      	subs	r3, #4
+     aec:	4688      	mov	r8, r1
+     aee:	6802      	ldr	r2, [r0, #0]
+     af0:	2b01      	cmp	r3, #1
+     af2:	d958      	bls.n	ba6 <Context::Render(float)+0xca>
+     af4:	f8d2 5084 	ldr.w	r5, [r2, #132]	; 0x84
+     af8:	f104 013c 	add.w	r1, r4, #60	; 0x3c
+     afc:	f8d4 20b4 	ldr.w	r2, [r4, #180]	; 0xb4
+     b00:	f44f 63f0 	mov.w	r3, #1920	; 0x780
+     b04:	47a8      	blx	r5
+     b06:	6820      	ldr	r0, [r4, #0]
+     b08:	6803      	ldr	r3, [r0, #0]
+     b0a:	695b      	ldr	r3, [r3, #20]
+     b0c:	4798      	blx	r3
+     b0e:	4621      	mov	r1, r4
+     b10:	f8d4 50c4 	ldr.w	r5, [r4, #196]	; 0xc4
+     b14:	23a0      	movs	r3, #160	; 0xa0
+     b16:	f851 6b4c 	ldr.w	r6, [r1], #76
+     b1a:	f8d4 20c0 	ldr.w	r2, [r4, #192]	; 0xc0
+     b1e:	6837      	ldr	r7, [r6, #0]
+     b20:	2801      	cmp	r0, #1
+     b22:	bf08      	it	eq
+     b24:	462a      	moveq	r2, r5
+     b26:	4630      	mov	r0, r6
+     b28:	f8d7 5088 	ldr.w	r5, [r7, #136]	; 0x88
+     b2c:	47a8      	blx	r5
+     b2e:	6820      	ldr	r0, [r4, #0]
+     b30:	f44f 7319 	mov.w	r3, #612	; 0x264
+     b34:	f8d4 20c8 	ldr.w	r2, [r4, #200]	; 0xc8
+     b38:	6805      	ldr	r5, [r0, #0]
+     b3a:	f104 016c 	add.w	r1, r4, #108	; 0x6c
+     b3e:	f8d5 5088 	ldr.w	r5, [r5, #136]	; 0x88
+     b42:	47a8      	blx	r5
+     b44:	f894 3080 	ldrb.w	r3, [r4, #128]	; 0x80
+     b48:	b343      	cbz	r3, b9c <Context::Render(float)+0xc0>
+     b4a:	6820      	ldr	r0, [r4, #0]
+     b4c:	23a0      	movs	r3, #160	; 0xa0
+     b4e:	f8d4 20bc 	ldr.w	r2, [r4, #188]	; 0xbc
+     b52:	f104 015c 	add.w	r1, r4, #92	; 0x5c
+     b56:	6805      	ldr	r5, [r0, #0]
+     b58:	f8d5 5088 	ldr.w	r5, [r5, #136]	; 0x88
+     b5c:	47a8      	blx	r5
+     b5e:	f8d4 30d8 	ldr.w	r3, [r4, #216]	; 0xd8
+     b62:	b19b      	cbz	r3, b8c <Context::Render(float)+0xb0>
+     b64:	1d27      	adds	r7, r4, #4
+     b66:	f104 068c 	add.w	r6, r4, #140	; 0x8c
+     b6a:	2500      	movs	r5, #0
+     b6c:	eb05 00c5 	add.w	r0, r5, r5, lsl #3
+     b70:	f8d4 30d4 	ldr.w	r3, [r4, #212]	; 0xd4
+     b74:	4632      	mov	r2, r6
+     b76:	4639      	mov	r1, r7
+     b78:	eb03 03c0 	add.w	r3, r3, r0, lsl #3
+     b7c:	6820      	ldr	r0, [r4, #0]
+     b7e:	f7ff fa97 	bl	b0 <DrawIcon(API*, Rect const&, IconsManager const&, GameDesc const&)>
+     b82:	3501      	adds	r5, #1
+     b84:	f8d4 30d8 	ldr.w	r3, [r4, #216]	; 0xd8
+     b88:	42ab      	cmp	r3, r5
+     b8a:	d8ef      	bhi.n	b6c <Context::Render(float)+0x90>
+     b8c:	4641      	mov	r1, r8
+     b8e:	f104 00fc 	add.w	r0, r4, #252	; 0xfc
+     b92:	b002      	add	sp, #8
+     b94:	e8bd 41f0 	ldmia.w	sp!, {r4, r5, r6, r7, r8, lr}
+     b98:	f000 bb82 	b.w	12a0 <NotificationsCtx::Render(float)>
+     b9c:	f8d4 30d0 	ldr.w	r3, [r4, #208]	; 0xd0
+     ba0:	2b00      	cmp	r3, #0
+     ba2:	d0dc      	beq.n	b5e <Context::Render(float)+0x82>
+     ba4:	e7d1      	b.n	b4a <Context::Render(float)+0x6e>
+     ba6:	6e13      	ldr	r3, [r2, #96]	; 0x60
+     ba8:	2100      	movs	r1, #0
+     baa:	4798      	blx	r3
+     bac:	6820      	ldr	r0, [r4, #0]
+     bae:	2100      	movs	r1, #0
+     bb0:	6803      	ldr	r3, [r0, #0]
+     bb2:	6e9b      	ldr	r3, [r3, #104]	; 0x68
+     bb4:	4798      	blx	r3
+     bb6:	6820      	ldr	r0, [r4, #0]
+     bb8:	f04f 31ff 	mov.w	r1, #4294967295	; 0xffffffff
+     bbc:	6803      	ldr	r3, [r0, #0]
+     bbe:	6edb      	ldr	r3, [r3, #108]	; 0x6c
+     bc0:	4798      	blx	r3
+     bc2:	6820      	ldr	r0, [r4, #0]
+     bc4:	2104      	movs	r1, #4
+     bc6:	6803      	ldr	r3, [r0, #0]
+     bc8:	6f1b      	ldr	r3, [r3, #112]	; 0x70
+     bca:	4798      	blx	r3
+     bcc:	6820      	ldr	r0, [r4, #0]
+     bce:	2201      	movs	r2, #1
+     bd0:	4b04      	ldr	r3, [pc, #16]	; (be4 <Context::Render(float)+0x108>)
+     bd2:	6801      	ldr	r1, [r0, #0]
+     bd4:	447b      	add	r3, pc
+     bd6:	9200      	str	r2, [sp, #0]
+     bd8:	2264      	movs	r2, #100	; 0x64
+     bda:	6f8d      	ldr	r5, [r1, #120]	; 0x78
+     bdc:	2100      	movs	r1, #0
+     bde:	47a8      	blx	r5
+     be0:	e7d4      	b.n	b8c <Context::Render(float)+0xb0>
+     be2:	bf00      	nop
+     be4:	00000ccc 	.word	0x00000ccc
+
+00000be8 <Context::Update()>:
+     be8:	e92d 41f0 	stmdb	sp!, {r4, r5, r6, r7, r8, lr}
+     bec:	f100 05fc 	add.w	r5, r0, #252	; 0xfc
+     bf0:	4604      	mov	r4, r0
+     bf2:	ed2d 8b02 	vpush	{d8}
+     bf6:	4628      	mov	r0, r5
+     bf8:	b092      	sub	sp, #72	; 0x48
+     bfa:	f000 fd5b 	bl	16b4 <NotificationsCtx::Update()>
+     bfe:	6820      	ldr	r0, [r4, #0]
+     c00:	6803      	ldr	r3, [r0, #0]
+     c02:	f8d3 30c4 	ldr.w	r3, [r3, #196]	; 0xc4
+     c06:	4798      	blx	r3
+     c08:	f894 3080 	ldrb.w	r3, [r4, #128]	; 0x80
+     c0c:	edd4 7a8c 	vldr	s15, [r4, #560]	; 0x230
+     c10:	ee07 0a10 	vmov	s14, r0
+     c14:	2b06      	cmp	r3, #6
+     c16:	f8c4 0230 	str.w	r0, [r4, #560]	; 0x230
+     c1a:	ee37 8a67 	vsub.f32	s16, s14, s15
+     c1e:	d10c      	bne.n	c3a <Context::Update()+0x52>
+     c20:	6820      	ldr	r0, [r4, #0]
+     c22:	e9d4 313a 	ldrd	r3, r1, [r4, #232]	; 0xe8
+     c26:	4798      	blx	r3
+     c28:	2800      	cmp	r0, #0
+     c2a:	f040 80a1 	bne.w	d70 <Context::Update()+0x188>
+     c2e:	f04f 33ff 	mov.w	r3, #4294967295	; 0xffffffff
+     c32:	f884 0080 	strb.w	r0, [r4, #128]	; 0x80
+     c36:	f8c4 30e0 	str.w	r3, [r4, #224]	; 0xe0
+     c3a:	4620      	mov	r0, r4
+     c3c:	f7ff fcbe 	bl	5bc <Context::ProcessInput()>
+     c40:	4620      	mov	r0, r4
+     c42:	f7ff fd75 	bl	730 <Context::UpdateIcons()>
+     c46:	f894 3080 	ldrb.w	r3, [r4, #128]	; 0x80
+     c4a:	2b02      	cmp	r3, #2
+     c4c:	d07a      	beq.n	d44 <Context::Update()+0x15c>
+     c4e:	2b01      	cmp	r3, #1
+     c50:	f000 8084 	beq.w	d5c <Context::Update()+0x174>
+     c54:	2b03      	cmp	r3, #3
+     c56:	d052      	beq.n	cfe <Context::Update()+0x116>
+     c58:	2b04      	cmp	r3, #4
+     c5a:	d02c      	beq.n	cb6 <Context::Update()+0xce>
+     c5c:	2b05      	cmp	r3, #5
+     c5e:	d11f      	bne.n	ca0 <Context::Update()+0xb8>
+     c60:	6fe3      	ldr	r3, [r4, #124]	; 0x7c
+     c62:	f893 2054 	ldrb.w	r2, [r3, #84]	; 0x54
+     c66:	b1da      	cbz	r2, ca0 <Context::Update()+0xb8>
+     c68:	f8d4 60d0 	ldr.w	r6, [r4, #208]	; 0xd0
+     c6c:	b9c6      	cbnz	r6, ca0 <Context::Update()+0xb8>
+     c6e:	f893 7055 	ldrb.w	r7, [r3, #85]	; 0x55
+     c72:	6820      	ldr	r0, [r4, #0]
+     c74:	6803      	ldr	r3, [r0, #0]
+     c76:	2f00      	cmp	r7, #0
+     c78:	f040 80d0 	bne.w	e1c <Context::Update()+0x234>
+     c7c:	4996      	ldr	r1, [pc, #600]	; (ed8 <Context::Update()+0x2f0>)
+     c7e:	f8d3 30bc 	ldr.w	r3, [r3, #188]	; 0xbc
+     c82:	4479      	add	r1, pc
+     c84:	4798      	blx	r3
+     c86:	f04f 33ff 	mov.w	r3, #4294967295	; 0xffffffff
+     c8a:	f884 7080 	strb.w	r7, [r4, #128]	; 0x80
+     c8e:	f8c4 30e0 	str.w	r3, [r4, #224]	; 0xe0
+     c92:	6820      	ldr	r0, [r4, #0]
+     c94:	6fe1      	ldr	r1, [r4, #124]	; 0x7c
+     c96:	6803      	ldr	r3, [r0, #0]
+     c98:	6a5b      	ldr	r3, [r3, #36]	; 0x24
+     c9a:	4798      	blx	r3
+     c9c:	2300      	movs	r3, #0
+     c9e:	67e3      	str	r3, [r4, #124]	; 0x7c
+     ca0:	4620      	mov	r0, r4
+     ca2:	ee18 1a10 	vmov	r1, s16
+     ca6:	f7ff ff19 	bl	adc <Context::Render(float)>
+     caa:	2001      	movs	r0, #1
+     cac:	b012      	add	sp, #72	; 0x48
+     cae:	ecbd 8b02 	vpop	{d8}
+     cb2:	e8bd 81f0 	ldmia.w	sp!, {r4, r5, r6, r7, r8, pc}
+     cb6:	6fe3      	ldr	r3, [r4, #124]	; 0x7c
+     cb8:	f893 3054 	ldrb.w	r3, [r3, #84]	; 0x54
+     cbc:	2b00      	cmp	r3, #0
+     cbe:	d0ef      	beq.n	ca0 <Context::Update()+0xb8>
+     cc0:	4620      	mov	r0, r4
+     cc2:	f7ff fe45 	bl	950 <Context::ProcessLoadedAsset()>
+     cc6:	4606      	mov	r6, r0
+     cc8:	2800      	cmp	r0, #0
+     cca:	d136      	bne.n	d3a <Context::Update()+0x152>
+     ccc:	f8d4 30e0 	ldr.w	r3, [r4, #224]	; 0xe0
+     cd0:	f8d4 10d4 	ldr.w	r1, [r4, #212]	; 0xd4
+     cd4:	6820      	ldr	r0, [r4, #0]
+     cd6:	eb03 03c3 	add.w	r3, r3, r3, lsl #3
+     cda:	f8d4 20e4 	ldr.w	r2, [r4, #228]	; 0xe4
+     cde:	eb01 03c3 	add.w	r3, r1, r3, lsl #3
+     ce2:	6805      	ldr	r5, [r0, #0]
+     ce4:	497d      	ldr	r1, [pc, #500]	; (edc <Context::Update()+0x2f4>)
+     ce6:	695b      	ldr	r3, [r3, #20]
+     ce8:	4479      	add	r1, pc
+     cea:	f8d5 50bc 	ldr.w	r5, [r5, #188]	; 0xbc
+     cee:	47a8      	blx	r5
+     cf0:	f04f 33ff 	mov.w	r3, #4294967295	; 0xffffffff
+     cf4:	f884 6080 	strb.w	r6, [r4, #128]	; 0x80
+     cf8:	f8c4 30e0 	str.w	r3, [r4, #224]	; 0xe0
+     cfc:	e7d0      	b.n	ca0 <Context::Update()+0xb8>
+     cfe:	6fe1      	ldr	r1, [r4, #124]	; 0x7c
+     d00:	f891 3054 	ldrb.w	r3, [r1, #84]	; 0x54
+     d04:	b1cb      	cbz	r3, d3a <Context::Update()+0x152>
+     d06:	f891 3055 	ldrb.w	r3, [r1, #85]	; 0x55
+     d0a:	6820      	ldr	r0, [r4, #0]
+     d0c:	2b00      	cmp	r3, #0
+     d0e:	d16d      	bne.n	dec <Context::Update()+0x204>
+     d10:	6803      	ldr	r3, [r0, #0]
+     d12:	4973      	ldr	r1, [pc, #460]	; (ee0 <Context::Update()+0x2f8>)
+     d14:	f8d3 30bc 	ldr.w	r3, [r3, #188]	; 0xbc
+     d18:	4479      	add	r1, pc
+     d1a:	4798      	blx	r3
+     d1c:	6823      	ldr	r3, [r4, #0]
+     d1e:	2600      	movs	r6, #0
+     d20:	6fe1      	ldr	r1, [r4, #124]	; 0x7c
+     d22:	f884 6080 	strb.w	r6, [r4, #128]	; 0x80
+     d26:	4618      	mov	r0, r3
+     d28:	681b      	ldr	r3, [r3, #0]
+     d2a:	6a5b      	ldr	r3, [r3, #36]	; 0x24
+     d2c:	4798      	blx	r3
+     d2e:	f894 3080 	ldrb.w	r3, [r4, #128]	; 0x80
+     d32:	67e6      	str	r6, [r4, #124]	; 0x7c
+     d34:	2b04      	cmp	r3, #4
+     d36:	d191      	bne.n	c5c <Context::Update()+0x74>
+     d38:	e7bd      	b.n	cb6 <Context::Update()+0xce>
+     d3a:	f894 3080 	ldrb.w	r3, [r4, #128]	; 0x80
+     d3e:	2b05      	cmp	r3, #5
+     d40:	d08e      	beq.n	c60 <Context::Update()+0x78>
+     d42:	e7ad      	b.n	ca0 <Context::Update()+0xb8>
+     d44:	6820      	ldr	r0, [r4, #0]
+     d46:	6803      	ldr	r3, [r0, #0]
+     d48:	695b      	ldr	r3, [r3, #20]
+     d4a:	4798      	blx	r3
+     d4c:	2801      	cmp	r0, #1
+     d4e:	4606      	mov	r6, r0
+     d50:	d019      	beq.n	d86 <Context::Update()+0x19e>
+     d52:	f894 3080 	ldrb.w	r3, [r4, #128]	; 0x80
+     d56:	2b01      	cmp	r3, #1
+     d58:	f47f af7c 	bne.w	c54 <Context::Update()+0x6c>
+     d5c:	6fe0      	ldr	r0, [r4, #124]	; 0x7c
+     d5e:	f890 3054 	ldrb.w	r3, [r0, #84]	; 0x54
+     d62:	bb33      	cbnz	r3, db2 <Context::Update()+0x1ca>
+     d64:	f894 3080 	ldrb.w	r3, [r4, #128]	; 0x80
+     d68:	2b04      	cmp	r3, #4
+     d6a:	f47f af77 	bne.w	c5c <Context::Update()+0x74>
+     d6e:	e7a2      	b.n	cb6 <Context::Update()+0xce>
+     d70:	4628      	mov	r0, r5
+     d72:	ee18 1a10 	vmov	r1, s16
+     d76:	f000 fa93 	bl	12a0 <NotificationsCtx::Render(float)>
+     d7a:	2001      	movs	r0, #1
+     d7c:	b012      	add	sp, #72	; 0x48
+     d7e:	ecbd 8b02 	vpop	{d8}
+     d82:	e8bd 81f0 	ldmia.w	sp!, {r4, r5, r6, r7, r8, pc}
+     d86:	6827      	ldr	r7, [r4, #0]
+     d88:	683b      	ldr	r3, [r7, #0]
+     d8a:	4638      	mov	r0, r7
+     d8c:	699a      	ldr	r2, [r3, #24]
+     d8e:	f8d3 80bc 	ldr.w	r8, [r3, #188]	; 0xbc
+     d92:	4790      	blx	r2
+     d94:	4953      	ldr	r1, [pc, #332]	; (ee4 <Context::Update()+0x2fc>)
+     d96:	4602      	mov	r2, r0
+     d98:	4638      	mov	r0, r7
+     d9a:	4479      	add	r1, pc
+     d9c:	47c0      	blx	r8
+     d9e:	6820      	ldr	r0, [r4, #0]
+     da0:	f7ff f9fa 	bl	198 <RequestAuthKey(API*)>
+     da4:	67e0      	str	r0, [r4, #124]	; 0x7c
+     da6:	2800      	cmp	r0, #0
+     da8:	f000 8093 	beq.w	ed2 <Context::Update()+0x2ea>
+     dac:	f884 6080 	strb.w	r6, [r4, #128]	; 0x80
+     db0:	e7d5      	b.n	d5e <Context::Update()+0x176>
+     db2:	4622      	mov	r2, r4
+     db4:	4601      	mov	r1, r0
+     db6:	f852 0b84 	ldr.w	r0, [r2], #132
+     dba:	f7ff fa1b 	bl	1f4 <ParseAuthResponse(API*, HTTPRequest*, unsigned long&)>
+     dbe:	4606      	mov	r6, r0
+     dc0:	6820      	ldr	r0, [r4, #0]
+     dc2:	b30e      	cbz	r6, e08 <Context::Update()+0x220>
+     dc4:	6803      	ldr	r3, [r0, #0]
+     dc6:	6fe1      	ldr	r1, [r4, #124]	; 0x7c
+     dc8:	6a5b      	ldr	r3, [r3, #36]	; 0x24
+     dca:	4798      	blx	r3
+     dcc:	f8d4 1084 	ldr.w	r1, [r4, #132]	; 0x84
+     dd0:	4628      	mov	r0, r5
+     dd2:	f000 fc6b 	bl	16ac <NotificationsCtx::SetAuthKey(unsigned long)>
+     dd6:	f8d4 1084 	ldr.w	r1, [r4, #132]	; 0x84
+     dda:	6820      	ldr	r0, [r4, #0]
+     ddc:	f7ff fa8e 	bl	2fc <RequestGamesList(API*, unsigned long)>
+     de0:	2303      	movs	r3, #3
+     de2:	4601      	mov	r1, r0
+     de4:	67e0      	str	r0, [r4, #124]	; 0x7c
+     de6:	f884 3080 	strb.w	r3, [r4, #128]	; 0x80
+     dea:	e789      	b.n	d00 <Context::Update()+0x118>
+     dec:	f104 03d8 	add.w	r3, r4, #216	; 0xd8
+     df0:	f8d4 20d4 	ldr.w	r2, [r4, #212]	; 0xd4
+     df4:	f7ff fa12 	bl	21c <ParseGamesList(API*, HTTPRequest*, GameDesc*, unsigned long&)>
+     df8:	6820      	ldr	r0, [r4, #0]
+     dfa:	493b      	ldr	r1, [pc, #236]	; (ee8 <Context::Update()+0x300>)
+     dfc:	6803      	ldr	r3, [r0, #0]
+     dfe:	4479      	add	r1, pc
+     e00:	f8d3 30bc 	ldr.w	r3, [r3, #188]	; 0xbc
+     e04:	4798      	blx	r3
+     e06:	e789      	b.n	d1c <Context::Update()+0x134>
+     e08:	f884 6080 	strb.w	r6, [r4, #128]	; 0x80
+     e0c:	6803      	ldr	r3, [r0, #0]
+     e0e:	6fe1      	ldr	r1, [r4, #124]	; 0x7c
+     e10:	6a5b      	ldr	r3, [r3, #36]	; 0x24
+     e12:	4798      	blx	r3
+     e14:	f894 3080 	ldrb.w	r3, [r4, #128]	; 0x80
+     e18:	67e6      	str	r6, [r4, #124]	; 0x7c
+     e1a:	e71b      	b.n	c54 <Context::Update()+0x6c>
+     e1c:	f10d 0808 	add.w	r8, sp, #8
+     e20:	f8d3 70ac 	ldr.w	r7, [r3, #172]	; 0xac
+     e24:	4632      	mov	r2, r6
+     e26:	2340      	movs	r3, #64	; 0x40
+     e28:	4641      	mov	r1, r8
+     e2a:	47b8      	blx	r7
+     e2c:	f8d4 30e0 	ldr.w	r3, [r4, #224]	; 0xe0
+     e30:	f8d4 70d4 	ldr.w	r7, [r4, #212]	; 0xd4
+     e34:	4641      	mov	r1, r8
+     e36:	6820      	ldr	r0, [r4, #0]
+     e38:	eb03 03c3 	add.w	r3, r3, r3, lsl #3
+     e3c:	4a2b      	ldr	r2, [pc, #172]	; (eec <Context::Update()+0x304>)
+     e3e:	eb07 03c3 	add.w	r3, r7, r3, lsl #3
+     e42:	6807      	ldr	r7, [r0, #0]
+     e44:	447a      	add	r2, pc
+     e46:	3318      	adds	r3, #24
+     e48:	f8d7 70b8 	ldr.w	r7, [r7, #184]	; 0xb8
+     e4c:	47b8      	blx	r7
+     e4e:	6820      	ldr	r0, [r4, #0]
+     e50:	6803      	ldr	r3, [r0, #0]
+     e52:	689b      	ldr	r3, [r3, #8]
+     e54:	4798      	blx	r3
+     e56:	4642      	mov	r2, r8
+     e58:	4601      	mov	r1, r0
+     e5a:	4628      	mov	r0, r5
+     e5c:	f000 faa8 	bl	13b0 <NotificationsCtx::Post(char const*, char const*)>
+     e60:	f8d4 20e0 	ldr.w	r2, [r4, #224]	; 0xe0
+     e64:	f8d4 30d4 	ldr.w	r3, [r4, #212]	; 0xd4
+     e68:	6820      	ldr	r0, [r4, #0]
+     e6a:	eb02 02c2 	add.w	r2, r2, r2, lsl #3
+     e6e:	4920      	ldr	r1, [pc, #128]	; (ef0 <Context::Update()+0x308>)
+     e70:	eb03 02c2 	add.w	r2, r3, r2, lsl #3
+     e74:	6803      	ldr	r3, [r0, #0]
+     e76:	4479      	add	r1, pc
+     e78:	3218      	adds	r2, #24
+     e7a:	f8d3 30bc 	ldr.w	r3, [r3, #188]	; 0xbc
+     e7e:	4798      	blx	r3
+     e80:	6820      	ldr	r0, [r4, #0]
+     e82:	f8d4 50dc 	ldr.w	r5, [r4, #220]	; 0xdc
+     e86:	2304      	movs	r3, #4
+     e88:	6801      	ldr	r1, [r0, #0]
+     e8a:	462a      	mov	r2, r5
+     e8c:	9600      	str	r6, [sp, #0]
+     e8e:	f8d1 70a8 	ldr.w	r7, [r1, #168]	; 0xa8
+     e92:	4669      	mov	r1, sp
+     e94:	47b8      	blx	r7
+     e96:	6820      	ldr	r0, [r4, #0]
+     e98:	2304      	movs	r3, #4
+     e9a:	9601      	str	r6, [sp, #4]
+     e9c:	6806      	ldr	r6, [r0, #0]
+     e9e:	1d2a      	adds	r2, r5, #4
+     ea0:	eb0d 0103 	add.w	r1, sp, r3
+     ea4:	f8d6 70a8 	ldr.w	r7, [r6, #168]	; 0xa8
+     ea8:	f105 0608 	add.w	r6, r5, #8
+     eac:	47b8      	blx	r7
+     eae:	f8d4 1088 	ldr.w	r1, [r4, #136]	; 0x88
+     eb2:	6820      	ldr	r0, [r4, #0]
+     eb4:	e9dd 3500 	ldrd	r3, r5, [sp]
+     eb8:	3301      	adds	r3, #1
+     eba:	4433      	add	r3, r6
+     ebc:	4798      	blx	r3
+     ebe:	1c6b      	adds	r3, r5, #1
+     ec0:	2206      	movs	r2, #6
+     ec2:	f8c4 00ec 	str.w	r0, [r4, #236]	; 0xec
+     ec6:	4433      	add	r3, r6
+     ec8:	f884 2080 	strb.w	r2, [r4, #128]	; 0x80
+     ecc:	f8c4 30e8 	str.w	r3, [r4, #232]	; 0xe8
+     ed0:	e6df      	b.n	c92 <Context::Update()+0xaa>
+     ed2:	f884 0080 	strb.w	r0, [r4, #128]	; 0x80
+     ed6:	e6e3      	b.n	ca0 <Context::Update()+0xb8>
+     ed8:	00000cd2 	.word	0x00000cd2
+     edc:	00000c24 	.word	0x00000c24
+     ee0:	00000bcc 	.word	0x00000bcc
+     ee4:	00000b12 	.word	0x00000b12
+     ee8:	00000ace 	.word	0x00000ace
+     eec:	00000aec 	.word	0x00000aec
+     ef0:	00000aca 	.word	0x00000aca
+
+00000ef4 <GameInit(API*, unsigned char*)>:
+     ef4:	e92d 4ff8 	stmdb	sp!, {r3, r4, r5, r6, r7, r8, r9, sl, fp, lr}
+     ef8:	6803      	ldr	r3, [r0, #0]
+     efa:	460f      	mov	r7, r1
+     efc:	f44f 710d 	mov.w	r1, #564	; 0x234
+     f00:	2500      	movs	r5, #0
+     f02:	681b      	ldr	r3, [r3, #0]
+     f04:	4606      	mov	r6, r0
+     f06:	4798      	blx	r3
+     f08:	4604      	mov	r4, r0
+     f0a:	f100 09fc 	add.w	r9, r0, #252	; 0xfc
+     f0e:	f04f 08a3 	mov.w	r8, #163	; 0xa3
+     f12:	e9c0 6500 	strd	r6, r5, [r0]
+     f16:	e9c4 5502 	strd	r5, r5, [r4, #8]
+     f1a:	6125      	str	r5, [r4, #16]
+     f1c:	4648      	mov	r0, r9
+     f1e:	e9c4 550f 	strd	r5, r5, [r4, #60]	; 0x3c
+     f22:	e9c4 5511 	strd	r5, r5, [r4, #68]	; 0x44
+     f26:	e9c4 5513 	strd	r5, r5, [r4, #76]	; 0x4c
+     f2a:	e9c4 5515 	strd	r5, r5, [r4, #84]	; 0x54
+     f2e:	e9c4 5517 	strd	r5, r5, [r4, #92]	; 0x5c
+     f32:	e9c4 5519 	strd	r5, r5, [r4, #100]	; 0x64
+     f36:	e9c4 551b 	strd	r5, r5, [r4, #108]	; 0x6c
+     f3a:	e9c4 551d 	strd	r5, r5, [r4, #116]	; 0x74
+     f3e:	f000 f95b 	bl	11f8 <NotificationsCtx::NotificationsCtx()>
+     f42:	4621      	mov	r1, r4
+     f44:	f851 0b04 	ldr.w	r0, [r1], #4
+     f48:	6803      	ldr	r3, [r0, #0]
+     f4a:	68db      	ldr	r3, [r3, #12]
+     f4c:	4798      	blx	r3
+     f4e:	f44f 72f0 	mov.w	r2, #480	; 0x1e0
+     f52:	f44f 7cd7 	mov.w	ip, #430	; 0x1ae
+     f56:	f44f 7e88 	mov.w	lr, #272	; 0x110
+     f5a:	20ee      	movs	r0, #238	; 0xee
+     f5c:	2199      	movs	r1, #153	; 0x99
+     f5e:	6462      	str	r2, [r4, #68]	; 0x44
+     f60:	2220      	movs	r2, #32
+     f62:	f8c4 c05c 	str.w	ip, [r4, #92]	; 0x5c
+     f66:	f04f 3cff 	mov.w	ip, #4294967295	; 0xffffffff
+     f6a:	462b      	mov	r3, r5
+     f6c:	63e5      	str	r5, [r4, #60]	; 0x3c
+     f6e:	6425      	str	r5, [r4, #64]	; 0x40
+     f70:	67e5      	str	r5, [r4, #124]	; 0x7c
+     f72:	f104 0590 	add.w	r5, r4, #144	; 0x90
+     f76:	f8c4 e048 	str.w	lr, [r4, #72]	; 0x48
+     f7a:	f04f 0e02 	mov.w	lr, #2
+     f7e:	6720      	str	r0, [r4, #112]	; 0x70
+     f80:	4638      	mov	r0, r7
+     f82:	6761      	str	r1, [r4, #116]	; 0x74
+     f84:	210a      	movs	r1, #10
+     f86:	67a2      	str	r2, [r4, #120]	; 0x78
+     f88:	2228      	movs	r2, #40	; 0x28
+     f8a:	f8c4 c084 	str.w	ip, [r4, #132]	; 0x84
+     f8e:	f8df c220 	ldr.w	ip, [pc, #544]	; 11b0 <GameInit(API*, unsigned char*)+0x2bc>
+     f92:	f8c4 608c 	str.w	r6, [r4, #140]	; 0x8c
+     f96:	f8c4 806c 	str.w	r8, [r4, #108]	; 0x6c
+     f9a:	f884 e080 	strb.w	lr, [r4, #128]	; 0x80
+     f9e:	6621      	str	r1, [r4, #96]	; 0x60
+     fa0:	e9c4 1113 	strd	r1, r1, [r4, #76]	; 0x4c
+     fa4:	e9c4 2215 	strd	r2, r2, [r4, #84]	; 0x54
+     fa8:	e9c4 2219 	strd	r2, r2, [r4, #100]	; 0x64
+     fac:	f845 0b04 	str.w	r0, [r5], #4
+     fb0:	4460      	add	r0, ip
+     fb2:	60eb      	str	r3, [r5, #12]
+     fb4:	3301      	adds	r3, #1
+     fb6:	2b04      	cmp	r3, #4
+     fb8:	d1f8      	bne.n	fac <GameInit(API*, unsigned char*)+0xb8>
+     fba:	6831      	ldr	r1, [r6, #0]
+     fbc:	4630      	mov	r0, r6
+     fbe:	f8df a1fc 	ldr.w	sl, [pc, #508]	; 11bc <GameInit(API*, unsigned char*)+0x2c8>
+     fc2:	2500      	movs	r5, #0
+     fc4:	f8df 81f8 	ldr.w	r8, [pc, #504]	; 11c0 <GameInit(API*, unsigned char*)+0x2cc>
+     fc8:	44ba      	add	sl, r7
+     fca:	f8c4 30b0 	str.w	r3, [r4, #176]	; 0xb0
+     fce:	44f8      	add	r8, pc
+     fd0:	f8d1 3094 	ldr.w	r3, [r1, #148]	; 0x94
+     fd4:	497b      	ldr	r1, [pc, #492]	; (11c4 <GameInit(API*, unsigned char*)+0x2d0>)
+     fd6:	4642      	mov	r2, r8
+     fd8:	f8c4 a0b4 	str.w	sl, [r4, #180]	; 0xb4
+     fdc:	4479      	add	r1, pc
+     fde:	4798      	blx	r3
+     fe0:	4683      	mov	fp, r0
+     fe2:	f8d4 008c 	ldr.w	r0, [r4, #140]	; 0x8c
+     fe6:	4651      	mov	r1, sl
+     fe8:	465b      	mov	r3, fp
+     fea:	f44f 22ff 	mov.w	r2, #522240	; 0x7f800
+     fee:	f8d0 c000 	ldr.w	ip, [r0]
+     ff2:	f8dc a098 	ldr.w	sl, [ip, #152]	; 0x98
+     ff6:	47d0      	blx	sl
+     ff8:	f8d4 008c 	ldr.w	r0, [r4, #140]	; 0x8c
+     ffc:	4659      	mov	r1, fp
+     ffe:	f8df a1c8 	ldr.w	sl, [pc, #456]	; 11c8 <GameInit(API*, unsigned char*)+0x2d4>
+    1002:	6803      	ldr	r3, [r0, #0]
+    1004:	44ba      	add	sl, r7
+    1006:	f8d3 30a4 	ldr.w	r3, [r3, #164]	; 0xa4
+    100a:	4798      	blx	r3
+    100c:	f8d4 008c 	ldr.w	r0, [r4, #140]	; 0x8c
+    1010:	496e      	ldr	r1, [pc, #440]	; (11cc <GameInit(API*, unsigned char*)+0x2d8>)
+    1012:	4642      	mov	r2, r8
+    1014:	6803      	ldr	r3, [r0, #0]
+    1016:	f8c4 a0b8 	str.w	sl, [r4, #184]	; 0xb8
+    101a:	4479      	add	r1, pc
+    101c:	f8d3 3094 	ldr.w	r3, [r3, #148]	; 0x94
+    1020:	4798      	blx	r3
+    1022:	4683      	mov	fp, r0
+    1024:	f8d4 008c 	ldr.w	r0, [r4, #140]	; 0x8c
+    1028:	4651      	mov	r1, sl
+    102a:	465b      	mov	r3, fp
+    102c:	4a60      	ldr	r2, [pc, #384]	; (11b0 <GameInit(API*, unsigned char*)+0x2bc>)
+    102e:	f8d0 c000 	ldr.w	ip, [r0]
+    1032:	f8dc a098 	ldr.w	sl, [ip, #152]	; 0x98
+    1036:	47d0      	blx	sl
+    1038:	f8d4 008c 	ldr.w	r0, [r4, #140]	; 0x8c
+    103c:	4659      	mov	r1, fp
+    103e:	f8df a190 	ldr.w	sl, [pc, #400]	; 11d0 <GameInit(API*, unsigned char*)+0x2dc>
+    1042:	6803      	ldr	r3, [r0, #0]
+    1044:	44ba      	add	sl, r7
+    1046:	f8d3 30a4 	ldr.w	r3, [r3, #164]	; 0xa4
+    104a:	4798      	blx	r3
+    104c:	f8d4 008c 	ldr.w	r0, [r4, #140]	; 0x8c
+    1050:	4960      	ldr	r1, [pc, #384]	; (11d4 <GameInit(API*, unsigned char*)+0x2e0>)
+    1052:	4642      	mov	r2, r8
+    1054:	6803      	ldr	r3, [r0, #0]
+    1056:	f8c4 a0bc 	str.w	sl, [r4, #188]	; 0xbc
+    105a:	4479      	add	r1, pc
+    105c:	f8d3 3094 	ldr.w	r3, [r3, #148]	; 0x94
+    1060:	4798      	blx	r3
+    1062:	4683      	mov	fp, r0
+    1064:	f8d4 008c 	ldr.w	r0, [r4, #140]	; 0x8c
+    1068:	4651      	mov	r1, sl
+    106a:	465b      	mov	r3, fp
+    106c:	f44f 52c8 	mov.w	r2, #6400	; 0x1900
+    1070:	f8d0 c000 	ldr.w	ip, [r0]
+    1074:	f8dc a098 	ldr.w	sl, [ip, #152]	; 0x98
+    1078:	47d0      	blx	sl
+    107a:	f8d4 008c 	ldr.w	r0, [r4, #140]	; 0x8c
+    107e:	4659      	mov	r1, fp
+    1080:	f8df a154 	ldr.w	sl, [pc, #340]	; 11d8 <GameInit(API*, unsigned char*)+0x2e4>
+    1084:	6803      	ldr	r3, [r0, #0]
+    1086:	44ba      	add	sl, r7
+    1088:	f8d3 30a4 	ldr.w	r3, [r3, #164]	; 0xa4
+    108c:	4798      	blx	r3
+    108e:	f8d4 008c 	ldr.w	r0, [r4, #140]	; 0x8c
+    1092:	4952      	ldr	r1, [pc, #328]	; (11dc <GameInit(API*, unsigned char*)+0x2e8>)
+    1094:	4642      	mov	r2, r8
+    1096:	6803      	ldr	r3, [r0, #0]
+    1098:	f8c4 a0c0 	str.w	sl, [r4, #192]	; 0xc0
+    109c:	4479      	add	r1, pc
+    109e:	f8d3 3094 	ldr.w	r3, [r3, #148]	; 0x94
+    10a2:	4798      	blx	r3
+    10a4:	4683      	mov	fp, r0
+    10a6:	f8d4 008c 	ldr.w	r0, [r4, #140]	; 0x8c
+    10aa:	4651      	mov	r1, sl
+    10ac:	465b      	mov	r3, fp
+    10ae:	f44f 52c8 	mov.w	r2, #6400	; 0x1900
+    10b2:	f8d0 c000 	ldr.w	ip, [r0]
+    10b6:	f8dc a098 	ldr.w	sl, [ip, #152]	; 0x98
+    10ba:	47d0      	blx	sl
+    10bc:	f8d4 008c 	ldr.w	r0, [r4, #140]	; 0x8c
+    10c0:	4659      	mov	r1, fp
+    10c2:	f8df a11c 	ldr.w	sl, [pc, #284]	; 11e0 <GameInit(API*, unsigned char*)+0x2ec>
+    10c6:	6803      	ldr	r3, [r0, #0]
+    10c8:	44ba      	add	sl, r7
+    10ca:	f8d3 30a4 	ldr.w	r3, [r3, #164]	; 0xa4
+    10ce:	4798      	blx	r3
+    10d0:	f8d4 008c 	ldr.w	r0, [r4, #140]	; 0x8c
+    10d4:	4943      	ldr	r1, [pc, #268]	; (11e4 <GameInit(API*, unsigned char*)+0x2f0>)
+    10d6:	4642      	mov	r2, r8
+    10d8:	6803      	ldr	r3, [r0, #0]
+    10da:	f8c4 a0c4 	str.w	sl, [r4, #196]	; 0xc4
+    10de:	4479      	add	r1, pc
+    10e0:	f8d3 3094 	ldr.w	r3, [r3, #148]	; 0x94
+    10e4:	4798      	blx	r3
+    10e6:	4683      	mov	fp, r0
+    10e8:	f8d4 008c 	ldr.w	r0, [r4, #140]	; 0x8c
+    10ec:	4651      	mov	r1, sl
+    10ee:	465b      	mov	r3, fp
+    10f0:	f44f 52c8 	mov.w	r2, #6400	; 0x1900
+    10f4:	f8d0 c000 	ldr.w	ip, [r0]
+    10f8:	f8dc a098 	ldr.w	sl, [ip, #152]	; 0x98
+    10fc:	47d0      	blx	sl
+    10fe:	f8d4 008c 	ldr.w	r0, [r4, #140]	; 0x8c
+    1102:	4659      	mov	r1, fp
+    1104:	f8df a0e0 	ldr.w	sl, [pc, #224]	; 11e8 <GameInit(API*, unsigned char*)+0x2f4>
+    1108:	6803      	ldr	r3, [r0, #0]
+    110a:	44ba      	add	sl, r7
+    110c:	f8d3 30a4 	ldr.w	r3, [r3, #164]	; 0xa4
+    1110:	4798      	blx	r3
+    1112:	f8d4 008c 	ldr.w	r0, [r4, #140]	; 0x8c
+    1116:	4935      	ldr	r1, [pc, #212]	; (11ec <GameInit(API*, unsigned char*)+0x2f8>)
+    1118:	4642      	mov	r2, r8
+    111a:	6803      	ldr	r3, [r0, #0]
+    111c:	f8c4 a0c8 	str.w	sl, [r4, #200]	; 0xc8
+    1120:	4479      	add	r1, pc
+    1122:	f8d3 3094 	ldr.w	r3, [r3, #148]	; 0x94
+    1126:	4798      	blx	r3
+    1128:	4680      	mov	r8, r0
+    112a:	f8d4 008c 	ldr.w	r0, [r4, #140]	; 0x8c
+    112e:	4651      	mov	r1, sl
+    1130:	4643      	mov	r3, r8
+    1132:	f44f 4299 	mov.w	r2, #19584	; 0x4c80
+    1136:	f8d0 c000 	ldr.w	ip, [r0]
+    113a:	f8dc a098 	ldr.w	sl, [ip, #152]	; 0x98
+    113e:	47d0      	blx	sl
+    1140:	f8d4 008c 	ldr.w	r0, [r4, #140]	; 0x8c
+    1144:	4641      	mov	r1, r8
+    1146:	6803      	ldr	r3, [r0, #0]
+    1148:	f8d3 30a4 	ldr.w	r3, [r3, #164]	; 0xa4
+    114c:	4798      	blx	r3
+    114e:	4a19      	ldr	r2, [pc, #100]	; (11b4 <GameInit(API*, unsigned char*)+0x2c0>)
+    1150:	4b19      	ldr	r3, [pc, #100]	; (11b8 <GameInit(API*, unsigned char*)+0x2c4>)
+    1152:	f44f 6180 	mov.w	r1, #1024	; 0x400
+    1156:	443a      	add	r2, r7
+    1158:	f884 50cc 	strb.w	r5, [r4, #204]	; 0xcc
+    115c:	443b      	add	r3, r7
+    115e:	f8c4 50d8 	str.w	r5, [r4, #216]	; 0xd8
+    1162:	4630      	mov	r0, r6
+    1164:	f8c4 3088 	str.w	r3, [r4, #136]	; 0x88
+    1168:	e9c4 5234 	strd	r5, r2, [r4, #208]	; 0xd0
+    116c:	6833      	ldr	r3, [r6, #0]
+    116e:	681b      	ldr	r3, [r3, #0]
+    1170:	4798      	blx	r3
+    1172:	2200      	movs	r2, #0
+    1174:	f04f 33ff 	mov.w	r3, #4294967295	; 0xffffffff
+    1178:	4631      	mov	r1, r6
+    117a:	f8c4 00dc 	str.w	r0, [r4, #220]	; 0xdc
+    117e:	4648      	mov	r0, r9
+    1180:	f8c4 20f8 	str.w	r2, [r4, #248]	; 0xf8
+    1184:	f884 50f0 	strb.w	r5, [r4, #240]	; 0xf0
+    1188:	f8a4 50f2 	strh.w	r5, [r4, #242]	; 0xf2
+    118c:	f8a4 50f4 	strh.w	r5, [r4, #244]	; 0xf4
+    1190:	e9c4 3338 	strd	r3, r3, [r4, #224]	; 0xe0
+    1194:	e9c4 553a 	strd	r5, r5, [r4, #232]	; 0xe8
+    1198:	f000 f844 	bl	1224 <NotificationsCtx::Init(API*)>
+    119c:	6833      	ldr	r3, [r6, #0]
+    119e:	4630      	mov	r0, r6
+    11a0:	f8d3 30c4 	ldr.w	r3, [r3, #196]	; 0xc4
+    11a4:	4798      	blx	r3
+    11a6:	f8c4 0230 	str.w	r0, [r4, #560]	; 0x230
+    11aa:	4620      	mov	r0, r4
+    11ac:	e8bd 8ff8 	ldmia.w	sp!, {r3, r4, r5, r6, r7, r8, r9, sl, fp, pc}
+    11b0:	0001ce40 	.word	0x0001ce40
+    11b4:	001196c0 	.word	0x001196c0
+    11b8:	0011dec0 	.word	0x0011dec0
+    11bc:	00073900 	.word	0x00073900
+    11c0:	000009a2 	.word	0x000009a2
+    11c4:	00000998 	.word	0x00000998
+    11c8:	000f3100 	.word	0x000f3100
+    11cc:	0000096e 	.word	0x0000096e
+    11d0:	0010ff40 	.word	0x0010ff40
+    11d4:	00000942 	.word	0x00000942
+    11d8:	00111840 	.word	0x00111840
+    11dc:	00000910 	.word	0x00000910
+    11e0:	00113140 	.word	0x00113140
+    11e4:	000008e2 	.word	0x000008e2
+    11e8:	00114a40 	.word	0x00114a40
+    11ec:	000008b4 	.word	0x000008b4
+
+000011f0 <GameUpdate(API*, void*)>:
+    11f0:	4608      	mov	r0, r1
+    11f2:	f7ff bcf9 	b.w	be8 <Context::Update()>
+    11f6:	bf00      	nop
+
+000011f8 <NotificationsCtx::NotificationsCtx()>:
+    11f8:	2200      	movs	r2, #0
+    11fa:	2100      	movs	r1, #0
+    11fc:	b410      	push	{r4}
+    11fe:	f04f 34ff 	mov.w	r4, #4294967295	; 0xffffffff
+    1202:	6102      	str	r2, [r0, #16]
+    1204:	f880 212c 	strb.w	r2, [r0, #300]	; 0x12c
+    1208:	6044      	str	r4, [r0, #4]
+    120a:	6184      	str	r4, [r0, #24]
+    120c:	6141      	str	r1, [r0, #20]
+    120e:	f8c0 1130 	str.w	r1, [r0, #304]	; 0x130
+    1212:	f85d 4b04 	ldr.w	r4, [sp], #4
+    1216:	e9c0 2202 	strd	r2, r2, [r0, #8]
+    121a:	e9c0 2247 	strd	r2, r2, [r0, #284]	; 0x11c
+    121e:	e9c0 2249 	strd	r2, r2, [r0, #292]	; 0x124
+    1222:	4770      	bx	lr
+
+00001224 <NotificationsCtx::Init(API*)>:
+    1224:	6001      	str	r1, [r0, #0]
+    1226:	2001      	movs	r0, #1
+    1228:	4770      	bx	lr
+    122a:	bf00      	nop
+
+0000122c <DrawString(long&, long&, char const*, unsigned long, API*, FontInfo const&, Rect const&)>:
+    122c:	e92d 4ff8 	stmdb	sp!, {r3, r4, r5, r6, r7, r8, r9, sl, fp, lr}
+    1230:	f8dd 8030 	ldr.w	r8, [sp, #48]	; 0x30
+    1234:	e9dd 7a0a 	ldrd	r7, sl, [sp, #40]	; 0x28
+    1238:	b383      	cbz	r3, 129c <DrawString(long&, long&, char const*, unsigned long, API*, FontInfo const&, Rect const&)+0x70>
+    123a:	4413      	add	r3, r2
+    123c:	460e      	mov	r6, r1
+    123e:	4605      	mov	r5, r0
+    1240:	1e54      	subs	r4, r2, #1
+    1242:	f103 39ff 	add.w	r9, r3, #4294967295	; 0xffffffff
+    1246:	e019      	b.n	127c <DrawString(long&, long&, char const*, unsigned long, API*, FontInfo const&, Rect const&)+0x50>
+    1248:	6839      	ldr	r1, [r7, #0]
+    124a:	8832      	ldrh	r2, [r6, #0]
+    124c:	f8d1 b07c 	ldr.w	fp, [r1, #124]	; 0x7c
+    1250:	8829      	ldrh	r1, [r5, #0]
+    1252:	47d8      	blx	fp
+    1254:	f8da 2000 	ldr.w	r2, [sl]
+    1258:	682b      	ldr	r3, [r5, #0]
+    125a:	4413      	add	r3, r2
+    125c:	602b      	str	r3, [r5, #0]
+    125e:	f8d8 1000 	ldr.w	r1, [r8]
+    1262:	f8d8 2008 	ldr.w	r2, [r8, #8]
+    1266:	440a      	add	r2, r1
+    1268:	4293      	cmp	r3, r2
+    126a:	dd05      	ble.n	1278 <DrawString(long&, long&, char const*, unsigned long, API*, FontInfo const&, Rect const&)+0x4c>
+    126c:	6029      	str	r1, [r5, #0]
+    126e:	6833      	ldr	r3, [r6, #0]
+    1270:	f8da 2004 	ldr.w	r2, [sl, #4]
+    1274:	4413      	add	r3, r2
+    1276:	6033      	str	r3, [r6, #0]
+    1278:	454c      	cmp	r4, r9
+    127a:	d00f      	beq.n	129c <DrawString(long&, long&, char const*, unsigned long, API*, FontInfo const&, Rect const&)+0x70>
+    127c:	f814 2f01 	ldrb.w	r2, [r4, #1]!
+    1280:	4638      	mov	r0, r7
+    1282:	2a0a      	cmp	r2, #10
+    1284:	4613      	mov	r3, r2
+    1286:	d1df      	bne.n	1248 <DrawString(long&, long&, char const*, unsigned long, API*, FontInfo const&, Rect const&)+0x1c>
+    1288:	f8d8 3000 	ldr.w	r3, [r8]
+    128c:	454c      	cmp	r4, r9
+    128e:	602b      	str	r3, [r5, #0]
+    1290:	6833      	ldr	r3, [r6, #0]
+    1292:	f8da 2004 	ldr.w	r2, [sl, #4]
+    1296:	4413      	add	r3, r2
+    1298:	6033      	str	r3, [r6, #0]
+    129a:	d1ef      	bne.n	127c <DrawString(long&, long&, char const*, unsigned long, API*, FontInfo const&, Rect const&)+0x50>
+    129c:	e8bd 8ff8 	ldmia.w	sp!, {r3, r4, r5, r6, r7, r8, r9, sl, fp, pc}
+
+000012a0 <NotificationsCtx::Render(float)>:
+    12a0:	f890 312c 	ldrb.w	r3, [r0, #300]	; 0x12c
+    12a4:	2b00      	cmp	r3, #0
+    12a6:	d072      	beq.n	138e <NotificationsCtx::Render(float)+0xee>
+    12a8:	e92d 43f0 	stmdb	sp!, {r4, r5, r6, r7, r8, r9, lr}
+    12ac:	4604      	mov	r4, r0
+    12ae:	b08d      	sub	sp, #52	; 0x34
+    12b0:	6800      	ldr	r0, [r0, #0]
+    12b2:	460d      	mov	r5, r1
+    12b4:	ae06      	add	r6, sp, #24
+    12b6:	2101      	movs	r1, #1
+    12b8:	6803      	ldr	r3, [r0, #0]
+    12ba:	4632      	mov	r2, r6
+    12bc:	6f5b      	ldr	r3, [r3, #116]	; 0x74
+    12be:	4798      	blx	r3
+    12c0:	6820      	ldr	r0, [r4, #0]
+    12c2:	2101      	movs	r1, #1
+    12c4:	6803      	ldr	r3, [r0, #0]
+    12c6:	6f1b      	ldr	r3, [r3, #112]	; 0x70
+    12c8:	4798      	blx	r3
+    12ca:	6820      	ldr	r0, [r4, #0]
+    12cc:	f04f 31ff 	mov.w	r1, #4294967295	; 0xffffffff
+    12d0:	6803      	ldr	r3, [r0, #0]
+    12d2:	6edb      	ldr	r3, [r3, #108]	; 0x6c
+    12d4:	4798      	blx	r3
+    12d6:	eef1 7a04 	vmov.f32	s15, #20	; 0x40a00000  5.0
+    12da:	ed94 7a4c 	vldr	s14, [r4, #304]	; 0x130
+    12de:	213c      	movs	r1, #60	; 0x3c
+    12e0:	220f      	movs	r2, #15
+    12e2:	f44f 7087 	mov.w	r0, #270	; 0x10e
+    12e6:	eeb4 7ae7 	vcmpe.f32	s14, s15
+    12ea:	2300      	movs	r3, #0
+    12ec:	e9cd 1208 	strd	r1, r2, [sp, #32]
+    12f0:	eef1 fa10 	vmrs	APSR_nzcv, fpscr
+    12f4:	e9cd 030a 	strd	r0, r3, [sp, #40]	; 0x28
+    12f8:	d40b      	bmi.n	1312 <NotificationsCtx::Render(float)+0x72>
+    12fa:	2200      	movs	r2, #0
+    12fc:	f884 312c 	strb.w	r3, [r4, #300]	; 0x12c
+    1300:	e9c4 3347 	strd	r3, r3, [r4, #284]	; 0x11c
+    1304:	e9c4 3349 	strd	r3, r3, [r4, #292]	; 0x124
+    1308:	f8c4 2130 	str.w	r2, [r4, #304]	; 0x130
+    130c:	b00d      	add	sp, #52	; 0x34
+    130e:	e8bd 83f0 	ldmia.w	sp!, {r4, r5, r6, r7, r8, r9, pc}
+    1312:	6820      	ldr	r0, [r4, #0]
+    1314:	f10d 0814 	add.w	r8, sp, #20
+    1318:	9104      	str	r1, [sp, #16]
+    131a:	af04      	add	r7, sp, #16
+    131c:	6803      	ldr	r3, [r0, #0]
+    131e:	f10d 0920 	add.w	r9, sp, #32
+    1322:	9205      	str	r2, [sp, #20]
+    1324:	f8d4 111c 	ldr.w	r1, [r4, #284]	; 0x11c
+    1328:	f8d3 30b0 	ldr.w	r3, [r3, #176]	; 0xb0
+    132c:	4798      	blx	r3
+    132e:	6822      	ldr	r2, [r4, #0]
+    1330:	4603      	mov	r3, r0
+    1332:	9601      	str	r6, [sp, #4]
+    1334:	4641      	mov	r1, r8
+    1336:	4638      	mov	r0, r7
+    1338:	f8cd 9008 	str.w	r9, [sp, #8]
+    133c:	9200      	str	r2, [sp, #0]
+    133e:	f8d4 211c 	ldr.w	r2, [r4, #284]	; 0x11c
+    1342:	f7ff ff73 	bl	122c <DrawString(long&, long&, char const*, unsigned long, API*, FontInfo const&, Rect const&)>
+    1346:	9b05      	ldr	r3, [sp, #20]
+    1348:	9a07      	ldr	r2, [sp, #28]
+    134a:	6820      	ldr	r0, [r4, #0]
+    134c:	4413      	add	r3, r2
+    134e:	9a08      	ldr	r2, [sp, #32]
+    1350:	6801      	ldr	r1, [r0, #0]
+    1352:	9305      	str	r3, [sp, #20]
+    1354:	9204      	str	r2, [sp, #16]
+    1356:	f8d1 30b0 	ldr.w	r3, [r1, #176]	; 0xb0
+    135a:	f8d4 1124 	ldr.w	r1, [r4, #292]	; 0x124
+    135e:	4798      	blx	r3
+    1360:	6822      	ldr	r2, [r4, #0]
+    1362:	4603      	mov	r3, r0
+    1364:	f8cd 9008 	str.w	r9, [sp, #8]
+    1368:	4641      	mov	r1, r8
+    136a:	4638      	mov	r0, r7
+    136c:	e9cd 2600 	strd	r2, r6, [sp]
+    1370:	f8d4 2124 	ldr.w	r2, [r4, #292]	; 0x124
+    1374:	f7ff ff5a 	bl	122c <DrawString(long&, long&, char const*, unsigned long, API*, FontInfo const&, Rect const&)>
+    1378:	edd4 7a4c 	vldr	s15, [r4, #304]	; 0x130
+    137c:	ee07 5a10 	vmov	s14, r5
+    1380:	ee77 7a87 	vadd.f32	s15, s15, s14
+    1384:	edc4 7a4c 	vstr	s15, [r4, #304]	; 0x130
+    1388:	b00d      	add	sp, #52	; 0x34
+    138a:	e8bd 83f0 	ldmia.w	sp!, {r4, r5, r6, r7, r8, r9, pc}
+    138e:	4770      	bx	lr
+
+00001390 <NotificationsCtx::FreePostRequest()>:
+    1390:	b510      	push	{r4, lr}
+    1392:	4604      	mov	r4, r0
+    1394:	6800      	ldr	r0, [r0, #0]
+    1396:	68a2      	ldr	r2, [r4, #8]
+    1398:	6803      	ldr	r3, [r0, #0]
+    139a:	6c51      	ldr	r1, [r2, #68]	; 0x44
+    139c:	685b      	ldr	r3, [r3, #4]
+    139e:	4798      	blx	r3
+    13a0:	6820      	ldr	r0, [r4, #0]
+    13a2:	68a1      	ldr	r1, [r4, #8]
+    13a4:	6803      	ldr	r3, [r0, #0]
+    13a6:	6a5b      	ldr	r3, [r3, #36]	; 0x24
+    13a8:	4798      	blx	r3
+    13aa:	2300      	movs	r3, #0
+    13ac:	60a3      	str	r3, [r4, #8]
+    13ae:	bd10      	pop	{r4, pc}
+
+000013b0 <NotificationsCtx::Post(char const*, char const*)>:
+    13b0:	e92d 43f0 	stmdb	sp!, {r4, r5, r6, r7, r8, r9, lr}
+    13b4:	6887      	ldr	r7, [r0, #8]
+    13b6:	b085      	sub	sp, #20
+    13b8:	b117      	cbz	r7, 13c0 <NotificationsCtx::Post(char const*, char const*)+0x10>
+    13ba:	b005      	add	sp, #20
+    13bc:	e8bd 83f0 	ldmia.w	sp!, {r4, r5, r6, r7, r8, r9, pc}
+    13c0:	4604      	mov	r4, r0
+    13c2:	6800      	ldr	r0, [r0, #0]
+    13c4:	4615      	mov	r5, r2
+    13c6:	460e      	mov	r6, r1
+    13c8:	6803      	ldr	r3, [r0, #0]
+    13ca:	69db      	ldr	r3, [r3, #28]
+    13cc:	4798      	blx	r3
+    13ce:	60a0      	str	r0, [r4, #8]
+    13d0:	2800      	cmp	r0, #0
+    13d2:	d0f2      	beq.n	13ba <NotificationsCtx::Post(char const*, char const*)+0xa>
+    13d4:	2201      	movs	r2, #1
+    13d6:	f44f 5efa 	mov.w	lr, #8000	; 0x1f40
+    13da:	4b36      	ldr	r3, [pc, #216]	; (14b4 <NotificationsCtx::Post(char const*, char const*)+0x104>)
+    13dc:	7002      	strb	r2, [r0, #0]
+    13de:	6820      	ldr	r0, [r4, #0]
+    13e0:	447b      	add	r3, pc
+    13e2:	69a2      	ldr	r2, [r4, #24]
+    13e4:	f8d0 c000 	ldr.w	ip, [r0]
+    13e8:	68a1      	ldr	r1, [r4, #8]
+    13ea:	e9cd e200 	strd	lr, r2, [sp]
+    13ee:	4a32      	ldr	r2, [pc, #200]	; (14b8 <NotificationsCtx::Post(char const*, char const*)+0x108>)
+    13f0:	3101      	adds	r1, #1
+    13f2:	f8dc 80b8 	ldr.w	r8, [ip, #184]	; 0xb8
+    13f6:	447a      	add	r2, pc
+    13f8:	47c0      	blx	r8
+    13fa:	6820      	ldr	r0, [r4, #0]
+    13fc:	4631      	mov	r1, r6
+    13fe:	6803      	ldr	r3, [r0, #0]
+    1400:	f8d3 30b0 	ldr.w	r3, [r3, #176]	; 0xb0
+    1404:	4798      	blx	r3
+    1406:	6823      	ldr	r3, [r4, #0]
+    1408:	9002      	str	r0, [sp, #8]
+    140a:	4629      	mov	r1, r5
+    140c:	681a      	ldr	r2, [r3, #0]
+    140e:	4618      	mov	r0, r3
+    1410:	f8d2 30b0 	ldr.w	r3, [r2, #176]	; 0xb0
+    1414:	4798      	blx	r3
+    1416:	9b02      	ldr	r3, [sp, #8]
+    1418:	68a2      	ldr	r2, [r4, #8]
+    141a:	3308      	adds	r3, #8
+    141c:	9003      	str	r0, [sp, #12]
+    141e:	4403      	add	r3, r0
+    1420:	6493      	str	r3, [r2, #72]	; 0x48
+    1422:	6820      	ldr	r0, [r4, #0]
+    1424:	f8d4 8008 	ldr.w	r8, [r4, #8]
+    1428:	6803      	ldr	r3, [r0, #0]
+    142a:	f8d8 1048 	ldr.w	r1, [r8, #72]	; 0x48
+    142e:	681b      	ldr	r3, [r3, #0]
+    1430:	4798      	blx	r3
+    1432:	f8c8 0044 	str.w	r0, [r8, #68]	; 0x44
+    1436:	68a3      	ldr	r3, [r4, #8]
+    1438:	463a      	mov	r2, r7
+    143a:	6820      	ldr	r0, [r4, #0]
+    143c:	f8d3 8044 	ldr.w	r8, [r3, #68]	; 0x44
+    1440:	6807      	ldr	r7, [r0, #0]
+    1442:	4641      	mov	r1, r8
+    1444:	6c9b      	ldr	r3, [r3, #72]	; 0x48
+    1446:	f8d7 90ac 	ldr.w	r9, [r7, #172]	; 0xac
+    144a:	1d0f      	adds	r7, r1, #4
+    144c:	47c8      	blx	r9
+    144e:	6820      	ldr	r0, [r4, #0]
+    1450:	4641      	mov	r1, r8
+    1452:	2304      	movs	r3, #4
+    1454:	aa02      	add	r2, sp, #8
+    1456:	f8d0 c000 	ldr.w	ip, [r0]
+    145a:	f8dc 80a8 	ldr.w	r8, [ip, #168]	; 0xa8
+    145e:	47c0      	blx	r8
+    1460:	9b02      	ldr	r3, [sp, #8]
+    1462:	b143      	cbz	r3, 1476 <NotificationsCtx::Post(char const*, char const*)+0xc6>
+    1464:	6820      	ldr	r0, [r4, #0]
+    1466:	4632      	mov	r2, r6
+    1468:	4639      	mov	r1, r7
+    146a:	6806      	ldr	r6, [r0, #0]
+    146c:	f8d6 60a8 	ldr.w	r6, [r6, #168]	; 0xa8
+    1470:	47b0      	blx	r6
+    1472:	9b02      	ldr	r3, [sp, #8]
+    1474:	441f      	add	r7, r3
+    1476:	6820      	ldr	r0, [r4, #0]
+    1478:	2304      	movs	r3, #4
+    147a:	aa03      	add	r2, sp, #12
+    147c:	4639      	mov	r1, r7
+    147e:	6806      	ldr	r6, [r0, #0]
+    1480:	f8d6 60a8 	ldr.w	r6, [r6, #168]	; 0xa8
+    1484:	47b0      	blx	r6
+    1486:	9b03      	ldr	r3, [sp, #12]
+    1488:	b133      	cbz	r3, 1498 <NotificationsCtx::Post(char const*, char const*)+0xe8>
+    148a:	6820      	ldr	r0, [r4, #0]
+    148c:	462a      	mov	r2, r5
+    148e:	1d39      	adds	r1, r7, #4
+    1490:	6805      	ldr	r5, [r0, #0]
+    1492:	f8d5 50a8 	ldr.w	r5, [r5, #168]	; 0xa8
+    1496:	47a8      	blx	r5
+    1498:	6820      	ldr	r0, [r4, #0]
+    149a:	68a1      	ldr	r1, [r4, #8]
+    149c:	6803      	ldr	r3, [r0, #0]
+    149e:	6a1b      	ldr	r3, [r3, #32]
+    14a0:	4798      	blx	r3
+    14a2:	2800      	cmp	r0, #0
+    14a4:	d189      	bne.n	13ba <NotificationsCtx::Post(char const*, char const*)+0xa>
+    14a6:	4620      	mov	r0, r4
+    14a8:	f7ff ff72 	bl	1390 <NotificationsCtx::FreePostRequest()>
+    14ac:	b005      	add	sp, #20
+    14ae:	e8bd 83f0 	ldmia.w	sp!, {r4, r5, r6, r7, r8, r9, pc}
+    14b2:	bf00      	nop
+    14b4:	00000398 	.word	0x00000398
+    14b8:	000005fe 	.word	0x000005fe
+
+000014bc <NotificationsCtx::FreeGetRequest()>:
+    14bc:	b510      	push	{r4, lr}
+    14be:	4604      	mov	r4, r0
+    14c0:	6800      	ldr	r0, [r0, #0]
+    14c2:	6803      	ldr	r3, [r0, #0]
+    14c4:	68e1      	ldr	r1, [r4, #12]
+    14c6:	6a5b      	ldr	r3, [r3, #36]	; 0x24
+    14c8:	4798      	blx	r3
+    14ca:	2300      	movs	r3, #0
+    14cc:	60e3      	str	r3, [r4, #12]
+    14ce:	bd10      	pop	{r4, pc}
+
+000014d0 <NotificationsCtx::Get()>:
+    14d0:	b570      	push	{r4, r5, r6, lr}
+    14d2:	4604      	mov	r4, r0
+    14d4:	6800      	ldr	r0, [r0, #0]
+    14d6:	b082      	sub	sp, #8
+    14d8:	6803      	ldr	r3, [r0, #0]
+    14da:	69db      	ldr	r3, [r3, #28]
+    14dc:	4798      	blx	r3
+    14de:	60e0      	str	r0, [r4, #12]
+    14e0:	b1b8      	cbz	r0, 1512 <NotificationsCtx::Get()+0x42>
+    14e2:	2200      	movs	r2, #0
+    14e4:	f44f 55fa 	mov.w	r5, #8000	; 0x1f40
+    14e8:	4b0e      	ldr	r3, [pc, #56]	; (1524 <NotificationsCtx::Get()+0x54>)
+    14ea:	7002      	strb	r2, [r0, #0]
+    14ec:	6820      	ldr	r0, [r4, #0]
+    14ee:	447b      	add	r3, pc
+    14f0:	69a6      	ldr	r6, [r4, #24]
+    14f2:	6802      	ldr	r2, [r0, #0]
+    14f4:	68e1      	ldr	r1, [r4, #12]
+    14f6:	e9cd 5600 	strd	r5, r6, [sp]
+    14fa:	f8d2 50b8 	ldr.w	r5, [r2, #184]	; 0xb8
+    14fe:	3101      	adds	r1, #1
+    1500:	4a09      	ldr	r2, [pc, #36]	; (1528 <NotificationsCtx::Get()+0x58>)
+    1502:	447a      	add	r2, pc
+    1504:	47a8      	blx	r5
+    1506:	6820      	ldr	r0, [r4, #0]
+    1508:	68e1      	ldr	r1, [r4, #12]
+    150a:	6803      	ldr	r3, [r0, #0]
+    150c:	6a1b      	ldr	r3, [r3, #32]
+    150e:	4798      	blx	r3
+    1510:	b108      	cbz	r0, 1516 <NotificationsCtx::Get()+0x46>
+    1512:	b002      	add	sp, #8
+    1514:	bd70      	pop	{r4, r5, r6, pc}
+    1516:	4620      	mov	r0, r4
+    1518:	b002      	add	sp, #8
+    151a:	e8bd 4070 	ldmia.w	sp!, {r4, r5, r6, lr}
+    151e:	f7ff bfcd 	b.w	14bc <NotificationsCtx::FreeGetRequest()>
+    1522:	bf00      	nop
+    1524:	0000028a 	.word	0x0000028a
+    1528:	000004f2 	.word	0x000004f2
+
+0000152c <NotificationsCtx::CheckForNewNotifications()>:
+    152c:	e92d 41f0 	stmdb	sp!, {r4, r5, r6, r7, r8, lr}
+    1530:	4604      	mov	r4, r0
+    1532:	6800      	ldr	r0, [r0, #0]
+    1534:	b090      	sub	sp, #64	; 0x40
+    1536:	6803      	ldr	r3, [r0, #0]
+    1538:	695b      	ldr	r3, [r3, #20]
+    153a:	4798      	blx	r3
+    153c:	2801      	cmp	r0, #1
+    153e:	d133      	bne.n	15a8 <NotificationsCtx::CheckForNewNotifications()+0x7c>
+    1540:	4605      	mov	r5, r0
+    1542:	6820      	ldr	r0, [r4, #0]
+    1544:	6803      	ldr	r3, [r0, #0]
+    1546:	f8d3 30c4 	ldr.w	r3, [r3, #196]	; 0xc4
+    154a:	4798      	blx	r3
+    154c:	6863      	ldr	r3, [r4, #4]
+    154e:	ee07 0a90 	vmov	s15, r0
+    1552:	2b00      	cmp	r3, #0
+    1554:	db2b      	blt.n	15ae <NotificationsCtx::CheckForNewNotifications()+0x82>
+    1556:	6820      	ldr	r0, [r4, #0]
+    1558:	4951      	ldr	r1, [pc, #324]	; (16a0 <NotificationsCtx::CheckForNewNotifications()+0x174>)
+    155a:	6803      	ldr	r3, [r0, #0]
+    155c:	4479      	add	r1, pc
+    155e:	6a9b      	ldr	r3, [r3, #40]	; 0x28
+    1560:	4798      	blx	r3
+    1562:	6823      	ldr	r3, [r4, #0]
+    1564:	f641 7241 	movw	r2, #8001	; 0x1f41
+    1568:	9002      	str	r0, [sp, #8]
+    156a:	6819      	ldr	r1, [r3, #0]
+    156c:	4618      	mov	r0, r3
+    156e:	f8ad 200c 	strh.w	r2, [sp, #12]
+    1572:	aa02      	add	r2, sp, #8
+    1574:	6c0b      	ldr	r3, [r1, #64]	; 0x40
+    1576:	6861      	ldr	r1, [r4, #4]
+    1578:	4798      	blx	r3
+    157a:	f100 030b 	add.w	r3, r0, #11
+    157e:	2b01      	cmp	r3, #1
+    1580:	d912      	bls.n	15a8 <NotificationsCtx::CheckForNewNotifications()+0x7c>
+    1582:	e9d4 3100 	ldrd	r3, r1, [r4]
+    1586:	681d      	ldr	r5, [r3, #0]
+    1588:	2800      	cmp	r0, #0
+    158a:	d030      	beq.n	15ee <NotificationsCtx::CheckForNewNotifications()+0xc2>
+    158c:	300c      	adds	r0, #12
+    158e:	d02e      	beq.n	15ee <NotificationsCtx::CheckForNewNotifications()+0xc2>
+    1590:	4618      	mov	r0, r3
+    1592:	6d6a      	ldr	r2, [r5, #84]	; 0x54
+    1594:	4790      	blx	r2
+    1596:	f04f 33ff 	mov.w	r3, #4294967295	; 0xffffffff
+    159a:	6820      	ldr	r0, [r4, #0]
+    159c:	6063      	str	r3, [r4, #4]
+    159e:	6803      	ldr	r3, [r0, #0]
+    15a0:	f8d3 30c4 	ldr.w	r3, [r3, #196]	; 0xc4
+    15a4:	4798      	blx	r3
+    15a6:	6160      	str	r0, [r4, #20]
+    15a8:	b010      	add	sp, #64	; 0x40
+    15aa:	e8bd 81f0 	ldmia.w	sp!, {r4, r5, r6, r7, r8, pc}
+    15ae:	edd4 6a05 	vldr	s13, [r4, #20]
+    15b2:	eeb6 7a00 	vmov.f32	s14, #96	; 0x3f000000  0.5
+    15b6:	ee77 7ae6 	vsub.f32	s15, s15, s13
+    15ba:	eef4 7ac7 	vcmpe.f32	s15, s14
+    15be:	eef1 fa10 	vmrs	APSR_nzcv, fpscr
+    15c2:	d4f1      	bmi.n	15a8 <NotificationsCtx::CheckForNewNotifications()+0x7c>
+    15c4:	6820      	ldr	r0, [r4, #0]
+    15c6:	4629      	mov	r1, r5
+    15c8:	6803      	ldr	r3, [r0, #0]
+    15ca:	6b1b      	ldr	r3, [r3, #48]	; 0x30
+    15cc:	4798      	blx	r3
+    15ce:	2800      	cmp	r0, #0
+    15d0:	4601      	mov	r1, r0
+    15d2:	6060      	str	r0, [r4, #4]
+    15d4:	dbe8      	blt.n	15a8 <NotificationsCtx::CheckForNewNotifications()+0x7c>
+    15d6:	6820      	ldr	r0, [r4, #0]
+    15d8:	2200      	movs	r2, #0
+    15da:	6803      	ldr	r3, [r0, #0]
+    15dc:	6b5b      	ldr	r3, [r3, #52]	; 0x34
+    15de:	4798      	blx	r3
+    15e0:	6820      	ldr	r0, [r4, #0]
+    15e2:	6803      	ldr	r3, [r0, #0]
+    15e4:	f8d3 30c4 	ldr.w	r3, [r3, #196]	; 0xc4
+    15e8:	4798      	blx	r3
+    15ea:	6160      	str	r0, [r4, #20]
+    15ec:	e7b3      	b.n	1556 <NotificationsCtx::CheckForNewNotifications()+0x2a>
+    15ee:	2700      	movs	r7, #0
+    15f0:	ae04      	add	r6, sp, #16
+    15f2:	4618      	mov	r0, r3
+    15f4:	2310      	movs	r3, #16
+    15f6:	9700      	str	r7, [sp, #0]
+    15f8:	4632      	mov	r2, r6
+    15fa:	6bed      	ldr	r5, [r5, #60]	; 0x3c
+    15fc:	47a8      	blx	r5
+    15fe:	2810      	cmp	r0, #16
+    1600:	4605      	mov	r5, r0
+    1602:	d00a      	beq.n	161a <NotificationsCtx::CheckForNewNotifications()+0xee>
+    1604:	1c45      	adds	r5, r0, #1
+    1606:	d0cf      	beq.n	15a8 <NotificationsCtx::CheckForNewNotifications()+0x7c>
+    1608:	e9d4 0100 	ldrd	r0, r1, [r4]
+    160c:	6803      	ldr	r3, [r0, #0]
+    160e:	6d5b      	ldr	r3, [r3, #84]	; 0x54
+    1610:	4798      	blx	r3
+    1612:	f04f 33ff 	mov.w	r3, #4294967295	; 0xffffffff
+    1616:	6063      	str	r3, [r4, #4]
+    1618:	e7c6      	b.n	15a8 <NotificationsCtx::CheckForNewNotifications()+0x7c>
+    161a:	6820      	ldr	r0, [r4, #0]
+    161c:	4921      	ldr	r1, [pc, #132]	; (16a4 <NotificationsCtx::CheckForNewNotifications()+0x178>)
+    161e:	6803      	ldr	r3, [r0, #0]
+    1620:	4479      	add	r1, pc
+    1622:	f8d3 30bc 	ldr.w	r3, [r3, #188]	; 0xbc
+    1626:	4798      	blx	r3
+    1628:	4621      	mov	r1, r4
+    162a:	4632      	mov	r2, r6
+    162c:	2304      	movs	r3, #4
+    162e:	f851 0b10 	ldr.w	r0, [r1], #16
+    1632:	f8d0 c000 	ldr.w	ip, [r0]
+    1636:	f8dc 80a8 	ldr.w	r8, [ip, #168]	; 0xa8
+    163a:	47c0      	blx	r8
+    163c:	4b1a      	ldr	r3, [pc, #104]	; (16a8 <NotificationsCtx::CheckForNewNotifications()+0x17c>)
+    163e:	f8d4 e000 	ldr.w	lr, [r4]
+    1642:	f10d 0c20 	add.w	ip, sp, #32
+    1646:	447b      	add	r3, pc
+    1648:	f10d 0830 	add.w	r8, sp, #48	; 0x30
+    164c:	cb0f      	ldmia	r3, {r0, r1, r2, r3}
+    164e:	e88c 000f 	stmia.w	ip, {r0, r1, r2, r3}
+    1652:	f8de 3000 	ldr.w	r3, [lr]
+    1656:	4632      	mov	r2, r6
+    1658:	4641      	mov	r1, r8
+    165a:	4670      	mov	r0, lr
+    165c:	f8d3 60a8 	ldr.w	r6, [r3, #168]	; 0xa8
+    1660:	462b      	mov	r3, r5
+    1662:	47b0      	blx	r6
+    1664:	990c      	ldr	r1, [sp, #48]	; 0x30
+    1666:	4e0d      	ldr	r6, [pc, #52]	; (169c <NotificationsCtx::CheckForNewNotifications()+0x170>)
+    1668:	462b      	mov	r3, r5
+    166a:	9809      	ldr	r0, [sp, #36]	; 0x24
+    166c:	4642      	mov	r2, r8
+    166e:	404e      	eors	r6, r1
+    1670:	990a      	ldr	r1, [sp, #40]	; 0x28
+    1672:	9d0e      	ldr	r5, [sp, #56]	; 0x38
+    1674:	4430      	add	r0, r6
+    1676:	960c      	str	r6, [sp, #48]	; 0x30
+    1678:	9e0d      	ldr	r6, [sp, #52]	; 0x34
+    167a:	4070      	eors	r0, r6
+    167c:	9e0b      	ldr	r6, [sp, #44]	; 0x2c
+    167e:	4401      	add	r1, r0
+    1680:	900d      	str	r0, [sp, #52]	; 0x34
+    1682:	6820      	ldr	r0, [r4, #0]
+    1684:	404d      	eors	r5, r1
+    1686:	6861      	ldr	r1, [r4, #4]
+    1688:	6804      	ldr	r4, [r0, #0]
+    168a:	442e      	add	r6, r5
+    168c:	950e      	str	r5, [sp, #56]	; 0x38
+    168e:	9d0f      	ldr	r5, [sp, #60]	; 0x3c
+    1690:	9700      	str	r7, [sp, #0]
+    1692:	4075      	eors	r5, r6
+    1694:	6ba4      	ldr	r4, [r4, #56]	; 0x38
+    1696:	950f      	str	r5, [sp, #60]	; 0x3c
+    1698:	47a0      	blx	r4
+    169a:	e785      	b.n	15a8 <NotificationsCtx::CheckForNewNotifications()+0x7c>
+    169c:	1dd232c4 	.word	0x1dd232c4
+    16a0:	0000021c 	.word	0x0000021c
+    16a4:	000003f8 	.word	0x000003f8
+    16a8:	0000039e 	.word	0x0000039e
+
+000016ac <NotificationsCtx::SetAuthKey(unsigned long)>:
+    16ac:	6181      	str	r1, [r0, #24]
+    16ae:	f7ff bf3d 	b.w	152c <NotificationsCtx::CheckForNewNotifications()>
+    16b2:	bf00      	nop
+
+000016b4 <NotificationsCtx::Update()>:
+    16b4:	b5f0      	push	{r4, r5, r6, r7, lr}
+    16b6:	6883      	ldr	r3, [r0, #8]
+    16b8:	b0c1      	sub	sp, #260	; 0x104
+    16ba:	4604      	mov	r4, r0
+    16bc:	b11b      	cbz	r3, 16c6 <NotificationsCtx::Update()+0x12>
+    16be:	f893 3054 	ldrb.w	r3, [r3, #84]	; 0x54
+    16c2:	2b00      	cmp	r3, #0
+    16c4:	d152      	bne.n	176c <NotificationsCtx::Update()+0xb8>
+    16c6:	68e2      	ldr	r2, [r4, #12]
+    16c8:	b112      	cbz	r2, 16d0 <NotificationsCtx::Update()+0x1c>
+    16ca:	f892 3054 	ldrb.w	r3, [r2, #84]	; 0x54
+    16ce:	b953      	cbnz	r3, 16e6 <NotificationsCtx::Update()+0x32>
+    16d0:	4620      	mov	r0, r4
+    16d2:	f7ff ff2b 	bl	152c <NotificationsCtx::CheckForNewNotifications()>
+    16d6:	6923      	ldr	r3, [r4, #16]
+    16d8:	2b00      	cmp	r3, #0
+    16da:	dd02      	ble.n	16e2 <NotificationsCtx::Update()+0x2e>
+    16dc:	68e3      	ldr	r3, [r4, #12]
+    16de:	2b00      	cmp	r3, #0
+    16e0:	d047      	beq.n	1772 <NotificationsCtx::Update()+0xbe>
+    16e2:	b041      	add	sp, #260	; 0x104
+    16e4:	bdf0      	pop	{r4, r5, r6, r7, pc}
+    16e6:	f892 3055 	ldrb.w	r3, [r2, #85]	; 0x55
+    16ea:	2b00      	cmp	r3, #0
+    16ec:	d037      	beq.n	175e <NotificationsCtx::Update()+0xaa>
+    16ee:	6d93      	ldr	r3, [r2, #88]	; 0x58
+    16f0:	2b00      	cmp	r3, #0
+    16f2:	d034      	beq.n	175e <NotificationsCtx::Update()+0xaa>
+    16f4:	6820      	ldr	r0, [r4, #0]
+    16f6:	466e      	mov	r6, sp
+    16f8:	4625      	mov	r5, r4
+    16fa:	6cd2      	ldr	r2, [r2, #76]	; 0x4c
+    16fc:	6807      	ldr	r7, [r0, #0]
+    16fe:	4631      	mov	r1, r6
+    1700:	f8d7 70a8 	ldr.w	r7, [r7, #168]	; 0xa8
+    1704:	47b8      	blx	r7
+    1706:	f855 0b1c 	ldr.w	r0, [r5], #28
+    170a:	4632      	mov	r2, r6
+    170c:	f44f 7380 	mov.w	r3, #256	; 0x100
+    1710:	6806      	ldr	r6, [r0, #0]
+    1712:	4629      	mov	r1, r5
+    1714:	f8d6 60a8 	ldr.w	r6, [r6, #168]	; 0xa8
+    1718:	47b0      	blx	r6
+    171a:	6820      	ldr	r0, [r4, #0]
+    171c:	462a      	mov	r2, r5
+    171e:	2304      	movs	r3, #4
+    1720:	6805      	ldr	r5, [r0, #0]
+    1722:	f504 7190 	add.w	r1, r4, #288	; 0x120
+    1726:	f8d5 50a8 	ldr.w	r5, [r5, #168]	; 0xa8
+    172a:	47a8      	blx	r5
+    172c:	f8d4 2120 	ldr.w	r2, [r4, #288]	; 0x120
+    1730:	f104 0520 	add.w	r5, r4, #32
+    1734:	6820      	ldr	r0, [r4, #0]
+    1736:	2304      	movs	r3, #4
+    1738:	f504 7194 	add.w	r1, r4, #296	; 0x128
+    173c:	f8c4 511c 	str.w	r5, [r4, #284]	; 0x11c
+    1740:	4415      	add	r5, r2
+    1742:	6806      	ldr	r6, [r0, #0]
+    1744:	462a      	mov	r2, r5
+    1746:	3504      	adds	r5, #4
+    1748:	f8d6 60a8 	ldr.w	r6, [r6, #168]	; 0xa8
+    174c:	47b0      	blx	r6
+    174e:	2201      	movs	r2, #1
+    1750:	2300      	movs	r3, #0
+    1752:	f8c4 5124 	str.w	r5, [r4, #292]	; 0x124
+    1756:	f884 212c 	strb.w	r2, [r4, #300]	; 0x12c
+    175a:	f8c4 3130 	str.w	r3, [r4, #304]	; 0x130
+    175e:	4620      	mov	r0, r4
+    1760:	f7ff feac 	bl	14bc <NotificationsCtx::FreeGetRequest()>
+    1764:	6923      	ldr	r3, [r4, #16]
+    1766:	3b01      	subs	r3, #1
+    1768:	6123      	str	r3, [r4, #16]
+    176a:	e7b1      	b.n	16d0 <NotificationsCtx::Update()+0x1c>
+    176c:	f7ff fe10 	bl	1390 <NotificationsCtx::FreePostRequest()>
+    1770:	e7a9      	b.n	16c6 <NotificationsCtx::Update()+0x12>
+    1772:	4620      	mov	r0, r4
+    1774:	f7ff feac 	bl	14d0 <NotificationsCtx::Get()>
+    1778:	b041      	add	sp, #260	; 0x104
+    177a:	bdf0      	pop	{r4, r5, r6, r7, pc}

