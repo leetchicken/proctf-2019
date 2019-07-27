@@ -10,7 +10,7 @@ import io
 
 SERVICE_NAME = "game_console"
 OK, CORRUPT, MUMBLE, DOWN, CHECKER_ERROR = 101, 102, 103, 104, 110
-SERVER_ADDR = "127.0.0.1:8000"
+SERVER_ADDR = "10.60.3.2:8000"
 
 
 def close(code, public="", private=""):
