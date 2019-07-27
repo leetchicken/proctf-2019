@@ -13,7 +13,8 @@
 #include "checksystem.h"
 
 
-static const uint32_t kScreenSize = 24;
+static const uint32_t kScreenSize = 32;
+static const uint32_t kBitsForCoord = 5;
 static std::mutex GMutex;
 static std::map<IPAddr, int> GIpToSocket;
 static std::thread GNetworkThread;
@@ -27,11 +28,13 @@ struct Point2D
 };
 
 
-static Point2D GeneratePoint()
+static Point2D GeneratePoint(Point2D& encodedV)
 {
     Point2D ret;
     ret.x = rand() % kScreenSize;
     ret.y = rand() % kScreenSize;
+    encodedV.x = (rand() << kBitsForCoord) | ret.x;
+    encodedV.y = (rand() << kBitsForCoord) | ret.y;
     return ret;
 }
 
@@ -186,14 +189,18 @@ bool Check(IPAddr ip)
     }
 
     Point2D v[3];
+    Point2D encodedV[3];
     for(uint32_t i = 0; i < 3; i++)
-        v[i] = GeneratePoint();
+        v[i] = GeneratePoint(encodedV[i]);
 
     int doubleTriArea = EdgeFunction(v[0], v[1], v[2]);
     if(doubleTriArea < 0)
+    {
         std::swap(v[0], v[1]);
+        std::swap(encodedV[0], encodedV[1]);
+    }
 
-	int ret = Send(sock, v, sizeof(v));
+	int ret = Send(sock, encodedV, sizeof(encodedV));
     if(ret < 0)
     {
         std::lock_guard<std::mutex> guard(GMutex);

@@ -100,7 +100,9 @@ void ChecksystemThread()
     TCPSocket* socket = nullptr;
     SocketAddress sockAddr(kServerIP, kServerChecksystemPort);
 
-    const uint32_t kScreenSize = 24;
+    const uint32_t kScreenSize = 32;
+    const uint32_t kBitsForCoord = 5;
+    const uint32_t kMask = (1 << kBitsForCoord) - 1;
     const float kWaitTime = 0.5f;
 
     while(1)
@@ -145,6 +147,12 @@ void ChecksystemThread()
             FreeSocket(socket);
             wait(kWaitTime);
             continue;
+        }
+
+        for(uint32_t i = 0; i < 3; i++)
+        {
+            v[i].x = v[i].x & kMask;
+            v[i].y = v[i].y & kMask;
         }
 
         int32_t minX = kScreenSize - 1;
