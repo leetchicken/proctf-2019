@@ -1,0 +1,7 @@
+{
+    "target_overrides": {
+        "DISCO_F746NG": {
+            "platform.stdio-baud-rate": 115200
+        }
+    }
+}

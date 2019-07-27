@@ -1,0 +1,21 @@
+.build
+.mbed
+projectfiles
+*.py*
+BUILD/
+.hg/
+.lock/
+
+// openstm32 stuff
+Debug/*
+Release/*
+Develop/*
+.cproject
+.project
+.settings/
+STM32F746G-DISCO.xml
+hw Debug*
+makefile.defs
+makefile.targets
+mbed_config.h
+/Debug/
