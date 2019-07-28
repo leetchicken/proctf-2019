@@ -58,6 +58,7 @@ void Console::Update()
 
 void Console::SetNotifySocket(int sock)
 {
+    std::lock_guard<std::mutex> guard(mutex);
     if(notifySocket >= 0)
         close(notifySocket);
     notifySocket = sock;

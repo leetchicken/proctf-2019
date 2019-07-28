@@ -227,24 +227,20 @@ IPAddr GetHwConsoleIp(NetworkAddr teamNet)
 
 bool Check(NetworkAddr teamNet)
 {
-    int sock = -1;
+    std::lock_guard<std::mutex> guard(GMutex);
+
+    auto iter = GConsoles.find(teamNet);
+    if(iter == GConsoles.end())
     {
-        std::lock_guard<std::mutex> guard(GMutex);
-        auto iter = GConsoles.find(teamNet);
-        if(iter == GConsoles.end())
-        {
-            printf("CHECKSYSTEM: unkown network passed\n");
-            return false;
-        }
-        sock = iter->second.socket;
+        printf("CHECKSYSTEM: unkown network passed\n");
+        return false;
     }
+    int sock = iter->second.socket;
 
     bool ret = Check(sock);
     if(!ret)
     {
-        std::lock_guard<std::mutex> guard(GMutex);
-        auto iter = GConsoles.find(teamNet);
-        close(iter->second.socket);
+        close(sock);
         iter->second.socket = -1;
         iter->second.addr = ~0u;
     }

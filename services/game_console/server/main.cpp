@@ -848,6 +848,7 @@ void ReadConsolesStorage()
                     continue;
 
                 Console* console = team->AddConsole(record.ip);
+                console->authKey = record.authKey;
                 GConsoles[record.authKey] = console;
             }
         }
