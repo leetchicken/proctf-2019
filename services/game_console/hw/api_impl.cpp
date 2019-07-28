@@ -78,7 +78,9 @@ void HttpThread(EthernetInterface* ethInterface)
         if (evt.status == osEventMessage) 
         {
             HTTPRequest* request = (HTTPRequest*)evt.value.p;
+#if TARGET_DEBUG
             printf("Request: %s\n", request->url);
+#endif
             bool needBodyCallback = request->responseData != NULL;
             GHttpBodyCallbackPtr = (uint8_t*)request->responseData;
             GHttpBodySize = 0;
@@ -88,7 +90,9 @@ void HttpThread(EthernetInterface* ethInterface)
             HttpResponse* httpResponse = httpRequest->send(request->requestBody, request->requestBodySize);
             if (httpResponse) 
             {
+#if TARGET_DEBUG
                 printf("Response code: %d\n", httpResponse->get_status_code());
+#endif
                 if(!request->responseData)
                 {
                     request->responseData = httpResponse->get_body();
@@ -105,7 +109,9 @@ void HttpThread(EthernetInterface* ethInterface)
             }
             else
             {
+#if TARGET_DEBUG
                 printf("Http request failed (error code %d)\n", httpRequest->get_error());
+#endif
                 request->statusCode = 0;
                 request->succeed = false;
                 request->internalData = (void*)httpRequest;
