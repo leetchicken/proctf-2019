@@ -7,6 +7,7 @@ import json
 import random
 import string
 import io
+import json
 
 SERVICE_NAME = "game_console"
 OK, CORRUPT, MUMBLE, DOWN, CHECKER_ERROR = 101, 102, 103, 104, 110
@@ -28,15 +29,20 @@ def check(*args):
 	url = 'http://%s/checksystem_check?addr=%s' % (SERVER_ADDR, addr)
 	try:
 		r = requests.get(url)
-		if r.status_code == 502:
-			close(DOWN, "Server is down", "Nginx 502")
+		if r.status_code == 400 or r.status_code == 404:
+			close(CHECKER_ERROR, "Internal error", "Malformed request")
 		if r.status_code != 200:
-			close( MUMBLE, "Get error", "Invalid status code: %s %d %s" % ( url, r.status_code, r.text ) )
+			close(CHECKER_ERROR, "Internal error", "Invalid status code: %s %d %s" % (url, r.status_code, r.text))
+
+		j = json.loads(r.text)
+		code = int(j['errorCode'])
+		if code != OK:
+			close(code, private = j['data'])
 
 	except Exception as e:
-		 close(DOWN, "HTTP Error", "HTTP error: %s" % e)
+		 close(CHECKER_ERROR, "HTTP Error", "HTTP error: %s" % e)
 	
-	close( OK )
+	close(OK)
 
 
 def put(*args):
@@ -49,13 +55,18 @@ def put(*args):
 	url = 'http://%s/checksystem_putflag?addr=%s&id=%s&flag=%s' % (SERVER_ADDR, addr, flag_id, flag)
 	try:
 		r = requests.post(url)
-		if r.status_code == 502:
-			close(DOWN, "Server is down", "Nginx 502")
+		if r.status_code == 400 or r.status_code == 404:
+			close(CHECKER_ERROR, "Internal error", "Malformed request")
 		if r.status_code != 200:
-			close( MUMBLE, "Submit error", "Invalid status code: %s %d %s" % ( url, r.status_code, r.text ) )
+			close(CHECKER_ERROR, "Internal error", "Invalid status code: %s %d %s" % (url, r.status_code, r.text))
+
+		j = json.loads(r.text)
+		code = int(j['errorCode'])
+		if code != OK:
+			close(code, private = j['data'])
 
 	except Exception as e:
-		 close(DOWN, "HTTP Error", "HTTP error: %s" % e)
+		 close(CHECKER_ERROR, "HTTP Error", "HTTP error: %s" % e)
 
 	close(OK, flag_id)
 
@@ -68,17 +79,24 @@ def get(*args):
 	url = 'http://%s/checksystem_getflag?addr=%s&id=%s' % (SERVER_ADDR, addr, flag_id)
 	try:
 		r = requests.get(url)
-		if r.status_code == 502:
-			close(DOWN, "Server is down", "Nginx 502")
+		if r.status_code == 400 or r.status_code == 404:
+			close(CHECKER_ERROR, "Internal error", "Malformed request")
 		if r.status_code != 200:
-			close( MUMBLE, "Get error", "Invalid status code: %s %d %s" % ( url, r.status_code, r.text ) )
+			close(CHECKER_ERROR, "Internal error", "Invalid status code: %s %d %s" % (url, r.status_code, r.text))
 
-		if r.text != flag:
-			close(CORRUPT, "Service corrupted", "Invalid response: %s" % r.text )
+		j = json.loads(r.text)
+		code = int(j['errorCode'])
+		if code != OK:
+			close(code, private = j['data'])
+		
+		flagFromServer = j['data']
+		if flagFromServer != flag:
+			close(CHECKER_ERROR, "Internal error", "Wrong flag: %s, must be %s" % (flagFromServer, flag))
+			
 	except Exception as e:
-		 close(DOWN, "HTTP Error", "HTTP error: %s" % e)
+		 close(CHECKER_ERROR, "HTTP Error", "HTTP error: %s" % e)
 
-	close( OK )
+	close(OK)
 
 
 def info(*args):

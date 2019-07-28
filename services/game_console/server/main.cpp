@@ -137,6 +137,22 @@ static void DumpConsolesStorage()
 }
 
 
+static HttpResponse BuildChecksystemResponse(int errorCode, const char* data)
+{
+    printf("  Response: %d %s\n", errorCode, data);
+
+    HttpResponse response;
+    response.code = MHD_HTTP_OK;
+    response.headers.insert({"Content-Type", "application/json"});
+    response.content = (char*)malloc(512);
+    memset(response.content, 0, 512);
+    sprintf(response.content,
+            "{ \"errorCode\": %d, \"data\": \"%s\" }", errorCode, data);
+    response.contentLength = strlen(response.content);
+    return response;
+}
+
+
 HttpResponse RequestHandler::HandleGet(HttpRequest request)
 {
     printf("  IP: %s\n", inet_ntoa(request.clientIp));
@@ -442,28 +458,15 @@ HttpResponse RequestHandler::HandleGet(HttpRequest request)
         inet_aton(addrStr, (in_addr*)&addr);
         team = FindTeam(addr);
         if(!team)
-        {
-            printf("  ERROR: Bad request\n");
-            return HttpResponse(MHD_HTTP_BAD_REQUEST);
-        }
+            return BuildChecksystemResponse(kCheckerCheckerError, "Failed to found team by IP");
         printf("  team:    %s\n", team->desc.name.c_str());
 
         const char* flag = team->GetFlag(flagId);
         if(!flag)
-        {
-            printf("  ERROR: flag not found\n");
-            return HttpResponse(MHD_HTTP_BAD_REQUEST);
-        }
+            return BuildChecksystemResponse(kCheckerCheckerError, "Failed to found flag");
         printf("  flag:    %s\n", flag);
 
-        HttpResponse response;
-        response.code = MHD_HTTP_OK;
-        response.headers.insert({"Content-Type", "text/plain"});
-        size_t flagLen = strlen(flag);
-        response.content = (char*)malloc(flagLen);
-        memcpy(response.content, flag, flagLen);
-        response.contentLength = flagLen;
-        return response;
+        return BuildChecksystemResponse(kCheckerOk, flag);
     }
     else if(ParseUrl(request.url, 1, "checksystem_check"))
     {
@@ -485,36 +488,24 @@ HttpResponse RequestHandler::HandleGet(HttpRequest request)
         inet_aton(addrStr, (in_addr*)&addr);
         team = FindTeam(addr);
         if(!team)
-        {
-            printf("  ERROR: Bad request\n");
-            return HttpResponse(MHD_HTTP_BAD_REQUEST);
-        }
+            return BuildChecksystemResponse(kCheckerCheckerError, "Failed to found team by IP");
         printf("  team:    %s\n", team->desc.name.c_str());
 
         IPAddr consoleAddr = GetHwConsoleIp(team->desc.network);
         if(consoleAddr == ~0u)
-        {
-            printf("  ERROR: team does not have registerd hw console\n");
-            return HttpResponse(MHD_HTTP_BAD_REQUEST);
-        }
+            return BuildChecksystemResponse(kCheckerDown, "There is no hardware console");
 
 		Console* console = team->GetConsole(consoleAddr);
         if(!console)
-        {
-            printf("  ERROR: hw console is not registered\n");
-            return HttpResponse(MHD_HTTP_BAD_REQUEST);
-        }
+            return BuildChecksystemResponse(kCheckerMumble, "Console is not authenticated");
 
         if(console->GetNotificationsInQueue() >= Console::kNotificationQueueSize)
-        {
-            printf("  Notifications queue is overflowed\n");
-            return HttpResponse(MHD_HTTP_BAD_REQUEST);
-        }
+            return BuildChecksystemResponse(kCheckerMumble, "Notifications queue is overflowed");
 
         if(!Check(team->desc.network))
-            return HttpResponse(MHD_HTTP_BAD_REQUEST);
+            return BuildChecksystemResponse(kCheckerMumble, "Check failed");
 
-        return HttpResponse(MHD_HTTP_OK);
+        return BuildChecksystemResponse(kCheckerOk, "OK");
     }
 
     return HttpResponse(MHD_HTTP_NOT_FOUND);
@@ -540,6 +531,13 @@ HttpResponse RequestHandler::HandlePost(HttpRequest request, HttpPostProcessor**
     }
     else if(ParseUrl(request.url, 1, "checksystem_notification")) 
     {
+        auto team = FindTeam(request.clientIp, false);
+        if(team)
+        {
+            printf(" ERROR: Forbidden\n");
+            return HttpResponse(MHD_HTTP_FORBIDDEN);
+        }
+
 		static std::string kMessage("message");
 
 		const char* message = FindInMap(request.queryString, kMessage);
@@ -589,25 +587,16 @@ HttpResponse RequestHandler::HandlePost(HttpRequest request, HttpPostProcessor**
         inet_aton(addrStr, (in_addr*)&addr);
         team = FindTeam(addr);
         if(!team)
-        {
-            printf("  ERROR: Bad request\n");
-            return HttpResponse(MHD_HTTP_BAD_REQUEST);
-        }
+            return BuildChecksystemResponse(kCheckerCheckerError, "Failed to found team by IP");
         printf("  team:    %s\n", team->desc.name.c_str());
         
         IPAddr consoleAddr = GetHwConsoleIp(team->desc.network);
         if(consoleAddr == ~0u)
-        {
-            printf("  ERROR: team does not have registerd hw console\n");
-            return HttpResponse(MHD_HTTP_BAD_REQUEST);
-        }
+            return BuildChecksystemResponse(kCheckerDown, "There is no hardware console");
 
 		Console* console = team->GetConsole(consoleAddr);
         if(!console)
-        {
-            printf("  ERROR: hw console is not registered\n");
-            return HttpResponse(MHD_HTTP_BAD_REQUEST);
-        }
+            return BuildChecksystemResponse(kCheckerMumble, "Console is not authenticated");
 
         team->PutFlag(flagId, flag);
 
@@ -616,7 +605,7 @@ HttpResponse RequestHandler::HandlePost(HttpRequest request, HttpPostProcessor**
         Notification* n = new Notification("Hackerdom", message);
         console->AddNotification(n);
 
-        return HttpResponse(MHD_HTTP_OK);
+        return BuildChecksystemResponse(kCheckerOk, "OK");
     }
 
     return HttpResponse(MHD_HTTP_NOT_FOUND);

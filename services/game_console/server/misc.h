@@ -10,6 +10,14 @@ static const uint16_t kNotifyPort = 8001;
 static const uint16_t kChecksystemPort = 8002;
 static const uint32_t kMaxNotificationSize = 1024;
 
+enum ECheckErrorCodes
+{
+    kCheckerOk = 101,
+    kCheckerCorrupt = 102,
+    kCheckerMumble = 103,
+    kCheckerDown = 104,
+    kCheckerCheckerError = 110,
+};
 
 using IPAddr = uint32_t;
 using NetworkAddr = uint32_t;
