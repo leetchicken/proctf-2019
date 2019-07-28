@@ -7,7 +7,6 @@ services:
       - cluster.name=deer-cluster
       - node.name=es
       - cluster.initial_master_nodes=es
-#      - bootstrap.memory_lock=true # along with the memlock settings below, disables swapping
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m" # minimum and maximum Java heap size, recommend setting both to 50% of system RAM
     ulimits:
       memlock:
@@ -26,15 +25,17 @@ services:
       - network
 
   rabbitmq:
-    image: rabbitmq:3.6-management
+    image: proctf/deer-rabbitmq
+    build: rabbitmq/
     container_name: deer-rabbit
+    volumes:
+      - ./definitions.json:/etc/rabbitmq/definitions.json
     ports:
       - 5672:5672
-#      - 15672:15672
+      - 15672:15672
     expose:
       - "5672"
-# TODO remove
-#      - "15672"
+      - "15672"
     networks:
       - network
 
@@ -42,11 +43,15 @@ services:
     image: proctf/deer-log-processor
     build: src/LogProcessor/
     container_name: deer-log-processor
+    restart: on-failure
+    volumes:
+      - ./LogProcessor.appsettings.json:/app/appsettings.json
     networks:
       - network
 
 volumes:
   elastic-data:
+  rabbit-data:
 
 networks:
   network:

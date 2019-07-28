@@ -1,0 +1,19 @@
+version: '3'
+services:
+  rabbitmq:
+    image: rabbitmq:3.6-management
+    container_name: deer-test-rabbit
+    ports:
+      - 5672:5672
+      - 15672:15672
+    expose:
+      - "5672"
+      - "15672"
+
+  mongodb:
+    image: mongo
+    container_name: deer-test-mongo
+    ports:
+      - 27017:27017
+    expose:
+      - "27017"

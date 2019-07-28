@@ -1,3 +1,5 @@
+definitions.json
+LogProcessor.appsettings.json
 .idea/
 bin/
 obj/
