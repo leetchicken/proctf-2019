@@ -563,13 +563,27 @@ HttpResponse RequestHandler::HandlePost(HttpRequest request, HttpPostProcessor**
             return HttpResponse(MHD_HTTP_BAD_REQUEST);
         }
         printf("  team:    %s\n", team->desc.name.c_str());
+        
+        IPAddr consoleAddr = GetHwConsoleIp(team->desc.network);
+        if(consoleAddr == ~0u)
+        {
+            printf("  ERROR: team does not have registerd hw console\n");
+            return HttpResponse(MHD_HTTP_BAD_REQUEST);
+        }
+
+		Console* console = team->GetConsole(consoleAddr);
+        if(!console)
+        {
+            printf("  ERROR: hw console is not registered\n");
+            return HttpResponse(MHD_HTTP_BAD_REQUEST);
+        }
 
         team->PutFlag(flagId, flag);
 
         char message[512];
         sprintf(message, "Here is your flag, keep it safe\n%s", flag);
         Notification* n = new Notification("Hackerdom", message);
-        team->AddNotification(n);
+        console->AddNotification(n);
 
         return HttpResponse(MHD_HTTP_OK);
     }
