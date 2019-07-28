@@ -88,7 +88,10 @@ void Team::PutFlag(const char* flagId, const char* flag)
     flags.insert({flagId, flag});
 }
 
-const std::string& Team::GetFlag(const char* flagId)
+const char* Team::GetFlag(const char* flagId)
 {
-    return flags[flagId];
+    auto iter = flags.find(flagId);
+    if(iter == flags.end())
+        return nullptr;
+    return iter->second.c_str();
 }

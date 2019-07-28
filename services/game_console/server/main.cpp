@@ -400,10 +400,12 @@ HttpResponse RequestHandler::HandleGet(HttpRequest request)
         const char* addrStr = FindInMap(request.queryString, kAddr);
 		if(!addrStr)
 			return HttpResponse(MHD_HTTP_BAD_REQUEST);
+        printf("  addr:    %s\n", addrStr);
 
 		const char* flagId = FindInMap(request.queryString, kFlagId);
 		if(!flagId)
 			return HttpResponse(MHD_HTTP_BAD_REQUEST);
+        printf("  flag id: %s\n", flagId);
 
 		in_addr addr;
         inet_aton(addrStr, (in_addr*)&addr);
@@ -413,9 +415,50 @@ HttpResponse RequestHandler::HandleGet(HttpRequest request)
             printf("  ERROR: Bad request\n");
             return HttpResponse(MHD_HTTP_BAD_REQUEST);
         }
+        printf("  team:    %s\n", team->desc.name.c_str());
 
-        auto& flag = team->GetFlag(flagId);
-        printf("  Flag '%s' with id '%s' for team '%s'\n", flag.c_str(), flagId, team->desc.name.c_str());
+        const char* flag = team->GetFlag(flagId);
+        if(!flag)
+        {
+            printf("  ERROR: flag not found\n");
+            return HttpResponse(MHD_HTTP_BAD_REQUEST);
+        }
+        printf("  flag:    %s\n", flag);
+
+        HttpResponse response;
+        response.code = MHD_HTTP_OK;
+        response.headers.insert({"Content-Type", "text/plain"});
+        size_t flagLen = strlen(flag);
+        response.content = (char*)malloc(flagLen);
+        memcpy(response.content, flag, flagLen);
+        response.contentLength = flagLen;
+        return response;
+    }
+    else if(ParseUrl(request.url, 1, "checksystem_check"))
+    {
+        auto team = FindTeam(request.clientIp, false);
+        if(team)
+        {
+            printf("  ERROR: Forbidden\n");
+            return HttpResponse(MHD_HTTP_FORBIDDEN);
+        }
+
+        static std::string kAddr("addr");
+
+        const char* addrStr = FindInMap(request.queryString, kAddr);
+		if(!addrStr)
+			return HttpResponse(MHD_HTTP_BAD_REQUEST);
+        printf("  addr:    %s\n", addrStr);
+
+		in_addr addr;
+        inet_aton(addrStr, (in_addr*)&addr);
+        team = FindTeam(addr);
+        if(!team)
+        {
+            printf("  ERROR: Bad request\n");
+            return HttpResponse(MHD_HTTP_BAD_REQUEST);
+        }
+        printf("  team:    %s\n", team->desc.name.c_str());
 
         IPAddr consoleAddr = GetHwConsoleIp(team->desc.network);
         if(consoleAddr == ~0u)
@@ -423,9 +466,6 @@ HttpResponse RequestHandler::HandleGet(HttpRequest request)
             printf("  ERROR: team does not have registerd hw console\n");
             return HttpResponse(MHD_HTTP_BAD_REQUEST);
         }
-
-        if(!Check(team->desc.network))
-            return HttpResponse(MHD_HTTP_BAD_REQUEST);
 
 		Console* console = team->GetConsole(consoleAddr);
         if(!console)
@@ -440,16 +480,10 @@ HttpResponse RequestHandler::HandleGet(HttpRequest request)
             return HttpResponse(MHD_HTTP_BAD_REQUEST);
         }
 
-        HttpResponse response;
-        response.code = MHD_HTTP_OK;
-        if(flag.size())
-        {
-            response.headers.insert({"Content-Type", "text/plain"});
-            response.content = (char*)malloc(flag.size());
-            memcpy(response.content, flag.c_str(), flag.size());
-            response.contentLength = flag.size();
-        }
-        return response;
+        if(!Check(team->desc.network))
+            return HttpResponse(MHD_HTTP_BAD_REQUEST);
+
+        return HttpResponse(MHD_HTTP_OK);
     }
 
     return HttpResponse(MHD_HTTP_NOT_FOUND);
@@ -508,17 +542,17 @@ HttpResponse RequestHandler::HandlePost(HttpRequest request, HttpPostProcessor**
         const char* addrStr = FindInMap(request.queryString, kAddr);
 		if(!addrStr)
 			return HttpResponse(MHD_HTTP_BAD_REQUEST);
+        printf("  addr:    %s\n", addrStr);
 
 		const char* flagId = FindInMap(request.queryString, kFlagId);
 		if(!flagId)
 			return HttpResponse(MHD_HTTP_BAD_REQUEST);
+        printf("  flag id: %s\n", flagId);
 
 		const char* flag = FindInMap(request.queryString, kFlag);
 		if(!flag)
 			return HttpResponse(MHD_HTTP_BAD_REQUEST);
-
-        char message[512];
-        sprintf(message, "Here is your flag, keep it safe\n%s", flag);
+        printf("  flag:    %s\n", flag);
 
         in_addr addr;
         inet_aton(addrStr, (in_addr*)&addr);
@@ -528,10 +562,12 @@ HttpResponse RequestHandler::HandlePost(HttpRequest request, HttpPostProcessor**
             printf("  ERROR: Bad request\n");
             return HttpResponse(MHD_HTTP_BAD_REQUEST);
         }
-
-        printf("  Flag '%s' with id '%s' for team '%s'\n", flag, flagId, team->desc.name.c_str());
+        printf("  team:    %s\n", team->desc.name.c_str());
 
         team->PutFlag(flagId, flag);
+
+        char message[512];
+        sprintf(message, "Here is your flag, keep it safe\n%s", flag);
         Notification* n = new Notification("Hackerdom", message);
         team->AddNotification(n);
 

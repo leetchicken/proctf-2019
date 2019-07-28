@@ -27,7 +27,7 @@ struct Team
     void DumpStats(std::string& out);
     
     void PutFlag(const char* flagId, const char* flag);
-    const std::string& GetFlag(const char* flagId);
+    const char* GetFlag(const char* flagId);
 
 private:
     std::mutex mutex;

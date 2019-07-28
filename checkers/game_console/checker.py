@@ -24,6 +24,17 @@ def close(code, public="", private=""):
 
 def check(*args):
 	addr = args[0]
+
+	url = 'http://%s/checksystem_check?addr=%s' % (SERVER_ADDR, addr)
+	try:
+		r = requests.get(url)
+		if r.status_code == 502:
+			close(DOWN, "Server is down", "Nginx 502")
+		if r.status_code != 200:
+			close( MUMBLE, "Get error", "Invalid status code: %s %d %s" % ( url, r.status_code, r.text ) )
+
+	except Exception as e:
+		 close(DOWN, "HTTP Error", "HTTP error: %s" % e)
 	
 	close( OK )
 
