@@ -764,6 +764,7 @@ bool LoadTeamsDatabase()
 		desc.network = net;
         printf("  %u %s\n", desc.number, desc.name.c_str());
         printf("    network: %s(%08X)\n", netStr, net);
+        team.LoadDb();
     }
 
     return true;
