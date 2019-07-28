@@ -56,6 +56,13 @@ protected:
 };
 
 
+struct ConsolesStorageRecord
+{
+    IPAddr ip;
+    AuthKey authKey;
+};
+static const char* kConsoleStorageFileName = "data/consoles.dat";
+
 std::map<uint32_t, GameDesc> GGamesDatabase;
 std::unordered_map<NetworkAddr, Team> GTeams;
 std::mutex GConsolesGuard;
@@ -108,6 +115,28 @@ static Console* CheckAuthority(const QueryString& queryString)
 }
 
 
+static void DumpConsolesStorage()
+{
+    std::lock_guard<std::mutex> guard(GConsolesGuard);
+    FILE* f = fopen(kConsoleStorageFileName, "w");
+    if(!f)
+    {
+        printf("Failed to open consoles storage\n");
+        return;
+    }
+
+    for(auto iter : GConsoles)
+    {
+        ConsolesStorageRecord record;
+        record.authKey = iter.second->authKey;
+        record.ip = iter.second->ipAddr;
+        fwrite(&record, sizeof(record), 1, f);
+    }
+
+    fclose(f);
+}
+
+
 HttpResponse RequestHandler::HandleGet(HttpRequest request)
 {
     printf("  IP: %s\n", inet_ntoa(request.clientIp));
@@ -147,6 +176,8 @@ HttpResponse RequestHandler::HandleGet(HttpRequest request)
             }
             GConsoles[console->authKey] = console;
         }
+
+        DumpConsolesStorage();
 
         struct
         {
@@ -785,6 +816,54 @@ bool LoadTeamsDatabase()
 }
 
 
+void ReadConsolesStorage()
+{
+    const uint32_t kRecordSize = sizeof(ConsolesStorageRecord);
+
+    FILE* storage = fopen(kConsoleStorageFileName, "r");
+	if(storage)
+	{
+		fseek(storage, 0, SEEK_END);
+		size_t fileSize = ftell(storage);
+		fseek(storage, 0, SEEK_SET);
+
+        bool error = false;
+        if((fileSize % kRecordSize) == 0)
+        {
+            uint32_t recordsNum = fileSize / kRecordSize;
+            for(uint32_t i = 0; i < recordsNum; i++)
+            {
+                ConsolesStorageRecord record;
+				if(fread(&record, kRecordSize, 1, storage) != 1)
+                {
+                    error = true;
+                    printf("Failed to read consoles storage\n");
+                    break;
+                }
+
+                in_addr addr;
+                addr.s_addr = record.ip;
+                Team* team = FindTeam(addr);
+                if(!team)
+                    continue;
+
+                Console* console = team->AddConsole(record.ip);
+                GConsoles[record.authKey] = console;
+            }
+        }
+        else
+        {
+            printf("Consoles storage is corrupted\n");
+        }
+
+        if(!error)
+            printf("Consoles storage has been read succefully\n");
+
+        fclose(storage);
+    }
+}
+
+
 void UpdateThread()
 {
     while(1)
@@ -872,6 +951,8 @@ int main()
 
     if(!LoadGamesDatabase() || !LoadTeamsDatabase())
         return -1;
+
+    ReadConsolesStorage();
 
     RequestHandler handler;
     HttpServer server(&handler);
