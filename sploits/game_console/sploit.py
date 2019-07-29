@@ -5,11 +5,11 @@ import os
 import requests
 import struct
 
-SERVER_ADDR = "192.168.1.1:8000"
+SERVER_ADDR = "10.60.3.2:8000"
 # value of 'sp' register at the very beginning of NotificationCtx::Update(),
 # before 'push {r4, r5, r6, r7, pc}' instruction,
 # ie start address of stack frame of NotificationCtx::Update()
-STACK_FRAME_START = 0x2000DE00
+STACK_FRAME_START = 0x2000DCF8
 
 url = 'http://%s/auth' % (SERVER_ADDR)
 r = requests.get(url)
