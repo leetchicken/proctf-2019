@@ -5,7 +5,6 @@
 #include "BlockDevice.h"
 #include "FATFileSystem.h"
 #include "api_impl.h"
-#include "team_data.h"
 #include "../main_screen/constants.h"
 
 APIImpl GAPIImpl;
@@ -38,16 +37,6 @@ void InitDisplay()
 
     BSP_TS_Init(BSP_LCD_GetXSize(), BSP_LCD_GetYSize());
 }
-
-
-char GMacAddress[] = {0x00, 0x80, 0xe1, 0x00, 0x00, MAC5};
-
-
-uint8_t mbed_otp_mac_address(char *mac)
-{
-    memcpy(mac, GMacAddress, 6);
-    return 1;
-};
 
 
 void InitNetwork()
@@ -216,9 +205,7 @@ int main()
     Thread checksystemThread;
     checksystemThread.start(callback(ChecksystemThread));
     
-    GAPIImpl.Init(&GEthernet, USER_NAME);
-
-    printf("User name: %s\n", USER_NAME);
+    GAPIImpl.Init(&GEthernet);
 
 #if _XX_
     ScopedRamExecutionLock make_ram_executable;

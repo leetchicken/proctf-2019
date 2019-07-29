@@ -5,6 +5,7 @@
 #include "MemoryPool.h"
 #include "Queue.h"
 #include "ip4string.h"
+#include "teams_data.h"
 
 
 Thread GHttpThread;
@@ -131,7 +132,7 @@ APIImpl::APIImpl()
 }
 
 
-void APIImpl::Init(EthernetInterface* ethInterface, const char* userName)
+void APIImpl::Init(EthernetInterface* ethInterface)
 {
     m_curFrameBuffer = 0;
     m_ethInterface = ethInterface;
@@ -141,7 +142,6 @@ void APIImpl::Init(EthernetInterface* ethInterface, const char* userName)
     m_acceptedSockets = 0;
     memset(m_udpSockets, 0, sizeof(m_udpSockets));
     m_freeUdpSockets = ~0u;
-    strcpy(m_userName, userName);
 }
 
 
@@ -159,7 +159,22 @@ void APIImpl::Free(void* ptr)
 
 const char* APIImpl::GetUserName()
 {
-    return m_userName;
+    if(m_ethInterface->get_connection_status() != NSAPI_STATUS_GLOBAL_UP)
+        return "Unknown";
+
+    const char* ipStr = m_ethInterface->get_ip_address();
+    uint32_t ip;
+    stoip4(ipStr, strlen(ipStr), &ip);
+    const uint32_t kNetMask = 0x00FFFFFF;
+    uint32_t netAddr = ip & kNetMask;
+    printf("%x\n", netAddr);
+    for(uint32_t i = 0; i < kTeamsNum; i++)
+    {
+        if(GTeamsData[i].net == netAddr)
+            return GTeamsData[i].name;
+    }
+
+    return "Unknown";
 }
 
 

@@ -3,6 +3,8 @@ import os
 import re
 import subprocess
 import xml.etree.ElementTree as ET
+import socket
+import struct
 
 # Usage:
 # python build.py
@@ -65,19 +67,30 @@ os.system("cp main_screen/fs.bin BUILD/")
 print("")
 
 teamsXml = ET.ElementTree(file="server/data/teams.xml").getroot()
+teamsData = open("hw/teams_data.h", "w")
+teamsData.write("struct TeamData { uint32_t net; const char* name; };\n\n")
+teamsData.write("static const TeamData GTeamsData[] = {\n")
+teamsNum = 0
 for team in teamsXml:
+	net = team.get("net")
 	name = team.get("name")
-	print("Build firmware for team " + name)
-	mac5 = team.get("mac5")
-	
-	team_data = "#define MAC5 %s\n" % mac5 
-	team_data += "#define USER_NAME \"%s\"\n" % name
-	team_data += "\n"
-	open("hw/team_data.h", "w").write(team_data)
 
-	if os.system("cd hw; ./compile.sh --profile release") != 0:
-		exit(1)
-	os.system("mkdir BUILD/%s; cp hw/BUILD/DISCO_F746NG/GCC_ARM/hw.bin BUILD/%s/" % (name, name))
-	os.system("cp hw/BUILD/DISCO_F746NG/GCC_ARM/hw.elf BUILD/%s/" % name)
-	print("")
+	netRaw = socket.inet_aton(net)
+	netHex = hex(struct.unpack('I', netRaw)[0])
+
+	teamsData.write("\t{%s, \"%s\"},\n" % (netHex, name))
+
+	teamsNum += 1
+
+teamsData.write("};\n")
+teamsData.write("static const uint32_t kTeamsNum = %d;\n" % teamsNum)
+teamsData.flush()
+teamsData.close()
+
+print("Build firmware")
+if os.system("cd hw; ./compile.sh --profile release") != 0:
+	exit(1)
+os.system("cp hw/BUILD/DISCO_F746NG/GCC_ARM/hw.bin BUILD/")
+os.system("cp hw/BUILD/DISCO_F746NG/GCC_ARM/hw.elf BUILD/")
+print("")
 

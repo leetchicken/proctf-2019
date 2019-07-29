@@ -8,7 +8,7 @@ class APIImpl : public API
 public:
     APIImpl();
 
-    void Init(EthernetInterface* ethInterface, const char* username);
+    void Init(EthernetInterface* ethInterface);
 
     void* Malloc(uint32_t size);
     void Free(void* ptr);
@@ -75,7 +75,6 @@ public:
 private:
     int m_curFrameBuffer;
     EthernetInterface* m_ethInterface;
-    char m_userName[256];
     Timer m_timer;
     bool m_displayIsOn;
     TCPSocket* m_tcpSockets[32];
