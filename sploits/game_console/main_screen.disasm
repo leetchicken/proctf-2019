@@ -218,8 +218,8 @@ Disassembly of section .text:
      1e6:	4628      	mov	r0, r5
      1e8:	b002      	add	sp, #8
      1ea:	bd70      	pop	{r4, r5, r6, pc}
-     1ec:	000015be 	.word	0x000015be
-     1f0:	000015c0 	.word	0x000015c0
+     1ec:	000015ce 	.word	0x000015ce
+     1f0:	000015d0 	.word	0x000015d0
 
 000001f4 <ParseAuthResponse(API*, HTTPRequest*, unsigned long&)>:
      1f4:	b538      	push	{r3, r4, r5, lr}
@@ -369,8 +369,8 @@ Disassembly of section .text:
      34e:	4628      	mov	r0, r5
      350:	b003      	add	sp, #12
      352:	bdf0      	pop	{r4, r5, r6, r7, pc}
-     354:	00001458 	.word	0x00001458
-     358:	0000146c 	.word	0x0000146c
+     354:	00001468 	.word	0x00001468
+     358:	0000147c 	.word	0x0000147c
 
 0000035c <RequestIcon(API*, unsigned long, unsigned long, unsigned char*)>:
      35c:	e92d 41f0 	stmdb	sp!, {r4, r5, r6, r7, r8, lr}
@@ -421,8 +421,8 @@ Disassembly of section .text:
      3c6:	e8bd 81f0 	ldmia.w	sp!, {r4, r5, r6, r7, r8, pc}
      3ca:	bf00      	nop
      3cc:	0001ce40 	.word	0x0001ce40
-     3d0:	000013f0 	.word	0x000013f0
-     3d4:	0000141c 	.word	0x0000141c
+     3d0:	00001400 	.word	0x00001400
+     3d4:	0000142c 	.word	0x0000142c
 
 000003d8 <RequestGameAsset(API*, unsigned long, unsigned long, unsigned long, unsigned char*)>:
      3d8:	e92d 41f0 	stmdb	sp!, {r4, r5, r6, r7, r8, lr}
@@ -474,8 +474,8 @@ Disassembly of section .text:
      444:	b004      	add	sp, #16
      446:	e8bd 81f0 	ldmia.w	sp!, {r4, r5, r6, r7, r8, pc}
      44a:	bf00      	nop
-     44c:	00001368 	.word	0x00001368
-     450:	000013c0 	.word	0x000013c0
+     44c:	00001378 	.word	0x00001378
+     450:	000013d0 	.word	0x000013d0
 
 00000454 <RequestGameCode(API*, unsigned long, unsigned long, unsigned char*)>:
      454:	e92d 41f0 	stmdb	sp!, {r4, r5, r6, r7, r8, lr}
@@ -524,8 +524,8 @@ Disassembly of section .text:
      4bc:	4620      	mov	r0, r4
      4be:	b004      	add	sp, #16
      4c0:	e8bd 81f0 	ldmia.w	sp!, {r4, r5, r6, r7, r8, pc}
-     4c4:	000012f8 	.word	0x000012f8
-     4c8:	00001370 	.word	0x00001370
+     4c4:	00001308 	.word	0x00001308
+     4c8:	00001380 	.word	0x00001380
 
 000004cc <Context::OnGameSelected(unsigned long)>:
      4cc:	f890 3080 	ldrb.w	r3, [r0, #128]	; 0x80
@@ -584,8 +584,8 @@ Disassembly of section .text:
      55a:	b003      	add	sp, #12
      55c:	bdf0      	pop	{r4, r5, r6, r7, pc}
      55e:	4770      	bx	lr
-     560:	00001302 	.word	0x00001302
-     564:	000012f4 	.word	0x000012f4
+     560:	00001312 	.word	0x00001312
+     564:	00001304 	.word	0x00001304
 
 00000568 <Context::OnUpdatePressed()>:
      568:	f890 3080 	ldrb.w	r3, [r0, #128]	; 0x80
@@ -1108,13 +1108,13 @@ Disassembly of section .text:
      aba:	4479      	add	r1, pc
      abc:	e79a      	b.n	9f4 <Context::ProcessLoadedAsset()+0xa4>
      abe:	bf00      	nop
-     ac0:	00000eb6 	.word	0x00000eb6
-     ac4:	00000ec0 	.word	0x00000ec0
-     ac8:	00000eb8 	.word	0x00000eb8
-     acc:	00000e92 	.word	0x00000e92
-     ad0:	00000dc0 	.word	0x00000dc0
-     ad4:	00000d9a 	.word	0x00000d9a
-     ad8:	00000dca 	.word	0x00000dca
+     ac0:	00000ec6 	.word	0x00000ec6
+     ac4:	00000ed0 	.word	0x00000ed0
+     ac8:	00000ec8 	.word	0x00000ec8
+     acc:	00000ea2 	.word	0x00000ea2
+     ad0:	00000dd0 	.word	0x00000dd0
+     ad4:	00000daa 	.word	0x00000daa
+     ad8:	00000dda 	.word	0x00000dda
 
 00000adc <Context::Render(float)>:
      adc:	e92d 41f0 	stmdb	sp!, {r4, r5, r6, r7, r8, lr}
@@ -1219,7 +1219,7 @@ Disassembly of section .text:
      bde:	47a8      	blx	r5
      be0:	e7d4      	b.n	b8c <Context::Render(float)+0xb0>
      be2:	bf00      	nop
-     be4:	00000ccc 	.word	0x00000ccc
+     be4:	00000cdc 	.word	0x00000cdc
 
 00000be8 <Context::Update()>:
      be8:	e92d 41f0 	stmdb	sp!, {r4, r5, r6, r7, r8, lr}
@@ -1228,7 +1228,7 @@ Disassembly of section .text:
      bf2:	ed2d 8b02 	vpush	{d8}
      bf6:	4628      	mov	r0, r5
      bf8:	b092      	sub	sp, #72	; 0x48
-     bfa:	f000 fd5b 	bl	16b4 <NotificationsCtx::Update()>
+     bfa:	f000 fd63 	bl	16c4 <NotificationsCtx::Update()>
      bfe:	6820      	ldr	r0, [r4, #0]
      c00:	6803      	ldr	r3, [r0, #0]
      c02:	f8d3 30c4 	ldr.w	r3, [r3, #196]	; 0xc4
@@ -1403,7 +1403,7 @@ Disassembly of section .text:
      dca:	4798      	blx	r3
      dcc:	f8d4 1084 	ldr.w	r1, [r4, #132]	; 0x84
      dd0:	4628      	mov	r0, r5
-     dd2:	f000 fc6b 	bl	16ac <NotificationsCtx::SetAuthKey(unsigned long)>
+     dd2:	f000 fc73 	bl	16bc <NotificationsCtx::SetAuthKey(unsigned long)>
      dd6:	f8d4 1084 	ldr.w	r1, [r4, #132]	; 0x84
      dda:	6820      	ldr	r0, [r4, #0]
      ddc:	f7ff fa8e 	bl	2fc <RequestGamesList(API*, unsigned long)>
@@ -1455,7 +1455,7 @@ Disassembly of section .text:
      e56:	4642      	mov	r2, r8
      e58:	4601      	mov	r1, r0
      e5a:	4628      	mov	r0, r5
-     e5c:	f000 faa8 	bl	13b0 <NotificationsCtx::Post(char const*, char const*)>
+     e5c:	f000 fab0 	bl	13c0 <NotificationsCtx::Post(char const*, char const*)>
      e60:	f8d4 20e0 	ldr.w	r2, [r4, #224]	; 0xe0
      e64:	f8d4 30d4 	ldr.w	r3, [r4, #212]	; 0xd4
      e68:	6820      	ldr	r0, [r4, #0]
@@ -1500,13 +1500,13 @@ Disassembly of section .text:
      ed0:	e6df      	b.n	c92 <Context::Update()+0xaa>
      ed2:	f884 0080 	strb.w	r0, [r4, #128]	; 0x80
      ed6:	e6e3      	b.n	ca0 <Context::Update()+0xb8>
-     ed8:	00000cd2 	.word	0x00000cd2
-     edc:	00000c24 	.word	0x00000c24
-     ee0:	00000bcc 	.word	0x00000bcc
-     ee4:	00000b12 	.word	0x00000b12
-     ee8:	00000ace 	.word	0x00000ace
-     eec:	00000aec 	.word	0x00000aec
-     ef0:	00000aca 	.word	0x00000aca
+     ed8:	00000ce2 	.word	0x00000ce2
+     edc:	00000c34 	.word	0x00000c34
+     ee0:	00000bdc 	.word	0x00000bdc
+     ee4:	00000b22 	.word	0x00000b22
+     ee8:	00000ade 	.word	0x00000ade
+     eec:	00000afc 	.word	0x00000afc
+     ef0:	00000ada 	.word	0x00000ada
 
 00000ef4 <GameInit(API*, unsigned char*)>:
      ef4:	e92d 4ff8 	stmdb	sp!, {r3, r4, r5, r6, r7, r8, r9, sl, fp, lr}
@@ -1753,18 +1753,18 @@ Disassembly of section .text:
     11b4:	001196c0 	.word	0x001196c0
     11b8:	0011dec0 	.word	0x0011dec0
     11bc:	00073900 	.word	0x00073900
-    11c0:	000009a2 	.word	0x000009a2
-    11c4:	00000998 	.word	0x00000998
+    11c0:	000009b2 	.word	0x000009b2
+    11c4:	000009a8 	.word	0x000009a8
     11c8:	000f3100 	.word	0x000f3100
-    11cc:	0000096e 	.word	0x0000096e
+    11cc:	0000097e 	.word	0x0000097e
     11d0:	0010ff40 	.word	0x0010ff40
-    11d4:	00000942 	.word	0x00000942
+    11d4:	00000952 	.word	0x00000952
     11d8:	00111840 	.word	0x00111840
-    11dc:	00000910 	.word	0x00000910
+    11dc:	00000920 	.word	0x00000920
     11e0:	00113140 	.word	0x00113140
-    11e4:	000008e2 	.word	0x000008e2
+    11e4:	000008f2 	.word	0x000008f2
     11e8:	00114a40 	.word	0x00114a40
-    11ec:	000008b4 	.word	0x000008b4
+    11ec:	000008c4 	.word	0x000008c4
 
 000011f0 <GameUpdate(API*, void*)>:
     11f0:	4608      	mov	r0, r1
@@ -1844,7 +1844,7 @@ Disassembly of section .text:
 000012a0 <NotificationsCtx::Render(float)>:
     12a0:	f890 312c 	ldrb.w	r3, [r0, #300]	; 0x12c
     12a4:	2b00      	cmp	r3, #0
-    12a6:	d072      	beq.n	138e <NotificationsCtx::Render(float)+0xee>
+    12a6:	d07a      	beq.n	139e <NotificationsCtx::Render(float)+0xfe>
     12a8:	e92d 43f0 	stmdb	sp!, {r4, r5, r6, r7, r8, r9, lr}
     12ac:	4604      	mov	r4, r0
     12ae:	b08d      	sub	sp, #52	; 0x34
@@ -1885,480 +1885,487 @@ Disassembly of section .text:
     130c:	b00d      	add	sp, #52	; 0x34
     130e:	e8bd 83f0 	ldmia.w	sp!, {r4, r5, r6, r7, r8, r9, pc}
     1312:	6820      	ldr	r0, [r4, #0]
-    1314:	f10d 0814 	add.w	r8, sp, #20
+    1314:	f10d 0914 	add.w	r9, sp, #20
     1318:	9104      	str	r1, [sp, #16]
-    131a:	af04      	add	r7, sp, #16
-    131c:	6803      	ldr	r3, [r0, #0]
-    131e:	f10d 0920 	add.w	r9, sp, #32
+    131a:	f10d 0820 	add.w	r8, sp, #32
+    131e:	6803      	ldr	r3, [r0, #0]
+    1320:	af04      	add	r7, sp, #16
     1322:	9205      	str	r2, [sp, #20]
     1324:	f8d4 111c 	ldr.w	r1, [r4, #284]	; 0x11c
     1328:	f8d3 30b0 	ldr.w	r3, [r3, #176]	; 0xb0
     132c:	4798      	blx	r3
-    132e:	6822      	ldr	r2, [r4, #0]
-    1330:	4603      	mov	r3, r0
-    1332:	9601      	str	r6, [sp, #4]
-    1334:	4641      	mov	r1, r8
-    1336:	4638      	mov	r0, r7
-    1338:	f8cd 9008 	str.w	r9, [sp, #8]
-    133c:	9200      	str	r2, [sp, #0]
-    133e:	f8d4 211c 	ldr.w	r2, [r4, #284]	; 0x11c
-    1342:	f7ff ff73 	bl	122c <DrawString(long&, long&, char const*, unsigned long, API*, FontInfo const&, Rect const&)>
-    1346:	9b05      	ldr	r3, [sp, #20]
-    1348:	9a07      	ldr	r2, [sp, #28]
-    134a:	6820      	ldr	r0, [r4, #0]
-    134c:	4413      	add	r3, r2
-    134e:	9a08      	ldr	r2, [sp, #32]
-    1350:	6801      	ldr	r1, [r0, #0]
-    1352:	9305      	str	r3, [sp, #20]
-    1354:	9204      	str	r2, [sp, #16]
-    1356:	f8d1 30b0 	ldr.w	r3, [r1, #176]	; 0xb0
-    135a:	f8d4 1124 	ldr.w	r1, [r4, #292]	; 0x124
-    135e:	4798      	blx	r3
-    1360:	6822      	ldr	r2, [r4, #0]
-    1362:	4603      	mov	r3, r0
-    1364:	f8cd 9008 	str.w	r9, [sp, #8]
-    1368:	4641      	mov	r1, r8
-    136a:	4638      	mov	r0, r7
-    136c:	e9cd 2600 	strd	r2, r6, [sp]
-    1370:	f8d4 2124 	ldr.w	r2, [r4, #292]	; 0x124
-    1374:	f7ff ff5a 	bl	122c <DrawString(long&, long&, char const*, unsigned long, API*, FontInfo const&, Rect const&)>
-    1378:	edd4 7a4c 	vldr	s15, [r4, #304]	; 0x130
-    137c:	ee07 5a10 	vmov	s14, r5
-    1380:	ee77 7a87 	vadd.f32	s15, s15, s14
-    1384:	edc4 7a4c 	vstr	s15, [r4, #304]	; 0x130
-    1388:	b00d      	add	sp, #52	; 0x34
-    138a:	e8bd 83f0 	ldmia.w	sp!, {r4, r5, r6, r7, r8, r9, pc}
-    138e:	4770      	bx	lr
+    132e:	f8d4 3120 	ldr.w	r3, [r4, #288]	; 0x120
+    1332:	6822      	ldr	r2, [r4, #0]
+    1334:	4649      	mov	r1, r9
+    1336:	4283      	cmp	r3, r0
+    1338:	9601      	str	r6, [sp, #4]
+    133a:	f8cd 8008 	str.w	r8, [sp, #8]
+    133e:	bf28      	it	cs
+    1340:	4603      	movcs	r3, r0
+    1342:	9200      	str	r2, [sp, #0]
+    1344:	4638      	mov	r0, r7
+    1346:	f8d4 211c 	ldr.w	r2, [r4, #284]	; 0x11c
+    134a:	f7ff ff6f 	bl	122c <DrawString(long&, long&, char const*, unsigned long, API*, FontInfo const&, Rect const&)>
+    134e:	9b05      	ldr	r3, [sp, #20]
+    1350:	9a07      	ldr	r2, [sp, #28]
+    1352:	6820      	ldr	r0, [r4, #0]
+    1354:	4413      	add	r3, r2
+    1356:	9a08      	ldr	r2, [sp, #32]
+    1358:	6801      	ldr	r1, [r0, #0]
+    135a:	9305      	str	r3, [sp, #20]
+    135c:	9204      	str	r2, [sp, #16]
+    135e:	f8d1 30b0 	ldr.w	r3, [r1, #176]	; 0xb0
+    1362:	f8d4 1124 	ldr.w	r1, [r4, #292]	; 0x124
+    1366:	4798      	blx	r3
+    1368:	f8d4 3128 	ldr.w	r3, [r4, #296]	; 0x128
+    136c:	6822      	ldr	r2, [r4, #0]
+    136e:	4649      	mov	r1, r9
+    1370:	4283      	cmp	r3, r0
+    1372:	f8cd 8008 	str.w	r8, [sp, #8]
+    1376:	9601      	str	r6, [sp, #4]
+    1378:	bf28      	it	cs
+    137a:	4603      	movcs	r3, r0
+    137c:	9200      	str	r2, [sp, #0]
+    137e:	4638      	mov	r0, r7
+    1380:	f8d4 2124 	ldr.w	r2, [r4, #292]	; 0x124
+    1384:	f7ff ff52 	bl	122c <DrawString(long&, long&, char const*, unsigned long, API*, FontInfo const&, Rect const&)>
+    1388:	edd4 7a4c 	vldr	s15, [r4, #304]	; 0x130
+    138c:	ee07 5a10 	vmov	s14, r5
+    1390:	ee77 7a87 	vadd.f32	s15, s15, s14
+    1394:	edc4 7a4c 	vstr	s15, [r4, #304]	; 0x130
+    1398:	b00d      	add	sp, #52	; 0x34
+    139a:	e8bd 83f0 	ldmia.w	sp!, {r4, r5, r6, r7, r8, r9, pc}
+    139e:	4770      	bx	lr
 
-00001390 <NotificationsCtx::FreePostRequest()>:
-    1390:	b510      	push	{r4, lr}
-    1392:	4604      	mov	r4, r0
-    1394:	6800      	ldr	r0, [r0, #0]
-    1396:	68a2      	ldr	r2, [r4, #8]
-    1398:	6803      	ldr	r3, [r0, #0]
-    139a:	6c51      	ldr	r1, [r2, #68]	; 0x44
-    139c:	685b      	ldr	r3, [r3, #4]
-    139e:	4798      	blx	r3
-    13a0:	6820      	ldr	r0, [r4, #0]
-    13a2:	68a1      	ldr	r1, [r4, #8]
-    13a4:	6803      	ldr	r3, [r0, #0]
-    13a6:	6a5b      	ldr	r3, [r3, #36]	; 0x24
-    13a8:	4798      	blx	r3
-    13aa:	2300      	movs	r3, #0
-    13ac:	60a3      	str	r3, [r4, #8]
-    13ae:	bd10      	pop	{r4, pc}
+000013a0 <NotificationsCtx::FreePostRequest()>:
+    13a0:	b510      	push	{r4, lr}
+    13a2:	4604      	mov	r4, r0
+    13a4:	6800      	ldr	r0, [r0, #0]
+    13a6:	68a2      	ldr	r2, [r4, #8]
+    13a8:	6803      	ldr	r3, [r0, #0]
+    13aa:	6c51      	ldr	r1, [r2, #68]	; 0x44
+    13ac:	685b      	ldr	r3, [r3, #4]
+    13ae:	4798      	blx	r3
+    13b0:	6820      	ldr	r0, [r4, #0]
+    13b2:	68a1      	ldr	r1, [r4, #8]
+    13b4:	6803      	ldr	r3, [r0, #0]
+    13b6:	6a5b      	ldr	r3, [r3, #36]	; 0x24
+    13b8:	4798      	blx	r3
+    13ba:	2300      	movs	r3, #0
+    13bc:	60a3      	str	r3, [r4, #8]
+    13be:	bd10      	pop	{r4, pc}
 
-000013b0 <NotificationsCtx::Post(char const*, char const*)>:
-    13b0:	e92d 43f0 	stmdb	sp!, {r4, r5, r6, r7, r8, r9, lr}
-    13b4:	6887      	ldr	r7, [r0, #8]
-    13b6:	b085      	sub	sp, #20
-    13b8:	b117      	cbz	r7, 13c0 <NotificationsCtx::Post(char const*, char const*)+0x10>
-    13ba:	b005      	add	sp, #20
-    13bc:	e8bd 83f0 	ldmia.w	sp!, {r4, r5, r6, r7, r8, r9, pc}
-    13c0:	4604      	mov	r4, r0
-    13c2:	6800      	ldr	r0, [r0, #0]
-    13c4:	4615      	mov	r5, r2
-    13c6:	460e      	mov	r6, r1
-    13c8:	6803      	ldr	r3, [r0, #0]
-    13ca:	69db      	ldr	r3, [r3, #28]
-    13cc:	4798      	blx	r3
-    13ce:	60a0      	str	r0, [r4, #8]
-    13d0:	2800      	cmp	r0, #0
-    13d2:	d0f2      	beq.n	13ba <NotificationsCtx::Post(char const*, char const*)+0xa>
-    13d4:	2201      	movs	r2, #1
-    13d6:	f44f 5efa 	mov.w	lr, #8000	; 0x1f40
-    13da:	4b36      	ldr	r3, [pc, #216]	; (14b4 <NotificationsCtx::Post(char const*, char const*)+0x104>)
-    13dc:	7002      	strb	r2, [r0, #0]
-    13de:	6820      	ldr	r0, [r4, #0]
-    13e0:	447b      	add	r3, pc
-    13e2:	69a2      	ldr	r2, [r4, #24]
-    13e4:	f8d0 c000 	ldr.w	ip, [r0]
-    13e8:	68a1      	ldr	r1, [r4, #8]
-    13ea:	e9cd e200 	strd	lr, r2, [sp]
-    13ee:	4a32      	ldr	r2, [pc, #200]	; (14b8 <NotificationsCtx::Post(char const*, char const*)+0x108>)
-    13f0:	3101      	adds	r1, #1
-    13f2:	f8dc 80b8 	ldr.w	r8, [ip, #184]	; 0xb8
-    13f6:	447a      	add	r2, pc
-    13f8:	47c0      	blx	r8
-    13fa:	6820      	ldr	r0, [r4, #0]
-    13fc:	4631      	mov	r1, r6
-    13fe:	6803      	ldr	r3, [r0, #0]
-    1400:	f8d3 30b0 	ldr.w	r3, [r3, #176]	; 0xb0
-    1404:	4798      	blx	r3
-    1406:	6823      	ldr	r3, [r4, #0]
-    1408:	9002      	str	r0, [sp, #8]
-    140a:	4629      	mov	r1, r5
-    140c:	681a      	ldr	r2, [r3, #0]
-    140e:	4618      	mov	r0, r3
-    1410:	f8d2 30b0 	ldr.w	r3, [r2, #176]	; 0xb0
+000013c0 <NotificationsCtx::Post(char const*, char const*)>:
+    13c0:	e92d 43f0 	stmdb	sp!, {r4, r5, r6, r7, r8, r9, lr}
+    13c4:	6887      	ldr	r7, [r0, #8]
+    13c6:	b085      	sub	sp, #20
+    13c8:	b117      	cbz	r7, 13d0 <NotificationsCtx::Post(char const*, char const*)+0x10>
+    13ca:	b005      	add	sp, #20
+    13cc:	e8bd 83f0 	ldmia.w	sp!, {r4, r5, r6, r7, r8, r9, pc}
+    13d0:	4604      	mov	r4, r0
+    13d2:	6800      	ldr	r0, [r0, #0]
+    13d4:	4615      	mov	r5, r2
+    13d6:	460e      	mov	r6, r1
+    13d8:	6803      	ldr	r3, [r0, #0]
+    13da:	69db      	ldr	r3, [r3, #28]
+    13dc:	4798      	blx	r3
+    13de:	60a0      	str	r0, [r4, #8]
+    13e0:	2800      	cmp	r0, #0
+    13e2:	d0f2      	beq.n	13ca <NotificationsCtx::Post(char const*, char const*)+0xa>
+    13e4:	2201      	movs	r2, #1
+    13e6:	f44f 5efa 	mov.w	lr, #8000	; 0x1f40
+    13ea:	4b36      	ldr	r3, [pc, #216]	; (14c4 <NotificationsCtx::Post(char const*, char const*)+0x104>)
+    13ec:	7002      	strb	r2, [r0, #0]
+    13ee:	6820      	ldr	r0, [r4, #0]
+    13f0:	447b      	add	r3, pc
+    13f2:	69a2      	ldr	r2, [r4, #24]
+    13f4:	f8d0 c000 	ldr.w	ip, [r0]
+    13f8:	68a1      	ldr	r1, [r4, #8]
+    13fa:	e9cd e200 	strd	lr, r2, [sp]
+    13fe:	4a32      	ldr	r2, [pc, #200]	; (14c8 <NotificationsCtx::Post(char const*, char const*)+0x108>)
+    1400:	3101      	adds	r1, #1
+    1402:	f8dc 80b8 	ldr.w	r8, [ip, #184]	; 0xb8
+    1406:	447a      	add	r2, pc
+    1408:	47c0      	blx	r8
+    140a:	6820      	ldr	r0, [r4, #0]
+    140c:	4631      	mov	r1, r6
+    140e:	6803      	ldr	r3, [r0, #0]
+    1410:	f8d3 30b0 	ldr.w	r3, [r3, #176]	; 0xb0
     1414:	4798      	blx	r3
-    1416:	9b02      	ldr	r3, [sp, #8]
-    1418:	68a2      	ldr	r2, [r4, #8]
-    141a:	3308      	adds	r3, #8
-    141c:	9003      	str	r0, [sp, #12]
-    141e:	4403      	add	r3, r0
-    1420:	6493      	str	r3, [r2, #72]	; 0x48
-    1422:	6820      	ldr	r0, [r4, #0]
-    1424:	f8d4 8008 	ldr.w	r8, [r4, #8]
-    1428:	6803      	ldr	r3, [r0, #0]
-    142a:	f8d8 1048 	ldr.w	r1, [r8, #72]	; 0x48
-    142e:	681b      	ldr	r3, [r3, #0]
-    1430:	4798      	blx	r3
-    1432:	f8c8 0044 	str.w	r0, [r8, #68]	; 0x44
-    1436:	68a3      	ldr	r3, [r4, #8]
-    1438:	463a      	mov	r2, r7
-    143a:	6820      	ldr	r0, [r4, #0]
-    143c:	f8d3 8044 	ldr.w	r8, [r3, #68]	; 0x44
-    1440:	6807      	ldr	r7, [r0, #0]
-    1442:	4641      	mov	r1, r8
-    1444:	6c9b      	ldr	r3, [r3, #72]	; 0x48
-    1446:	f8d7 90ac 	ldr.w	r9, [r7, #172]	; 0xac
-    144a:	1d0f      	adds	r7, r1, #4
-    144c:	47c8      	blx	r9
-    144e:	6820      	ldr	r0, [r4, #0]
-    1450:	4641      	mov	r1, r8
-    1452:	2304      	movs	r3, #4
-    1454:	aa02      	add	r2, sp, #8
-    1456:	f8d0 c000 	ldr.w	ip, [r0]
-    145a:	f8dc 80a8 	ldr.w	r8, [ip, #168]	; 0xa8
-    145e:	47c0      	blx	r8
-    1460:	9b02      	ldr	r3, [sp, #8]
-    1462:	b143      	cbz	r3, 1476 <NotificationsCtx::Post(char const*, char const*)+0xc6>
-    1464:	6820      	ldr	r0, [r4, #0]
-    1466:	4632      	mov	r2, r6
-    1468:	4639      	mov	r1, r7
-    146a:	6806      	ldr	r6, [r0, #0]
-    146c:	f8d6 60a8 	ldr.w	r6, [r6, #168]	; 0xa8
-    1470:	47b0      	blx	r6
-    1472:	9b02      	ldr	r3, [sp, #8]
-    1474:	441f      	add	r7, r3
-    1476:	6820      	ldr	r0, [r4, #0]
-    1478:	2304      	movs	r3, #4
-    147a:	aa03      	add	r2, sp, #12
-    147c:	4639      	mov	r1, r7
-    147e:	6806      	ldr	r6, [r0, #0]
-    1480:	f8d6 60a8 	ldr.w	r6, [r6, #168]	; 0xa8
-    1484:	47b0      	blx	r6
-    1486:	9b03      	ldr	r3, [sp, #12]
-    1488:	b133      	cbz	r3, 1498 <NotificationsCtx::Post(char const*, char const*)+0xe8>
-    148a:	6820      	ldr	r0, [r4, #0]
-    148c:	462a      	mov	r2, r5
-    148e:	1d39      	adds	r1, r7, #4
-    1490:	6805      	ldr	r5, [r0, #0]
-    1492:	f8d5 50a8 	ldr.w	r5, [r5, #168]	; 0xa8
-    1496:	47a8      	blx	r5
-    1498:	6820      	ldr	r0, [r4, #0]
-    149a:	68a1      	ldr	r1, [r4, #8]
-    149c:	6803      	ldr	r3, [r0, #0]
-    149e:	6a1b      	ldr	r3, [r3, #32]
-    14a0:	4798      	blx	r3
-    14a2:	2800      	cmp	r0, #0
-    14a4:	d189      	bne.n	13ba <NotificationsCtx::Post(char const*, char const*)+0xa>
-    14a6:	4620      	mov	r0, r4
-    14a8:	f7ff ff72 	bl	1390 <NotificationsCtx::FreePostRequest()>
-    14ac:	b005      	add	sp, #20
-    14ae:	e8bd 83f0 	ldmia.w	sp!, {r4, r5, r6, r7, r8, r9, pc}
-    14b2:	bf00      	nop
-    14b4:	00000398 	.word	0x00000398
-    14b8:	000005fe 	.word	0x000005fe
+    1416:	6823      	ldr	r3, [r4, #0]
+    1418:	9002      	str	r0, [sp, #8]
+    141a:	4629      	mov	r1, r5
+    141c:	681a      	ldr	r2, [r3, #0]
+    141e:	4618      	mov	r0, r3
+    1420:	f8d2 30b0 	ldr.w	r3, [r2, #176]	; 0xb0
+    1424:	4798      	blx	r3
+    1426:	9b02      	ldr	r3, [sp, #8]
+    1428:	68a2      	ldr	r2, [r4, #8]
+    142a:	3308      	adds	r3, #8
+    142c:	9003      	str	r0, [sp, #12]
+    142e:	4403      	add	r3, r0
+    1430:	6493      	str	r3, [r2, #72]	; 0x48
+    1432:	6820      	ldr	r0, [r4, #0]
+    1434:	f8d4 8008 	ldr.w	r8, [r4, #8]
+    1438:	6803      	ldr	r3, [r0, #0]
+    143a:	f8d8 1048 	ldr.w	r1, [r8, #72]	; 0x48
+    143e:	681b      	ldr	r3, [r3, #0]
+    1440:	4798      	blx	r3
+    1442:	f8c8 0044 	str.w	r0, [r8, #68]	; 0x44
+    1446:	68a3      	ldr	r3, [r4, #8]
+    1448:	463a      	mov	r2, r7
+    144a:	6820      	ldr	r0, [r4, #0]
+    144c:	f8d3 8044 	ldr.w	r8, [r3, #68]	; 0x44
+    1450:	6807      	ldr	r7, [r0, #0]
+    1452:	4641      	mov	r1, r8
+    1454:	6c9b      	ldr	r3, [r3, #72]	; 0x48
+    1456:	f8d7 90ac 	ldr.w	r9, [r7, #172]	; 0xac
+    145a:	1d0f      	adds	r7, r1, #4
+    145c:	47c8      	blx	r9
+    145e:	6820      	ldr	r0, [r4, #0]
+    1460:	4641      	mov	r1, r8
+    1462:	2304      	movs	r3, #4
+    1464:	aa02      	add	r2, sp, #8
+    1466:	f8d0 c000 	ldr.w	ip, [r0]
+    146a:	f8dc 80a8 	ldr.w	r8, [ip, #168]	; 0xa8
+    146e:	47c0      	blx	r8
+    1470:	9b02      	ldr	r3, [sp, #8]
+    1472:	b143      	cbz	r3, 1486 <NotificationsCtx::Post(char const*, char const*)+0xc6>
+    1474:	6820      	ldr	r0, [r4, #0]
+    1476:	4632      	mov	r2, r6
+    1478:	4639      	mov	r1, r7
+    147a:	6806      	ldr	r6, [r0, #0]
+    147c:	f8d6 60a8 	ldr.w	r6, [r6, #168]	; 0xa8
+    1480:	47b0      	blx	r6
+    1482:	9b02      	ldr	r3, [sp, #8]
+    1484:	441f      	add	r7, r3
+    1486:	6820      	ldr	r0, [r4, #0]
+    1488:	2304      	movs	r3, #4
+    148a:	aa03      	add	r2, sp, #12
+    148c:	4639      	mov	r1, r7
+    148e:	6806      	ldr	r6, [r0, #0]
+    1490:	f8d6 60a8 	ldr.w	r6, [r6, #168]	; 0xa8
+    1494:	47b0      	blx	r6
+    1496:	9b03      	ldr	r3, [sp, #12]
+    1498:	b133      	cbz	r3, 14a8 <NotificationsCtx::Post(char const*, char const*)+0xe8>
+    149a:	6820      	ldr	r0, [r4, #0]
+    149c:	462a      	mov	r2, r5
+    149e:	1d39      	adds	r1, r7, #4
+    14a0:	6805      	ldr	r5, [r0, #0]
+    14a2:	f8d5 50a8 	ldr.w	r5, [r5, #168]	; 0xa8
+    14a6:	47a8      	blx	r5
+    14a8:	6820      	ldr	r0, [r4, #0]
+    14aa:	68a1      	ldr	r1, [r4, #8]
+    14ac:	6803      	ldr	r3, [r0, #0]
+    14ae:	6a1b      	ldr	r3, [r3, #32]
+    14b0:	4798      	blx	r3
+    14b2:	2800      	cmp	r0, #0
+    14b4:	d189      	bne.n	13ca <NotificationsCtx::Post(char const*, char const*)+0xa>
+    14b6:	4620      	mov	r0, r4
+    14b8:	f7ff ff72 	bl	13a0 <NotificationsCtx::FreePostRequest()>
+    14bc:	b005      	add	sp, #20
+    14be:	e8bd 83f0 	ldmia.w	sp!, {r4, r5, r6, r7, r8, r9, pc}
+    14c2:	bf00      	nop
+    14c4:	00000398 	.word	0x00000398
+    14c8:	000005fe 	.word	0x000005fe
 
-000014bc <NotificationsCtx::FreeGetRequest()>:
-    14bc:	b510      	push	{r4, lr}
-    14be:	4604      	mov	r4, r0
-    14c0:	6800      	ldr	r0, [r0, #0]
-    14c2:	6803      	ldr	r3, [r0, #0]
-    14c4:	68e1      	ldr	r1, [r4, #12]
-    14c6:	6a5b      	ldr	r3, [r3, #36]	; 0x24
-    14c8:	4798      	blx	r3
-    14ca:	2300      	movs	r3, #0
-    14cc:	60e3      	str	r3, [r4, #12]
-    14ce:	bd10      	pop	{r4, pc}
+000014cc <NotificationsCtx::FreeGetRequest()>:
+    14cc:	b510      	push	{r4, lr}
+    14ce:	4604      	mov	r4, r0
+    14d0:	6800      	ldr	r0, [r0, #0]
+    14d2:	6803      	ldr	r3, [r0, #0]
+    14d4:	68e1      	ldr	r1, [r4, #12]
+    14d6:	6a5b      	ldr	r3, [r3, #36]	; 0x24
+    14d8:	4798      	blx	r3
+    14da:	2300      	movs	r3, #0
+    14dc:	60e3      	str	r3, [r4, #12]
+    14de:	bd10      	pop	{r4, pc}
 
-000014d0 <NotificationsCtx::Get()>:
-    14d0:	b570      	push	{r4, r5, r6, lr}
-    14d2:	4604      	mov	r4, r0
-    14d4:	6800      	ldr	r0, [r0, #0]
-    14d6:	b082      	sub	sp, #8
-    14d8:	6803      	ldr	r3, [r0, #0]
-    14da:	69db      	ldr	r3, [r3, #28]
-    14dc:	4798      	blx	r3
-    14de:	60e0      	str	r0, [r4, #12]
-    14e0:	b1b8      	cbz	r0, 1512 <NotificationsCtx::Get()+0x42>
-    14e2:	2200      	movs	r2, #0
-    14e4:	f44f 55fa 	mov.w	r5, #8000	; 0x1f40
-    14e8:	4b0e      	ldr	r3, [pc, #56]	; (1524 <NotificationsCtx::Get()+0x54>)
-    14ea:	7002      	strb	r2, [r0, #0]
-    14ec:	6820      	ldr	r0, [r4, #0]
-    14ee:	447b      	add	r3, pc
-    14f0:	69a6      	ldr	r6, [r4, #24]
-    14f2:	6802      	ldr	r2, [r0, #0]
-    14f4:	68e1      	ldr	r1, [r4, #12]
-    14f6:	e9cd 5600 	strd	r5, r6, [sp]
-    14fa:	f8d2 50b8 	ldr.w	r5, [r2, #184]	; 0xb8
-    14fe:	3101      	adds	r1, #1
-    1500:	4a09      	ldr	r2, [pc, #36]	; (1528 <NotificationsCtx::Get()+0x58>)
-    1502:	447a      	add	r2, pc
-    1504:	47a8      	blx	r5
-    1506:	6820      	ldr	r0, [r4, #0]
-    1508:	68e1      	ldr	r1, [r4, #12]
-    150a:	6803      	ldr	r3, [r0, #0]
-    150c:	6a1b      	ldr	r3, [r3, #32]
-    150e:	4798      	blx	r3
-    1510:	b108      	cbz	r0, 1516 <NotificationsCtx::Get()+0x46>
-    1512:	b002      	add	sp, #8
-    1514:	bd70      	pop	{r4, r5, r6, pc}
-    1516:	4620      	mov	r0, r4
-    1518:	b002      	add	sp, #8
-    151a:	e8bd 4070 	ldmia.w	sp!, {r4, r5, r6, lr}
-    151e:	f7ff bfcd 	b.w	14bc <NotificationsCtx::FreeGetRequest()>
-    1522:	bf00      	nop
-    1524:	0000028a 	.word	0x0000028a
-    1528:	000004f2 	.word	0x000004f2
+000014e0 <NotificationsCtx::Get()>:
+    14e0:	b570      	push	{r4, r5, r6, lr}
+    14e2:	4604      	mov	r4, r0
+    14e4:	6800      	ldr	r0, [r0, #0]
+    14e6:	b082      	sub	sp, #8
+    14e8:	6803      	ldr	r3, [r0, #0]
+    14ea:	69db      	ldr	r3, [r3, #28]
+    14ec:	4798      	blx	r3
+    14ee:	60e0      	str	r0, [r4, #12]
+    14f0:	b1b8      	cbz	r0, 1522 <NotificationsCtx::Get()+0x42>
+    14f2:	2200      	movs	r2, #0
+    14f4:	f44f 55fa 	mov.w	r5, #8000	; 0x1f40
+    14f8:	4b0e      	ldr	r3, [pc, #56]	; (1534 <NotificationsCtx::Get()+0x54>)
+    14fa:	7002      	strb	r2, [r0, #0]
+    14fc:	6820      	ldr	r0, [r4, #0]
+    14fe:	447b      	add	r3, pc
+    1500:	69a6      	ldr	r6, [r4, #24]
+    1502:	6802      	ldr	r2, [r0, #0]
+    1504:	68e1      	ldr	r1, [r4, #12]
+    1506:	e9cd 5600 	strd	r5, r6, [sp]
+    150a:	f8d2 50b8 	ldr.w	r5, [r2, #184]	; 0xb8
+    150e:	3101      	adds	r1, #1
+    1510:	4a09      	ldr	r2, [pc, #36]	; (1538 <NotificationsCtx::Get()+0x58>)
+    1512:	447a      	add	r2, pc
+    1514:	47a8      	blx	r5
+    1516:	6820      	ldr	r0, [r4, #0]
+    1518:	68e1      	ldr	r1, [r4, #12]
+    151a:	6803      	ldr	r3, [r0, #0]
+    151c:	6a1b      	ldr	r3, [r3, #32]
+    151e:	4798      	blx	r3
+    1520:	b108      	cbz	r0, 1526 <NotificationsCtx::Get()+0x46>
+    1522:	b002      	add	sp, #8
+    1524:	bd70      	pop	{r4, r5, r6, pc}
+    1526:	4620      	mov	r0, r4
+    1528:	b002      	add	sp, #8
+    152a:	e8bd 4070 	ldmia.w	sp!, {r4, r5, r6, lr}
+    152e:	f7ff bfcd 	b.w	14cc <NotificationsCtx::FreeGetRequest()>
+    1532:	bf00      	nop
+    1534:	0000028a 	.word	0x0000028a
+    1538:	000004f2 	.word	0x000004f2
 
-0000152c <NotificationsCtx::CheckForNewNotifications()>:
-    152c:	e92d 41f0 	stmdb	sp!, {r4, r5, r6, r7, r8, lr}
-    1530:	4604      	mov	r4, r0
-    1532:	6800      	ldr	r0, [r0, #0]
-    1534:	b090      	sub	sp, #64	; 0x40
-    1536:	6803      	ldr	r3, [r0, #0]
-    1538:	695b      	ldr	r3, [r3, #20]
-    153a:	4798      	blx	r3
-    153c:	2801      	cmp	r0, #1
-    153e:	d133      	bne.n	15a8 <NotificationsCtx::CheckForNewNotifications()+0x7c>
-    1540:	4605      	mov	r5, r0
-    1542:	6820      	ldr	r0, [r4, #0]
-    1544:	6803      	ldr	r3, [r0, #0]
-    1546:	f8d3 30c4 	ldr.w	r3, [r3, #196]	; 0xc4
+0000153c <NotificationsCtx::CheckForNewNotifications()>:
+    153c:	e92d 41f0 	stmdb	sp!, {r4, r5, r6, r7, r8, lr}
+    1540:	4604      	mov	r4, r0
+    1542:	6800      	ldr	r0, [r0, #0]
+    1544:	b090      	sub	sp, #64	; 0x40
+    1546:	6803      	ldr	r3, [r0, #0]
+    1548:	695b      	ldr	r3, [r3, #20]
     154a:	4798      	blx	r3
-    154c:	6863      	ldr	r3, [r4, #4]
-    154e:	ee07 0a90 	vmov	s15, r0
-    1552:	2b00      	cmp	r3, #0
-    1554:	db2b      	blt.n	15ae <NotificationsCtx::CheckForNewNotifications()+0x82>
-    1556:	6820      	ldr	r0, [r4, #0]
-    1558:	4951      	ldr	r1, [pc, #324]	; (16a0 <NotificationsCtx::CheckForNewNotifications()+0x174>)
-    155a:	6803      	ldr	r3, [r0, #0]
-    155c:	4479      	add	r1, pc
-    155e:	6a9b      	ldr	r3, [r3, #40]	; 0x28
-    1560:	4798      	blx	r3
-    1562:	6823      	ldr	r3, [r4, #0]
-    1564:	f641 7241 	movw	r2, #8001	; 0x1f41
-    1568:	9002      	str	r0, [sp, #8]
-    156a:	6819      	ldr	r1, [r3, #0]
-    156c:	4618      	mov	r0, r3
-    156e:	f8ad 200c 	strh.w	r2, [sp, #12]
-    1572:	aa02      	add	r2, sp, #8
-    1574:	6c0b      	ldr	r3, [r1, #64]	; 0x40
-    1576:	6861      	ldr	r1, [r4, #4]
-    1578:	4798      	blx	r3
-    157a:	f100 030b 	add.w	r3, r0, #11
-    157e:	2b01      	cmp	r3, #1
-    1580:	d912      	bls.n	15a8 <NotificationsCtx::CheckForNewNotifications()+0x7c>
-    1582:	e9d4 3100 	ldrd	r3, r1, [r4]
-    1586:	681d      	ldr	r5, [r3, #0]
-    1588:	2800      	cmp	r0, #0
-    158a:	d030      	beq.n	15ee <NotificationsCtx::CheckForNewNotifications()+0xc2>
-    158c:	300c      	adds	r0, #12
-    158e:	d02e      	beq.n	15ee <NotificationsCtx::CheckForNewNotifications()+0xc2>
-    1590:	4618      	mov	r0, r3
-    1592:	6d6a      	ldr	r2, [r5, #84]	; 0x54
-    1594:	4790      	blx	r2
-    1596:	f04f 33ff 	mov.w	r3, #4294967295	; 0xffffffff
-    159a:	6820      	ldr	r0, [r4, #0]
-    159c:	6063      	str	r3, [r4, #4]
-    159e:	6803      	ldr	r3, [r0, #0]
-    15a0:	f8d3 30c4 	ldr.w	r3, [r3, #196]	; 0xc4
-    15a4:	4798      	blx	r3
-    15a6:	6160      	str	r0, [r4, #20]
-    15a8:	b010      	add	sp, #64	; 0x40
-    15aa:	e8bd 81f0 	ldmia.w	sp!, {r4, r5, r6, r7, r8, pc}
-    15ae:	edd4 6a05 	vldr	s13, [r4, #20]
-    15b2:	eeb6 7a00 	vmov.f32	s14, #96	; 0x3f000000  0.5
-    15b6:	ee77 7ae6 	vsub.f32	s15, s15, s13
-    15ba:	eef4 7ac7 	vcmpe.f32	s15, s14
-    15be:	eef1 fa10 	vmrs	APSR_nzcv, fpscr
-    15c2:	d4f1      	bmi.n	15a8 <NotificationsCtx::CheckForNewNotifications()+0x7c>
-    15c4:	6820      	ldr	r0, [r4, #0]
-    15c6:	4629      	mov	r1, r5
-    15c8:	6803      	ldr	r3, [r0, #0]
-    15ca:	6b1b      	ldr	r3, [r3, #48]	; 0x30
-    15cc:	4798      	blx	r3
-    15ce:	2800      	cmp	r0, #0
-    15d0:	4601      	mov	r1, r0
-    15d2:	6060      	str	r0, [r4, #4]
-    15d4:	dbe8      	blt.n	15a8 <NotificationsCtx::CheckForNewNotifications()+0x7c>
-    15d6:	6820      	ldr	r0, [r4, #0]
-    15d8:	2200      	movs	r2, #0
-    15da:	6803      	ldr	r3, [r0, #0]
-    15dc:	6b5b      	ldr	r3, [r3, #52]	; 0x34
-    15de:	4798      	blx	r3
-    15e0:	6820      	ldr	r0, [r4, #0]
-    15e2:	6803      	ldr	r3, [r0, #0]
-    15e4:	f8d3 30c4 	ldr.w	r3, [r3, #196]	; 0xc4
-    15e8:	4798      	blx	r3
-    15ea:	6160      	str	r0, [r4, #20]
-    15ec:	e7b3      	b.n	1556 <NotificationsCtx::CheckForNewNotifications()+0x2a>
-    15ee:	2700      	movs	r7, #0
-    15f0:	ae04      	add	r6, sp, #16
-    15f2:	4618      	mov	r0, r3
-    15f4:	2310      	movs	r3, #16
-    15f6:	9700      	str	r7, [sp, #0]
-    15f8:	4632      	mov	r2, r6
-    15fa:	6bed      	ldr	r5, [r5, #60]	; 0x3c
-    15fc:	47a8      	blx	r5
-    15fe:	2810      	cmp	r0, #16
-    1600:	4605      	mov	r5, r0
-    1602:	d00a      	beq.n	161a <NotificationsCtx::CheckForNewNotifications()+0xee>
-    1604:	1c45      	adds	r5, r0, #1
-    1606:	d0cf      	beq.n	15a8 <NotificationsCtx::CheckForNewNotifications()+0x7c>
-    1608:	e9d4 0100 	ldrd	r0, r1, [r4]
-    160c:	6803      	ldr	r3, [r0, #0]
-    160e:	6d5b      	ldr	r3, [r3, #84]	; 0x54
-    1610:	4798      	blx	r3
-    1612:	f04f 33ff 	mov.w	r3, #4294967295	; 0xffffffff
-    1616:	6063      	str	r3, [r4, #4]
-    1618:	e7c6      	b.n	15a8 <NotificationsCtx::CheckForNewNotifications()+0x7c>
-    161a:	6820      	ldr	r0, [r4, #0]
-    161c:	4921      	ldr	r1, [pc, #132]	; (16a4 <NotificationsCtx::CheckForNewNotifications()+0x178>)
-    161e:	6803      	ldr	r3, [r0, #0]
-    1620:	4479      	add	r1, pc
-    1622:	f8d3 30bc 	ldr.w	r3, [r3, #188]	; 0xbc
-    1626:	4798      	blx	r3
-    1628:	4621      	mov	r1, r4
-    162a:	4632      	mov	r2, r6
-    162c:	2304      	movs	r3, #4
-    162e:	f851 0b10 	ldr.w	r0, [r1], #16
-    1632:	f8d0 c000 	ldr.w	ip, [r0]
-    1636:	f8dc 80a8 	ldr.w	r8, [ip, #168]	; 0xa8
-    163a:	47c0      	blx	r8
-    163c:	4b1a      	ldr	r3, [pc, #104]	; (16a8 <NotificationsCtx::CheckForNewNotifications()+0x17c>)
-    163e:	f8d4 e000 	ldr.w	lr, [r4]
-    1642:	f10d 0c20 	add.w	ip, sp, #32
-    1646:	447b      	add	r3, pc
-    1648:	f10d 0830 	add.w	r8, sp, #48	; 0x30
-    164c:	cb0f      	ldmia	r3, {r0, r1, r2, r3}
-    164e:	e88c 000f 	stmia.w	ip, {r0, r1, r2, r3}
-    1652:	f8de 3000 	ldr.w	r3, [lr]
-    1656:	4632      	mov	r2, r6
-    1658:	4641      	mov	r1, r8
-    165a:	4670      	mov	r0, lr
-    165c:	f8d3 60a8 	ldr.w	r6, [r3, #168]	; 0xa8
-    1660:	462b      	mov	r3, r5
-    1662:	47b0      	blx	r6
-    1664:	990c      	ldr	r1, [sp, #48]	; 0x30
-    1666:	4e0d      	ldr	r6, [pc, #52]	; (169c <NotificationsCtx::CheckForNewNotifications()+0x170>)
-    1668:	462b      	mov	r3, r5
-    166a:	9809      	ldr	r0, [sp, #36]	; 0x24
-    166c:	4642      	mov	r2, r8
-    166e:	404e      	eors	r6, r1
-    1670:	990a      	ldr	r1, [sp, #40]	; 0x28
-    1672:	9d0e      	ldr	r5, [sp, #56]	; 0x38
-    1674:	4430      	add	r0, r6
-    1676:	960c      	str	r6, [sp, #48]	; 0x30
-    1678:	9e0d      	ldr	r6, [sp, #52]	; 0x34
-    167a:	4070      	eors	r0, r6
-    167c:	9e0b      	ldr	r6, [sp, #44]	; 0x2c
-    167e:	4401      	add	r1, r0
-    1680:	900d      	str	r0, [sp, #52]	; 0x34
-    1682:	6820      	ldr	r0, [r4, #0]
-    1684:	404d      	eors	r5, r1
-    1686:	6861      	ldr	r1, [r4, #4]
-    1688:	6804      	ldr	r4, [r0, #0]
-    168a:	442e      	add	r6, r5
-    168c:	950e      	str	r5, [sp, #56]	; 0x38
-    168e:	9d0f      	ldr	r5, [sp, #60]	; 0x3c
-    1690:	9700      	str	r7, [sp, #0]
-    1692:	4075      	eors	r5, r6
-    1694:	6ba4      	ldr	r4, [r4, #56]	; 0x38
-    1696:	950f      	str	r5, [sp, #60]	; 0x3c
-    1698:	47a0      	blx	r4
-    169a:	e785      	b.n	15a8 <NotificationsCtx::CheckForNewNotifications()+0x7c>
-    169c:	1dd232c4 	.word	0x1dd232c4
-    16a0:	0000021c 	.word	0x0000021c
-    16a4:	000003f8 	.word	0x000003f8
-    16a8:	0000039e 	.word	0x0000039e
+    154c:	2801      	cmp	r0, #1
+    154e:	d133      	bne.n	15b8 <NotificationsCtx::CheckForNewNotifications()+0x7c>
+    1550:	4605      	mov	r5, r0
+    1552:	6820      	ldr	r0, [r4, #0]
+    1554:	6803      	ldr	r3, [r0, #0]
+    1556:	f8d3 30c4 	ldr.w	r3, [r3, #196]	; 0xc4
+    155a:	4798      	blx	r3
+    155c:	6863      	ldr	r3, [r4, #4]
+    155e:	ee07 0a90 	vmov	s15, r0
+    1562:	2b00      	cmp	r3, #0
+    1564:	db2b      	blt.n	15be <NotificationsCtx::CheckForNewNotifications()+0x82>
+    1566:	6820      	ldr	r0, [r4, #0]
+    1568:	4951      	ldr	r1, [pc, #324]	; (16b0 <NotificationsCtx::CheckForNewNotifications()+0x174>)
+    156a:	6803      	ldr	r3, [r0, #0]
+    156c:	4479      	add	r1, pc
+    156e:	6a9b      	ldr	r3, [r3, #40]	; 0x28
+    1570:	4798      	blx	r3
+    1572:	6823      	ldr	r3, [r4, #0]
+    1574:	f641 7241 	movw	r2, #8001	; 0x1f41
+    1578:	9002      	str	r0, [sp, #8]
+    157a:	6819      	ldr	r1, [r3, #0]
+    157c:	4618      	mov	r0, r3
+    157e:	f8ad 200c 	strh.w	r2, [sp, #12]
+    1582:	aa02      	add	r2, sp, #8
+    1584:	6c0b      	ldr	r3, [r1, #64]	; 0x40
+    1586:	6861      	ldr	r1, [r4, #4]
+    1588:	4798      	blx	r3
+    158a:	f100 030b 	add.w	r3, r0, #11
+    158e:	2b01      	cmp	r3, #1
+    1590:	d912      	bls.n	15b8 <NotificationsCtx::CheckForNewNotifications()+0x7c>
+    1592:	e9d4 3100 	ldrd	r3, r1, [r4]
+    1596:	681d      	ldr	r5, [r3, #0]
+    1598:	2800      	cmp	r0, #0
+    159a:	d030      	beq.n	15fe <NotificationsCtx::CheckForNewNotifications()+0xc2>
+    159c:	300c      	adds	r0, #12
+    159e:	d02e      	beq.n	15fe <NotificationsCtx::CheckForNewNotifications()+0xc2>
+    15a0:	4618      	mov	r0, r3
+    15a2:	6d6a      	ldr	r2, [r5, #84]	; 0x54
+    15a4:	4790      	blx	r2
+    15a6:	f04f 33ff 	mov.w	r3, #4294967295	; 0xffffffff
+    15aa:	6820      	ldr	r0, [r4, #0]
+    15ac:	6063      	str	r3, [r4, #4]
+    15ae:	6803      	ldr	r3, [r0, #0]
+    15b0:	f8d3 30c4 	ldr.w	r3, [r3, #196]	; 0xc4
+    15b4:	4798      	blx	r3
+    15b6:	6160      	str	r0, [r4, #20]
+    15b8:	b010      	add	sp, #64	; 0x40
+    15ba:	e8bd 81f0 	ldmia.w	sp!, {r4, r5, r6, r7, r8, pc}
+    15be:	edd4 6a05 	vldr	s13, [r4, #20]
+    15c2:	eeb6 7a00 	vmov.f32	s14, #96	; 0x3f000000  0.5
+    15c6:	ee77 7ae6 	vsub.f32	s15, s15, s13
+    15ca:	eef4 7ac7 	vcmpe.f32	s15, s14
+    15ce:	eef1 fa10 	vmrs	APSR_nzcv, fpscr
+    15d2:	d4f1      	bmi.n	15b8 <NotificationsCtx::CheckForNewNotifications()+0x7c>
+    15d4:	6820      	ldr	r0, [r4, #0]
+    15d6:	4629      	mov	r1, r5
+    15d8:	6803      	ldr	r3, [r0, #0]
+    15da:	6b1b      	ldr	r3, [r3, #48]	; 0x30
+    15dc:	4798      	blx	r3
+    15de:	2800      	cmp	r0, #0
+    15e0:	4601      	mov	r1, r0
+    15e2:	6060      	str	r0, [r4, #4]
+    15e4:	dbe8      	blt.n	15b8 <NotificationsCtx::CheckForNewNotifications()+0x7c>
+    15e6:	6820      	ldr	r0, [r4, #0]
+    15e8:	2200      	movs	r2, #0
+    15ea:	6803      	ldr	r3, [r0, #0]
+    15ec:	6b5b      	ldr	r3, [r3, #52]	; 0x34
+    15ee:	4798      	blx	r3
+    15f0:	6820      	ldr	r0, [r4, #0]
+    15f2:	6803      	ldr	r3, [r0, #0]
+    15f4:	f8d3 30c4 	ldr.w	r3, [r3, #196]	; 0xc4
+    15f8:	4798      	blx	r3
+    15fa:	6160      	str	r0, [r4, #20]
+    15fc:	e7b3      	b.n	1566 <NotificationsCtx::CheckForNewNotifications()+0x2a>
+    15fe:	2700      	movs	r7, #0
+    1600:	ae04      	add	r6, sp, #16
+    1602:	4618      	mov	r0, r3
+    1604:	2310      	movs	r3, #16
+    1606:	9700      	str	r7, [sp, #0]
+    1608:	4632      	mov	r2, r6
+    160a:	6bed      	ldr	r5, [r5, #60]	; 0x3c
+    160c:	47a8      	blx	r5
+    160e:	2810      	cmp	r0, #16
+    1610:	4605      	mov	r5, r0
+    1612:	d00a      	beq.n	162a <NotificationsCtx::CheckForNewNotifications()+0xee>
+    1614:	1c45      	adds	r5, r0, #1
+    1616:	d0cf      	beq.n	15b8 <NotificationsCtx::CheckForNewNotifications()+0x7c>
+    1618:	e9d4 0100 	ldrd	r0, r1, [r4]
+    161c:	6803      	ldr	r3, [r0, #0]
+    161e:	6d5b      	ldr	r3, [r3, #84]	; 0x54
+    1620:	4798      	blx	r3
+    1622:	f04f 33ff 	mov.w	r3, #4294967295	; 0xffffffff
+    1626:	6063      	str	r3, [r4, #4]
+    1628:	e7c6      	b.n	15b8 <NotificationsCtx::CheckForNewNotifications()+0x7c>
+    162a:	6820      	ldr	r0, [r4, #0]
+    162c:	4921      	ldr	r1, [pc, #132]	; (16b4 <NotificationsCtx::CheckForNewNotifications()+0x178>)
+    162e:	6803      	ldr	r3, [r0, #0]
+    1630:	4479      	add	r1, pc
+    1632:	f8d3 30bc 	ldr.w	r3, [r3, #188]	; 0xbc
+    1636:	4798      	blx	r3
+    1638:	4621      	mov	r1, r4
+    163a:	4632      	mov	r2, r6
+    163c:	2304      	movs	r3, #4
+    163e:	f851 0b10 	ldr.w	r0, [r1], #16
+    1642:	f8d0 c000 	ldr.w	ip, [r0]
+    1646:	f8dc 80a8 	ldr.w	r8, [ip, #168]	; 0xa8
+    164a:	47c0      	blx	r8
+    164c:	4b1a      	ldr	r3, [pc, #104]	; (16b8 <NotificationsCtx::CheckForNewNotifications()+0x17c>)
+    164e:	f8d4 e000 	ldr.w	lr, [r4]
+    1652:	f10d 0c20 	add.w	ip, sp, #32
+    1656:	447b      	add	r3, pc
+    1658:	f10d 0830 	add.w	r8, sp, #48	; 0x30
+    165c:	cb0f      	ldmia	r3, {r0, r1, r2, r3}
+    165e:	e88c 000f 	stmia.w	ip, {r0, r1, r2, r3}
+    1662:	f8de 3000 	ldr.w	r3, [lr]
+    1666:	4632      	mov	r2, r6
+    1668:	4641      	mov	r1, r8
+    166a:	4670      	mov	r0, lr
+    166c:	f8d3 60a8 	ldr.w	r6, [r3, #168]	; 0xa8
+    1670:	462b      	mov	r3, r5
+    1672:	47b0      	blx	r6
+    1674:	990c      	ldr	r1, [sp, #48]	; 0x30
+    1676:	4e0d      	ldr	r6, [pc, #52]	; (16ac <NotificationsCtx::CheckForNewNotifications()+0x170>)
+    1678:	462b      	mov	r3, r5
+    167a:	9809      	ldr	r0, [sp, #36]	; 0x24
+    167c:	4642      	mov	r2, r8
+    167e:	404e      	eors	r6, r1
+    1680:	990a      	ldr	r1, [sp, #40]	; 0x28
+    1682:	9d0e      	ldr	r5, [sp, #56]	; 0x38
+    1684:	4430      	add	r0, r6
+    1686:	960c      	str	r6, [sp, #48]	; 0x30
+    1688:	9e0d      	ldr	r6, [sp, #52]	; 0x34
+    168a:	4070      	eors	r0, r6
+    168c:	9e0b      	ldr	r6, [sp, #44]	; 0x2c
+    168e:	4401      	add	r1, r0
+    1690:	900d      	str	r0, [sp, #52]	; 0x34
+    1692:	6820      	ldr	r0, [r4, #0]
+    1694:	404d      	eors	r5, r1
+    1696:	6861      	ldr	r1, [r4, #4]
+    1698:	6804      	ldr	r4, [r0, #0]
+    169a:	442e      	add	r6, r5
+    169c:	950e      	str	r5, [sp, #56]	; 0x38
+    169e:	9d0f      	ldr	r5, [sp, #60]	; 0x3c
+    16a0:	9700      	str	r7, [sp, #0]
+    16a2:	4075      	eors	r5, r6
+    16a4:	6ba4      	ldr	r4, [r4, #56]	; 0x38
+    16a6:	950f      	str	r5, [sp, #60]	; 0x3c
+    16a8:	47a0      	blx	r4
+    16aa:	e785      	b.n	15b8 <NotificationsCtx::CheckForNewNotifications()+0x7c>
+    16ac:	1dd232c4 	.word	0x1dd232c4
+    16b0:	0000021c 	.word	0x0000021c
+    16b4:	000003f8 	.word	0x000003f8
+    16b8:	0000039e 	.word	0x0000039e
 
-000016ac <NotificationsCtx::SetAuthKey(unsigned long)>:
-    16ac:	6181      	str	r1, [r0, #24]
-    16ae:	f7ff bf3d 	b.w	152c <NotificationsCtx::CheckForNewNotifications()>
-    16b2:	bf00      	nop
+000016bc <NotificationsCtx::SetAuthKey(unsigned long)>:
+    16bc:	6181      	str	r1, [r0, #24]
+    16be:	f7ff bf3d 	b.w	153c <NotificationsCtx::CheckForNewNotifications()>
+    16c2:	bf00      	nop
 
-000016b4 <NotificationsCtx::Update()>:
-    16b4:	b5f0      	push	{r4, r5, r6, r7, lr}
-    16b6:	6883      	ldr	r3, [r0, #8]
-    16b8:	b0c1      	sub	sp, #260	; 0x104
-    16ba:	4604      	mov	r4, r0
-    16bc:	b11b      	cbz	r3, 16c6 <NotificationsCtx::Update()+0x12>
-    16be:	f893 3054 	ldrb.w	r3, [r3, #84]	; 0x54
-    16c2:	2b00      	cmp	r3, #0
-    16c4:	d152      	bne.n	176c <NotificationsCtx::Update()+0xb8>
-    16c6:	68e2      	ldr	r2, [r4, #12]
-    16c8:	b112      	cbz	r2, 16d0 <NotificationsCtx::Update()+0x1c>
-    16ca:	f892 3054 	ldrb.w	r3, [r2, #84]	; 0x54
-    16ce:	b953      	cbnz	r3, 16e6 <NotificationsCtx::Update()+0x32>
-    16d0:	4620      	mov	r0, r4
-    16d2:	f7ff ff2b 	bl	152c <NotificationsCtx::CheckForNewNotifications()>
-    16d6:	6923      	ldr	r3, [r4, #16]
-    16d8:	2b00      	cmp	r3, #0
-    16da:	dd02      	ble.n	16e2 <NotificationsCtx::Update()+0x2e>
-    16dc:	68e3      	ldr	r3, [r4, #12]
-    16de:	2b00      	cmp	r3, #0
-    16e0:	d047      	beq.n	1772 <NotificationsCtx::Update()+0xbe>
-    16e2:	b041      	add	sp, #260	; 0x104
-    16e4:	bdf0      	pop	{r4, r5, r6, r7, pc}
-    16e6:	f892 3055 	ldrb.w	r3, [r2, #85]	; 0x55
-    16ea:	2b00      	cmp	r3, #0
-    16ec:	d037      	beq.n	175e <NotificationsCtx::Update()+0xaa>
-    16ee:	6d93      	ldr	r3, [r2, #88]	; 0x58
-    16f0:	2b00      	cmp	r3, #0
-    16f2:	d034      	beq.n	175e <NotificationsCtx::Update()+0xaa>
-    16f4:	6820      	ldr	r0, [r4, #0]
-    16f6:	466e      	mov	r6, sp
-    16f8:	4625      	mov	r5, r4
-    16fa:	6cd2      	ldr	r2, [r2, #76]	; 0x4c
-    16fc:	6807      	ldr	r7, [r0, #0]
-    16fe:	4631      	mov	r1, r6
-    1700:	f8d7 70a8 	ldr.w	r7, [r7, #168]	; 0xa8
-    1704:	47b8      	blx	r7
-    1706:	f855 0b1c 	ldr.w	r0, [r5], #28
-    170a:	4632      	mov	r2, r6
-    170c:	f44f 7380 	mov.w	r3, #256	; 0x100
-    1710:	6806      	ldr	r6, [r0, #0]
-    1712:	4629      	mov	r1, r5
-    1714:	f8d6 60a8 	ldr.w	r6, [r6, #168]	; 0xa8
-    1718:	47b0      	blx	r6
-    171a:	6820      	ldr	r0, [r4, #0]
-    171c:	462a      	mov	r2, r5
-    171e:	2304      	movs	r3, #4
-    1720:	6805      	ldr	r5, [r0, #0]
-    1722:	f504 7190 	add.w	r1, r4, #288	; 0x120
-    1726:	f8d5 50a8 	ldr.w	r5, [r5, #168]	; 0xa8
-    172a:	47a8      	blx	r5
-    172c:	f8d4 2120 	ldr.w	r2, [r4, #288]	; 0x120
-    1730:	f104 0520 	add.w	r5, r4, #32
-    1734:	6820      	ldr	r0, [r4, #0]
-    1736:	2304      	movs	r3, #4
-    1738:	f504 7194 	add.w	r1, r4, #296	; 0x128
-    173c:	f8c4 511c 	str.w	r5, [r4, #284]	; 0x11c
-    1740:	4415      	add	r5, r2
-    1742:	6806      	ldr	r6, [r0, #0]
-    1744:	462a      	mov	r2, r5
-    1746:	3504      	adds	r5, #4
-    1748:	f8d6 60a8 	ldr.w	r6, [r6, #168]	; 0xa8
-    174c:	47b0      	blx	r6
-    174e:	2201      	movs	r2, #1
-    1750:	2300      	movs	r3, #0
-    1752:	f8c4 5124 	str.w	r5, [r4, #292]	; 0x124
-    1756:	f884 212c 	strb.w	r2, [r4, #300]	; 0x12c
-    175a:	f8c4 3130 	str.w	r3, [r4, #304]	; 0x130
-    175e:	4620      	mov	r0, r4
-    1760:	f7ff feac 	bl	14bc <NotificationsCtx::FreeGetRequest()>
-    1764:	6923      	ldr	r3, [r4, #16]
-    1766:	3b01      	subs	r3, #1
-    1768:	6123      	str	r3, [r4, #16]
-    176a:	e7b1      	b.n	16d0 <NotificationsCtx::Update()+0x1c>
-    176c:	f7ff fe10 	bl	1390 <NotificationsCtx::FreePostRequest()>
-    1770:	e7a9      	b.n	16c6 <NotificationsCtx::Update()+0x12>
-    1772:	4620      	mov	r0, r4
-    1774:	f7ff feac 	bl	14d0 <NotificationsCtx::Get()>
-    1778:	b041      	add	sp, #260	; 0x104
-    177a:	bdf0      	pop	{r4, r5, r6, r7, pc}
+000016c4 <NotificationsCtx::Update()>:
+    16c4:	b5f0      	push	{r4, r5, r6, r7, lr}
+    16c6:	6883      	ldr	r3, [r0, #8]
+    16c8:	b0c1      	sub	sp, #260	; 0x104
+    16ca:	4604      	mov	r4, r0
+    16cc:	b11b      	cbz	r3, 16d6 <NotificationsCtx::Update()+0x12>
+    16ce:	f893 3054 	ldrb.w	r3, [r3, #84]	; 0x54
+    16d2:	2b00      	cmp	r3, #0
+    16d4:	d152      	bne.n	177c <NotificationsCtx::Update()+0xb8>
+    16d6:	68e2      	ldr	r2, [r4, #12]
+    16d8:	b112      	cbz	r2, 16e0 <NotificationsCtx::Update()+0x1c>
+    16da:	f892 3054 	ldrb.w	r3, [r2, #84]	; 0x54
+    16de:	b953      	cbnz	r3, 16f6 <NotificationsCtx::Update()+0x32>
+    16e0:	4620      	mov	r0, r4
+    16e2:	f7ff ff2b 	bl	153c <NotificationsCtx::CheckForNewNotifications()>
+    16e6:	6923      	ldr	r3, [r4, #16]
+    16e8:	2b00      	cmp	r3, #0
+    16ea:	dd02      	ble.n	16f2 <NotificationsCtx::Update()+0x2e>
+    16ec:	68e3      	ldr	r3, [r4, #12]
+    16ee:	2b00      	cmp	r3, #0
+    16f0:	d047      	beq.n	1782 <NotificationsCtx::Update()+0xbe>
+    16f2:	b041      	add	sp, #260	; 0x104
+    16f4:	bdf0      	pop	{r4, r5, r6, r7, pc}
+    16f6:	f892 3055 	ldrb.w	r3, [r2, #85]	; 0x55
+    16fa:	2b00      	cmp	r3, #0
+    16fc:	d037      	beq.n	176e <NotificationsCtx::Update()+0xaa>
+    16fe:	6d93      	ldr	r3, [r2, #88]	; 0x58
+    1700:	2b00      	cmp	r3, #0
+    1702:	d034      	beq.n	176e <NotificationsCtx::Update()+0xaa>
+    1704:	6820      	ldr	r0, [r4, #0]
+    1706:	466e      	mov	r6, sp
+    1708:	4625      	mov	r5, r4
+    170a:	6cd2      	ldr	r2, [r2, #76]	; 0x4c
+    170c:	6807      	ldr	r7, [r0, #0]
+    170e:	4631      	mov	r1, r6
+    1710:	f8d7 70a8 	ldr.w	r7, [r7, #168]	; 0xa8
+    1714:	47b8      	blx	r7
+    1716:	f855 0b1c 	ldr.w	r0, [r5], #28
+    171a:	4632      	mov	r2, r6
+    171c:	f44f 7380 	mov.w	r3, #256	; 0x100
+    1720:	6806      	ldr	r6, [r0, #0]
+    1722:	4629      	mov	r1, r5
+    1724:	f8d6 60a8 	ldr.w	r6, [r6, #168]	; 0xa8
+    1728:	47b0      	blx	r6
+    172a:	6820      	ldr	r0, [r4, #0]
+    172c:	462a      	mov	r2, r5
+    172e:	2304      	movs	r3, #4
+    1730:	6805      	ldr	r5, [r0, #0]
+    1732:	f504 7190 	add.w	r1, r4, #288	; 0x120
+    1736:	f8d5 50a8 	ldr.w	r5, [r5, #168]	; 0xa8
+    173a:	47a8      	blx	r5
+    173c:	f8d4 2120 	ldr.w	r2, [r4, #288]	; 0x120
+    1740:	f104 0520 	add.w	r5, r4, #32
+    1744:	6820      	ldr	r0, [r4, #0]
+    1746:	2304      	movs	r3, #4
+    1748:	f504 7194 	add.w	r1, r4, #296	; 0x128
+    174c:	f8c4 511c 	str.w	r5, [r4, #284]	; 0x11c
+    1750:	4415      	add	r5, r2
+    1752:	6806      	ldr	r6, [r0, #0]
+    1754:	462a      	mov	r2, r5
+    1756:	3504      	adds	r5, #4
+    1758:	f8d6 60a8 	ldr.w	r6, [r6, #168]	; 0xa8
+    175c:	47b0      	blx	r6
+    175e:	2201      	movs	r2, #1
+    1760:	2300      	movs	r3, #0
+    1762:	f8c4 5124 	str.w	r5, [r4, #292]	; 0x124
+    1766:	f884 212c 	strb.w	r2, [r4, #300]	; 0x12c
+    176a:	f8c4 3130 	str.w	r3, [r4, #304]	; 0x130
+    176e:	4620      	mov	r0, r4
+    1770:	f7ff feac 	bl	14cc <NotificationsCtx::FreeGetRequest()>
+    1774:	6923      	ldr	r3, [r4, #16]
+    1776:	3b01      	subs	r3, #1
+    1778:	6123      	str	r3, [r4, #16]
+    177a:	e7b1      	b.n	16e0 <NotificationsCtx::Update()+0x1c>
+    177c:	f7ff fe10 	bl	13a0 <NotificationsCtx::FreePostRequest()>
+    1780:	e7a9      	b.n	16d6 <NotificationsCtx::Update()+0x12>
+    1782:	4620      	mov	r0, r4
+    1784:	f7ff feac 	bl	14e0 <NotificationsCtx::Get()>
+    1788:	b041      	add	sp, #260	; 0x104
+    178a:	bdf0      	pop	{r4, r5, r6, r7, pc}
