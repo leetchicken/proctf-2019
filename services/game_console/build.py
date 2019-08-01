@@ -51,6 +51,7 @@ for game in gamesXml:
 	os.system("cp server/data/%s/*.png BUILD/server/data/%s/" % (name, name))
 
 	os.system("mkdir BUILD/SDK/%s" % name)
+	os.system("cp server/data/%s/code.bin BUILD/SDK/%s/" % (name, name))
 	os.system("cp server/data/%s/*.h BUILD/SDK/%s/" % (name, name))
 	os.system("cp server/data/%s/*.cpp BUILD/SDK/%s/" % (name, name))
 	os.system("cp server/data/%s/*.png BUILD/SDK/%s/" % (name, name))
