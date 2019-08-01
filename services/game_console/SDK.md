@@ -16,18 +16,66 @@ At this moment Console and SDK are in a early stage of development. This means t
 
 ## Development
 Game code:
-+ must include api.h and nothing mode
++ must include api.h and nothing more
 + must not use any standart function, only API
 + must not declare non constant global variables
-+ Game code must declare 2 functions:
++ game code must declare 2 functions:
 ~~~~
 void* GameInit(API* api, uint8_t* sdram)
 ~~~~
-GameInit is called only once on game startup. Before GameInit call all game assets and game code are loaded. sdram is a pointer to the free region of SDRAM, you can use this memory as you wish. GameInit returns pointer, this pointer will be passed to second argument of GameUpdate
+GameInit is called only once on game startup. Before GameInit call all game assets and game code are loaded. sdram is a pointer to the free region of SDRAM, you can use this memory as you wish. GameInit returns pointer, this pointer will be passed to second argument of GameUpdate. We expect you to use this pointer as a pointer to some structure you allocate on heap. We refer this structure as 'Game context'. We expect you to declare this structure in your code with some functions and members. In GameInit you allocate space for it on heap, initialize structure's members and return pointer to it. Then every frame in GameUpdate you cast second arguments(void* ctxVoid) to your's structure type and use as you wish.
 ~~~~
 bool GameUpdate(API* api, void* ctxVoid)
 ~~~~
 GameUpdate is called every frame. In this function you are supposed to update your game logic and draw something on the screen. Return false if you want to terminate game execution.
+~~~~
+#include "api.h"
+
+
+struct Context
+{
+    uint32_t color;
+
+    Context()
+    {}
+
+    bool Update(API* api);
+};
+
+
+inline void* operator new(size_t, void* __p) { return __p; }
+
+
+void* GameInit(API* api, uint8_t* sdram)
+{
+    void* mem = api->Malloc(sizeof(Context));
+    Context* ctx = new(mem) Context();
+    ctx->color = 0;
+    return (void*)ctx;
+}
+
+
+bool GameUpdate(API* api, void* ctxVoid)
+{
+    Context* ctx = (Context*)ctxVoid;
+    return ctx->Update(api);
+}
+
+
+bool Context::Update(API* api)
+{
+    if(api->GetButtonState())
+    {
+        api->Free(this);
+        return false;
+    }
+
+    api->LCD_Clear(0xff000000 | (color << 16) | (color << 8));
+    color = (color + 1) % 128;
+
+    return true;
+}
+~~~~
 
 ## Submission
 To submit your game, put 
@@ -44,6 +92,6 @@ After moderation you will be informed about submission results. Your submit migh
 + you are doing something suspicious, illegal in your code
 + icon size is not equal to 172x172
 + at least one of the assets is bigger that 480x272
-+ icon or assets in not PNG file
++ icon or assets is not PNG file
 
 After successful submission all gamers will be informed about new game
