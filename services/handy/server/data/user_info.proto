@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package handy;
+
+option go_package = "data";
+
+message UserInfo {
+  string username = 1;
+}
