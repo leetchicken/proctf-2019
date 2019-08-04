@@ -54,7 +54,10 @@ public final class SPN {
 	}
 
 	func encryptRound(_ input: [UInt8], _ subKey: [UInt8], _ sboxes: [SBox], _ skipPermutation: Bool) -> [UInt8] {
-		var result = zip(input, subKey).map { $0.0 ^ $0.1}
+		
+		
+		var result = zip(input, subKey).map { $0.0 ^ $0.1 }
+		
 
 		for i in (0..<result.count) {
 			var leftPart = UInt8(result[i] >> 4)
@@ -65,18 +68,67 @@ public final class SPN {
 
 			result[i] = (leftPart << 4) | rightPart
 		}
+		
 
 		if(!skipPermutation) {
 			let pboxInput = result.reduce(UInt64(0), { x, y in 
 				(x << 8) | UInt64(y)
 			})
 			var pboxOutput = pbox.permute(pboxInput)
+			
 
 			for i in (0..<result.count) {
 				result[result.count - i - 1] = UInt8(pboxOutput & 0xFF)
 				pboxOutput >>= 8
 			}
+			
 		}
+
+		return result
+	}
+
+	func decrypt(_ block: [UInt8]) -> [UInt8] {
+		var result = block		
+		result = xorWithLastSubKey(result);
+
+		for roundNum in (0..<SPN.roundsCount).reversed() {			
+			result = decryptRound(result, subkeys[roundNum], sboxes[roundNum], roundNum == SPN.roundsCount - 1)
+		}		
+		return result;
+	}
+
+	func decryptRound(_ input: [UInt8], _ subKey: [UInt8], _ sboxes: [SBox], _ skipPermutation: Bool) -> [UInt8] {
+		
+		
+
+		var result = input
+		if(!skipPermutation) {
+			let pboxInput = result.reduce(UInt64(0), { x, y in 
+				(x << 8) | UInt64(y)
+			})
+			var pboxOutput = pbox.invPermute(pboxInput)
+			
+
+			for i in (0..<result.count) {
+				result[result.count - i - 1] = UInt8(pboxOutput & 0xFF)
+				pboxOutput >>= 8
+			}
+			
+		}
+
+		for i in (0..<result.count) {
+			var leftPart = UInt8(result[i] >> 4)
+			var rightPart = UInt8(result[i] & 0x0F)
+
+			leftPart = sboxes[i * 2].invSubstitute(leftPart)
+			rightPart = sboxes[i * 2 + 1].invSubstitute(rightPart)
+
+			result[i] = (leftPart << 4) | rightPart
+		}
+		
+
+		result = zip(result, subKey).map { $0.0 ^ $0.1}
+		
 
 		return result
 	}

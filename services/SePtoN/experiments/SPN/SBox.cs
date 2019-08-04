@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace SPN
@@ -9,10 +10,12 @@ namespace SPN
 	{
 		public const int BitSize = 4;
 
-		ulong[] mapping = new ulong[1 << BitSize];
-		ulong[] invmapping = new ulong[1 << BitSize];
+		byte[] mapping = new byte[1 << BitSize];
+		byte[] invmapping = new byte[1 << BitSize];
 
-		public SBox(ulong[] input, ulong[] output)
+		public SBox(byte[] output) : this(Enumerable.Range(0, output.Length).Select(i => (byte)i).ToArray(), output) {}
+
+		public SBox(byte[] input, byte[] output)
 		{
 			if(input.Length != output.Length)
 				throw new ArgumentException($"Input and output arrays size must be equal but is not: input: ({input.Length}, output: {output.Length})");

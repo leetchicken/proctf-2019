@@ -3,10 +3,14 @@ import NIOExtras
 import BigInt
 import Foundation
 
-let spn = SPN([0, 1, 2, 3, 4, 5, 6, 7])
-let output = spn.encrypt([0, 1, 2, 3, 4, 5, 6, 7])
-print(output)
+let spn = SPN([7, 6, 5, 4, 3, 2, 1, 0])
 
+let plain: [UInt8] = [0, 1, 2, 3, 4, 5, 6, 7]
+print(plain)
+let enc = spn.encrypt(plain)
+print(enc)
+let dec = spn.decrypt(enc)
+print(dec)
 
 
 let arguments = CommandLine.arguments

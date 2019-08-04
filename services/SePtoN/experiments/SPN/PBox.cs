@@ -55,10 +55,10 @@ namespace SPN
 //				throw new ArgumentException($"input {input} is out of range, must have no more than {outputBitNumbersZeroBased.Length} least significant bits set");
 
 			ulong result = 0;
-			for(int i = 0; i < outputBitNumbersZeroBased.Length; i++)
+			for(int i = 0; i < bitNumbers.Length; i++)
 			{
-				var inputBitValue = (input >> (outputBitNumbersZeroBased.Length - (i + 1))) & 0x1;
-				var outputBitValue = inputBitValue << (outputBitNumbersZeroBased.Length - (bitNumbers[i] + 1));
+				var inputBitValue = (input >> (bitNumbers.Length - (i + 1))) & 0x1;
+				var outputBitValue = inputBitValue << (bitNumbers.Length - (bitNumbers[i] + 1));
 				result |= outputBitValue;
 			}
 

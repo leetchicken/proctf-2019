@@ -29,17 +29,16 @@ public class SePtoN {
 	
 
 	public func start(){		
-		startServer(self.groupPut, ImagePutHandler(), host, portPut)		
-		startServer(self.groupGet, ImageGetHandler(), host, portGet)
+		let _ = startServer(self.groupPut, ImagePutHandler(), host, portPut)		
+		let _ = startServer(self.groupGet, ImageGetHandler(), host, portGet)
 
 		// try channelPut.closeFuture.wait()
 		// try channelGet.closeFuture.wait()
 		// print("Servers closed")
 	}
 
-	private func startServer<THandler: ChannelInboundHandler>(_ group: EventLoopGroup, _ handler: THandler, _ host: String, _ port: Int) -> (channel: Channel, loopGroup: EventLoopGroup)
+	private func startServer<THandler: ChannelInboundHandler>(_ group: EventLoopGroup, _ handler: THandler, _ host: String, _ port: Int) -> Channel
 	{
-		
 		let bootstrap = ServerBootstrap(group: group)
 		    .serverChannelOption(ChannelOptions.backlog, value: 256)
 		    .serverChannelOption(ChannelOptions.socket(SocketOptionLevel(SOL_SOCKET), SO_REUSEADDR), value: 1)
@@ -69,6 +68,6 @@ public class SePtoN {
 		}
 		print("Server started and listening on \(channel.localAddress!)")
 
-		return (channel, group)
+		return channel
 	}
 }

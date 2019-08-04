@@ -5,6 +5,9 @@ public final class PBox {
 	init(_ outputBitNumbers: [Int]){
 		outputBitNumbersZeroBased = outputBitNumbers.map { $0 - 1 }
 		invOutputBitNumbersZeroBased = [Int](repeating: 0, count: outputBitNumbersZeroBased.count)
+		for i in (0..<invOutputBitNumbersZeroBased.count) {
+			invOutputBitNumbersZeroBased[outputBitNumbersZeroBased[i]] = i
+		}
 	}
 
 	func permute(_ input: UInt64) -> UInt64 {
