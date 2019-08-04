@@ -7,7 +7,7 @@ public final class ImageGetHandler: ChannelInboundHandler {
     public typealias OutboundOut = ByteBuffer
 
     let dirSize: UInt32 = 500
-    let storageDir = "/tmp"
+    let storageDir = "./storage"
 
     public func channelRead(context: ChannelHandlerContext, data: NIOAny) {
         var byteBuffer = unwrapInboundIn(data)

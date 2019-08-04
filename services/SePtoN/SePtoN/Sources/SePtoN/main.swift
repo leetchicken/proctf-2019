@@ -3,6 +3,11 @@ import NIOExtras
 import BigInt
 import Foundation
 
+let spn = SPN([0, 1, 2, 3, 4, 5, 6, 7])
+let output = spn.encrypt([0, 1, 2, 3, 4, 5, 6, 7])
+print(output)
+
+
 
 let arguments = CommandLine.arguments
 let hostArg = arguments.dropFirst(1).first
