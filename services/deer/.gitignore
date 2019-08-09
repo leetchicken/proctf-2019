@@ -1,5 +1,6 @@
 definitions.json
 LogProcessor.appsettings.json
+IdentityServer.appsettings.json
 .idea/
 bin/
 obj/

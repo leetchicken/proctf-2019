@@ -7,13 +7,9 @@ function get_rabbit_password_hash () {
 	echo "$(printf "%s%s" $SALT $HASH_BYTES | xxd -r -p | openssl base64)"
 }
 
-if [ ! -f definitions.json ] || [ ! -f LogProcessor.appsettings.json ]; then
+if [ ! -f definitions.json ] || [ ! -f LogProcessor.appsettings.json ] || [ ! -f IdentityServer.appsettings.json ]; then
 	RABBIT_ADMIN_PASSWORD=`pwgen -Bs1 20`
 	RABBIT_LOG_PROCESSOR_PASSWORD=`pwgen -Bs1 20`
-
-	# TODO remove
-	echo "RabbitMQ admin password: $RABBIT_ADMIN_PASSWORD"
-	echo "RabbitMQ log-processor password: $RABBIT_LOG_PROCESSOR_PASSWORD"
 
 	cat << EOF > definitions.json
 {
@@ -63,6 +59,15 @@ if [ ! -f definitions.json ] || [ ! -f LogProcessor.appsettings.json ]; then
       "auto_delete": false,
       "internal": false,
       "arguments": {}
+    },
+    {
+      "name": "feedback",
+      "vhost": "/",
+      "type": "topic",
+      "durable": true,
+      "auto_delete": false,
+      "internal": false,
+      "arguments": {}
     }
   ],
   "queues": [
@@ -94,6 +99,28 @@ EOF
     }
 }
 EOF
+
+	cat << EOF > IdentityServer.appsettings.json
+{
+    "ConnectionStrings": {
+        "MongoDb": "mongodb://mongodb/users",
+        "RabbitMq": "host=rabbitmq;username=admin;password=$RABBIT_ADMIN_PASSWORD"
+    },
+    "Kestrel": {
+        "EndPoints": {
+            "Http": {
+                "Url": "http://*:5000"
+            }
+        }
+    },
+    "Logging": {
+        "LogLevel": {
+          "Default": "Warning"
+        }
+    }
+}
+EOF
+
 else
   echo "All files already exists"
 fi

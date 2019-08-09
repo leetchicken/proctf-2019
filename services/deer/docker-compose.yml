@@ -15,14 +15,10 @@ services:
       nofile:
         soft: 65536 # maximum number of open files for the Elasticsearch user, set to at least 65536 on modern systems
         hard: 65536
-    volumes:
-      - elastic-data:/usr/share/elasticsearch/data
     ports:
       - 9200:9200
     expose:
       - "9200"
-    networks:
-      - network
 
   rabbitmq:
     image: proctf/deer-rabbitmq
@@ -32,12 +28,16 @@ services:
       - ./definitions.json:/etc/rabbitmq/definitions.json
     ports:
       - 5672:5672
+      # TODO remove
       - 15672:15672
     expose:
       - "5672"
+      # TODO remove
       - "15672"
-    networks:
-      - network
+
+  mongodb:
+    image: mongo
+    container_name: deer-mongo
 
   log_processor:
     image: proctf/deer-log-processor
@@ -46,12 +46,21 @@ services:
     restart: on-failure
     volumes:
       - ./LogProcessor.appsettings.json:/app/appsettings.json
-    networks:
-      - network
+    links:
+      - rabbitmq
+      - elasticsearch
 
-volumes:
-  elastic-data:
-  rabbit-data:
-
-networks:
-  network:
+  identity_server:
+    image: proctf/deer-identity-server
+    build: src/IdentityServer/
+    container_name: deer-identity-server
+    restart: on-failure
+    volumes:
+      - ./IdentityServer.appsettings.json:/app/appsettings.json
+    ports:
+      - 5000:5000
+    expose:
+      - "5000"
+    links:
+      - mongodb
+      - rabbitmq
