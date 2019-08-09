@@ -1,4 +1,5 @@
 ﻿using EasyNetQ;
+using LogProcessor.Handlers;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -18,6 +19,8 @@ namespace LogProcessor
                     services.AddLogging();
 
                     services.AddSingleton(sp => RabbitHutch.CreateBus(sp.GetRequiredService<IConfiguration>().GetConnectionString("RabbitMq")));
+                    services.AddSingleton<UserAddedMessageHandler>();
+                    
                     services.AddHostedService<RabbitMqService>();
                 })
                 .ConfigureLogging((hostingContext, logging) =>

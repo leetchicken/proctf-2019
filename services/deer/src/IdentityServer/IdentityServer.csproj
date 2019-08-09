@@ -6,8 +6,10 @@
 
     <ItemGroup>
         <PackageReference Include="EasyNetQ" Version="3.6.0" />
+        <PackageReference Include="EasyNetQ.Management.Client" Version="1.2.0" />
         <PackageReference Include="Microsoft.AspNetCore" Version="2.2.0" />
         <PackageReference Include="Microsoft.AspNetCore.Authentication.Cookies" Version="2.2.0" />
+        <PackageReference Include="Microsoft.AspNetCore.Cryptography.KeyDerivation" Version="2.2.0" />
         <PackageReference Include="Microsoft.AspNetCore.Mvc" Version="2.2.0" />
         <PackageReference Include="Microsoft.AspNetCore.Mvc.Core" Version="2.2.5" />
         <PackageReference Include="Microsoft.AspNetCore.StaticFiles" Version="2.2.0" />

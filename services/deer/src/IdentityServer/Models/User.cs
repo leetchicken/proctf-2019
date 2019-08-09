@@ -4,7 +4,9 @@ namespace IdentityServer.Models
     {
         public string Username { get; set; }
 
-        public string PasswordHash { get; set; }
+        public byte[] Salt { get; set; }
+        
+        public byte[] PasswordHash { get; set; }
 
         public string LogExchangeName { get; set; }
 

@@ -1,4 +1,7 @@
-﻿using EasyNetQ;
+﻿using System.Linq;
+using EasyNetQ;
+using EasyNetQ.ConnectionString;
+using EasyNetQ.Management.Client;
 using IdentityServer.Models;
 using IdentityServer.Repositories;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -21,7 +24,14 @@ namespace IdentityServer
                 return new ConfigurationBuilder().SetBasePath(env.ContentRootPath).AddJsonFile("appsettings.json", false).Build();
             });
 
-            services.AddSingleton(sp => RabbitHutch.CreateBus(sp.GetRequiredService<IConfiguration>().GetConnectionString("RabbitMq")));
+            services.AddSingleton(sp => new ConnectionStringParser().Parse(sp.GetRequiredService<IConfiguration>().GetConnectionString("RabbitMq")));
+            services.AddSingleton(sp => RabbitHutch.CreateBus(sp.GetRequiredService<ConnectionConfiguration>(), sr => { }));
+
+            services.AddSingleton<IManagementClient>(sp =>
+            {
+                var connectionConfiguration = sp.GetRequiredService<ConnectionConfiguration>();
+                return new ManagementClient($"http://{connectionConfiguration.Hosts.First().Host}", connectionConfiguration.UserName, connectionConfiguration.Password);
+            });
 
             services.AddSingleton<IMongoClient>(sp => new MongoClient(sp.GetRequiredService<IConfiguration>().GetConnectionString("MongoDb")));
             services.AddSingleton(sp =>
@@ -29,6 +39,7 @@ namespace IdentityServer
 
             services.AddSingleton(sp => sp.GetRequiredService<IMongoDatabase>().GetCollection<UserMongoDocument>("users"));
             services.AddSingleton<IUserRepository, UserRepository>();
+            services.AddSingleton<IUserUnitOfWork, UserUnitOfWork>();
 
             services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie();
 

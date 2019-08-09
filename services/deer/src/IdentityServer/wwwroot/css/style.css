@@ -10,11 +10,19 @@ html,body{
 .card{
     margin-top: auto;
     margin-bottom: auto;
-    width: 400px;
+    width: 600px;
     background-color: rgba(0,0,0,0.5) !important;
 }
 
 .card-header h3{
+    color: white;
+}
+
+.card-body h6{
+    color: white;
+}
+
+.card-body table{
     color: white;
 }
 

@@ -2,8 +2,8 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using EasyNetQ;
-using IdentityServer.Models;
 using LogProcessor.Handlers;
+using LogProcessor.Models;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 

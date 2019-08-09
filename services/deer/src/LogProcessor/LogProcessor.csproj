@@ -24,8 +24,4 @@
       </None>
     </ItemGroup>
     
-    <ItemGroup>
-      <ProjectReference Include="..\IdentityServer.Models\IdentityServer.Models.csproj" />
-    </ItemGroup>
-
 </Project>

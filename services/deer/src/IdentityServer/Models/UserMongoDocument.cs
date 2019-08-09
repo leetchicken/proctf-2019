@@ -7,8 +7,11 @@ namespace IdentityServer.Models
         [BsonId]
         public string Username { get; set; }
 
+        [BsonElement("salt")]
+        public byte[] Salt { get; set; }
+        
         [BsonElement("hash")]
-        public string PasswordHash { get; set; }
+        public byte[] PasswordHash { get; set; }
 
         [BsonElement("log_exchange")]
         public string LogExchangeName { get; set; }
@@ -24,6 +27,7 @@ namespace IdentityServer.Models
             return new UserMongoDocument
             {
                 Username = user.Username,
+                Salt = user.Salt,
                 PasswordHash = user.PasswordHash,
                 LogExchangeName = user.LogExchangeName,
                 FeedbackQueueName = user.FeedbackQueueName
@@ -35,6 +39,7 @@ namespace IdentityServer.Models
             return new User
             {
                 Username = Username,
+                Salt = Salt,
                 PasswordHash = PasswordHash,
                 LogExchangeName = LogExchangeName,
                 FeedbackQueueName = FeedbackQueueName

@@ -1,7 +1,7 @@
 using System.Threading.Tasks;
 using EasyNetQ;
 using EasyNetQ.Topology;
-using IdentityServer.Models;
+using LogProcessor.Models;
 
 namespace LogProcessor.Handlers
 {

@@ -1,8 +1,8 @@
-using System;
+using System.ComponentModel.DataAnnotations;
+using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
-using EasyNetQ;
-using IdentityServer.Models;
+using IdentityServer.Helpers;
 using IdentityServer.Repositories;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -12,13 +12,13 @@ namespace IdentityServer.Controllers
 {
     public class AccountController : Controller
     {
+        private readonly IUserUnitOfWork _userUnitOfWork;
         private readonly IUserRepository _userRepository;
-        private readonly IBus _bus;
 
-        public AccountController(IUserRepository userRepository, IBus bus)
+        public AccountController(IUserUnitOfWork userUnitOfWork, IUserRepository userRepository)
         {
+            _userUnitOfWork = userUnitOfWork;
             _userRepository = userRepository;
-            _bus = bus;
         }
 
         [HttpGet]
@@ -28,10 +28,18 @@ namespace IdentityServer.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Login(string username, string password)
+        public async Task<IActionResult> Login([Required] string username, [Required] string password)
         {
-            if (username == "admin" && password == "admin")
-                return await LoginUser(username);
+            if (ModelState.IsValid)
+            {
+                var user = await _userRepository.GetAsync(username);
+                if (user != null)
+                {
+                    var passwordHash = CryptoUtils.ComputeHash(user.Salt, password);
+                    if (user.PasswordHash.SequenceEqual(passwordHash))
+                        return await LoginUser(username);
+                }
+            }
 
             return View();
         }
@@ -52,19 +60,14 @@ namespace IdentityServer.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> SignUp(string username, string password)
+        public async Task<IActionResult> SignUp([RegularExpression("^[a-zA-Z0-9]{1,50}$")] string username, string password)
         {
-            var queue = _bus.Advanced.QueueDeclareAsync("");
-
-            var user = new User
+            if (ModelState.IsValid && await _userUnitOfWork.CreateUserAsync(username, password))
             {
-                Username = username,
-                PasswordHash = password,
-                LogExchangeName = $"logs.{Guid.NewGuid():D}",
-                FeedbackQueueName = queue.Result.Name
-            };
-            await _userRepository.CreateAsync(user);
-            return await LoginUser(username);
+                return await LoginUser(username);
+            }
+            
+            return View();
         }
 
         public async Task<IActionResult> Logout()
