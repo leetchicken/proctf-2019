@@ -1,3 +1,8 @@
+import Foundation
+#if os(Linux) || os(FreeBSD)
+  import Glibc
+#endif
+
 public final class SPN {
 
 	static let roundsCount = 5
@@ -33,17 +38,62 @@ public final class SPN {
 		pbox = PBox(SPN.pBoxOutput)
 	}
 
+	static func generateIV() -> [UInt8] {
+		let buffer = UnsafeMutablePointer<UInt8>.allocate(capacity: blockSizeBytes)
+	  #if os(Linux) || os(FreeBSD)
+		let fd = open("/dev/urandom", O_RDONLY)
+        defer {
+            close(fd)
+        }
+        let _ = read(fd, buffer, MemoryLayout<UInt8>.size * blockSizeBytes)
+      #else
+        arc4random_buf(buffer, blockSizeBytes)
+      #endif
+        defer {
+            buffer.deinitialize(count: blockSizeBytes)
+            buffer.deallocate()
+        }
+
+        return Array(Data(bytesNoCopy: buffer, count: blockSizeBytes, deallocator: .none))
+	}
+
 	static func generateSBoxes() -> [[SBox]] {
 		return (0..<roundsCount).map { _ in
 			(0..<roundSBoxesCount).map { SBox(SBoxes[$0])}
-		}		
+		}
 	}
 
 	static func keyShedule(_ masterKey: [UInt8]) -> [[UInt8]] {
 		return (0...roundsCount).map { _ in masterKey }
 	}
 
-	func encrypt(_ block: [UInt8]) -> [UInt8] {
+	func encryptCBC(_ data: [UInt8], _ iv: [UInt8]) throws -> [UInt8] {
+		if (data.count == 0 || data.count % SPN.blockSizeBytes != 0 || iv.count % SPN.blockSizeBytes != 0) {
+			throw SPNError.unpaddedInput
+		}
+
+		var result = [UInt8]()
+		var i = 0
+		result.reserveCapacity(iv.count + data.count)		
+		result += iv
+		
+		var prevC = iv
+		while(i < data.count){
+			let p = Array(data[i..<(i+SPN.blockSizeBytes)])
+			let c = encryptBlock(xorBlock(p, prevC))
+			result += c
+			prevC = c
+			i += SPN.blockSizeBytes
+		}
+
+		return result
+	}
+
+	func xorBlock(_ lhs: [UInt8], _ rhs: [UInt8]) -> [UInt8] {
+		return zip(lhs, rhs).map { $0.0 ^ $0.1}
+	}
+
+	func encryptBlock(_ block: [UInt8]) -> [UInt8] {
 		var result = block
 		for roundNum in (0..<SPN.roundsCount) {
 			result = encryptRound(result, subkeys[roundNum], sboxes[roundNum], roundNum == SPN.roundsCount - 1)
@@ -54,10 +104,7 @@ public final class SPN {
 	}
 
 	func encryptRound(_ input: [UInt8], _ subKey: [UInt8], _ sboxes: [SBox], _ skipPermutation: Bool) -> [UInt8] {
-		
-		
 		var result = zip(input, subKey).map { $0.0 ^ $0.1 }
-		
 
 		for i in (0..<result.count) {
 			var leftPart = UInt8(result[i] >> 4)
@@ -68,26 +115,44 @@ public final class SPN {
 
 			result[i] = (leftPart << 4) | rightPart
 		}
-		
 
 		if(!skipPermutation) {
 			let pboxInput = result.reduce(UInt64(0), { x, y in 
 				(x << 8) | UInt64(y)
 			})
 			var pboxOutput = pbox.permute(pboxInput)
-			
 
 			for i in (0..<result.count) {
 				result[result.count - i - 1] = UInt8(pboxOutput & 0xFF)
 				pboxOutput >>= 8
-			}
-			
+			}			
 		}
 
 		return result
 	}
 
-	func decrypt(_ block: [UInt8]) -> [UInt8] {
+	func decryptCBC(_ data: [UInt8]) throws -> [UInt8] {
+		if (data.count == 0 || data.count % SPN.blockSizeBytes != 0) {
+			throw SPNError.unpaddedInput
+		}
+
+		var result = [UInt8]()
+		var i = SPN.blockSizeBytes
+		result.reserveCapacity(data.count - i)		
+
+		var prevC = Array(data[0..<i])
+		while(i < data.count){
+			let c = Array(data[i..<(i+SPN.blockSizeBytes)])
+			let p = xorBlock(decryptBlock(c), prevC)
+			result += p
+			prevC = c
+			i += SPN.blockSizeBytes
+		}
+
+		return result
+	}
+
+	func decryptBlock(_ block: [UInt8]) -> [UInt8] {
 		var result = block		
 		result = xorWithLastSubKey(result);
 
@@ -98,22 +163,17 @@ public final class SPN {
 	}
 
 	func decryptRound(_ input: [UInt8], _ subKey: [UInt8], _ sboxes: [SBox], _ skipPermutation: Bool) -> [UInt8] {
-		
-		
-
 		var result = input
 		if(!skipPermutation) {
 			let pboxInput = result.reduce(UInt64(0), { x, y in 
 				(x << 8) | UInt64(y)
 			})
 			var pboxOutput = pbox.invPermute(pboxInput)
-			
 
 			for i in (0..<result.count) {
 				result[result.count - i - 1] = UInt8(pboxOutput & 0xFF)
 				pboxOutput >>= 8
-			}
-			
+			}			
 		}
 
 		for i in (0..<result.count) {
@@ -124,11 +184,9 @@ public final class SPN {
 			rightPart = sboxes[i * 2 + 1].invSubstitute(rightPart)
 
 			result[i] = (leftPart << 4) | rightPart
-		}
-		
+		}		
 
-		result = zip(result, subKey).map { $0.0 ^ $0.1}
-		
+		result = zip(result, subKey).map { $0.0 ^ $0.1}	
 
 		return result
 	}
@@ -145,4 +203,8 @@ public final class SPN {
 	let pbox: PBox
 	let subkeys: [[UInt8]];
 	let masterKey: [UInt8]
+}
+
+enum SPNError: Error {
+    case unpaddedInput
 }

@@ -6,10 +6,12 @@ import Foundation
 let spn = SPN([7, 6, 5, 4, 3, 2, 1, 0])
 
 let plain: [UInt8] = [0, 1, 2, 3, 4, 5, 6, 7]
+let iv: [UInt8] = SPN.generateIV()
+
 print(plain)
-let enc = spn.encrypt(plain)
+let enc = try! spn.encryptCBC(plain, iv)
 print(enc)
-let dec = spn.decrypt(enc)
+let dec = try! spn.decryptCBC(enc)
 print(dec)
 
 
