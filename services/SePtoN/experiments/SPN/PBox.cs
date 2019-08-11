@@ -24,7 +24,7 @@ namespace SPN
 			outputBitNumbersZeroBased = outputBitNumbers.Select(i => i - 1).ToArray();
 
 			invOutputBitNumbersZeroBased = new int[outputBitNumbersZeroBased.Length];
-			for(int i = 0; i < outputBitNumbersZeroBased.Length; i++)
+			for(int i = 0; i < invOutputBitNumbersZeroBased.Length; i++)
 				invOutputBitNumbersZeroBased[outputBitNumbersZeroBased[i]] = i;
 
 		}

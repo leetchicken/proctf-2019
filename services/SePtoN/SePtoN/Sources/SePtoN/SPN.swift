@@ -31,13 +31,7 @@ public final class SPN {
 	static let SBoxes: [[UInt8]] = [SBox1, SBox2, SBox3, SBox4, SBox5, SBox6, SBox7, SBox8, SBox9, SBox10, SBox11, SBox12, SBox13, SBox14, SBox15, SBox16]
 	static let pBoxOutput: [Int] = [38, 4, 15, 46, 11, 16, 33, 1, 35, 64, 51, 45, 50, 55, 27, 57, 47, 52, 43, 12, 7, 40, 42, 53, 29, 10, 56, 60, 36, 20, 58, 24, 39, 37, 26, 3, 32, 17, 22, 28, 30, 23, 63, 49, 14, 62, 19, 25, 21, 5, 9, 6, 8, 34, 18, 13, 31, 61, 44, 2, 48, 41, 54, 59]	
 
-	init(_ masterKey: [UInt8]) {
-		self.masterKey = masterKey
-		subkeys = SPN.keyShedule(masterKey)
-		sboxes = SPN.generateSBoxes()
-		pbox = PBox(SPN.pBoxOutput)
-	}
-
+	
 	static func generateIV() -> [UInt8] {
 		let buffer = UnsafeMutablePointer<UInt8>.allocate(capacity: blockSizeBytes)
 	  #if os(Linux) || os(FreeBSD)
@@ -57,6 +51,20 @@ public final class SPN {
         return Array(Data(bytesNoCopy: buffer, count: blockSizeBytes, deallocator: .none))
 	}
 
+	static func CalcMasterKey(_ keyMaterial: [UInt8]) throws -> [UInt8] {
+		if (keyMaterial.count == 0 || keyMaterial.count % SPN.blockSizeBytes != 0) {
+			throw SPNError.unpaddedInput
+		}
+
+		var i = SPN.blockSizeBytes
+		var masterKey = Array(keyMaterial[0..<i])
+        while (i < keyMaterial.count) {
+        	masterKey = SPN.xorBlock(masterKey, Array(keyMaterial[i..<(i+SPN.blockSizeBytes)]))
+        	i += SPN.blockSizeBytes
+        }
+        return masterKey
+    }
+
 	static func generateSBoxes() -> [[SBox]] {
 		return (0..<roundsCount).map { _ in
 			(0..<roundSBoxesCount).map { SBox(SBoxes[$0])}
@@ -65,6 +73,15 @@ public final class SPN {
 
 	static func keyShedule(_ masterKey: [UInt8]) -> [[UInt8]] {
 		return (0...roundsCount).map { _ in masterKey }
+	}
+
+
+
+	init(_ masterKey: [UInt8]) {
+		self.masterKey = masterKey
+		subkeys = SPN.keyShedule(masterKey)
+		sboxes = SPN.generateSBoxes()
+		pbox = PBox(SPN.pBoxOutput)
 	}
 
 	func encryptCBC(_ data: [UInt8], _ iv: [UInt8]) throws -> [UInt8] {
@@ -80,17 +97,13 @@ public final class SPN {
 		var prevC = iv
 		while(i < data.count){
 			let p = Array(data[i..<(i+SPN.blockSizeBytes)])
-			let c = encryptBlock(xorBlock(p, prevC))
+			let c = encryptBlock(SPN.xorBlock(p, prevC))
 			result += c
 			prevC = c
 			i += SPN.blockSizeBytes
 		}
 
 		return result
-	}
-
-	func xorBlock(_ lhs: [UInt8], _ rhs: [UInt8]) -> [UInt8] {
-		return zip(lhs, rhs).map { $0.0 ^ $0.1}
 	}
 
 	func encryptBlock(_ block: [UInt8]) -> [UInt8] {
@@ -143,7 +156,7 @@ public final class SPN {
 		var prevC = Array(data[0..<i])
 		while(i < data.count){
 			let c = Array(data[i..<(i+SPN.blockSizeBytes)])
-			let p = xorBlock(decryptBlock(c), prevC)
+			let p = SPN.xorBlock(decryptBlock(c), prevC)
 			result += p
 			prevC = c
 			i += SPN.blockSizeBytes
@@ -197,6 +210,10 @@ public final class SPN {
 			result[i] ^= subkeys[SPN.roundsCount][i]
 		}
 		return result
+	}
+
+	static func xorBlock(_ lhs: [UInt8], _ rhs: [UInt8]) -> [UInt8] {
+		return zip(lhs, rhs).map { $0.0 ^ $0.1}
 	}
 
 	let sboxes: [[SBox]]

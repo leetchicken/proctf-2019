@@ -2,6 +2,7 @@ import NIO
 import NIOExtras
 import BigInt
 import Foundation
+import SwiftGD
 
 public final class ImagePutHandler: ChannelInboundHandler {
 
@@ -12,10 +13,13 @@ public final class ImagePutHandler: ChannelInboundHandler {
     public typealias InboundIn = ByteBuffer
     public typealias OutboundOut = ByteBuffer
 
-    // private enum State {
-    //     case waiti
-    //     case waitingForFrame(length: Int)
-    // }
+    private enum State {
+        case keyExchange
+        case imageTransfer
+    }
+
+    private var state: State = .keyExchange
+    private var spn: SPN?
 
     // public func channelActive(context: ChannelHandlerContext) {
     //     let remoteAddress = context.remoteAddress!
@@ -24,6 +28,48 @@ public final class ImagePutHandler: ChannelInboundHandler {
     // }
 
     public func channelRead(context: ChannelHandlerContext, data: NIOAny) {
+
+        if case .keyExchange = self.state {
+            processKeyExchange(context, data)
+            state = .imageTransfer
+            return
+        }
+
+        if case .imageTransfer = self.state {
+            processImageTransfer(context, data)
+
+            context.close(promise: nil)
+            return
+        }
+    }
+
+    public func processImageTransfer(_ context: ChannelHandlerContext, _ data: NIOAny) {
+        var byteBuffer = unwrapInboundIn(data)
+
+        guard let c = byteBuffer.readBytes(length: byteBuffer.readableBytes) else {
+            context.close(promise: nil)
+            return
+        }
+
+        guard let imageData = try? spn?.decryptCBC(c) else {
+            print("Failed to decryptCBC c of \(c.count) bytes")
+            context.close(promise: nil)
+            return
+        }
+
+        guard let image = try? Image(data: Data(imageData), as: .bmp) else {
+            print("Failed to parse decrypted image bytes as valid Image")
+            context.close(promise: nil)
+            return
+        }
+
+        var result = context.channel.allocator.buffer(capacity: 4)
+        result.writeBytes([0, 0, 0, 0]) //TODO watermark image, encrypt it back, save to file and respond with fileId
+
+        context.write(self.wrapOutboundOut(result), promise: nil)
+    }
+
+    public func processKeyExchange(_ context: ChannelHandlerContext, _ data: NIOAny) {
 
 // Expecting from Client no more than 128 bytes of his DH part: g^a mod p
         var byteBuffer = unwrapInboundIn(data)
@@ -45,12 +91,23 @@ public final class ImagePutHandler: ChannelInboundHandler {
         let key = yA.power(xB, modulus: p)
         print("Key: ", key)
 
+        let keyMaterial = Array(key.serialize())
+        print("keyMaterial: ", keyMaterial)
+
+        guard let masterKey = try? SPN.CalcMasterKey(keyMaterial) else {
+            print("Failed to generate masterKey from DH-derived key \(key)")
+            context.close(promise: nil)
+            return
+        }
+        spn = SPN(masterKey)
+
         var yBbuffer = context.channel.allocator.buffer(capacity: 128)
         yBbuffer.writeBytes(yB.serialize())
 
 // Responding with our g^b mod p back to Client
         context.write(self.wrapOutboundOut(yBbuffer), promise: nil)
-    }
+        print("Written data")
+    } 
 
     public func channelReadComplete(context: ChannelHandlerContext) {
         context.flush()

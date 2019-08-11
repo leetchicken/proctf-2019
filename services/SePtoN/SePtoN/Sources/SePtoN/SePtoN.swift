@@ -29,26 +29,30 @@ public class SePtoN {
 	
 
 	public func start(){		
-		let _ = startServer(self.groupPut, ImagePutHandler(), host, portPut)		
-		let _ = startServer(self.groupGet, ImageGetHandler(), host, portGet)
+		let _ = startServer(self.groupPut, { ImagePutHandler() }, host, portPut)
+		let _ = startServer(self.groupGet, { ImageGetHandler() }, host, portGet)
 
 		// try channelPut.closeFuture.wait()
 		// try channelGet.closeFuture.wait()
 		// print("Servers closed")
 	}
 
-	private func startServer<THandler: ChannelInboundHandler>(_ group: EventLoopGroup, _ handler: THandler, _ host: String, _ port: Int) -> Channel
+	private func startServer<THandler: ChannelInboundHandler>(_ group: EventLoopGroup, _ handlerFactory: @escaping () -> THandler, _ host: String, _ port: Int) -> Channel
 	{
 		let bootstrap = ServerBootstrap(group: group)
 		    .serverChannelOption(ChannelOptions.backlog, value: 256)
 		    .serverChannelOption(ChannelOptions.socket(SocketOptionLevel(SOL_SOCKET), SO_REUSEADDR), value: 1)
 
-		    .childChannelInitializer { channel in        
-		        channel.pipeline.addHandler(ByteToMessageHandler(LengthFieldBasedFrameDecoder(lengthFieldLength: .two))).flatMap { v in
-		            channel.pipeline.addHandler(LengthFieldPrepender(lengthFieldLength: .two)).flatMap { v in
-		                channel.pipeline.addHandler(handler)
-		            }
-		        }
+		    .childChannelInitializer { channel in
+		    	channel.pipeline.addHandler(DebugOutboundEventsHandler()).flatMap { v in
+		    		channel.pipeline.addHandler(DebugInboundEventsHandler()).flatMap { v in
+				        channel.pipeline.addHandler(ByteToMessageHandler(LengthFieldBasedFrameDecoder(lengthFieldLength: .two))).flatMap { v in
+				            channel.pipeline.addHandler(LengthFieldPrepender(lengthFieldLength: .two)).flatMap { v in
+				                channel.pipeline.addHandler(handlerFactory())
+				            }
+				        }
+				    }
+			    }
 		    }
 
 		    .childChannelOption(ChannelOptions.socket(IPPROTO_TCP, TCP_NODELAY), value: 1)
