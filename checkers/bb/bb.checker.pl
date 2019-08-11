@@ -54,7 +54,8 @@ sub _check_http_response {
 
 sub check {
   $log->info('Getting public advertisements ...');
-  $url->path('/');
+  my $page = int rand 100;
+  $url->path_query("/?page=$page");
   $_ = _check_http_response($ua->get($url));
   my $title = $_->dom->find('h2')->map('text')->first // '';
   _mumble "Invalid main page" unless $title =~ /List of all advertisements/;
@@ -65,8 +66,6 @@ sub check {
   _mumble "Invalid redirect for board" unless my $prev = $tx->previous;
   $_ = _check_http_response($prev);
   _mumble "Invalid response for board" unless $_->code == 302;
-
-  # paging
 
   my $login = '';
   $login .= $chars[rand @chars] for 1 .. 20;
