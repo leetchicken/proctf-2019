@@ -167,7 +167,6 @@ const char* APIImpl::GetUserName()
     stoip4(ipStr, strlen(ipStr), &ip);
     const uint32_t kNetMask = 0x00FFFFFF;
     uint32_t netAddr = ip & kNetMask;
-    printf("%x\n", netAddr);
     for(uint32_t i = 0; i < kTeamsNum; i++)
     {
         if(GTeamsData[i].net == netAddr)
