@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29123.88
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "rubik", "rubik\rubik.fsproj", "{03C46611-0975-4CAE-9C98-F2D1AB8B627E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "rubikdb", "rubikdb\rubikdb.csproj", "{47C231DF-6A64-4109-9510-28231D383A62}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{03C46611-0975-4CAE-9C98-F2D1AB8B627E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{03C46611-0975-4CAE-9C98-F2D1AB8B627E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{03C46611-0975-4CAE-9C98-F2D1AB8B627E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{03C46611-0975-4CAE-9C98-F2D1AB8B627E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{47C231DF-6A64-4109-9510-28231D383A62}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{47C231DF-6A64-4109-9510-28231D383A62}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{47C231DF-6A64-4109-9510-28231D383A62}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{47C231DF-6A64-4109-9510-28231D383A62}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {D1D6BAF3-50D8-401E-A2A6-FFBBB519F9E8}
+	EndGlobalSection
+EndGlobal
