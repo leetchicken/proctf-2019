@@ -6,7 +6,7 @@ using System.Text;
 
 namespace SPN
 {
-	class SBox
+	public class SBox
 	{
 		public const int BitSize = 4;
 

@@ -7,7 +7,7 @@ using System.Text;
 
 namespace SPN
 {
-	class SubstitutionPermutationNetwork
+	public class SubstitutionPermutationNetwork
 	{
 		public static int RoundSBoxesCount => SBoxes.Length;
 		public static int BlockSizeBytes => (SBoxes.Length * SBox.BitSize) / 8;

@@ -73,7 +73,7 @@ public final class ImagePutHandler: ChannelInboundHandler {
 
 // Expecting from Client no more than 128 bytes of his DH part: g^a mod p
         var byteBuffer = unwrapInboundIn(data)
-        if byteBuffer.readableBytes > 128 * 8 {
+        if byteBuffer.readableBytes > 128 + 1 {
             context.close(promise: nil)
             return
         }
@@ -81,18 +81,21 @@ public final class ImagePutHandler: ChannelInboundHandler {
             context.close(promise: nil)
             return
         }
-
+        
         let yA = BigUInt(Data(newData))
+        print(newData)
+        print("yA: ", yA)
+        print()
 
         let xB = BigUInt.randomInteger(withExactWidth: 20 * 8)
         let yB = g.power(xB, modulus: p)
         print("yB: ", yB)
 
         let key = yA.power(xB, modulus: p)
-        print("Key: ", key)
-
         let keyMaterial = Array(key.serialize())
-        print("keyMaterial: ", keyMaterial)
+        print(keyMaterial)
+        print("Key: ", key)
+        print()
 
         guard let masterKey = try? SPN.CalcMasterKey(keyMaterial) else {
             print("Failed to generate masterKey from DH-derived key \(key)")
@@ -101,7 +104,7 @@ public final class ImagePutHandler: ChannelInboundHandler {
         }
         spn = SPN(masterKey)
 
-        var yBbuffer = context.channel.allocator.buffer(capacity: 128)
+        var yBbuffer = context.channel.allocator.buffer(capacity: 128 + 1)
         yBbuffer.writeBytes(yB.serialize())
 
 // Responding with our g^b mod p back to Client

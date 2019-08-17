@@ -5,7 +5,7 @@ using System.Text;
 
 namespace SPN
 {
-	static class ICollectionUtils
+	public static class ICollectionUtils
 	{
 		public static IEnumerable<IEnumerable<T>> CrossJoin<T>(this ICollection<IEnumerable<T>> enumerableOfEnumerables)
 		{

@@ -4,7 +4,7 @@ using System.Text;
 
 namespace SPN
 {
-	class LinearApproximationTable
+	public class LinearApproximationTable
 	{
 		public double[,] table;
 

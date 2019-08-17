@@ -5,7 +5,7 @@ using System.Text;
 
 namespace SPN
 {
-	static class ByteArrayUtils
+	public static class ByteArrayUtils
 	{
 		public static string ToHex(this byte[] bytes)
 		{

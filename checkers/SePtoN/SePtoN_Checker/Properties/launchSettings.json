@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "SePtoN_Checker": {
+      "commandName": "Project",
+      "commandLineArgs": "put 10.60.2.4 id flag 1"
+    }
+  }
+}

@@ -4,7 +4,7 @@ using System.Text;
 
 namespace SPN
 {
-	static class MathUtils
+	public static class MathUtils
 	{
 		public static double Bias(this double value)
 		{

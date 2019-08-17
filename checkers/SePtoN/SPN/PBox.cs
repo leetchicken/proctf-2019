@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace SPN
 {
-	class PBox
+	public class PBox
 	{
 		private int[] outputBitNumbersZeroBased;
 		private int[] invOutputBitNumbersZeroBased;
