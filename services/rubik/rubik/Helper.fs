@@ -2,7 +2,6 @@
 
 open System
 open System.Runtime.CompilerServices
-open System.Runtime.InteropServices
 open System.Threading
 open Microsoft.FSharp.NativeInterop
 
@@ -14,6 +13,8 @@ type String with
     member inline this.TrimOrNull() = if this <> null then this.Trim() else null
 
 #if HACK
+open System.Runtime.InteropServices
+
 [<Struct; IsByRefLike; StructLayout(LayoutKind.Explicit)>]
 type CastToPointerStruct =
     [<FieldOffset(0)>]

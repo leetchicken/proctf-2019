@@ -66,10 +66,11 @@ type Rubik =
 
     member this.IsCompleted(): bool =
         let mutable result = true
-        for i = 0 to FacesCount * FaceSize - 1 do
-            let color = this.Cube.[i]
-            for j = 1 to FaceSize - 1 do
-                result <- this.Cube.[i + j] <> color
+        for i = 0 to FacesCount - 1 do
+            let idx = i * FaceSize
+            let color = this.Raw.[idx]
+            for j = idx + 1 to idx + FaceSize - 1 do
+                result <- result && (this.Raw.[j] = color)
         result
 
     [<MethodImpl(MethodImplOptions.AggressiveInlining)>]
@@ -208,7 +209,7 @@ type Rubik =
             this.Turn(moves.[i])
 
     member this.Shuffle(count: int): Rubik =
-        for i = 0 to count do
+        for i = 0 to count - 1 do
             this.Turn(LanguagePrimitives.EnumOfValue(byte(RandomNumberGenerator.GetInt32(int(Rotation.l)))))
         this
 
@@ -245,6 +246,13 @@ type Rubik =
         rubik2.Turn(inversed)
         rubik2.Turn(inversed)
         assert(rubik1.Raw.AsReadOnly().SequenceEqual(rubik2.Raw.AsReadOnly()))
+
+        let rubik = Rubik.Init()
+        assert(rubik.IsCompleted())
+        rubik.Turn(rotation)
+        assert(not(rubik.IsCompleted()))
+        rubik.Turn(inversed)
+        assert(rubik.IsCompleted())
 
     static member public Test() =
         for rotation in [Rotation.L; Rotation.F; Rotation.U; Rotation.R; Rotation.B; Rotation.D] do

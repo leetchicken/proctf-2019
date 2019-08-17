@@ -1,7 +1,6 @@
 ﻿namespace rubik
 
 open System
-open System.Runtime.InteropServices
 open Microsoft.AspNetCore.Http
 open Microsoft.AspNetCore.Mvc
 
@@ -60,7 +59,7 @@ type SolveHandler() =
                     Console.WriteLine("===")
                     Console.WriteLine(" raw addr: " + (new CastToPointerStruct(rubik.Raw)).Pointer.ToString("x16"))
                     Console.WriteLine(" key addr: " + (new CastToPointerStruct(key)).Pointer.ToString("x16"))
-                    Console.WriteLine(" dat addr: " + (new CastToPointerStruct(MemoryMarshal.Cast<Rotation, byte>(moves))).Pointer.ToString("x16"))
+                    Console.WriteLine(" dat addr: " + (new CastToPointerStruct(System.Runtime.InteropServices.MemoryMarshal.Cast<Rotation, byte>(moves))).Pointer.ToString("x16"))
                     Console.WriteLine("     diff: " + ((new CastToPointerStruct(key)).Pointer - (new CastToPointerStruct(rubik.Raw)).Pointer).ToString())
                     Console.WriteLine("      key: " + System.BitConverter.ToString(key.ToArray()))
                     Console.WriteLine("      raw: " + System.BitConverter.ToString(rubik.Raw.ToArray()))
@@ -68,8 +67,11 @@ type SolveHandler() =
 
                     match SolveHandler.GetOrAddUser(context, login, pass, bio, key.AsReadOnly()) with
                     | (200, _, user) when user <> null ->
-                        let sln = new Solution(Id = rubik.Id, Created = DateTime.UtcNow, Login = user.Login, MovesCount = moves.Length, Time = uint64((DateTime.UtcNow - rubik.Created).TotalMilliseconds))
-                        if RubikDb.TryAddSolution(sln) then (200, null, sln) else (400, "Already solved", null)
+                        match rubik.IsCompleted() with
+                        | true ->
+                            let sln = new Solution(Id = rubik.Id, Created = DateTime.UtcNow, Login = user.Login, MovesCount = moves.Length, Time = uint64((DateTime.UtcNow - rubik.Created).TotalMilliseconds))
+                            if RubikDb.TryAddSolution(sln) then (200, null, sln) else (409, "Already solved", null)
+                        | _ -> (418, "Better luck next time", null)
                     | (status, msg, _) -> (status, msg, null)
         | _ -> (400, "Bad puzzle or solution", null)
 
