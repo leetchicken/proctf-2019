@@ -1,0 +1,264 @@
+@font-face {
+	font-family: 'Orbitron';
+	font-style: normal;
+	font-weight: 400;
+	font-display: swap;
+	src: local('Orbitron Regular'), local('Orbitron-Regular'), url(/fonts/Orbitron.woff2) format('woff2'); /* SIL OPEN FONT LICENSE Version 1.1 * see for details: /fonts/Orbitron-OFL-License.txt */
+	unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+html, body {
+	height: 100%;
+	overflow: hidden;
+	background-color: white;
+	margin: 0;
+	padding: 0;
+}
+
+body {
+	perspective: 1000px;
+	perspective-origin: center -10em;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	flex-direction: column;
+	font-family: 'Orbitron';
+	user-select: none;
+}
+
+input {
+	width: 100%;
+	font-size: 16px;
+	border-radius: 3px;
+	border: 1px solid #3f51b5;
+	box-sizing: border-box;
+	padding: 3px 5px;
+	font-family: 'Orbitron';
+}
+
+table {
+	width: 100%;
+	user-select: none;
+}
+
+table td {
+	padding: 2px;
+	user-select: none;
+	-webkit-user-drag: none
+}
+
+a {
+	color: #3f51b5;
+	cursor: pointer;
+	font-weight: bold;
+}
+
+#scoreboard {
+	display: none;
+	position: absolute;
+	top: 1%;
+	left: 1%;
+	width: 98%;
+	height: 98%;
+	z-index: 1000;
+	box-shadow: 0px 0px 50px #aaa;
+	background-color: rgba(255, 255, 255, .9);
+	overflow-y: scroll;
+}
+
+@supports ((-webkit-backdrop-filter: blur(2em)) or (backdrop-filter: blur(2em))) {
+	#scoreboard {
+		background-color: rgba(255, 255, 255, .1);
+		-webkit-backdrop-filter: blur(2em);
+		backdrop-filter: blur(2em);
+	}
+}
+
+#scoreboard table {
+	width: 100%;
+	overflow-y: scroll;
+	padding: 10px;
+}
+
+#scoreboard td {
+	text-align: center;
+}
+
+#scoreboard th:nth-child(1) {
+	width: 20%;
+}
+
+#scoreboard th:nth-child(3) {
+	width: 15%;
+}
+
+#scoreboard th:nth-child(4) {
+	width: 15%;
+}
+
+#scoretitle {
+	padding: 10px;
+}
+
+#scoretitle a:last-child {
+	float: right;
+}
+
+#page {
+	width: 30px;
+	display: inline-block;
+	text-align: center;
+}
+
+.panel {
+	position: absolute;
+	width: 200px;
+	padding: 1em;
+}
+
+.auth {
+	top: 0;
+	left: 0;
+}
+
+.liftoff {
+	top: 0;
+	right: 0;
+}
+
+.controls {
+	bottom: 0;
+	left: 0;
+	line-height: 1.2em;
+}
+
+.links {
+	bottom: 0;
+	right: 0;
+	text-align: right;
+}
+
+#start {
+	font-size: 32px;
+	background-color: lightblue;
+}
+
+.time {
+	font-size: 40px;
+	padding-top: 0.2em;
+}
+#timesec {
+	text-align: right;
+}
+#timedot {
+	text-align: center;
+	width: 13px;
+}
+#timemsec {
+	text-align: left;
+	width: 38px;
+}
+
+#results {
+	white-space: pre;
+	text-align: right;
+}
+
+.error {
+	color: red;
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	width: 400px;
+	padding: 20px;
+	margin-top: -30px;
+	margin-left: -200px;
+	box-shadow: 0px 0px 50px #aaa;
+	background-color: rgba(255, 255, 255, .9);
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	border-radius: 3px;
+	border: 1px solid #aaa;
+}
+
+@supports ((-webkit-backdrop-filter: blur(2em)) or (backdrop-filter: blur(2em))) {
+	.error {
+		background-color: rgba(255, 255, 255, .1);
+		-webkit-backdrop-filter: blur(2em);
+		backdrop-filter: blur(2em);
+	}
+}
+
+table.face {
+	height: 100%;
+	border-collapse: collapse;
+	border-spacing: 0;
+	font-size: 50px;
+}
+
+table.face td {
+	text-align: center;
+	border: 2px dotted white;
+	width: 33.3%;
+	height: 33.3%;
+}
+
+.side, .container {
+	width: 20em;
+	height: 20em;
+	-webkit-user-drag: none;
+}
+
+.container {
+	transform-style: preserve-3d;
+	animation: rotate 20s infinite linear;
+	margin-top: 5em;
+}
+
+.paused {
+	animation-play-state: paused;
+}
+
+.side {
+	position: absolute;
+	border: 2px solid white;
+	opacity: .7;
+}
+
+.R {background:#ff7f7f;}
+.G {background:#90ee90;}
+.B {background:#5f9fff;}
+.W {background:#f9d7ff;}
+.Y {background:#ffff7f;}
+.Z {background:#3f4f5f;}
+
+.back {transform: translateZ(-10em) rotateY(180deg);}
+.left {transform: translateX(-10em) rotateY(270deg);}
+.right {transform: translateX(10em) rotateY(90deg);}
+.up {transform: translateY(-10em) rotateX(90deg);}
+.down {transform: translateY(10em) rotateX(270deg);}
+.front {transform: translateZ(10em);}
+
+@keyframes rotate {
+	100% { transform: rotatex(360deg) rotateY(360deg) rotateZ(360deg); }
+}
+
+@keyframes fade {
+	0%,100% { opacity: 0 }
+	50% { opacity: 1 }
+}
+
+.controller {
+	margin-top: 13em;
+	width: 20em;
+}
+
+.controller table {
+	text-align: center;
+}
+
+.controller table input {
+	font-size: 32px;
+	background-color: lightyellow;
+}

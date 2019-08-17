@@ -1,0 +1,119 @@
+<!doctype html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>rubik</title>
+	<link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
+	<link href="styles.css" rel="stylesheet" type="text/css"/>
+</head>
+<body>
+	<div id="scoreboard">
+		<div id="scoretitle">
+			<a id="prev">&lt;&nbsp;prev</a>&emsp;<span id="page"></span>&emsp;<a id="next">next&nbsp;&gt;</a><a id="close">close</a></tr>
+		</div>
+		<table>
+			<thead>
+				<tr><th>Time (UTC)</th><th>Login</th><th>Moves</th><th>Time (sec)</th></tr>
+			</thead>
+			<tbody></tbody>
+		</table>
+		<template id="scoretemplate">
+			<tr class="score"><td></td><td></td><td></td><td></td></tr>
+		</template>
+	</div>
+	<div class="panel auth">
+		<table>
+			<tr><td><input type="text" id="login" value placeholder="login"/></td></tr>
+			<tr><td><input type="password" id="pass" value placeholder="password"/></td></tr>
+			<tr><td><input type="text" id="bio" value placeholder="bio"/></td></tr>
+		</table>
+	</div>
+	<div class="panel liftoff">
+		<table>
+			<tr><td colspan="3"><input type="button" id="start" value="GO!"/></td></tr>
+			<tr class="time"><td id="timesec">0</td><td id="timedot">.</td><td id="timemsec">0</td></tr>
+			<tr><td colspan="3" id="results"></td></tr>
+		</table>
+	</div>
+	<div class="container">
+		<div class="left side">
+			<table class="face">
+				<tr><td id="c0"></td><td id="c1"></td><td id="c2"></td></tr>
+				<tr><td id="c7"></td><td id="c8">L</td><td id="c3"></td></tr>
+				<tr><td id="c6"></td><td id="c5"></td><td id="c4"></td></tr>
+			</table>
+		</div>
+		<div class="front side">
+			<table class="face">
+				<tr><td id="c9"></td><td id="c10"></td><td id="c11"></td></tr>
+				<tr><td id="c16"></td><td id="c17">F</td><td id="c12"></td></tr>
+				<tr><td id="c15"></td><td id="c14"></td><td id="c13"></td></tr>
+			</table>
+		</div>
+		<div class="up side">
+			<table class="face">
+				<tr><td id="c18"></td><td id="c19"></td><td id="c20"></td></tr>
+				<tr><td id="c25"></td><td id="c26">U</td><td id="c21"></td></tr>
+				<tr><td id="c24"></td><td id="c23"></td><td id="c22"></td></tr>
+			</table>
+		</div>
+		<div class="right side">
+			<table class="face">
+				<tr><td id="c27"></td><td id="c28"></td><td id="c29"></td></tr>
+				<tr><td id="c34"></td><td id="c35">R</td><td id="c30"></td></tr>
+				<tr><td id="c33"></td><td id="c32"></td><td id="c31"></td></tr>
+			</table>
+		</div>
+		<div class="back side">
+			<table class="face">
+				<tr><td id="c36"></td><td id="c37"></td><td id="c38"></td></tr>
+				<tr><td id="c43"></td><td id="c44">B</td><td id="c39"></td></tr>
+				<tr><td id="c42"></td><td id="c41"></td><td id="c40"></td></tr>
+			</table>
+		</div>
+		<div class="down side">
+			<table class="face">
+				<tr><td id="c45"></td><td id="c46"></td><td id="c47"></td></tr>
+				<tr><td id="c52"></td><td id="c53">D</td><td id="c48"></td></tr>
+				<tr><td id="c51"></td><td id="c50"></td><td id="c49"></td></tr>
+			</table>
+		</div>
+	</div>
+	<div class="controller">
+		<table>
+			<tr>
+				<td><input type="button" id="L" class="btn" value="L"/></td>
+				<td><input type="button" id="F" class="btn" value="F"/></td>
+				<td><input type="button" id="U" class="btn" value="U"/></td>
+				<td><input type="button" id="R" class="btn" value="R"/></td>
+				<td><input type="button" id="B" class="btn" value="B"/></td>
+				<td><input type="button" id="D" class="btn" value="D"/></td>
+			</tr>
+			<tr>
+				<td><input type="button" id="l" class="btn" value="l"/></td>
+				<td><input type="button" id="f" class="btn" value="f"/></td>
+				<td><input type="button" id="u" class="btn" value="u"/></td>
+				<td><input type="button" id="r" class="btn" value="r"/></td>
+				<td><input type="button" id="b" class="btn" value="b"/></td>
+				<td><input type="button" id="d" class="btn" value="d"/></td>
+			</tr>
+			<tr>
+				<td colspan="6"><input type="text" id="solution" value readonly/></td>
+			</tr>
+			<tr>
+				<td colspan="6"><input type="submit" id="submit" value="SUBMIT"/></td>
+			</tr>
+		</table>
+	</div>
+	<div class="panel controls">
+		<a id="daynight" title="Toggle theme">&#9728;</a>&nbsp;<a id="animation" title="Toggle animation">&#9724;</a>
+	</div>
+	<div class="panel links">
+		<a id="showscores">scoreboard</a>
+	</div>
+	<template id="errortemplate">
+		<div class="error"></div>
+	</template>
+	<script src="scripts.js"></script>
+</body>
+</html>
