@@ -3,18 +3,57 @@
   - name: sync catalog
     synchronize: src="../checkers" dest="{{cs_dir}}"
 
-  - name: checker owner
+  - name: checkers owner
     file:
       path: "{{cs_dir}}/checkers"
       owner: "{{cs_user}}"
       group: "{{cs_user}}"
       recurse: yes
 
+  - name: install docker deps
+    apt:
+      name:
+        - apt-transport-https
+        - ca-certificates
+        - curl
+        - gnupg2
+        - software-properties-common
+    tags: docker
+
+  - name: install docker key
+    apt_key: url=https://download.docker.com/linux/debian/gpg
+    tags: docker
+
+  - name: add docker repo
+    shell: echo "deb [arch=amd64] https://download.docker.com/linux/debian $(lsb_release -cs) stable" > /etc/apt/sources.list.d/docker.list
+    tags: docker
+
+  - name: install docker
+    apt:
+      name:
+        - docker-ce
+        - docker-ce-cli
+        - containerd.io
+      update_cache: yes
+    tags: docker
+
+  - name: add cs_user to docker
+    user: name="{{cs_user}}" groups=docker append=yes
+    tags: docker
+
+  - name: build binder
+    command: ./build.sh
+    args:
+      chdir: "{{cs_dir}}/checkers/Binder"
+    tags: binder
+
   - name: install sys deps
-    apt: name=python3-pip state=latest
+    apt:
+      name:
+        - python3-pip
 
   - name: python deps
     pip:
       executable: pip3
       name:
-      - requests
+        - requests
