@@ -9,6 +9,8 @@ static const uint16_t kHttpPort = 8000;
 static const uint16_t kNotifyPort = 8001;
 static const uint16_t kChecksystemPort = 8002;
 static const uint32_t kMaxNotificationSize = 1024;
+static const uint32_t kMaxUserNameLen = 64;
+static const uint32_t kMaxPasswordLen = 32;
 
 enum ECheckErrorCodes
 {

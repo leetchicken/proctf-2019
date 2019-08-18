@@ -49,6 +49,7 @@ struct GameDesc
 enum EMainScreenState
 {
     kMainScreenReady = 0,
+    kMainScreenRegistration,
     kMainScreenWaitAuthKey,
     kMainScreenWaitForNetwork,
     kMainScreenWaitGameList,
@@ -63,6 +64,8 @@ enum EMainScreenState
 struct Context
 {
     API* m_api;
+    char m_userName[128];
+    char m_password[128];
     Rect m_screenRect;
     TouchScreenState m_tsState;
 
@@ -103,6 +106,8 @@ struct Context
     {
         m_api->GetScreenRect(&m_screenRect);
 
+        ReadCredentials();
+
         m_backgroundRect = Rect(0, 0, kBackgroundWidth, kBackgroundHeight);
         m_networkRect = Rect(10, 10, kInfoIconsWidth, kInfoIconsHeight);
         m_loadingRect = Rect(430, 10, kInfoIconsWidth, kInfoIconsHeight);
@@ -134,6 +139,32 @@ struct Context
         m_notificationsCtx.Init(api);
 
         m_timer = api->time();
+    }
+
+    void ReadCredentials()
+    {
+        m_api->memset(m_userName, 0, sizeof(m_userName));
+        m_api->memset(m_password, 0, sizeof(m_password));
+
+        void* f = m_api->fopen("/fs/username", "r");
+        if(f)
+        {
+            uint32_t size = m_api->fsize(f);
+            m_api->fread(m_userName, size, f);
+            m_api->fclose(f);
+        }
+        else
+        {
+            m_api->sprintf(m_userName, "Unknown");
+        }
+
+        f = m_api->fopen("/fs/password", "r");
+        if(f)
+        {
+            uint32_t size = m_api->fsize(f);
+            m_api->fread(m_password, size, f);
+            m_api->fclose(f);
+        }
     }
 
     bool Update();
@@ -174,13 +205,29 @@ void DrawIcon(API* api, const Rect& screenRect, const IconsManager& iconMan, con
 }
 
 
-HTTPRequest* RequestAuthKey(API* api)
+HTTPRequest* RequestRegistration(API* api, const char* userName, const char* password)
 {
     HTTPRequest* request = api->AllocHTTPRequest();
     if(!request)
         return NULL;
     request->httpMethod = kHttpMethodGet;
-    api->sprintf(request->url, "http://%s:%u/auth", kServerIP, kServerPort);
+    api->sprintf(request->url, "http://%s:%u/register?u=%s&p=%s", kServerIP, kServerPort, userName, password);
+    if(!api->SendHTTPRequest(request))
+    {
+        api->FreeHTTPRequest(request);
+        return NULL;
+    }
+    return request;
+}
+
+
+HTTPRequest* RequestAuthKey(API* api, const char* userName, const char* password)
+{
+    HTTPRequest* request = api->AllocHTTPRequest();
+    if(!request)
+        return NULL;
+    request->httpMethod = kHttpMethodGet;
+    api->sprintf(request->url, "http://%s:%u/auth?u=%s&p=%s", kServerIP, kServerPort, userName, password);
     if(!api->SendHTTPRequest(request))
     {
         api->FreeHTTPRequest(request);
@@ -392,7 +439,7 @@ void Context::OnUpdatePressed()
         m_iconCache.ClearGameIcons();
         if(m_authKey == ~0u)
         {
-            m_request = RequestAuthKey(m_api);
+            m_request = RequestAuthKey(m_api, m_userName, m_password);
             if(m_request)
                 m_state = kMainScreenWaitAuthKey;
         }
@@ -554,6 +601,16 @@ void Context::Render(float dt)
 
         for(uint32_t g = 0; g < m_gamesCount; g++)
             DrawIcon(m_api, m_screenRect, m_iconCache, m_games[g]);
+
+        char buf[256];
+        m_api->LCD_SetFont(kFont8);
+        m_api->LCD_SetTextColor(0xffffffff);
+        m_api->sprintf(buf, "User name: %s", m_userName);
+        m_api->LCD_DisplayStringAt(5, 248, buf, kTextAlignNone);
+        m_api->sprintf(buf, "Password: %s", m_password);
+        m_api->LCD_DisplayStringAt(5, 256, buf, kTextAlignNone);
+        m_api->sprintf(buf, "Visit our site http://%s", kServerIP);
+        m_api->LCD_DisplayStringAt(5, 264, buf, kTextAlignNone);
     }
 
     m_notificationsCtx.Render(dt);
@@ -586,11 +643,18 @@ bool Context::Update()
     if(m_state == kMainScreenWaitForNetwork && m_api->GetNetwokConnectionStatus() == kNetwokConnectionStatusGlobalUp)
     {
         m_api->printf("Connected to the network: '%s'\n", m_api->GetIPAddress());
-        m_request = RequestAuthKey(m_api);
+        m_request = RequestRegistration(m_api, m_userName, m_password);
         if(m_request)
-            m_state = kMainScreenWaitAuthKey;
+            m_state = kMainScreenRegistration;
         else
             m_state = kMainScreenReady;
+    }
+
+    if(m_state == kMainScreenRegistration && m_request->done)
+    {
+        m_api->FreeHTTPRequest(m_request);
+        m_request = RequestAuthKey(m_api, m_userName, m_password);
+        m_state = kMainScreenWaitAuthKey;
     }
 
     if(m_state == kMainScreenWaitAuthKey && m_request->done)
@@ -645,7 +709,7 @@ bool Context::Update()
             char buf[64];
             m_api->memset(buf, 0, 64);
             m_api->sprintf(buf, "Start game '%s'", m_games[m_curGame].name);
-            m_notificationsCtx.Post(m_api->GetUserName(), buf);
+            m_notificationsCtx.Post(m_userName, buf);
             
             m_api->printf("Start game '%s'\n", m_games[m_curGame].name);
 

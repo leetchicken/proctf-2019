@@ -71,30 +71,51 @@ void Team::LoadDb()
 }
 
 
-Console* Team::AddConsole(IPAddr consoleIp)
+User* Team::AddUser(const std::string& name, const std::string& password)
 {
     std::lock_guard<std::mutex> guard(mutex);
-    Console* console = new Console();
-    console->ipAddr = consoleIp;
-    consoles[consoleIp] = console;
-    return console;
+    User* user = new User(name, password);
+    users[name] = user;
+    return user;
 }
 
 
-Console* Team::GetConsole(IPAddr consoleIp)
+User* Team::GetUser(const std::string& name)
 {
     std::lock_guard<std::mutex> guard(mutex);
-    auto iter = consoles.find(consoleIp);
-    if(iter == consoles.end())
+    auto iter = users.find(name);
+    if(iter == users.end())
         return nullptr;
     return iter->second;
 }
 
 
-void Team::AddNotification(Notification* n, IPAddr except)
+User* Team::GetUser(IPAddr ipAddr)
 {
     std::lock_guard<std::mutex> guard(mutex);
-    for(auto& iter : consoles)
+    for(auto& u : users)
+    {
+        if(u.second->ipAddr == ipAddr)
+            return u.second;
+    }
+    return nullptr;
+}
+
+
+bool Team::AuthorizeUser(const std::string& name, const std::string& password)
+{
+    std::lock_guard<std::mutex> guard(mutex);
+    auto iter = users.find(name);
+    if(iter == users.end())
+        return false;
+    return iter->second->GetPassword() == password;
+}
+
+
+void Team::AddNotification(Notification* n, const std::string& except)
+{
+    std::lock_guard<std::mutex> guard(mutex);
+    for(auto& iter : users)
     {
         if(iter.first == except)
             continue;
@@ -106,7 +127,7 @@ void Team::AddNotification(Notification* n, IPAddr except)
 void Team::Update()
 {
     std::lock_guard<std::mutex> guard(mutex);
-    for(auto& iter : consoles)
+    for(auto& iter : users)
         iter.second->Update();
 }
 
@@ -125,30 +146,21 @@ void Team::DumpStats(std::string& out)
     sprintf(buf, "  Last time team post notification: %f\n", lastTimeTeamPostNotification);
     out.append(buf);
 
-    sprintf(buf, "  Number of flags: %u\n\n", (uint32_t)flags.size());
+    sprintf(buf, "  Number of flags: %u\n", (uint32_t)flags.size());
     out.append(buf);
 
     IPAddr hwConsoleIp = GetHwConsoleIp(desc.network);
+    sprintf(buf, "  HW Console IP: %s\n\n", inet_ntoa(hwConsoleIp));
+    out.append(buf);
 
-    for(auto& iter : consoles)
+    for(auto& iter : users)
     {
-        auto& c = iter.second;
+        auto& u = iter.second;
 
-        sprintf(buf, "  Console %s:\n", inet_ntoa(iter.first));
+        sprintf(buf, "  User %s:\n", iter.first.c_str());
         out.append(buf);
 
-        bool isHw = c->ipAddr == hwConsoleIp;
-        sprintf(buf, "    Is HW: %s\n", isHw ? "yes" : "no");
-        out.append(buf);
-
-        sprintf(buf, "    Notifications in queue: %u\n", c->GetNotificationsInQueue());
-        out.append(buf);
-
-        sprintf(buf, "    Last console notify time: %f\n", c->lastConsoleNotifyTime);
-        out.append(buf);
-
-        sprintf(buf, "    Auth key: %x\n\n", c->authKey);
-        out.append(buf);
+        u->DumpStats(out, hwConsoleIp);
     }
 }
 
