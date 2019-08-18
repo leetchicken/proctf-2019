@@ -1,0 +1,6 @@
+set disassembly-flavor intel
+set print repeats 0
+p/x (int) valid_key
+p (int) coded_mes_len
+p/x (char[100]) coded_mes
+q
