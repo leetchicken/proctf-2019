@@ -84,8 +84,29 @@ public final class SPN {
 		pbox = PBox(SPN.pBoxOutput)
 	}
 
+	func encryptWithPadding(_ data: [UInt8], _ iv: [UInt8]) throws -> [UInt8] {
+		return try encryptCBC(pad(data), iv)
+	}
+
+	func pad(_ data: [UInt8]) -> [UInt8] {
+		let padLength = SPN.blockSizeBytes - data.count % SPN.blockSizeBytes
+		
+		var newData = [UInt8]()
+		var i = 0
+		newData.reserveCapacity(data.count + padLength)
+		newData += data
+
+		while(i < data.count + padLength) {
+			newData.append(UInt8(padLength))
+			i+=1
+		}
+
+		return newData;
+	}
+
+
 	func encryptCBC(_ data: [UInt8], _ iv: [UInt8]) throws -> [UInt8] {
-		if (data.count == 0 || data.count % SPN.blockSizeBytes != 0 || iv.count % SPN.blockSizeBytes != 0) {
+		if (data.count == 0 || data.count % SPN.blockSizeBytes != 0 || iv.count == 0 || iv.count % SPN.blockSizeBytes != 0) {
 			throw SPNError.unpaddedInput
 		}
 
@@ -142,6 +163,32 @@ public final class SPN {
 		}
 
 		return result
+	}
+
+	func decryptWithPadding(_ data: [UInt8]) throws -> [UInt8] {
+		return try unPad(decryptCBC(data))
+	}
+
+	
+	func unPad(_ data: [UInt8]) throws -> [UInt8] {
+		if (data.count == 0 || data.count % SPN.blockSizeBytes != 0) {
+			throw SPNError.unpaddedInput
+		}
+
+		let padLength = Int(data[data.count - 1])
+		if(padLength == 0 || padLength > SPN.blockSizeBytes) {
+			throw SPNError.unpaddedInput
+		}
+
+		var i = data.count - 2
+		while(i >= data.count - padLength) {
+			if(data[i] != padLength) {
+				throw SPNError.invalidPadding
+			}
+			i -= 1
+		}
+
+		return Array(data[0..<(data.count - padLength)])
 	}
 
 	func decryptCBC(_ data: [UInt8]) throws -> [UInt8] {
@@ -224,4 +271,5 @@ public final class SPN {
 
 enum SPNError: Error {
     case unpaddedInput
+    case invalidPadding
 }
