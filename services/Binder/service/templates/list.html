@@ -1,7 +1,9 @@
 <html>
 <head>
-<script src="{{ url_for('static', filename='jquery-3.4.1.js') }}">
-</script>
+<link rel="stylesheet"  href="{{ url_for('static', filename='bootstrap.min.css') }}" />
+<script src="{{ url_for('static', filename='jquery-3.2.1.slim.min.js') }}"></script>
+<script src="{{ url_for('static', filename='popper.min.js') }}"></script>
+<script src="{{ url_for('static', filename='bootstrap.min.js') }}"></script>
 <script>
     $(document).ready(function(){
       $("#messages a.runner").click(function(e){
@@ -14,35 +16,53 @@
 </script>
 </head>
 <body>
-  <h1>Obfuscated messages</h1>
-  <p>
-    Welcome to the message storing service. You can upload any file with message, protected with
-    password. Your file must be runnable with password as argument.
-  </p>
-  <div>
-    <form action="/upload" method="POST"
-                      enctype="multipart/form-data">
-      <input type='file' name="message"></input>
-      <div>
-        <p> Enter 8-length string for which md5("{{challange}}"+string)[0:3]=="\x00\x00\x00"
-        <input type='text' name="challange"></input>
-        </p>
-      </div>
-      <input type='submit' value='Send'></input>
-    </form>
+  <div class="container">
+    <h1>Obfuscated messages</h1>
+    <p>
+      Welcome to the message storing service. You can upload any file with message, protected with
+      password. Your file must be runnable with password as argument.
+    </p>
+    <div>
+      <form class="md-form" action='/upload' method="POST" enctype="multipart/form-data">
+
+        <div class="input-group mb-3">
+          <div class="input-group-prepend">
+            <span class="input-group-text">Message elf-file</span>
+          </div>
+          <div class="custom-file">
+            <input type="file" name='message' class="custom-file-input" id="inputGroupFile01">
+            <label class="custom-file-label" for="inputGroupFile01">Choose file</label>
+          </div>
+        </div>
+
+
+        <div class="form-group">
+          <label for="challange_md5">Challange</label>
+          <input name="challange" type="text" class="form-control" id="challange_md5"
+                              aria-describedby="challange_md5_ar" placeholder="">
+          <small id="challange_md5_ar" class="form-text text-muted">
+            Enter 8-length string for which md5("{{challange}}"+string)[0:3]=="\x00\x00\x00"
+          </small>
+        </div>
+        <button type="submit" class="btn btn-primary">Send</button>
+      </form>
+    </div>
+    <div>
+      <h1>List of messages</h1>
+      <table>
+        <thead>
+          <tr><td>Message id</td></tr>
+        </thead>
+        <tbody id="messages">
+          {% for message_id in messages %}
+            <tr><td>
+              <a class="runner" message_id="{{ message_id }}" href="#">{{ message_id }}</a>
+              <a class="getter" href="/get?message_id={{ message_id }}">download</a>
+            </td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
   </div>
-  <table>
-    <thead>
-      <tr><td>Message id</td></tr>
-    </thead>
-    <tbody id="messages">
-      {% for message_id in messages %}
-        <tr><td>
-          <a class="runner" message_id="{{ message_id }}" href="#">{{ message_id }}</a>
-          <a class="getter" href="/get?message_id={{ message_id }}">download</a>
-        </td></tr>
-      {% endfor %}
-    </tbody>
-  </table>
 </body>
 </html>

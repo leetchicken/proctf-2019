@@ -1,12 +1,16 @@
 <html>
 <head>
-<script src="{{ url_for('static', filename='jquery-3.4.1.slim.js') }}">
-</script>
+  <link rel="stylesheet"  href="{{ url_for('static', filename='bootstrap.min.css') }}" />
+  <script src="{{ url_for('static', filename='jquery-3.2.1.slim.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='popper.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='bootstrap.min.js') }}"></script>
 </head>
 <body>
-  <h1>Message {{ message_id }}</h1>
-  <div>
-    {{ content }}
-  </div>
+  <div class="container ">
+    <h1>Message {{ message_id }}</h1>
+    <div class="alert alert-primary">
+      {{ content }}
+    </div>
+</div>
 </body>
 </html>
