@@ -4,10 +4,13 @@
 #include "misc.h"
 #include "notification.h"
 
-struct Console
+struct User
 {
+    std::string name;
+    std::string password;
+
     IPAddr ipAddr;
-    float lastConsoleNotifyTime = 0.0f;
+    float lastUserNotifyTime = 0.0f;
     AuthKey authKey = ~0u;
     static const uint32_t kNotificationQueueSize = 32;
 
@@ -24,5 +27,5 @@ private:
     std::list<Notification*> notifications;
     int notifySocket = -1;
 
-    void NotifyConsole();
+    void NotifyUser();
 };

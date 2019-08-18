@@ -49,6 +49,7 @@ struct GameDesc
 enum EMainScreenState
 {
     kMainScreenReady = 0,
+    kMainScreenRegistration,
     kMainScreenWaitAuthKey,
     kMainScreenWaitForNetwork,
     kMainScreenWaitGameList,
@@ -204,13 +205,29 @@ void DrawIcon(API* api, const Rect& screenRect, const IconsManager& iconMan, con
 }
 
 
-HTTPRequest* RequestAuthKey(API* api)
+HTTPRequest* RequestRegistration(API* api, const char* userName, const char* password)
 {
     HTTPRequest* request = api->AllocHTTPRequest();
     if(!request)
         return NULL;
     request->httpMethod = kHttpMethodGet;
-    api->sprintf(request->url, "http://%s:%u/auth", kServerIP, kServerPort);
+    api->sprintf(request->url, "http://%s:%u/register?u=%s&p=%s", kServerIP, kServerPort, userName, password);
+    if(!api->SendHTTPRequest(request))
+    {
+        api->FreeHTTPRequest(request);
+        return NULL;
+    }
+    return request;
+}
+
+
+HTTPRequest* RequestAuthKey(API* api, const char* userName, const char* password)
+{
+    HTTPRequest* request = api->AllocHTTPRequest();
+    if(!request)
+        return NULL;
+    request->httpMethod = kHttpMethodGet;
+    api->sprintf(request->url, "http://%s:%u/auth?u=%s&p=%s", kServerIP, kServerPort, userName, password);
     if(!api->SendHTTPRequest(request))
     {
         api->FreeHTTPRequest(request);
@@ -422,7 +439,7 @@ void Context::OnUpdatePressed()
         m_iconCache.ClearGameIcons();
         if(m_authKey == ~0u)
         {
-            m_request = RequestAuthKey(m_api);
+            m_request = RequestAuthKey(m_api, m_userName, m_password);
             if(m_request)
                 m_state = kMainScreenWaitAuthKey;
         }
@@ -626,11 +643,18 @@ bool Context::Update()
     if(m_state == kMainScreenWaitForNetwork && m_api->GetNetwokConnectionStatus() == kNetwokConnectionStatusGlobalUp)
     {
         m_api->printf("Connected to the network: '%s'\n", m_api->GetIPAddress());
-        m_request = RequestAuthKey(m_api);
+        m_request = RequestRegistration(m_api, m_userName, m_password);
         if(m_request)
-            m_state = kMainScreenWaitAuthKey;
+            m_state = kMainScreenRegistration;
         else
             m_state = kMainScreenReady;
+    }
+
+    if(m_state == kMainScreenRegistration && m_request->done)
+    {
+        m_api->FreeHTTPRequest(m_request);
+        m_request = RequestAuthKey(m_api, m_userName, m_password);
+        m_state = kMainScreenWaitAuthKey;
     }
 
     if(m_state == kMainScreenWaitAuthKey && m_request->done)

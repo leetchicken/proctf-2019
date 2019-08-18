@@ -1,9 +1,9 @@
-#include "console.h"
+#include "user.h"
 #include <unistd.h>
 #include <string.h>
 
 
-void Console::GenerateAuthKey()
+void User::GenerateAuthKey()
 {
     authKey = 0;
     for(uint32_t i = 0; i < 4; i++)
@@ -11,7 +11,7 @@ void Console::GenerateAuthKey()
 }
 
 
-bool Console::AddNotification(Notification* n)
+bool User::AddNotification(Notification* n)
 {
     std::lock_guard<std::mutex> guard(mutex);
     if(notifications.size() >= kNotificationQueueSize)
@@ -22,14 +22,14 @@ bool Console::AddNotification(Notification* n)
     notifications.push_back(n);
     n->AddRef();
 
-    NotifyConsole();
+    NotifyUser();
 
     return true;
 }
 
 
 
-Notification* Console::GetNotification()
+Notification* User::GetNotification()
 {
     std::lock_guard<std::mutex> guard(mutex);
     if(notifications.empty())
@@ -40,23 +40,23 @@ Notification* Console::GetNotification()
 }
 
 
-uint32_t Console::GetNotificationsInQueue()
+uint32_t User::GetNotificationsInQueue()
 {
     std::lock_guard<std::mutex> guard(mutex);
     return notifications.size();
 }
 
 
-void Console::Update()
+void User::Update()
 {
     std::lock_guard<std::mutex> guard(mutex);
-    float dt = GetTime() - lastConsoleNotifyTime;
+    float dt = GetTime() - lastUserNotifyTime;
     if(!notifications.empty() && dt > 5.0f)
-        NotifyConsole();
+        NotifyUser();
 }
 
 
-void Console::SetNotifySocket(int sock)
+void User::SetNotifySocket(int sock)
 {
     std::lock_guard<std::mutex> guard(mutex);
     if(notifySocket >= 0)
@@ -65,9 +65,9 @@ void Console::SetNotifySocket(int sock)
 }
 
 
-void Console::NotifyConsole()
+void User::NotifyUser()
 {
-    lastConsoleNotifyTime = GetTime();
+    lastUserNotifyTime = GetTime();
     if(notifySocket >= 0)
     {
         uint8_t data[16];

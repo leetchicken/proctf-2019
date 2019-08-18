@@ -127,7 +127,7 @@ enum EHttpMethod
 struct HTTPRequest
 {
     EHttpMethod httpMethod;
-    char url[64];
+    char url[128];
     void* requestBody;
     uint32_t requestBodySize;
     void* responseData;
