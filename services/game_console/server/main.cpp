@@ -186,12 +186,17 @@ HttpResponse RequestHandler::HandleGet(HttpRequest request)
             return HttpResponse(MHD_HTTP_BAD_REQUEST);
         }
 
-        User* user = team->GetUser(userName);
-        if(!user)
+        for(auto& team : GTeams)
         {
-            printf("  new user\n");
-            team->AddUser(userName, password);
+            User* user = team.second.GetUser(userName);
+            if(!user)
+                continue;
+            
+            return HttpResponse(MHD_HTTP_ALREADY_REPORTED);
         }
+
+        printf("  new user\n");
+        team->AddUser(userName, password);
 
         return HttpResponse(MHD_HTTP_OK);
     }
@@ -584,6 +589,36 @@ HttpResponse RequestHandler::HandleGet(HttpRequest request)
             return BuildChecksystemResponse(kCheckerMumble, "Check failed");
 
         return BuildChecksystemResponse(kCheckerOk, "OK");
+    }
+    else if (ParseUrl(request.url, 1, "checksystem_change_password"))
+    {
+        auto team = FindTeam(request.clientIp);
+        if(team)
+            return HttpResponse(MHD_HTTP_FORBIDDEN);
+
+        std::string userName, password;
+        if(!FindInMap(request.queryString, kU, userName))
+            return HttpResponse(MHD_HTTP_BAD_REQUEST);
+        if(!FindInMap(request.queryString, kP, password))
+            return HttpResponse(MHD_HTTP_BAD_REQUEST);
+        printf("  user name: %s\n", userName.c_str());
+        printf("  password:  %s\n", password.c_str());
+
+        std::lock_guard<std::mutex> guard(GUsersGuard);
+
+        for(auto& team : GTeams)
+        {
+            User* user = team.second.GetUser(userName);
+            if(!user)
+                continue;
+
+            uint32_t authKey = user->GetAuthKey();
+            GUsers.erase(authKey);
+
+            user->ChangePassword(password);   
+        }
+
+        return HttpResponse(MHD_HTTP_OK);
     }
 
     return HttpResponse(MHD_HTTP_NOT_FOUND);
