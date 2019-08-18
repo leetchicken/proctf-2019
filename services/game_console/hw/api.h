@@ -202,8 +202,6 @@ public:
     virtual void* Malloc(uint32_t size) = 0;
     virtual void Free(void* ptr) = 0;
 
-    virtual const char* GetUserName() = 0;
-
     virtual void GetScreenRect(Rect* rect) = 0;
     virtual void GetTouchScreenState(TouchScreenState* state) = 0;
 

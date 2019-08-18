@@ -6,6 +6,8 @@
 #include "FATFileSystem.h"
 #include "api_impl.h"
 #include "../main_screen/constants.h"
+#include "ip4string.h"
+#include "teams_data.h"
 
 APIImpl GAPIImpl;
 uint8_t* GSdram = NULL;
@@ -187,6 +189,96 @@ void ChecksystemThread()
 }
 
 
+void FactoryReset()
+{
+    printf("Factory reset\n");
+    GAPIImpl.LCD_SetFont(kFont12);
+    FontInfo fontInfo;
+    GAPIImpl.LCD_GetFontInfo(kFont12, &fontInfo);
+    uint32_t textY = 10;
+
+    GAPIImpl.LCD_Clear(0xff000000);
+    GAPIImpl.LCD_SetTextColor(0xffffffff);
+
+    GAPIImpl.LCD_DisplayStringAt(10, textY, "Factory reset", kTextAlignNone);
+    textY += fontInfo.charHeight;
+    GAPIImpl.LCD_DisplayStringAt(10, textY, "Press button if you want to reset username and password", kTextAlignNone);
+    textY += fontInfo.charHeight;
+    GAPIImpl.LCD_DisplayStringAt(10, textY, "Press reset to exit", kTextAlignNone);
+    textY += fontInfo.charHeight;
+
+    wait(2.0f);
+
+    while(!GAPIImpl.GetButtonState())
+        wait(0.1f);
+
+    GAPIImpl.LCD_DisplayStringAt(10, textY, "Waiting for the network...", kTextAlignNone);
+    textY += fontInfo.charHeight;
+    while(GEthernet.get_connection_status() != NSAPI_STATUS_GLOBAL_UP)
+    {
+        wait(0.1f);
+        continue;
+    }
+
+    const char* ipStr = GAPIImpl.GetIPAddress();
+    char buf[512];
+    memset(buf, 0, 512);
+    sprintf(buf, "Connected. IP = %s", ipStr);
+    GAPIImpl.LCD_DisplayStringAt(10, textY, buf, kTextAlignNone);
+    textY += fontInfo.charHeight;
+
+    uint32_t ip;
+    stoip4(ipStr, strlen(ipStr), &ip);
+    const uint32_t kNetMask = 0x00FFFFFF;
+    uint32_t netAddr = ip & kNetMask;
+    uint32_t teamIdx = 0;
+    for(; teamIdx < kTeamsNum; teamIdx++)
+    {
+        if(GTeamsData[teamIdx].net == netAddr)
+            break;
+    }
+
+    if(teamIdx == kTeamsNum)
+    {
+        GAPIImpl.LCD_DisplayStringAt(10, textY, "Factory reset failed, unknown network", kTextAlignNone);
+        textY += fontInfo.charHeight;
+    }
+    else
+    {
+        sprintf(buf, "Team '%s'", GTeamsData[teamIdx].name);
+        GAPIImpl.LCD_DisplayStringAt(10, textY, buf, kTextAlignNone);
+        textY += fontInfo.charHeight;        
+
+        const char* userName = GTeamsData[teamIdx].name;
+        const char* password = "00000000";
+
+        sprintf(buf, "Set userName = '%s', password = '%s'", userName, password);
+        GAPIImpl.LCD_DisplayStringAt(10, textY, buf, kTextAlignNone);
+        textY += fontInfo.charHeight;        
+
+        FILE* f = fopen("/fs/username", "w");
+        fwrite(userName, 1, strlen(userName), f);
+        fflush(f);
+        fclose(f);
+
+        f = fopen("/fs/password", "w");
+        fwrite(password, 1, strlen(password), f);
+        fflush(f);
+        fclose(f);
+    }
+
+    int timer = 5;
+    while(timer > 0)
+    {
+        sprintf(buf, "Reboot in %d seconds", timer);
+        GAPIImpl.LCD_DisplayStringAt(10, textY, buf, kTextAlignNone);
+        textY += fontInfo.charHeight;
+        wait(1.0f);
+        timer--;
+    }
+}
+
+
 #define _XX_ 0
 
 #if _XX_
@@ -202,10 +294,26 @@ int main()
     BSP_PB_Init(BUTTON_KEY, BUTTON_MODE_GPIO);
     BSP_LED_Init(LED_GREEN);
 
+    GAPIImpl.Init(&GEthernet);
+
+    if(GAPIImpl.GetButtonState())
+    {
+        float start = GAPIImpl.time();
+        while(GAPIImpl.GetButtonState())
+        {
+            wait(0.1f);
+            float duration = GAPIImpl.time() - start;
+            if(duration > 5.0f)
+            {
+                FactoryReset();
+                NVIC_SystemReset();
+                return 0;
+            }
+        }
+    }
+
     Thread checksystemThread;
     checksystemThread.start(callback(ChecksystemThread));
-    
-    GAPIImpl.Init(&GEthernet);
 
 #if _XX_
     ScopedRamExecutionLock make_ram_executable;
