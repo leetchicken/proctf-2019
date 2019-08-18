@@ -119,7 +119,6 @@ static User* CheckAuthority(const QueryString& queryString)
 
 static void DumpUsersStorage()
 {
-    std::lock_guard<std::mutex> guard(GUsersGuard);
     FILE* f = fopen(kUsersStorageFileName, "w");
     if(!f)
     {
@@ -132,10 +131,12 @@ static void DumpUsersStorage()
         UsersStorageRecord record;
         User* u = iter.second;
         memset(&record, 0, sizeof(record));
-        record.authKey = u->authKey;
+        record.authKey = u->GetAuthKey();
         record.ip = u->ipAddr;
-        memcpy(record.userName, u->name.c_str(), u->name.length());
-        memcpy(record.password, u->password.c_str(), u->password.length());
+        auto& name = u->GetName();
+        auto& password = u->GetPassword();
+        memcpy(record.userName, name.c_str(), name.length());
+        memcpy(record.password, password.c_str(), password.length());
         fwrite(&record, sizeof(record), 1, f);
     }
 
@@ -208,6 +209,8 @@ HttpResponse RequestHandler::HandleGet(HttpRequest request)
         printf("  user name: %s\n", userName.c_str());
         printf("  password:  %s\n", password.c_str());
 
+        std::lock_guard<std::mutex> guard(GUsersGuard);
+
         if(!team->AuthorizeUser(userName, password))
         {
             printf("  invalid credentials\n");
@@ -216,29 +219,24 @@ HttpResponse RequestHandler::HandleGet(HttpRequest request)
 
         User* user = team->GetUser(userName);
 
+        uint32_t authKey = user->GetAuthKey();
+        auto iter = GUsers.find(authKey);
+        if(iter != GUsers.end())
         {
-            std::lock_guard<std::mutex> guard(GUsersGuard);
-            auto iter = GUsers.find(user->authKey);
-            if(iter != GUsers.end())
-            {
-                printf("  reauth detected, prev auth key: %x\n", user->authKey);
-                GUsers.erase(iter);
-            }
+            printf("  reauth detected, prev auth key: %x\n", authKey);
+            GUsers.erase(iter);
         }
 
-        user->GenerateAuthKey();
+        authKey = user->GenerateAuthKey();
         user->ipAddr = request.clientIp.s_addr;
-        printf("  auth key: %x\n", user->authKey);
+        printf("  auth key: %x\n", authKey);
 
+        if(GUsers.find(authKey) != GUsers.end())
         {
-            std::lock_guard<std::mutex> guard(GUsersGuard);
-            if(GUsers.find(user->authKey) != GUsers.end())
-            {
-                printf("  CRITICAL ERROR, dublicate user was found, auth key: %x\n", user->authKey);
-                exit(1);
-            }
-            GUsers[user->authKey] = user;
+            printf("  CRITICAL ERROR, dublicate user was found, auth key: %x\n", authKey);
+            exit(1);
         }
+        GUsers[authKey] = user;
 
         DumpUsersStorage();
 
@@ -246,7 +244,7 @@ HttpResponse RequestHandler::HandleGet(HttpRequest request)
         {
             uint32_t authKey;
         } responseData;
-        responseData.authKey = user->authKey;
+        responseData.authKey = authKey;
 
         HttpResponse response;
         response.code = MHD_HTTP_OK;
@@ -255,6 +253,37 @@ HttpResponse RequestHandler::HandleGet(HttpRequest request)
         response.contentLength = sizeof(responseData);
         memcpy(response.content, &responseData, response.contentLength);
         return response;
+    }
+    else if (ParseUrl(request.url, 1, "change_password"))
+    {
+        auto team = FindTeam(request.clientIp);
+        if(!team)
+            return HttpResponse(MHD_HTTP_FORBIDDEN);
+
+        User* user = CheckAuthority(request.queryString);
+        if(!user)
+            return HttpResponse(MHD_HTTP_UNAUTHORIZED);
+
+        std::lock_guard<std::mutex> guard(GUsersGuard);
+        auto& userName = user->GetName();
+
+        if(!team->GetUser(userName))
+        {
+            printf("  Team '%s' tries to change password for '%s'\n", team->desc.name.c_str(), userName.c_str());
+            return HttpResponse(MHD_HTTP_FORBIDDEN);
+        }
+
+        std::string password;
+        if(!FindInMap(request.queryString, kP, password))
+            return HttpResponse(MHD_HTTP_BAD_REQUEST);
+        printf("  new password: %s\n", password.c_str());
+
+        uint32_t authKey = user->GetAuthKey();
+        GUsers.erase(authKey);
+
+        user->ChangePassword(password);
+
+        return HttpResponse(MHD_HTTP_OK);
     }
     else if (ParseUrl(request.url, 1, "list"))
     {
@@ -727,7 +756,7 @@ void NotificationProcessor::FinalizeRequest()
     for(auto& iter : GTeams)
     {
         Team& team = iter.second;
-        team.AddNotification(notification, user->name);
+        team.AddNotification(notification, user->GetName());
     }
     notification->Release();
 
@@ -890,7 +919,7 @@ void ReadUsersStorage()
                     continue;
 
                 User* user = team->AddUser(record.userName, record.password);
-                user->authKey = record.authKey;
+                user->SetAuthKey(record.authKey);
                 user->ipAddr = record.ip;
                 GUsers[record.authKey] = user;
             }

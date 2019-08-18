@@ -6,15 +6,20 @@
 
 struct User
 {
-    std::string name;
-    std::string password;
-
     IPAddr ipAddr;
-    float lastUserNotifyTime = 0.0f;
-    AuthKey authKey = ~0u;
     static const uint32_t kNotificationQueueSize = 32;
 
-    void GenerateAuthKey();
+    User() = delete;
+    User(const std::string& name, const std::string& password);
+
+    void SetAuthKey(uint32_t authKey);
+    uint32_t GetAuthKey() const;
+    uint32_t GenerateAuthKey();
+
+    const std::string& GetName() const;
+
+    const std::string& GetPassword() const;
+    void ChangePassword(const std::string& newPassword);
 
     bool AddNotification(Notification* n);
     Notification* GetNotification();
@@ -22,10 +27,16 @@ struct User
     void Update();
     void SetNotifySocket(int sock);
 
+    void DumpStats(std::string& out, IPAddr hwConsoleIp) const;
+
 private:
-    std::mutex mutex;
+    mutable std::mutex mutex;
+    std::string name;
+    std::string password;
+    AuthKey authKey = ~0u;
     std::list<Notification*> notifications;
     int notifySocket = -1;
+    float lastUserNotifyTime = 0.0f;
 
     void NotifyUser();
 };

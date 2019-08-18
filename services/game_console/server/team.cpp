@@ -74,11 +74,8 @@ void Team::LoadDb()
 User* Team::AddUser(const std::string& name, const std::string& password)
 {
     std::lock_guard<std::mutex> guard(mutex);
-    User* user = new User();
-    user->name = name;
-    user->password = password;
-    user->ipAddr = ~0u;
-    users[user->name] = user;
+    User* user = new User(name, password);
+    users[name] = user;
     return user;
 }
 
@@ -111,7 +108,7 @@ bool Team::AuthorizeUser(const std::string& name, const std::string& password)
     auto iter = users.find(name);
     if(iter == users.end())
         return false;
-    return iter->second->password == password;
+    return iter->second->GetPassword() == password;
 }
 
 
@@ -163,24 +160,7 @@ void Team::DumpStats(std::string& out)
         sprintf(buf, "  User %s:\n", iter.first.c_str());
         out.append(buf);
 
-        sprintf(buf, "    Password: %s\n", u->password.c_str());
-        out.append(buf);
-
-        sprintf(buf, "    IP: %s\n", inet_ntoa(u->ipAddr));
-        out.append(buf);
-
-        bool isHw = u->ipAddr == hwConsoleIp;
-        sprintf(buf, "    Is HW: %s\n", isHw ? "yes" : "no");
-        out.append(buf);
-
-        sprintf(buf, "    Notifications in queue: %u\n", u->GetNotificationsInQueue());
-        out.append(buf);
-
-        sprintf(buf, "    Last user notify time: %f\n", u->lastUserNotifyTime);
-        out.append(buf);
-
-        sprintf(buf, "    Auth key: %x\n\n", u->authKey);
-        out.append(buf);
+        u->DumpStats(out, hwConsoleIp);
     }
 }
 

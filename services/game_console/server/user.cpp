@@ -3,11 +3,56 @@
 #include <string.h>
 
 
-void User::GenerateAuthKey()
+User::User(const std::string& name, const std::string& password)
+    : name(name), password(password), ipAddr(~0u)
 {
+
+}
+
+
+void User::SetAuthKey(uint32_t k)
+{
+    std::lock_guard<std::mutex> guard(mutex);
+    authKey = k;
+}
+
+
+uint32_t User::GetAuthKey() const
+{
+    std::lock_guard<std::mutex> guard(mutex);
+    return authKey;
+}
+
+
+uint32_t User::GenerateAuthKey()
+{
+    std::lock_guard<std::mutex> guard(mutex);
     authKey = 0;
     for(uint32_t i = 0; i < 4; i++)
         authKey |= (rand() % 255) << (i * 8);
+    return authKey;
+}
+
+
+const std::string& User::GetName() const
+{
+    // mutex is not required here
+    return name;
+}
+
+
+const std::string& User::GetPassword() const
+{
+    std::lock_guard<std::mutex> guard(mutex);
+    return password;
+}
+
+
+void User::ChangePassword(const std::string& newPassword)
+{
+    std::lock_guard<std::mutex> guard(mutex);
+    password = newPassword;
+    authKey = ~0u;
 }
 
 
@@ -87,4 +132,31 @@ void User::NotifyUser()
             notifySocket = -1;
         }
     }
+}
+
+
+void User::DumpStats(std::string& out, IPAddr hwConsoleIp) const
+{
+    std::lock_guard<std::mutex> guard(mutex);
+
+    char buf[512];
+
+    sprintf(buf, "    Password: %s\n", password.c_str());
+    out.append(buf);
+
+    sprintf(buf, "    IP: %s\n", inet_ntoa(ipAddr));
+    out.append(buf);
+
+    bool isHw = ipAddr == hwConsoleIp;
+    sprintf(buf, "    Is HW: %s\n", isHw ? "yes" : "no");
+    out.append(buf);
+
+    sprintf(buf, "    Notifications in queue: %u\n", notifications.size());
+    out.append(buf);
+
+    sprintf(buf, "    Last user notify time: %f\n", lastUserNotifyTime);
+    out.append(buf);
+
+    sprintf(buf, "    Auth key: %x\n\n", authKey);
+    out.append(buf);
 }
