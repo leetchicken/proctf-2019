@@ -1,0 +1,7 @@
+definitions.json
+LogProcessor.appsettings.json
+IdentityServer.appsettings.json
+internal_users.yml
+.idea/
+bin/
+obj/
