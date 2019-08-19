@@ -1,0 +1,34 @@
+% layout 'default';
+% title 'Index';
+
+<h2>List of all messages</h2>
+
+<div class="row">
+  % for my $message (@$messages) {
+    <div class="message col s3">
+      <strong><%= $message->{created_at} %></strong>
+    </div>
+    <div class="message col s1">
+      % my $direction = $message->{direction} eq 'to_owner' ? '⮞' : '⮜';
+      % $direction = $message->{direction} eq 'to_client' ? '⮞' : '⮜' if $client_id;
+      <strong><%= $direction %></strong>
+    </div>
+    <div class="message col s8">
+      <span><%= $message->{data} %></span>
+    </div>
+  % }
+</div>
+
+<form class="col s12" method="POST">
+  <div class="row">
+    <div class="input-field col s6 offset-s2">
+      <input id="message" name="message" type="text">
+      <label for="message">Enter message...</label>
+    </div>
+    <div class="input-field col s4">
+      <button class="btn waves-effect waves-light" type="submit" name="action">
+        Send
+      </button>
+    </div>
+  </div>
+</form>

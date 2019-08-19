@@ -1,0 +1,27 @@
+version: '3'
+
+services:
+  web:
+    build: .
+    image: "bb:latest"
+    depends_on:
+      - pg
+    ports:
+      - "8080:8080"
+    volumes:
+      - "./b_b.conf:/app/b_b.conf"
+    environment:
+      - ENC_KEY
+      - SECRET
+      - POSTGRES_PASSWORD
+  pg:
+    image: "postgres:11"
+    volumes:
+      - "dbdata:/var/lib/postgresql/data"
+      - "./init/create_db.sql:/docker-entrypoint-initdb.d/create_db.sql"
+    environment:
+      - ENC_KEY
+      - POSTGRES_PASSWORD
+
+volumes:
+  dbdata:

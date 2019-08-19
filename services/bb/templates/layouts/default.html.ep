@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link type="text/css" rel="stylesheet" href="/css/materialize.min.css" media="screen,projection"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title><%= title %></title>
+  </head>
+  <body>
+    <div class="container">
+      <nav>
+        <div class="nav-wrapper">
+          <a href="<%= url_for 'index' %>" class="brand-logo">Bulletin Board</a>
+          <ul id="nav-mobile" class="right hide-on-med-and-down">
+            % if (my $login = session 'login') {
+              <li><a href="<%= url_for 'ad_create' %>">Create advertisement</a></li>
+              <li><a href="<%= url_for 'logout' %>">Logout (<%= $login %>)</a></li>
+            % } else {
+              <li><a href="<%= url_for 'register' %>">Register</a></li>
+              <li><a href="<%= url_for 'login' %>">Login</a></li>
+            % }
+          </ul>
+        </div>
+      </nav>
+      <%= content %>
+    </div>
+
+    <script type="text/javascript" src="/js/materialize.min.js"></script>
+  </body>
+</html>

@@ -1,0 +1,48 @@
+% layout 'default';
+% title 'Index';
+
+<h2>
+  List of all advertisements
+  % if (session 'user_id') {
+    <a href="<%= url_for('index')->query(own => 1) %>">(only own)</a>
+  % }
+</h2>
+
+% for my $board (@$boards) {
+  <div class="divider"></div>
+  <div class="row">
+    <div class="col s8">
+      <div class="section">
+        <h5 class="board_title"><%= $board->{title} %></h5>
+        <small><%= $board->{created_at} %></small>
+        <p class="board_descr"><%= $board->{descr} %></p>
+      </div>
+    </div>
+    <div class="col s4">
+      <p class="board_id">
+        ID: <%= $board->{id} %>
+      </p>
+      <p>Author: <%= $board->{login} %></p>
+      % if (my $user_id = session 'user_id') {
+        <p>
+          % if ($board->{user_id} != $user_id) {
+            <a href="<%= url_for 'messages', board_id => $board->{id} %>">
+              Go to private conversation
+            </a>
+          % } else {
+            % for my $thread (@{$board->{threads}}) {
+              <p>
+                <a class="thread" href="<%= url_for('messages', board_id => $board->{id})->query(client_id => $thread->{client_id}) %>">
+                  Go to thread with <%= $thread->{login} %>
+                </a>
+              </p>
+            % }
+          % }
+        </p>
+      % }
+    </div>
+  </div>
+% }
+
+<a class="btn <%= $page == 1 ? 'disabled' : '' %>" href="<%= url_with->query({page => $page - 1}) %>">⇦ Newer</a>
+<a class="btn <%= $page == $max ? 'disabled' : '' %>" href="<%= url_with->query({page => $page + 1}) %>">Older ⇨</a>

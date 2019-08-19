@@ -1,0 +1,17 @@
+% layout 'default';
+% title 'Index';
+
+<h2>List of threads</h2>
+
+<div class="row">
+  % for my $thread (@$threads) {
+    <div class="col s3">
+      <strong><%= $thread->{login} %></strong>
+    </div>
+    <div class="col s9">
+      <a href="<%= url_for('messages', board_id => $board_id)->query(client_id => $thread->{client_id}) %>">
+        Go to private conversation
+      </a>
+    </div>
+  % }
+</div>
