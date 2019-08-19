@@ -18,7 +18,7 @@ services:
     image: "postgres:11"
     volumes:
       - "dbdata:/var/lib/postgresql/data"
-      - "./init/create_db.sql:/docker-entrypoint-initdb.d/create_db.sql"
+      - "./sql/create_db.sql:/docker-entrypoint-initdb.d/create_db.sql"
     environment:
       - ENC_KEY
       - POSTGRES_PASSWORD

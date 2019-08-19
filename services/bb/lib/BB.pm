@@ -17,7 +17,7 @@ sub startup {
   $app->helper(users => sub { state $users = Blog::Model::Users->new(pg => shift->pg) });
   $app->helper(boards => sub { state $boards = Blog::Model::Boards->new(pg => shift->pg, enc_key => $config->{enc_key}) });
 
-  my $schema = $app->home->child('bb.sql');
+  my $schema = $app->home->child('sql', 'bb.sql');
   $app->pg->auto_migrate(1)->migrations->name('bb')->from_file($schema);
 
   my $r = $app->routes;
