@@ -47,6 +47,10 @@
       chdir: "{{cs_dir}}/checkers/Binder"
     tags: binder
 
+  - name: build tmp dir
+    file: path="{{cs_dir}}/checkers/Binder/checker/tmp" state=directory owner="{{cs_user}}" group="{{cs_user}}"
+    tags: binder
+
   - name: install sys deps
     apt:
       name:
