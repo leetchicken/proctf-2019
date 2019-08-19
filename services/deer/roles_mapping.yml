@@ -1,0 +1,25 @@
+---
+
+_meta:
+  type: "rolesmapping"
+  config_version: 2
+
+all_access:
+  reserved: true
+  hidden: false
+  backend_roles:
+  - "admin"
+  hosts: []
+  users: []
+  and_backend_roles: []
+  description: "Maps admin to all_access"
+
+read_own_index:
+  reserved: false
+  hidden: false
+  backend_roles:
+  - "deer_user"
+  hosts: []
+  users: []
+  and_backend_roles: []
+  description: "Maps deer_user to read_own_index"

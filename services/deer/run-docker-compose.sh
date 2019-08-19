@@ -7,9 +7,15 @@ function get_rabbit_password_hash () {
 	echo "$(printf "%s%s" $SALT $HASH_BYTES | xxd -r -p | openssl base64)"
 }
 
-if [ ! -f definitions.json ] || [ ! -f LogProcessor.appsettings.json ] || [ ! -f IdentityServer.appsettings.json ]; then
+function get_es_password_hash () {
+	local HASH="$(docker run -it --rm amazon/opendistro-for-elasticsearch:1.1.0 /bin/bash /usr/share/elasticsearch/plugins/opendistro_security/tools/hash.sh -p $1)"
+	echo $HASH | sed $'s/\r//'
+}
+
+if [ ! -f definitions.json ] || [ ! -f internal_users.yml ] || [ ! -f LogProcessor.appsettings.json ] || [ ! -f IdentityServer.appsettings.json ]; then
 	RABBIT_ADMIN_PASSWORD=`pwgen -Bs1 20`
 	RABBIT_LOG_PROCESSOR_PASSWORD=`pwgen -Bs1 20`
+	ES_ADMIN_PASSWORD=`pwgen -Bs1 20`
 
 	cat << EOF > definitions.json
 {
@@ -119,6 +125,19 @@ EOF
         }
     }
 }
+EOF
+
+	cat << EOF > internal_users.yml
+_meta:
+  type: "internalusers"
+  config_version: 2
+
+admin:
+  hash: "$(get_es_password_hash $ES_ADMIN_PASSWORD)"
+  reserved: true
+  backend_roles:
+  - "admin"
+  description: "Admin user"
 EOF
 
 else

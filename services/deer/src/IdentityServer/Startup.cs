@@ -39,6 +39,7 @@ namespace IdentityServer
 
             services.AddSingleton(sp => sp.GetRequiredService<IMongoDatabase>().GetCollection<UserMongoDocument>("users"));
             services.AddSingleton<IUserRepository, UserRepository>();
+            services.AddSingleton<IOpenDistroElasticsearchClient, OpenDistroElasticsearchClient>();
             services.AddSingleton<IUserUnitOfWork, UserUnitOfWork>();
 
             services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie();

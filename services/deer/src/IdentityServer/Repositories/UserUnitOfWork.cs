@@ -15,13 +15,15 @@ namespace IdentityServer.Repositories
         private readonly IManagementClient _managementClient;
         private readonly IUserRepository _userRepository;
         private readonly IBus _bus;
+        private readonly IOpenDistroElasticsearchClient _elasticsearchClient;
         private readonly ILogger<UserUnitOfWork> _logger;
 
-        public UserUnitOfWork(IManagementClient managementClient, IUserRepository userRepository, IBus bus, ILogger<UserUnitOfWork> logger)
+        public UserUnitOfWork(IManagementClient managementClient, IUserRepository userRepository, IBus bus, IOpenDistroElasticsearchClient elasticsearchClient, ILogger<UserUnitOfWork> logger)
         {
             _managementClient = managementClient;
             _userRepository = userRepository;
             _bus = bus;
+            _elasticsearchClient = elasticsearchClient;
             _logger = logger;
         }
 
@@ -52,7 +54,8 @@ namespace IdentityServer.Repositories
             var bindingInfo = new BindingInfo(username);
             await _managementClient.CreateBindingAsync(exchange, queue, bindingInfo);
 
-            // TODO create elastic user
+            await _elasticsearchClient.CreateUserAsync(username, password);
+            await _elasticsearchClient.CreateIndexAsync(username);
             
             var salt = CryptoUtils.GenerateSalt();
             var passwordHash = CryptoUtils.ComputeHash(salt, password);

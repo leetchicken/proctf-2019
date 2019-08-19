@@ -1,8 +1,13 @@
 version: '3'
 services:
   elasticsearch:
-    image: amazon/opendistro-for-elasticsearch:1.0.1
+    image: amazon/opendistro-for-elasticsearch:1.1.0
     container_name: deer-elastic
+    volumes:
+      - ./internal_users.yml:/usr/share/elasticsearch/plugins/opendistro_security/securityconfig/internal_users.yml
+      - ./roles.yml:/usr/share/elasticsearch/plugins/opendistro_security/securityconfig/roles.yml
+      - ./roles_mapping.yml:/usr/share/elasticsearch/plugins/opendistro_security/securityconfig/roles_mapping.yml
+      - ./tenants.yml:/usr/share/elasticsearch/plugins/opendistro_security/securityconfig/tenants.yml
     environment:
       - cluster.name=deer-cluster
       - node.name=es
@@ -28,12 +33,8 @@ services:
       - ./definitions.json:/etc/rabbitmq/definitions.json
     ports:
       - 5672:5672
-      # TODO remove
-      - 15672:15672
     expose:
       - "5672"
-      # TODO remove
-      - "15672"
 
   mongodb:
     image: mongo
@@ -62,5 +63,6 @@ services:
     expose:
       - "5000"
     links:
+      - elasticsearch
       - mongodb
       - rabbitmq
