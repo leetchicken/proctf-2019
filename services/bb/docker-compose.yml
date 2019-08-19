@@ -7,7 +7,7 @@ services:
     depends_on:
       - pg
     ports:
-      - "8080:8080"
+      - "443:8443"
     volumes:
       - "./b_b.conf:/app/b_b.conf"
     environment:

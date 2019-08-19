@@ -1,6 +1,6 @@
 FROM perl:5.30
 
-RUN cpanm -n Mojolicious Mojo::Pg
+RUN cpanm -n Mojolicious Mojo::Pg IO::Socket::SSL
 
 WORKDIR /app
 COPY . /app
