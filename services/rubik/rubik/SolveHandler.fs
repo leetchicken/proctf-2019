@@ -31,6 +31,8 @@ type SolveHandler() =
         | user when user <> null -> (200, null, user)
         | _ ->
             match login.TrimOrNull(), pass.TrimOrNull(), bio.TrimOrNull() with
+            | login, pass, bio when String.IsNullOrEmpty(login) && String.IsNullOrEmpty(pass) && String.IsNullOrEmpty(bio) ->
+                (200, null, new User(Login = "Guest #" + Guid.NewGuid().ToString("N").Substring(0, 12), Created = DateTime.UtcNow))
             | login, pass, bio when String.IsNullOrEmpty(login) || login.Length > MaxFieldLength || String.IsNullOrEmpty(pass) || pass.Length > MaxFieldLength || not(String.IsNullOrEmpty(bio)) && bio.Length > MaxFieldLength ->
                 (400, "Bad login or pass or bio", null)
             | login, pass, bio ->
@@ -41,8 +43,8 @@ type SolveHandler() =
                 | _ -> (403, "Invalid pass", null)
 
     static member Solve(context: HttpContext, puzzle: string, solution: string, login: string, pass: string, bio: string) =
-        match puzzle, solution with
-        | puzzle, solution when not(String.IsNullOrEmpty(puzzle)) && not(String.IsNullOrEmpty(solution)) && solution.Length <= MaxSolutionLength ->
+        match puzzle, (if solution <> null then solution else "") with
+        | puzzle, solution when not(String.IsNullOrEmpty(puzzle)) && solution.Length <= MaxSolutionLength ->
             match RubikHelper.TryDeserialize(puzzle, SettingsManager.Current.Key) with
             | rubik when rubik.IsEmpty() -> (400, "Bad puzzle", null)
             | rubik ->
@@ -78,7 +80,5 @@ type SolveHandler() =
     [<HttpPost("/api/solve")>]
     member __.ProcessRequest(puzzle: string, solution: string, login: string, pass: string, bio: string): IActionResult =
         match SolveHandler.Solve(base.HttpContext, puzzle, solution, login, pass, bio) with
-        | (200, _, sln) when sln <> null ->
-            base.Ok(sln) :> IActionResult
-        | (status, message, _) ->
-            base.StatusCode(status, message) :> IActionResult
+        | (200, _, sln) when sln <> null -> base.Ok(sln) :> IActionResult
+        | (status, message, _) -> base.StatusCode(status, message) :> IActionResult

@@ -214,6 +214,7 @@ table.face td {
 	transform-style: preserve-3d;
 	animation: rotate 20s infinite linear;
 	margin-top: 5em;
+	z-index: -1000;
 }
 
 .paused {
@@ -239,6 +240,24 @@ table.face td {
 .up {transform: translateY(-10em) rotateX(90deg);}
 .down {transform: translateY(10em) rotateX(270deg);}
 .front {transform: translateZ(10em);}
+
+@media (max-height: 800px) {
+	.side, .container {
+		width: 10em;
+		height: 10em;
+	}
+
+	.container {
+		margin-top: 10em;
+	}
+
+	.back {transform: translateZ(-5em) rotateY(180deg);}
+	.left {transform: translateX(-5em) rotateY(270deg);}
+	.right {transform: translateX(5em) rotateY(90deg);}
+	.up {transform: translateY(-5em) rotateX(90deg);}
+	.down {transform: translateY(5em) rotateX(270deg);}
+	.front {transform: translateZ(5em);}
+}
 
 @keyframes rotate {
 	100% { transform: rotatex(360deg) rotateY(360deg) rotateZ(360deg); }
