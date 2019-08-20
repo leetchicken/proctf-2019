@@ -223,7 +223,6 @@
             var userId = document.getElementById("user_list").selectedIndex
 
             callApi("POST", "/checkuser", {"rules": algoNames, "user": userId}, function (result) {
-                // console.log(result)
                 var resultEl = document.getElementById("compare_result")
                 resultEl.innerHTML = ""
 
@@ -257,10 +256,7 @@
 
                 }
                 window.scrollTo(0, document.body.scrollHeight)
-                // downloadRules()
             })
-
-            
         }
 
         function downloadRules() {
