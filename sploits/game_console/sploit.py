@@ -5,6 +5,7 @@ import os
 import requests
 import struct
 import socket
+import time
 
 SERVER_ADDR = "10.60.3.2:8000"
 # value of 'sp' register at the very beginning of NotificationCtx::Update(),
@@ -86,6 +87,26 @@ requests.post(url=url, data=notification, headers={'Content-Type': 'application/
 client_sock, addr = sock.accept()
 authKeyRaw = client_sock.recv(4)
 authKey = struct.unpack('I', authKeyRaw)[0]
-print(hex(authKey))
+print("Auth key: " + hex(authKey))
 client_sock.close()
 sock.close()
+
+print("Waiting for notifications with flag")
+while(1):
+    url = 'http://%s/notification?auth=%x' % (SERVER_ADDR, authKey)
+    r = requests.get(url)
+    if r.status_code != 200 or len(r.content) == 0:
+        time.sleep(10)
+        continue
+    
+    notification = r.content
+
+    userNameLen = struct.unpack('I', notification[0:4])[0]
+    userName = notification[4 : 4 + userNameLen].decode('utf-8')
+
+    messageLenOffset = 4 + userNameLen
+    messageLen = struct.unpack('I', notification[messageLenOffset : messageLenOffset + 4])[0]
+    messageOffset = messageLenOffset + 4
+    message = notification[messageOffset : messageOffset + messageLen].decode('utf-8')
+    print(userName + ": " + message)
+

