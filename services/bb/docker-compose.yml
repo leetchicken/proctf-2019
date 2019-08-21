@@ -10,6 +10,7 @@ services:
       - "443:8443"
     volumes:
       - "./b_b.conf:/app/b_b.conf"
+      - "./ssl:/app/ssl"
     environment:
       - ENC_KEY
       - SECRET

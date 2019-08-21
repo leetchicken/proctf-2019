@@ -21,7 +21,7 @@ warn 'Invalid mode.' and exit $INTERNAL_ERROR unless $mode ~~ %MODES;
 my $agents = c(<DATA>)->map(sub {chomp; $_});
 my $ua = _ua();
 
-my $url = Mojo::URL->new("https://$ip:443/");
+my $url = Mojo::URL->new("https://$ip/");
 my $log = Mojo::Log->new;
 $log->info("URL for check: $url");
 
@@ -32,7 +32,7 @@ sub _mumble  { say $_[0] and $log->info($_[0]) and exit $SERVICE_MUMBLE }
 sub _fail    { say $_[0] and $log->info($_[0]) and exit $SERVICE_FAIL }
 
 sub _ua {
-  my $ua = Mojo::UserAgent->new(max_redirects => 3);
+  my $ua = Mojo::UserAgent->new(max_redirects => 3, insecure => 1);
   $ua->transactor->name($agents->shuffle->first);
 
   return $ua;
