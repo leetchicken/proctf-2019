@@ -62,6 +62,32 @@ namespace SPN
 		private static byte[][] SBoxes = { SBox1, SBox2, SBox3, SBox4, SBox5, SBox6, SBox7, SBox8, SBox9, SBox10, SBox11, SBox12, SBox13, SBox14, SBox15, SBox16 };
 		private static int[] PBoxOutput = { 38, 4, 15, 46, 11, 16, 33, 1, 35, 64, 51, 45, 50, 55, 27, 57, 47, 52, 43, 12, 7, 40, 42, 53, 29, 10, 56, 60, 36, 20, 58, 24, 39, 37, 26, 3, 32, 17, 22, 28, 30, 23, 63, 49, 14, 62, 19, 25, 21, 5, 9, 6, 8, 34, 18, 13, 31, 61, 44, 2, 48, 41, 54, 59 };
 
+		private static byte[] XorBlock(byte[] lhs, byte[] rhs)
+		{
+			var result = new byte[lhs.Length];
+			for(int i = 0; i < Math.Min(lhs.Length, rhs.Length); i++)
+				result[i] = (byte)(lhs[i] ^ rhs[i]);
+			return result;
+		}
+
+		public static byte[] CalcMasterKey(byte[] keyMaterial)
+		{
+			if(keyMaterial.Length == 0 || keyMaterial.Length % BlockSizeBytes != 0)
+				throw new Exception($"Key material length {keyMaterial.Length} is not aligned to BlockSizeBytes {BlockSizeBytes}");
+
+			var result = keyMaterial.Take(BlockSizeBytes).ToArray();
+			for(int i = BlockSizeBytes; i < keyMaterial.Length; i += BlockSizeBytes)
+				result = XorBlock(result, keyMaterial.Skip(i).Take(BlockSizeBytes).ToArray());
+
+			return result;
+		}
+
+		public static byte[] GenerateRandomIV()
+		{
+			var iv = new byte[BlockSizeBytes];
+			new RNGCryptoServiceProvider().GetBytes(iv);
+			return iv;
+		}
 
 		public static byte[] GenerateRandomKey()
 		{
@@ -96,7 +122,42 @@ namespace SPN
 				yield return masterKey.ToArray();
 		}
 
-		public byte[] Encrypt(byte[] block)
+		public byte[] EncryptWithPadding(byte[] data, byte[] iv)
+		{
+			return EncryptCBC(Pad(data), iv);
+		}
+
+		private byte[] Pad(byte[] data)
+		{
+			var padLength = BlockSizeBytes - data.Length % BlockSizeBytes;
+			var newData = new byte[data.Length + padLength];
+			Array.Copy(data, newData, data.Length);
+			for(int i = data.Length; i < newData.Length; i++)
+				newData[i] = (byte)padLength;
+			return newData;
+		}
+
+		public byte[] EncryptCBC(byte[] data, byte[] iv)
+		{
+			if(data.Length == 0 || data.Length % BlockSizeBytes != 0 || iv.Length == 0 || iv.Length % BlockSizeBytes != 0)
+				throw new Exception($"Input block length {data.Length} is not aligned to BlockSizeBytes {BlockSizeBytes} or IV length {iv.Length} is not aligned to BlockSizeBytes {BlockSizeBytes}");
+
+			var result = new List<byte>(data.Length + iv.Length);
+			result.AddRange(iv);
+
+			byte[] prevC = iv.ToArray();
+			for(int i = 0; i < data.Length; i += BlockSizeBytes)
+			{
+				var p = data.Skip(i).Take(BlockSizeBytes).ToArray();
+				var c = EncryptBlock(XorBlock(p, prevC));
+				result.AddRange(c);
+				prevC = c;
+			}
+
+			return result.ToArray();
+		}
+
+		public byte[] EncryptBlock(byte[] block)
 		{
 			if(block.Length != BlockSizeBytes)
 				throw new Exception($"Input block length {block.Length} is not equal to expected {BlockSizeBytes} bytes");
@@ -146,7 +207,49 @@ namespace SPN
 			return result;
 		}
 
-		public byte[] Decrypt(byte[] block)
+		public byte[] DecryptWithPadding(byte[] data)
+		{
+			return UnPad(DecryptCBC(data));
+		}
+
+		private byte[] UnPad(byte[] data)
+		{
+			if(data.Length == 0 || data.Length % BlockSizeBytes != 0)
+				throw new Exception($"Input block length {data.Length} is not aligned to BlockSizeBytes {BlockSizeBytes}");
+
+			var padLength = data[data.Length - 1];
+			if(padLength == 0 || padLength > BlockSizeBytes)
+				throw new Exception($"Invalid padding");
+
+			for(int i = data.Length - 2; i >= data.Length - padLength; i--)
+			{
+				if(data[i] != padLength)
+					throw new Exception($"Invalid padding");
+			}
+
+			return data.Take(data.Length - padLength).ToArray();
+		}
+
+		public byte[] DecryptCBC(byte[] data)
+		{
+			if(data.Length == 0 || data.Length % BlockSizeBytes != 0)
+				throw new Exception($"Input block length {data.Length} is not aligned to BlockSizeBytes {BlockSizeBytes}");
+
+			var result = new List<byte>(data.Length - BlockSizeBytes);
+
+			byte[] prevC = data.Take(BlockSizeBytes).ToArray();
+			for(int i = BlockSizeBytes; i < data.Length; i += BlockSizeBytes)
+			{
+				var c = data.Skip(i).Take(BlockSizeBytes).ToArray();
+				var p = XorBlock(DecryptBlock(c), prevC);
+				result.AddRange(p);
+				prevC = c;
+			}
+
+			return result.ToArray();
+		}
+
+		public byte[] DecryptBlock(byte[] block)
 		{
 			if(block.Length != BlockSizeBytes)
 				throw new Exception($"Input block size {block.Length} is not equal to expected {BlockSizeBytes} bytes");

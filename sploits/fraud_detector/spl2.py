@@ -2,8 +2,9 @@
 
 import sys
 from common import call_get_rules_api, call_add_rule_api, call_check_user_api
+import random
 
-PREFIX = "SPL2_"
+PREFIX = "SPL2_%d_" % random.randrange(2**64)
 
 PAYLOAD_START = """
 def add(self, flag):

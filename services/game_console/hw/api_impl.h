@@ -13,8 +13,6 @@ public:
     void* Malloc(uint32_t size);
     void Free(void* ptr);
 
-    const char* GetUserName();
-
     void GetScreenRect(Rect* rect);
     void GetTouchScreenState(TouchScreenState* state);
 

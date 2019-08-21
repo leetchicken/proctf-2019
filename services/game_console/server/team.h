@@ -4,7 +4,7 @@
 #include <mutex>
 #include <map>
 #include "notification.h"
-#include "console.h"
+#include "user.h"
 #include "misc.h"
 
 
@@ -22,9 +22,12 @@ struct Team
 
     void LoadDb();
 
-    Console* AddConsole(IPAddr consoleIp);
-    Console* GetConsole(IPAddr consoleIp);
-    void AddNotification(Notification* n, IPAddr except = 0);
+    User* AddUser(const std::string& name, const std::string& password);
+    User* GetUser(const std::string& name);
+    User* GetUser(IPAddr ipAddr);
+    bool AuthorizeUser(const std::string& name, const std::string& password);
+
+    void AddNotification(Notification* n, const std::string& except = 0);
     void Update();
     void DumpStats(std::string& out);
     
@@ -34,6 +37,6 @@ struct Team
 private:
     std::mutex mutex;
     FILE* storage = nullptr;
-    std::map<IPAddr, Console*> consoles;
+    std::map<std::string, User*> users;
     std::map<std::string, std::string> flags;
 };

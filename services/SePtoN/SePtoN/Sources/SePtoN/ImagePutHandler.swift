@@ -44,6 +44,9 @@ public final class ImagePutHandler: ChannelInboundHandler {
     }
 
     public func processImageTransfer(_ context: ChannelHandlerContext, _ data: NIOAny) {
+        print()
+        print("IMAGE TRANSFER")
+
         var byteBuffer = unwrapInboundIn(data)
 
         guard let c = byteBuffer.readBytes(length: byteBuffer.readableBytes) else {
@@ -51,17 +54,25 @@ public final class ImagePutHandler: ChannelInboundHandler {
             return
         }
 
-        guard let imageData = try? spn?.decryptCBC(c) else {
-            print("Failed to decryptCBC c of \(c.count) bytes")
+        guard let imageData = try? spn?.decryptWithPadding(c) else {
+            print("!! Failed to decryptWithPadding c of \(c.count) bytes")
             context.close(promise: nil)
             return
         }
 
         guard let image = try? Image(data: Data(imageData), as: .bmp) else {
-            print("Failed to parse decrypted image bytes as valid Image")
+            print("!! Failed to parse decrypted image bytes as valid Image")
             context.close(promise: nil)
             return
         }
+
+        print("GOT VALID IMAGE \(image.size)")
+
+        let currentDirectory = URL(fileURLWithPath: FileManager().currentDirectoryPath)
+        let destination = currentDirectory.appendingPathComponent("image.png")
+        let success = image.write(to: destination)
+
+        print("SAVED IMAGE: \(success)")
 
         var result = context.channel.allocator.buffer(capacity: 4)
         result.writeBytes([0, 0, 0, 0]) //TODO watermark image, encrypt it back, save to file and respond with fileId
@@ -83,17 +94,17 @@ public final class ImagePutHandler: ChannelInboundHandler {
         }
         
         let yA = BigUInt(Data(newData))
-        print(newData)
-        print("yA: ", yA)
-        print()
+        // print(newData)
+        // print("yA: ", yA)
+        // print()
 
         let xB = BigUInt.randomInteger(withExactWidth: 20 * 8)
         let yB = g.power(xB, modulus: p)
-        print("yB: ", yB)
+        // print("yB: ", yB)
 
         let key = yA.power(xB, modulus: p)
         let keyMaterial = Array(key.serialize())
-        print(keyMaterial)
+        // print(keyMaterial)
         print("Key: ", key)
         print()
 
@@ -109,7 +120,6 @@ public final class ImagePutHandler: ChannelInboundHandler {
 
 // Responding with our g^b mod p back to Client
         context.write(self.wrapOutboundOut(yBbuffer), promise: nil)
-        print("Written data")
     } 
 
     public func channelReadComplete(context: ChannelHandlerContext) {

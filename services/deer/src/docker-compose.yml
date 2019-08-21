@@ -1,0 +1,32 @@
+version: '3'
+services:
+  rabbitmq:
+    image: rabbitmq:3.6-management
+    container_name: deer-test-rabbit
+    ports:
+      - 5672:5672
+      - 15672:15672
+    expose:
+      - "5672"
+      - "15672"
+
+  mongodb:
+    image: mongo
+    container_name: deer-test-mongo
+    ports:
+      - 27017:27017
+    expose:
+      - "27017"
+
+  elasticsearch:
+    image: amazon/opendistro-for-elasticsearch:1.1.0
+    container_name: deer-test-elastic
+    environment:
+      - cluster.name=deer-test-cluster
+      - node.name=es-test
+      - cluster.initial_master_nodes=es-test
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m" # minimum and maximum Java heap size, recommend setting both to 50% of system RAM
+    ports:
+      - 9200:9200
+    expose:
+      - "9200"

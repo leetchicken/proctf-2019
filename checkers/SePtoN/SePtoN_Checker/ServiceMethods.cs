@@ -7,6 +7,7 @@ using System.Net.Sockets;
 using System.Numerics;
 using System.Text;
 using log4net;
+using SPN;
 
 namespace SePtoN_Checker
 {
@@ -43,13 +44,17 @@ namespace SePtoN_Checker
 				{
 					var xA = DH.GenerateRandomXA(DH_x_bitsCount);
 					var yA = DH.CalculateYA(xA);
-
 					stream.WriteBigIntBigEndian(yA);
 
 					var yB = stream.ReadBigIntBigEndian();
-					var key = DH.DeriveKey(yB, xA);
+					var keyMaterial = DH.DeriveKey(yB, xA).ToByteArray(isBigEndian:true);
+					var masterKey = SubstitutionPermutationNetwork.CalcMasterKey(keyMaterial);
 
-					Console.WriteLine($"Key: {key}");
+					var flagPicture = FlagsPainter.DrawFlag(flag);
+					var spn = new SubstitutionPermutationNetwork(masterKey);
+					var encryptedData = spn.EncryptWithPadding(flagPicture, SubstitutionPermutationNetwork.GenerateRandomIV());
+
+					stream.WriteLengthFieldAware(encryptedData);
 
 					return -1;
 				}

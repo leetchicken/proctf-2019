@@ -5,7 +5,6 @@
 #include "MemoryPool.h"
 #include "Queue.h"
 #include "ip4string.h"
-#include "teams_data.h"
 
 
 Thread GHttpThread;
@@ -154,27 +153,6 @@ void* APIImpl::Malloc(uint32_t size)
 void APIImpl::Free(void* ptr)
 {
     free(ptr);
-}
-
-
-const char* APIImpl::GetUserName()
-{
-    if(m_ethInterface->get_connection_status() != NSAPI_STATUS_GLOBAL_UP)
-        return "Unknown";
-
-    const char* ipStr = m_ethInterface->get_ip_address();
-    uint32_t ip;
-    stoip4(ipStr, strlen(ipStr), &ip);
-    const uint32_t kNetMask = 0x00FFFFFF;
-    uint32_t netAddr = ip & kNetMask;
-    printf("%x\n", netAddr);
-    for(uint32_t i = 0; i < kTeamsNum; i++)
-    {
-        if(GTeamsData[i].net == netAddr)
-            return GTeamsData[i].name;
-    }
-
-    return "Unknown";
 }
 
 

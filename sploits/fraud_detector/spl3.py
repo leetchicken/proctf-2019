@@ -3,9 +3,10 @@
 import sys
 import socket
 from common import call_get_rules_api, call_add_rule_api, call_check_user_api
+import random
 
-MODULE_NAME = "SPL3_MODULE"
-RULE_NAME = "SPL3_RULE"
+MODULE_NAME = "SPL3_MODULE_%d" % random.randrange(2**64)
+RULE_NAME = "SPL3_RULE_%d"% random.randrange(2**64)
 
 host = sys.argv[1]
 connectback_ip = sys.argv[2]

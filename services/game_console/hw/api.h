@@ -127,7 +127,7 @@ enum EHttpMethod
 struct HTTPRequest
 {
     EHttpMethod httpMethod;
-    char url[64];
+    char url[128];
     void* requestBody;
     uint32_t requestBodySize;
     void* responseData;
@@ -201,8 +201,6 @@ class API
 public:
     virtual void* Malloc(uint32_t size) = 0;
     virtual void Free(void* ptr) = 0;
-
-    virtual const char* GetUserName() = 0;
 
     virtual void GetScreenRect(Rect* rect) = 0;
     virtual void GetTouchScreenState(TouchScreenState* state) = 0;

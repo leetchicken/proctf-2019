@@ -44,15 +44,15 @@ public class SePtoN {
 		    .serverChannelOption(ChannelOptions.socket(SocketOptionLevel(SOL_SOCKET), SO_REUSEADDR), value: 1)
 
 		    .childChannelInitializer { channel in
-		    	channel.pipeline.addHandler(DebugOutboundEventsHandler()).flatMap { v in
-		    		channel.pipeline.addHandler(DebugInboundEventsHandler()).flatMap { v in
+		    	// channel.pipeline.addHandler(DebugOutboundEventsHandler()).flatMap { v in
+		    		// channel.pipeline.addHandler(DebugInboundEventsHandler()).flatMap { v in
 				        channel.pipeline.addHandler(ByteToMessageHandler(LengthFieldBasedFrameDecoder(lengthFieldLength: .two))).flatMap { v in
 				            channel.pipeline.addHandler(LengthFieldPrepender(lengthFieldLength: .two)).flatMap { v in
 				                channel.pipeline.addHandler(handlerFactory())
 				            }
 				        }
-				    }
-			    }
+				    // }
+			    // }
 		    }
 
 		    .childChannelOption(ChannelOptions.socket(IPPROTO_TCP, TCP_NODELAY), value: 1)

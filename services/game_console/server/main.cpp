@@ -12,7 +12,6 @@
 #include "checksystem.h"
 #include "misc.h"
 #include "notification.h"
-#include "console.h"
 #include "team.h"
 
 struct GameDesc
@@ -50,23 +49,26 @@ public:
     char* m_curContentPtr = nullptr;
 
     in_addr m_sourceIp;
+    uint32_t m_authKey;
 
 protected:
     virtual void FinalizeRequest();
 };
 
 
-struct ConsolesStorageRecord
+struct UsersStorageRecord
 {
     IPAddr ip;
     AuthKey authKey;
+    char userName[kMaxUserNameLen];
+    char password[kMaxPasswordLen];
 };
-static const char* kConsoleStorageFileName = "data/consoles.dat";
+static const char* kUsersStorageFileName = "data/users.dat";
 
 std::map<uint32_t, GameDesc> GGamesDatabase;
 std::unordered_map<NetworkAddr, Team> GTeams;
-std::mutex GConsolesGuard;
-std::unordered_map<AuthKey, Console*> GConsoles;
+std::mutex GUsersGuard;
+std::unordered_map<AuthKey, User*> GUsers;
 
 
 static Team* FindTeam(in_addr ipAddr, bool showError = true)
@@ -83,17 +85,17 @@ static Team* FindTeam(in_addr ipAddr, bool showError = true)
 }
 
 
-static Console* GetConsole(AuthKey authKey)
+static User* GetUser(AuthKey authKey)
 {
-    std::lock_guard<std::mutex> guard(GConsolesGuard);
-    auto iter = GConsoles.find(authKey);
-    if(iter == GConsoles.end())
+    std::lock_guard<std::mutex> guard(GUsersGuard);
+    auto iter = GUsers.find(authKey);
+    if(iter == GUsers.end())
         return nullptr;
     return iter->second;
 }
 
 
-static Console* CheckAuthority(const QueryString& queryString)
+static User* CheckAuthority(const QueryString& queryString)
 {
     static const std::string kAuth("auth");
     AuthKey authKey = ~0u;
@@ -104,32 +106,37 @@ static Console* CheckAuthority(const QueryString& queryString)
     }
     printf("  auth key: %x\n", authKey);
 
-    auto console = GetConsole(authKey);
-    if(!console)
+    auto user = GetUser(authKey);
+    if(!user)
     {
         printf("  ERROR: Unauthorized access, auth key: %x\n", authKey);
         return nullptr;
     }
 
-    return console;
+    return user;
 }
 
 
-static void DumpConsolesStorage()
+static void DumpUsersStorage()
 {
-    std::lock_guard<std::mutex> guard(GConsolesGuard);
-    FILE* f = fopen(kConsoleStorageFileName, "w");
+    FILE* f = fopen(kUsersStorageFileName, "w");
     if(!f)
     {
-        printf("Failed to open consoles storage\n");
+        printf("Failed to open users storage\n");
         return;
     }
 
-    for(auto iter : GConsoles)
+    for(auto iter : GUsers)
     {
-        ConsolesStorageRecord record;
-        record.authKey = iter.second->authKey;
-        record.ip = iter.second->ipAddr;
+        UsersStorageRecord record;
+        User* u = iter.second;
+        memset(&record, 0, sizeof(record));
+        record.authKey = u->GetAuthKey();
+        record.ip = u->ipAddr;
+        auto& name = u->GetName();
+        auto& password = u->GetPassword();
+        memcpy(record.userName, name.c_str(), name.length());
+        memcpy(record.password, password.c_str(), password.length());
         fwrite(&record, sizeof(record), 1, f);
     }
 
@@ -155,51 +162,94 @@ static HttpResponse BuildChecksystemResponse(int errorCode, const char* data)
 
 HttpResponse RequestHandler::HandleGet(HttpRequest request)
 {
+    static const std::string kU("u");
+    static const std::string kP("p");
+
     printf("  IP: %s\n", inet_ntoa(request.clientIp));
-    if (ParseUrl(request.url, 1, "auth"))
+    if (ParseUrl(request.url, 1, "register"))
     {
         auto team = FindTeam(request.clientIp);
         if(!team)
             return HttpResponse(MHD_HTTP_FORBIDDEN);
 
-        Console* console = team->GetConsole(request.clientIp.s_addr);
-        if(console)
+        std::string userName, password;
+        if(!FindInMap(request.queryString, kU, userName))
+            return HttpResponse(MHD_HTTP_BAD_REQUEST);
+        if(!FindInMap(request.queryString, kP, password))
+            return HttpResponse(MHD_HTTP_BAD_REQUEST);
+        printf("  user name: %s\n", userName.c_str());
+        printf("  password:  %s\n", password.c_str());
+
+        if(userName.length() > kMaxUserNameLen || password.length() > kMaxPasswordLen)
         {
-            std::lock_guard<std::mutex> guard(GConsolesGuard);
-            printf("  found existing console, auth key: %x\n", console->authKey);
-            auto iter = GConsoles.find(console->authKey);
-            if(iter == GConsoles.end())
-            {
-                printf("  CRITICAL ERROR, console was not found\n");
-                exit(1);
-            }
-            GConsoles.erase(iter);
-        }
-        else
-        {
-            console = team->AddConsole(request.clientIp.s_addr);
+            printf("  too long\n");
+            return HttpResponse(MHD_HTTP_BAD_REQUEST);
         }
 
-        console->GenerateAuthKey();
-        printf("  auth key: %x\n", console->authKey);
-
+        for(auto& team : GTeams)
         {
-            std::lock_guard<std::mutex> guard(GConsolesGuard);
-            if(GConsoles.find(console->authKey) != GConsoles.end())
-            {
-                printf("  CRITICAL ERROR, dublicate console was found, auth key: %x\n", console->authKey);
-                exit(1);
-            }
-            GConsoles[console->authKey] = console;
+            User* user = team.second.GetUser(userName);
+            if(!user)
+                continue;
+            
+            return HttpResponse(MHD_HTTP_ALREADY_REPORTED);
         }
 
-        DumpConsolesStorage();
+        printf("  new user\n");
+        team->AddUser(userName, password);
+
+        return HttpResponse(MHD_HTTP_OK);
+    }
+    else if (ParseUrl(request.url, 1, "auth"))
+    {
+        auto team = FindTeam(request.clientIp);
+        if(!team)
+            return HttpResponse(MHD_HTTP_FORBIDDEN);
+
+        std::string userName, password;
+        if(!FindInMap(request.queryString, kU, userName))
+            return HttpResponse(MHD_HTTP_BAD_REQUEST);
+        if(!FindInMap(request.queryString, kP, password))
+            return HttpResponse(MHD_HTTP_BAD_REQUEST);
+        printf("  user name: %s\n", userName.c_str());
+        printf("  password:  %s\n", password.c_str());
+
+        std::lock_guard<std::mutex> guard(GUsersGuard);
+
+        if(!team->AuthorizeUser(userName, password))
+        {
+            printf("  invalid credentials\n");
+            return HttpResponse(MHD_HTTP_FORBIDDEN);
+        }
+
+        User* user = team->GetUser(userName);
+
+        uint32_t authKey = user->GetAuthKey();
+        auto iter = GUsers.find(authKey);
+        if(iter != GUsers.end())
+        {
+            printf("  reauth detected, prev auth key: %x\n", authKey);
+            GUsers.erase(iter);
+        }
+
+        authKey = user->GenerateAuthKey();
+        user->ipAddr = request.clientIp.s_addr;
+        printf("  auth key: %x\n", authKey);
+
+        if(GUsers.find(authKey) != GUsers.end())
+        {
+            printf("  CRITICAL ERROR, dublicate user was found, auth key: %x\n", authKey);
+            exit(1);
+        }
+        GUsers[authKey] = user;
+
+        DumpUsersStorage();
 
         struct
         {
             uint32_t authKey;
         } responseData;
-        responseData.authKey = console->authKey;
+        responseData.authKey = authKey;
 
         HttpResponse response;
         response.code = MHD_HTTP_OK;
@@ -208,6 +258,37 @@ HttpResponse RequestHandler::HandleGet(HttpRequest request)
         response.contentLength = sizeof(responseData);
         memcpy(response.content, &responseData, response.contentLength);
         return response;
+    }
+    else if (ParseUrl(request.url, 1, "change_password"))
+    {
+        auto team = FindTeam(request.clientIp);
+        if(!team)
+            return HttpResponse(MHD_HTTP_FORBIDDEN);
+
+        User* user = CheckAuthority(request.queryString);
+        if(!user)
+            return HttpResponse(MHD_HTTP_UNAUTHORIZED);
+
+        std::lock_guard<std::mutex> guard(GUsersGuard);
+        auto& userName = user->GetName();
+
+        if(!team->GetUser(userName))
+        {
+            printf("  Team '%s' tries to change password for '%s'\n", team->desc.name.c_str(), userName.c_str());
+            return HttpResponse(MHD_HTTP_FORBIDDEN);
+        }
+
+        std::string password;
+        if(!FindInMap(request.queryString, kP, password))
+            return HttpResponse(MHD_HTTP_BAD_REQUEST);
+        printf("  new password: %s\n", password.c_str());
+
+        uint32_t authKey = user->GetAuthKey();
+        GUsers.erase(authKey);
+
+        user->ChangePassword(password);
+
+        return HttpResponse(MHD_HTTP_OK);
     }
     else if (ParseUrl(request.url, 1, "list"))
     {
@@ -389,11 +470,11 @@ HttpResponse RequestHandler::HandleGet(HttpRequest request)
     }
     else if(ParseUrl(request.url, 1, "notification"))
     {
-        auto console = CheckAuthority(request.queryString);
-        if(!console)
+        auto user = CheckAuthority(request.queryString);
+        if(!user)
             return HttpResponse(MHD_HTTP_UNAUTHORIZED);
 
-        Notification* n = console->GetNotification();
+        Notification* n = user->GetNotification();
         if(!n)
             return HttpResponse(MHD_HTTP_OK);
 
@@ -442,7 +523,6 @@ HttpResponse RequestHandler::HandleGet(HttpRequest request)
 
         static std::string kAddr("addr");
 		static std::string kFlagId("id");
-		static std::string kFlag("flag");
 
         const char* addrStr = FindInMap(request.queryString, kAddr);
 		if(!addrStr)
@@ -491,21 +571,54 @@ HttpResponse RequestHandler::HandleGet(HttpRequest request)
             return BuildChecksystemResponse(kCheckerCheckerError, "Failed to found team by IP");
         printf("  team:    %s\n", team->desc.name.c_str());
 
-        IPAddr consoleAddr = GetHwConsoleIp(team->desc.network);
-        if(consoleAddr == ~0u)
+        User* hwConsoleUser = team->GetUser(team->desc.name);
+        if(!hwConsoleUser)
+            return BuildChecksystemResponse(kCheckerMumble, "HW Console user is not registered");
+
+        IPAddr hwConsoleAddr = GetHwConsoleIp(team->desc.network);
+        if(hwConsoleAddr == ~0u)
             return BuildChecksystemResponse(kCheckerDown, "There is no hardware console");
 
-		Console* console = team->GetConsole(consoleAddr);
-        if(!console)
-            return BuildChecksystemResponse(kCheckerMumble, "Console is not authenticated");
+        if(hwConsoleUser->ipAddr != hwConsoleAddr)
+            return BuildChecksystemResponse(kCheckerMumble, "HW Console user is used not on the hw console");
 
-        if(console->GetNotificationsInQueue() >= Console::kNotificationQueueSize)
+        if(hwConsoleUser->GetNotificationsInQueue() >= User::kNotificationQueueSize)
             return BuildChecksystemResponse(kCheckerMumble, "Notifications queue is overflowed");
 
         if(!Check(team->desc.network))
             return BuildChecksystemResponse(kCheckerMumble, "Check failed");
 
         return BuildChecksystemResponse(kCheckerOk, "OK");
+    }
+    else if (ParseUrl(request.url, 1, "checksystem_change_password"))
+    {
+        auto team = FindTeam(request.clientIp);
+        if(team)
+            return HttpResponse(MHD_HTTP_FORBIDDEN);
+
+        std::string userName, password;
+        if(!FindInMap(request.queryString, kU, userName))
+            return HttpResponse(MHD_HTTP_BAD_REQUEST);
+        if(!FindInMap(request.queryString, kP, password))
+            return HttpResponse(MHD_HTTP_BAD_REQUEST);
+        printf("  user name: %s\n", userName.c_str());
+        printf("  password:  %s\n", password.c_str());
+
+        std::lock_guard<std::mutex> guard(GUsersGuard);
+
+        for(auto& team : GTeams)
+        {
+            User* user = team.second.GetUser(userName);
+            if(!user)
+                continue;
+
+            uint32_t authKey = user->GetAuthKey();
+            GUsers.erase(authKey);
+
+            user->ChangePassword(password);   
+        }
+
+        return HttpResponse(MHD_HTTP_OK);
     }
 
     return HttpResponse(MHD_HTTP_NOT_FOUND);
@@ -589,21 +702,17 @@ HttpResponse RequestHandler::HandlePost(HttpRequest request, HttpPostProcessor**
         if(!team)
             return BuildChecksystemResponse(kCheckerCheckerError, "Failed to found team by IP");
         printf("  team:    %s\n", team->desc.name.c_str());
-        
-        IPAddr consoleAddr = GetHwConsoleIp(team->desc.network);
-        if(consoleAddr == ~0u)
-            return BuildChecksystemResponse(kCheckerDown, "There is no hardware console");
 
-		Console* console = team->GetConsole(consoleAddr);
-        if(!console)
-            return BuildChecksystemResponse(kCheckerMumble, "Console is not authenticated");
+        User* hwConsoleUser = team->GetUser(team->desc.name);
+        if(!hwConsoleUser)
+            return BuildChecksystemResponse(kCheckerMumble, "HW Console user is not registered");
 
         team->PutFlag(flagId, flag);
 
         char message[512];
         sprintf(message, "Here is your flag, keep it safe\n%s", flag);
         Notification* n = new Notification("Hackerdom", message);
-        console->AddNotification(n);
+        hwConsoleUser->AddNotification(n);
 
         return BuildChecksystemResponse(kCheckerOk, "OK");
     }
@@ -616,7 +725,9 @@ NotificationProcessor::NotificationProcessor(const HttpRequest& request)
     : HttpPostProcessor(request)
 {
     static const std::string kContentLength("content-length");
+    static const std::string kAuth("auth");
     FindInMap(request.headers, kContentLength, m_contentLength);
+    FindInMap(request.queryString, kAuth, m_authKey, 16);
 
     if(m_contentLength)
         m_content = (char*)malloc(m_contentLength);
@@ -642,6 +753,7 @@ void NotificationProcessor::FinalizeRequest()
         return;
     }
 
+    auto* user = GetUser(m_authKey);
     auto team = FindTeam(m_sourceIp);
     if(!team)
     {
@@ -679,7 +791,7 @@ void NotificationProcessor::FinalizeRequest()
     for(auto& iter : GTeams)
     {
         Team& team = iter.second;
-        team.AddNotification(notification, m_sourceIp.s_addr);
+        team.AddNotification(notification, user->GetName());
     }
     notification->Release();
 
@@ -795,6 +907,11 @@ bool LoadTeamsDatabase()
         auto& desc = team.desc;
         desc.number = teamNode.attribute("number").as_uint();
         desc.name = teamNode.attribute("name").as_string();
+        if(desc.name.length() > kMaxUserNameLen)
+        {
+            printf("  ERROR: too long user name: %s\n", desc.name.c_str());
+            exit(1);
+        }
 		desc.network = net;
         printf("  %u %s\n", desc.number, desc.name.c_str());
         printf("    network: %s(%08X)\n", netStr, net);
@@ -805,11 +922,11 @@ bool LoadTeamsDatabase()
 }
 
 
-void ReadConsolesStorage()
+void ReadUsersStorage()
 {
-    const uint32_t kRecordSize = sizeof(ConsolesStorageRecord);
+    const uint32_t kRecordSize = sizeof(UsersStorageRecord);
 
-    FILE* storage = fopen(kConsoleStorageFileName, "r");
+    FILE* storage = fopen(kUsersStorageFileName, "r");
 	if(storage)
 	{
 		fseek(storage, 0, SEEK_END);
@@ -822,7 +939,7 @@ void ReadConsolesStorage()
             uint32_t recordsNum = fileSize / kRecordSize;
             for(uint32_t i = 0; i < recordsNum; i++)
             {
-                ConsolesStorageRecord record;
+                UsersStorageRecord record;
 				if(fread(&record, kRecordSize, 1, storage) != 1)
                 {
                     error = true;
@@ -836,9 +953,10 @@ void ReadConsolesStorage()
                 if(!team)
                     continue;
 
-                Console* console = team->AddConsole(record.ip);
-                console->authKey = record.authKey;
-                GConsoles[record.authKey] = console;
+                User* user = team->AddUser(record.userName, record.password);
+                user->SetAuthKey(record.authKey);
+                user->ipAddr = record.ip;
+                GUsers[record.authKey] = user;
             }
         }
         else
@@ -913,24 +1031,27 @@ void NetworkThread()
             continue;
         }
 
-        printf("NOTIFY: Connection from %s\n", inet_ntoa(clientAddr.sin_addr));
+        printf("NOTIFY: Accepted connection from: %s\n", inet_ntoa(clientAddr.sin_addr));
 
         Team* team = FindTeam(clientAddr.sin_addr);
         if(!team)
         {
+            printf("NOTIFY: unknown network\n");
             close(newSocket);
             continue;
         }
 
-        Console* console = team->GetConsole(clientAddr.sin_addr.s_addr);
-        if(!console)
+        User* user = team->GetUser(clientAddr.sin_addr.s_addr);
+        if(!user)
         {
-            printf("NOTIFY: Unregistered console\n");
+            printf("NOTIFY: Unknown ip address\n");
             close(newSocket);
             continue;
         }
 
-        console->SetNotifySocket(newSocket);
+        printf("NOTIFY: OK\n");
+
+        user->SetNotifySocket(newSocket);
     }
 }
 
@@ -942,7 +1063,7 @@ int main()
     if(!LoadGamesDatabase() || !LoadTeamsDatabase())
         return -1;
 
-    ReadConsolesStorage();
+    ReadUsersStorage();
 
     RequestHandler handler;
     HttpServer server(&handler);

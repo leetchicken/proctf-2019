@@ -21,7 +21,7 @@ warn 'Invalid mode.' and exit $INTERNAL_ERROR unless $mode ~~ %MODES;
 my $agents = c(<DATA>)->map(sub {chomp; $_});
 my $ua = _ua();
 
-my $url = Mojo::URL->new("http://$ip:8080/");
+my $url = Mojo::URL->new("https://$ip/");
 my $log = Mojo::Log->new;
 $log->info("URL for check: $url");
 
@@ -32,7 +32,7 @@ sub _mumble  { say $_[0] and $log->info($_[0]) and exit $SERVICE_MUMBLE }
 sub _fail    { say $_[0] and $log->info($_[0]) and exit $SERVICE_FAIL }
 
 sub _ua {
-  my $ua = Mojo::UserAgent->new(max_redirects => 3);
+  my $ua = Mojo::UserAgent->new(max_redirects => 3, insecure => 1);
   $ua->transactor->name($agents->shuffle->first);
 
   return $ua;
@@ -54,7 +54,8 @@ sub _check_http_response {
 
 sub check {
   $log->info('Getting public advertisements ...');
-  $url->path('/');
+  my $page = int rand 100;
+  $url->path_query("/?page=$page");
   $_ = _check_http_response($ua->get($url));
   my $title = $_->dom->find('h2')->map('text')->first // '';
   _mumble "Invalid main page" unless $title =~ /List of all advertisements/;
@@ -65,8 +66,6 @@ sub check {
   _mumble "Invalid redirect for board" unless my $prev = $tx->previous;
   $_ = _check_http_response($prev);
   _mumble "Invalid response for board" unless $_->code == 302;
-
-  # paging
 
   my $login = '';
   $login .= $chars[rand @chars] for 1 .. 20;
