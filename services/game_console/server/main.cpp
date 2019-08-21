@@ -12,7 +12,7 @@
 #include "checksystem.h"
 #include "misc.h"
 #include "notification.h"
-#include "team.h"
+#include "user.h"
 
 struct GameDesc
 {
@@ -68,7 +68,8 @@ static const char* kUsersStorageFileName = "data/users.dat";
 std::map<uint32_t, GameDesc> GGamesDatabase;
 std::unordered_map<NetworkAddr, Team> GTeams;
 std::mutex GUsersGuard;
-std::unordered_map<AuthKey, User*> GUsers;
+std::unordered_map<std::string, User*> GUsers;
+std::unordered_map<AuthKey, User*> GAuthUsers;
 
 
 static Team* FindTeam(in_addr ipAddr, bool showError = true)
@@ -82,38 +83,6 @@ static Team* FindTeam(in_addr ipAddr, bool showError = true)
         return nullptr;
     }
     return &iter->second;
-}
-
-
-static User* GetUser(AuthKey authKey)
-{
-    std::lock_guard<std::mutex> guard(GUsersGuard);
-    auto iter = GUsers.find(authKey);
-    if(iter == GUsers.end())
-        return nullptr;
-    return iter->second;
-}
-
-
-static User* CheckAuthority(const QueryString& queryString)
-{
-    static const std::string kAuth("auth");
-    AuthKey authKey = ~0u;
-    if(!FindInMap(queryString, kAuth, authKey, 16))
-    {
-        printf("  ERROR: Bad request\n");
-        return nullptr;
-    }
-    printf("  auth key: %x\n", authKey);
-
-    auto user = GetUser(authKey);
-    if(!user)
-    {
-        printf("  ERROR: Unauthorized access, auth key: %x\n", authKey);
-        return nullptr;
-    }
-
-    return user;
 }
 
 
@@ -132,7 +101,7 @@ static void DumpUsersStorage()
         User* u = iter.second;
         memset(&record, 0, sizeof(record));
         record.authKey = u->GetAuthKey();
-        record.ip = u->ipAddr;
+        record.ip = u->GetIPAddr();
         auto& name = u->GetName();
         auto& password = u->GetPassword();
         memcpy(record.userName, name.c_str(), name.length());
@@ -141,6 +110,177 @@ static void DumpUsersStorage()
     }
 
     fclose(f);
+}
+
+
+static bool AddUser(const std::string& name, const std::string& password, Team* team)
+{
+    std::lock_guard<std::mutex> guard(GUsersGuard);
+
+    auto iter = GUsers.find(name);
+    if(iter != GUsers.end())
+        return false;
+
+    User* user = new User(name, password, team);
+    GUsers[name] = user;
+
+    return true;
+}
+
+
+static User* GetUser(const std::string& name)
+{
+    std::lock_guard<std::mutex> guard(GUsersGuard);
+    auto iter = GUsers.find(name);
+    if(iter == GUsers.end())
+        return nullptr;
+    return iter->second;
+}
+
+
+static AuthKey AuthorizeUser(const std::string& name, const std::string& password, IPAddr ipAddr)
+{
+    std::lock_guard<std::mutex> guard(GUsersGuard);
+    auto usersIter = GUsers.find(name);
+    if(usersIter == GUsers.end())
+        return kInvalidAuthKey;
+
+    User* user = usersIter->second;    
+
+    if(user->GetPassword() != password)
+        return kInvalidAuthKey;
+
+    uint32_t authKey = user->GetAuthKey();
+    auto authUsersIter = GAuthUsers.find(authKey);
+    if(authUsersIter != GAuthUsers.end())
+    {
+        printf("  reauth detected, prev auth key: %x\n", authKey);
+        User* user2 = authUsersIter->second;
+        if(user != user2)
+        {
+            printf("  CRITICAL ERROR, mismatched user data '%s':%u '%s':%u\n", user->GetName().c_str(), authKey, user2->GetName().c_str(), user2->GetAuthKey());
+            exit(1);
+        }
+        GAuthUsers.erase(authUsersIter);
+    }
+
+    authKey = user->GenerateAuthKey();
+    const uint32_t kMaxTriesCount = 5;
+    uint32_t triesCount = 0;
+    while(GAuthUsers.find(authKey) != GAuthUsers.end())
+    {
+        if(triesCount >= kMaxTriesCount)
+        {
+            printf("  CRITICAL ERROR, dublicate user was found, auth key: %x\n", authKey);
+            exit(1);
+        }
+
+        authKey = user->GenerateAuthKey();
+        triesCount++;
+    }
+
+    printf("  auth key: %x\n", authKey);
+    GAuthUsers[authKey] = user;
+    user->SetIPAddr(ipAddr);
+
+    DumpUsersStorage();
+
+    return authKey;
+}
+
+
+static void ChangeUserPassword(User* user, const std::string& newPassword)
+{
+    uint32_t authKey = user->GetAuthKey();
+    GAuthUsers.erase(authKey);
+
+    user->ChangePassword(newPassword);
+
+    DumpUsersStorage();
+}
+
+
+static bool ChangeUserPassword(const std::string& userName, const std::string& newPassword)
+{
+    std::lock_guard<std::mutex> guard(GUsersGuard);
+
+    auto iter = GUsers.find(userName);
+    if(iter == GUsers.end())
+        return false;
+    
+    User* user = iter->second;
+    ChangeUserPassword(user, newPassword);
+
+    return true;
+}
+
+
+static HttpResponse ChangeUserPassword(AuthKey authKey, const std::string& newPassword, Team* team)
+{
+    std::lock_guard<std::mutex> guard(GUsersGuard);
+
+    if(authKey == kInvalidAuthKey)
+        return HttpResponse(MHD_HTTP_UNAUTHORIZED);;
+
+    auto iter = GAuthUsers.find(authKey);
+    if(iter == GAuthUsers.end())
+        return HttpResponse(MHD_HTTP_UNAUTHORIZED);;
+    
+    User* user = iter->second;
+
+    if(user->GetTeam() != team)
+    {
+        printf("  Team '%s' tries to change password for '%s' from '%s' team\n", team->desc.name.c_str(), user->GetName().c_str(), user->GetTeam()->desc.name.c_str());
+        return HttpResponse(MHD_HTTP_FORBIDDEN);
+    }
+
+    ChangeUserPassword(user, newPassword);
+
+    return HttpResponse(MHD_HTTP_OK);
+}
+
+
+static User* GetUser(AuthKey authKey)
+{
+    std::lock_guard<std::mutex> guard(GUsersGuard);
+    auto iter = GAuthUsers.find(authKey);
+    if(iter == GAuthUsers.end())
+        return nullptr;
+    return iter->second;
+}
+
+
+static AuthKey GetAuthKeyFromQueryString(const QueryString& queryString)
+{
+    static const std::string kAuth("auth");
+    AuthKey authKey = ~0u;
+    if(!FindInMap(queryString, kAuth, authKey, 16))
+    {
+        printf("  ERROR: Bad request\n");
+        return kInvalidAuthKey;
+    }
+
+    return authKey;
+}
+
+
+static User* CheckAuthority(const QueryString& queryString)
+{
+    AuthKey authKey = GetAuthKeyFromQueryString(queryString);
+
+    printf("  auth key: %x\n", authKey);
+
+    if(authKey == kInvalidAuthKey)
+        return nullptr;
+
+    auto user = GetUser(authKey);
+    if(!user)
+    {
+        printf("  ERROR: Unauthorized access, auth key: %x\n", authKey);
+        return nullptr;
+    }
+
+    return user;
 }
 
 
@@ -186,17 +326,10 @@ HttpResponse RequestHandler::HandleGet(HttpRequest request)
             return HttpResponse(MHD_HTTP_BAD_REQUEST);
         }
 
-        for(auto& team : GTeams)
-        {
-            User* user = team.second.GetUser(userName);
-            if(!user)
-                continue;
-            
+        if(!AddUser(userName, password, team))
             return HttpResponse(MHD_HTTP_ALREADY_REPORTED);
-        }
 
         printf("  new user\n");
-        team->AddUser(userName, password);
 
         return HttpResponse(MHD_HTTP_OK);
     }
@@ -214,36 +347,12 @@ HttpResponse RequestHandler::HandleGet(HttpRequest request)
         printf("  user name: %s\n", userName.c_str());
         printf("  password:  %s\n", password.c_str());
 
-        std::lock_guard<std::mutex> guard(GUsersGuard);
-
-        if(!team->AuthorizeUser(userName, password))
+        AuthKey authKey = AuthorizeUser(userName, password, request.clientIp.s_addr);
+        if(authKey == kInvalidAuthKey)
         {
             printf("  invalid credentials\n");
             return HttpResponse(MHD_HTTP_FORBIDDEN);
         }
-
-        User* user = team->GetUser(userName);
-
-        uint32_t authKey = user->GetAuthKey();
-        auto iter = GUsers.find(authKey);
-        if(iter != GUsers.end())
-        {
-            printf("  reauth detected, prev auth key: %x\n", authKey);
-            GUsers.erase(iter);
-        }
-
-        authKey = user->GenerateAuthKey();
-        user->ipAddr = request.clientIp.s_addr;
-        printf("  auth key: %x\n", authKey);
-
-        if(GUsers.find(authKey) != GUsers.end())
-        {
-            printf("  CRITICAL ERROR, dublicate user was found, auth key: %x\n", authKey);
-            exit(1);
-        }
-        GUsers[authKey] = user;
-
-        DumpUsersStorage();
 
         struct
         {
@@ -265,30 +374,16 @@ HttpResponse RequestHandler::HandleGet(HttpRequest request)
         if(!team)
             return HttpResponse(MHD_HTTP_FORBIDDEN);
 
-        User* user = CheckAuthority(request.queryString);
-        if(!user)
-            return HttpResponse(MHD_HTTP_UNAUTHORIZED);
-
-        std::lock_guard<std::mutex> guard(GUsersGuard);
-        auto& userName = user->GetName();
-
-        if(!team->GetUser(userName))
-        {
-            printf("  Team '%s' tries to change password for '%s'\n", team->desc.name.c_str(), userName.c_str());
-            return HttpResponse(MHD_HTTP_FORBIDDEN);
-        }
+        AuthKey authKey = GetAuthKeyFromQueryString(request.queryString);
 
         std::string password;
         if(!FindInMap(request.queryString, kP, password))
             return HttpResponse(MHD_HTTP_BAD_REQUEST);
+
+        printf("  auth key: %x\n", authKey);
         printf("  new password: %s\n", password.c_str());
 
-        uint32_t authKey = user->GetAuthKey();
-        GUsers.erase(authKey);
-
-        user->ChangePassword(password);
-
-        return HttpResponse(MHD_HTTP_OK);
+        return ChangeUserPassword(authKey, password, team);
     }
     else if (ParseUrl(request.url, 1, "list"))
     {
@@ -474,7 +569,12 @@ HttpResponse RequestHandler::HandleGet(HttpRequest request)
         if(!user)
             return HttpResponse(MHD_HTTP_UNAUTHORIZED);
 
-        Notification* n = user->GetNotification();
+        Notification* n = nullptr;
+        {
+            std::lock_guard<std::mutex> guard(GUsersGuard);
+            n = user->GetNotification();
+        }
+
         if(!n)
             return HttpResponse(MHD_HTTP_OK);
 
@@ -498,10 +598,27 @@ HttpResponse RequestHandler::HandleGet(HttpRequest request)
         sprintf(buf, "Current time: %f\n\n", GetTime());
         data.append(buf);
 
-        for(auto& iter : GTeams)
         {
-            auto& team = iter.second;
-            team.DumpStats(data);
+            for(auto& teamIter : GTeams)
+            {
+                auto& team = teamIter.second;
+                IPAddr hwConsoleIp = GetHwConsoleIp(team.desc.network);
+
+                team.DumpStats(data, hwConsoleIp);
+
+                std::lock_guard<std::mutex> guard(GUsersGuard);
+                for(auto& userIter : GUsers)
+                {
+                    auto user = userIter.second;
+                    if(user->GetTeam() != &team)
+                        continue;
+                    
+                    sprintf(buf, "  User '%s':\n", user->GetName().c_str());
+                    data.append(buf);
+
+                    user->DumpStats(data, hwConsoleIp);
+                }
+            }
         }
 
         HttpResponse response;
@@ -571,7 +688,7 @@ HttpResponse RequestHandler::HandleGet(HttpRequest request)
             return BuildChecksystemResponse(kCheckerCheckerError, "Failed to found team by IP");
         printf("  team:    %s\n", team->desc.name.c_str());
 
-        User* hwConsoleUser = team->GetUser(team->desc.name);
+        User* hwConsoleUser = GetUser(team->desc.name);
         if(!hwConsoleUser)
             return BuildChecksystemResponse(kCheckerMumble, "HW Console user is not registered");
 
@@ -579,7 +696,7 @@ HttpResponse RequestHandler::HandleGet(HttpRequest request)
         if(hwConsoleAddr == ~0u)
             return BuildChecksystemResponse(kCheckerDown, "There is no hardware console");
 
-        if(hwConsoleUser->ipAddr != hwConsoleAddr)
+        if(hwConsoleUser->GetIPAddr() != hwConsoleAddr)
             return BuildChecksystemResponse(kCheckerMumble, "HW Console user is used not on the hw console");
 
         if(hwConsoleUser->GetNotificationsInQueue() >= User::kNotificationQueueSize)
@@ -604,19 +721,8 @@ HttpResponse RequestHandler::HandleGet(HttpRequest request)
         printf("  user name: %s\n", userName.c_str());
         printf("  password:  %s\n", password.c_str());
 
-        std::lock_guard<std::mutex> guard(GUsersGuard);
-
-        for(auto& team : GTeams)
-        {
-            User* user = team.second.GetUser(userName);
-            if(!user)
-                continue;
-
-            uint32_t authKey = user->GetAuthKey();
-            GUsers.erase(authKey);
-
-            user->ChangePassword(password);   
-        }
+        if(!ChangeUserPassword(userName, password))
+            return HttpResponse(MHD_HTTP_BAD_REQUEST);
 
         return HttpResponse(MHD_HTTP_OK);
     }
@@ -659,10 +765,13 @@ HttpResponse RequestHandler::HandlePost(HttpRequest request, HttpPostProcessor**
 
         Notification* n = new Notification("Hackerdom", message);
         n->AddRef();
-        for(auto& iter : GTeams)
         {
-            Team& team = iter.second;
-            team.AddNotification(n);
+            std::lock_guard<std::mutex> guard(GUsersGuard);
+            for(auto& iter : GUsers)
+            {
+                User* user = iter.second;
+                user->AddNotification(n);
+            }
         }
         n->Release();
 
@@ -703,7 +812,7 @@ HttpResponse RequestHandler::HandlePost(HttpRequest request, HttpPostProcessor**
             return BuildChecksystemResponse(kCheckerCheckerError, "Failed to found team by IP");
         printf("  team:    %s\n", team->desc.name.c_str());
 
-        User* hwConsoleUser = team->GetUser(team->desc.name);
+        User* hwConsoleUser = GetUser(team->desc.name);
         if(!hwConsoleUser)
             return BuildChecksystemResponse(kCheckerMumble, "HW Console user is not registered");
 
@@ -712,7 +821,10 @@ HttpResponse RequestHandler::HandlePost(HttpRequest request, HttpPostProcessor**
         char message[512];
         sprintf(message, "Here is your flag, keep it safe\n%s", flag);
         Notification* n = new Notification("Hackerdom", message);
-        hwConsoleUser->AddNotification(n);
+        {
+            std::lock_guard<std::mutex> guard(GUsersGuard);
+            hwConsoleUser->AddNotification(n);
+        }
 
         return BuildChecksystemResponse(kCheckerOk, "OK");
     }
@@ -753,7 +865,6 @@ void NotificationProcessor::FinalizeRequest()
         return;
     }
 
-    auto* user = GetUser(m_authKey);
     auto team = FindTeam(m_sourceIp);
     if(!team)
     {
@@ -762,7 +873,9 @@ void NotificationProcessor::FinalizeRequest()
     }
     auto& teamDesc = team->desc;
 
-    printf("  notification from Team %u %s\n", teamDesc.number, teamDesc.name.c_str());
+    User* sourceUser = GetUser(m_authKey);
+
+    printf("  notification from user '%s' team %u '%s'\n", sourceUser->GetName().c_str(), teamDesc.number, teamDesc.name.c_str());
 
     float curTime = GetTime();
     if(curTime - team->lastTimeTeamPostNotification < 1.0f)
@@ -788,10 +901,15 @@ void NotificationProcessor::FinalizeRequest()
 
     Notification* notification = new Notification(m_content, m_contentLength);
     notification->AddRef();
-    for(auto& iter : GTeams)
     {
-        Team& team = iter.second;
-        team.AddNotification(notification, user->GetName());
+        std::lock_guard<std::mutex> guard(GUsersGuard);
+        for(auto& iter : GUsers)
+        {
+            User* user = iter.second;
+            if(user == sourceUser)
+                continue;
+            user->AddNotification(notification);
+        }
     }
     notification->Release();
 
@@ -953,10 +1071,11 @@ void ReadUsersStorage()
                 if(!team)
                     continue;
 
-                User* user = team->AddUser(record.userName, record.password);
+                User* user = new User(record.userName, record.password, team);
+                GUsers[record.userName] = user;
                 user->SetAuthKey(record.authKey);
-                user->ipAddr = record.ip;
-                GUsers[record.authKey] = user;
+                user->SetIPAddr(record.ip);
+                GAuthUsers[record.authKey] = user;
             }
         }
         else
@@ -976,10 +1095,13 @@ void UpdateThread()
 {
     while(1)
     {
-        for(auto& iter : GTeams)
         {
-            Team& team = iter.second;
-            team.Update();
+            std::lock_guard<std::mutex> guard(GUsersGuard);
+            for(auto& iter : GUsers)
+            {
+                User* user = iter.second;
+                user->Update();
+            }
         }
         sleep(1);
     }
@@ -1041,7 +1163,7 @@ void NetworkThread()
             continue;
         }
 
-        User* user = team->GetUser(clientAddr.sin_addr.s_addr);
+        User* user = GetUser(clientAddr.sin_addr.s_addr);
         if(!user)
         {
             printf("NOTIFY: Unknown ip address\n");
@@ -1051,6 +1173,7 @@ void NetworkThread()
 
         printf("NOTIFY: OK\n");
 
+        std::lock_guard<std::mutex> guard(GUsersGuard);
         user->SetNotifySocket(newSocket);
     }
 }

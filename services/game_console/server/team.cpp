@@ -1,5 +1,4 @@
 #include "team.h"
-#include "checksystem.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -71,73 +70,12 @@ void Team::LoadDb()
 }
 
 
-User* Team::AddUser(const std::string& name, const std::string& password)
-{
-    std::lock_guard<std::mutex> guard(mutex);
-    User* user = new User(name, password);
-    users[name] = user;
-    return user;
-}
-
-
-User* Team::GetUser(const std::string& name)
-{
-    std::lock_guard<std::mutex> guard(mutex);
-    auto iter = users.find(name);
-    if(iter == users.end())
-        return nullptr;
-    return iter->second;
-}
-
-
-User* Team::GetUser(IPAddr ipAddr)
-{
-    std::lock_guard<std::mutex> guard(mutex);
-    for(auto& u : users)
-    {
-        if(u.second->ipAddr == ipAddr)
-            return u.second;
-    }
-    return nullptr;
-}
-
-
-bool Team::AuthorizeUser(const std::string& name, const std::string& password)
-{
-    std::lock_guard<std::mutex> guard(mutex);
-    auto iter = users.find(name);
-    if(iter == users.end())
-        return false;
-    return iter->second->GetPassword() == password;
-}
-
-
-void Team::AddNotification(Notification* n, const std::string& except)
-{
-    std::lock_guard<std::mutex> guard(mutex);
-    for(auto& iter : users)
-    {
-        if(iter.first == except)
-            continue;
-        iter.second->AddNotification(n);
-    }
-}
-
-
-void Team::Update()
-{
-    std::lock_guard<std::mutex> guard(mutex);
-    for(auto& iter : users)
-        iter.second->Update();
-}
-
-
-void Team::DumpStats(std::string& out)
+void Team::DumpStats(std::string& out, IPAddr hwConsoleIp)
 {
     std::lock_guard<std::mutex> guard(mutex);
 
     char buf[512];
-    sprintf(buf, "Team%u %s:\n", desc.number, desc.name.c_str());
+    sprintf(buf, "Team%u '%s':\n", desc.number, desc.name.c_str());
     out.append(buf);
 
     sprintf(buf, "  Network: %s\n", inet_ntoa(desc.network));
@@ -149,20 +87,10 @@ void Team::DumpStats(std::string& out)
     sprintf(buf, "  Number of flags: %u\n", (uint32_t)flags.size());
     out.append(buf);
 
-    IPAddr hwConsoleIp = GetHwConsoleIp(desc.network);
     sprintf(buf, "  HW Console IP: %s\n\n", inet_ntoa(hwConsoleIp));
     out.append(buf);
-
-    for(auto& iter : users)
-    {
-        auto& u = iter.second;
-
-        sprintf(buf, "  User %s:\n", iter.first.c_str());
-        out.append(buf);
-
-        u->DumpStats(out, hwConsoleIp);
-    }
 }
+
 
 void Team::PutFlag(const char* flagId, const char* flag)
 {
@@ -182,6 +110,7 @@ void Team::PutFlag(const char* flagId, const char* flag)
 
     flags.insert({flagId, flag});
 }
+
 
 const char* Team::GetFlag(const char* flagId)
 {
