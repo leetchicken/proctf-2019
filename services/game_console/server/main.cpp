@@ -1163,7 +1163,18 @@ void NetworkThread()
             continue;
         }
 
-        User* user = GetUser(clientAddr.sin_addr.s_addr);
+        std::lock_guard<std::mutex> guard(GUsersGuard);
+        IPAddr ipAddr = clientAddr.sin_addr.s_addr;
+        User* user = nullptr;
+        for(auto& iter : GUsers)
+        {
+            if(iter.second->GetIPAddr() == ipAddr)
+            {
+                user = iter.second;
+                break;
+            }
+        }
+
         if(!user)
         {
             printf("NOTIFY: Unknown ip address\n");
@@ -1172,8 +1183,6 @@ void NetworkThread()
         }
 
         printf("NOTIFY: OK\n");
-
-        std::lock_guard<std::mutex> guard(GUsersGuard);
         user->SetNotifySocket(newSocket);
     }
 }
