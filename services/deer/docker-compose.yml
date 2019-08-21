@@ -48,8 +48,9 @@ services:
     volumes:
       - ./LogProcessor.appsettings.json:/app/appsettings.json
     links:
-      - rabbitmq
       - elasticsearch
+      - mongodb
+      - rabbitmq
 
   identity_server:
     image: proctf/deer-identity-server

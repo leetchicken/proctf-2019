@@ -14,7 +14,6 @@ function get_es_password_hash () {
 
 if [ ! -f definitions.json ] || [ ! -f internal_users.yml ] || [ ! -f LogProcessor.appsettings.json ] || [ ! -f IdentityServer.appsettings.json ]; then
 	RABBIT_ADMIN_PASSWORD=`pwgen -Bs1 20`
-	RABBIT_LOG_PROCESSOR_PASSWORD=`pwgen -Bs1 20`
 	ES_ADMIN_PASSWORD=`pwgen -Bs1 20`
 
 	cat << EOF > definitions.json
@@ -24,13 +23,7 @@ if [ ! -f definitions.json ] || [ ! -f internal_users.yml ] || [ ! -f LogProcess
       "name": "admin",
       "password_hash": "$(get_rabbit_password_hash $RABBIT_ADMIN_PASSWORD)",
       "tags": "administrator"
-    },
-    {
-      "name": "log-processor",
-      "password_hash": "$(get_rabbit_password_hash $RABBIT_LOG_PROCESSOR_PASSWORD)",
-      "tags": ""
     }
-
   ],
   "vhosts": [
     {
@@ -44,15 +37,7 @@ if [ ! -f definitions.json ] || [ ! -f internal_users.yml ] || [ ! -f LogProcess
       "configure": ".*",
       "write": ".*",
       "read": ".*"
-    },
-    {
-      "user": "log-processor",
-      "vhost": "/",
-      "configure": "^$",
-      "write": "^$",
-      "read": "^users\.log\-processor$"
     }
-
   ],
   "parameters": [],
   "policies": [],
@@ -101,7 +86,9 @@ EOF
 	cat << EOF > LogProcessor.appsettings.json
 {
     "ConnectionStrings": {
-        "RabbitMq": "host=rabbitmq;username=log-processor;password=$RABBIT_LOG_PROCESSOR_PASSWORD"
+        "ElasticSearch": "https://admin:$ES_ADMIN_PASSWORD@elasticsearch:9200",
+        "MongoDb": "mongodb://mongodb/users",
+        "RabbitMq": "host=rabbitmq;username=admin;password=$RABBIT_ADMIN_PASSWORD"
     }
 }
 EOF
@@ -109,6 +96,7 @@ EOF
 	cat << EOF > IdentityServer.appsettings.json
 {
     "ConnectionStrings": {
+        "ElasticSearch": "https://admin:$ES_ADMIN_PASSWORD@elasticsearch:9200",
         "MongoDb": "mongodb://mongodb/users",
         "RabbitMq": "host=rabbitmq;username=admin;password=$RABBIT_ADMIN_PASSWORD"
     },

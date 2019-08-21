@@ -17,8 +17,11 @@ namespace IdentityServer.Repositories
         private readonly HttpClient _httpClient;
         private readonly ElasticClient _elasticClient;
 
-        public OpenDistroElasticsearchClient()
+        public OpenDistroElasticsearchClient(Uri elasticSearchUri)
         {
+            var userInfo = elasticSearchUri.UserInfo.Split(':');
+            var user = userInfo[0];
+            var password = userInfo[1];
             ServicePointManager.ServerCertificateValidationCallback +=
                 (sender, cert, chain, errors) => true;
             
@@ -27,18 +30,18 @@ namespace IdentityServer.Repositories
             {
                 ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => { return true; }
             };
-            
-            var authHeader = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(Encoding.UTF8.GetBytes("admin:admin")));
 
-            _httpClient = new HttpClient(httpClientHandler, true) {BaseAddress = new Uri("https://localhost:9200", UriKind.Absolute)};
+            var authHeader = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(Encoding.UTF8.GetBytes($"{user}:{password}")));
+
+            _httpClient = new HttpClient(httpClientHandler, true) {BaseAddress = elasticSearchUri};
             _httpClient.DefaultRequestHeaders.Authorization = authHeader;
             
-            var settings = new ConnectionSettings(new Uri("https://localhost:9200", UriKind.Absolute))
-            .BasicAuthentication("admin", "admin")
+            var nestSettings = new ConnectionSettings(elasticSearchUri)
+            .BasicAuthentication(user, password)
             // TODO change to AuthorityIsRoot
             .ServerCertificateValidationCallback(CertificateValidations.AllowAll);
             
-            _elasticClient = new ElasticClient(settings);
+            _elasticClient = new ElasticClient(nestSettings);
         }
 
         public async Task CreateUserAsync(string username, string password)

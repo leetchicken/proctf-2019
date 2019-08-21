@@ -8,6 +8,8 @@ namespace IdentityServer.Models
         
         public byte[] PasswordHash { get; set; }
 
+        public string LogIndexName { get; set; }
+        
         public string LogExchangeName { get; set; }
 
         public string FeedbackQueueName { get; set; }

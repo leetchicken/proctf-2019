@@ -6,6 +6,7 @@ using EasyNetQ.Management.Client;
 using EasyNetQ.Management.Client.Model;
 using IdentityServer.Helpers;
 using Microsoft.Extensions.Logging;
+using ExchangeType = RabbitMQ.Client.ExchangeType;
 using User = IdentityServer.Models.User;
 
 namespace IdentityServer.Repositories
@@ -39,23 +40,35 @@ namespace IdentityServer.Repositories
             
             var userInfo = new UserInfo(username, password);
             var rabbitUser = await _managementClient.CreateUserAsync(userInfo);
+            _logger.LogInformation($"RabbitMQ user {username} created");
 
+            var logsExchangeName = $"logs.{username}";
+            var exchangeInfo = new ExchangeInfo(logsExchangeName, ExchangeType.Fanout);
+            await _managementClient.CreateExchangeAsync(exchangeInfo, vhost);
+            _logger.LogInformation($"RabbitMQ exchange for user {username} created");
+            
             var permissionInfo = new PermissionInfo(rabbitUser, vhost)
                 .DenyAllConfigure()
                 .SetRead("^amp\\.")
                 .SetWrite("^logs\\.");
             await _managementClient.CreatePermissionAsync(permissionInfo);
-    
-            var exchange = await _managementClient.GetExchangeAsync("feedback", vhost);
+            _logger.LogInformation($"RabbitMQ permissions for user {username} set");
 
-            var queueName = (await _bus.Advanced.QueueDeclareAsync("")).Name;
-            var queue = await _managementClient.GetQueueAsync(queueName, vhost);
+            var feedbackExchange = await _managementClient.GetExchangeAsync("feedback", vhost);
             
+            var feedbackQueueName = (await _bus.Advanced.QueueDeclareAsync("")).Name;
+            _logger.LogInformation($"RabbitMQ feedback queue for user {username} created");
+            
+            var feedbackQueue = await _managementClient.GetQueueAsync(feedbackQueueName, vhost);
             var bindingInfo = new BindingInfo(username);
-            await _managementClient.CreateBindingAsync(exchange, queue, bindingInfo);
+            await _managementClient.CreateBindingAsync(feedbackExchange, feedbackQueue, bindingInfo);
+            _logger.LogInformation($"RabbitMQ feedback queue for user {username} bound to feedback exchange");
 
             await _elasticsearchClient.CreateUserAsync(username, password);
+            _logger.LogInformation($"ElasticSearch user {username} created");
+            
             await _elasticsearchClient.CreateIndexAsync(username);
+            _logger.LogInformation($"ElasticSearch index for {username} created");
             
             var salt = CryptoUtils.GenerateSalt();
             var passwordHash = CryptoUtils.ComputeHash(salt, password);
@@ -65,10 +78,17 @@ namespace IdentityServer.Repositories
                 Username = username,
                 Salt = salt,
                 PasswordHash = passwordHash,
-                LogExchangeName = $"logs.{username}",
-                FeedbackQueueName = queue.Name
+                LogIndexName = username,
+                LogExchangeName = logsExchangeName,
+                FeedbackQueueName = feedbackQueueName
             };
             await _userRepository.CreateAsync(user);
+            _logger.LogInformation($"UserInfo for user {username} saved to MongoDB");
+
+            var usersExchange = await _bus.Advanced.ExchangeDeclareAsync("users", ExchangeType.Fanout);
+            await _bus.Advanced.PublishAsync(usersExchange, "added", false, new Message<string>(username));
+            _logger.LogInformation($"Message for new user {username} published");
+            
             return true;
         }
     }

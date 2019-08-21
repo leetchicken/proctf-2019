@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using EasyNetQ;
 using EasyNetQ.ConnectionString;
 using EasyNetQ.Management.Client;
@@ -39,7 +40,8 @@ namespace IdentityServer
 
             services.AddSingleton(sp => sp.GetRequiredService<IMongoDatabase>().GetCollection<UserMongoDocument>("users"));
             services.AddSingleton<IUserRepository, UserRepository>();
-            services.AddSingleton<IOpenDistroElasticsearchClient, OpenDistroElasticsearchClient>();
+            services.AddSingleton<IOpenDistroElasticsearchClient>(sp =>
+                new OpenDistroElasticsearchClient(new Uri(sp.GetRequiredService<IConfiguration>().GetConnectionString("ElasticSearch"), UriKind.Absolute)));
             services.AddSingleton<IUserUnitOfWork, UserUnitOfWork>();
 
             services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie();

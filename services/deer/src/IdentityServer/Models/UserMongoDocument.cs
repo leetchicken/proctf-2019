@@ -13,6 +13,9 @@ namespace IdentityServer.Models
         [BsonElement("hash")]
         public byte[] PasswordHash { get; set; }
 
+        [BsonElement("log_index")]
+        public string LogIndexName { get; set; }
+        
         [BsonElement("log_exchange")]
         public string LogExchangeName { get; set; }
 
@@ -29,6 +32,7 @@ namespace IdentityServer.Models
                 Username = user.Username,
                 Salt = user.Salt,
                 PasswordHash = user.PasswordHash,
+                LogIndexName = user.LogIndexName,
                 LogExchangeName = user.LogExchangeName,
                 FeedbackQueueName = user.FeedbackQueueName
             };
@@ -41,6 +45,7 @@ namespace IdentityServer.Models
                 Username = Username,
                 Salt = Salt,
                 PasswordHash = PasswordHash,
+                LogIndexName = LogIndexName,
                 LogExchangeName = LogExchangeName,
                 FeedbackQueueName = FeedbackQueueName
             };
