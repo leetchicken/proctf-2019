@@ -2,6 +2,7 @@
 #include "constants.h"
 #include "notifications.h"
 #include "icons_manager.h"
+#include "password_widget.h"
 
 
 enum EIconState
@@ -56,6 +57,7 @@ enum EMainScreenState
     kMainScreenLoadGameAsset,
     kMainScreenLoadGameCode,
     kMainScreenWaitForGameFinish,
+    kMainScreenPasswordWidget,
 
     kMainScreenStatesCount
 };
@@ -73,6 +75,7 @@ struct Context
     Rect m_networkRect;
     Rect m_loadingRect;
     Rect m_refreshRect;
+    Rect m_changePasswordRect;
 
     HTTPRequest* m_request;
     EMainScreenState m_state;
@@ -98,11 +101,12 @@ struct Context
     float m_pressDownTime;
 
     NotificationsCtx m_notificationsCtx;
+    PasswordWidget m_passwordWidget;
 
     float m_timer;
 
     Context(API* api, uint8_t* sdram)
-        : m_api(api)
+        : m_api(api), m_passwordWidget(api, m_iconCache)
     {
         m_api->GetScreenRect(&m_screenRect);
 
@@ -112,6 +116,7 @@ struct Context
         m_networkRect = Rect(10, 10, kInfoIconsWidth, kInfoIconsHeight);
         m_loadingRect = Rect(430, 10, kInfoIconsWidth, kInfoIconsHeight);
         m_refreshRect = Rect(163, 238, kRefreshButtonWidth, kRefreshButtonHeight);
+        m_changePasswordRect = Rect(320, 238, kRefreshButtonWidth, kRefreshButtonHeight);
 
         m_request = NULL;
         m_state = kMainScreenWaitForNetwork;
@@ -171,7 +176,8 @@ struct Context
 
     void ProcessInput();
     void OnGameSelected(uint32_t gameIdx);
-    void OnUpdatePressed();
+    void OnRefreshPressed();
+    void OnChangePasswordPressed();
     void UpdateIcons();
     bool ProcessLoadedAsset();
     void Render(float dt);
@@ -350,40 +356,28 @@ void Context::ProcessInput()
 {
     m_api->GetTouchScreenState(&m_tsState);
 
-    uint32_t selectedGame = ~0u;
-    bool updatePressed = false;
-
-    bool pressDown = false, pressUp = false;
-    // press down detection
+    bool click = false;
+    int clickX = 0;
+    int clickY = 0;
+    bool move = false;
+    int moveVecX = 0;
+    int moveVecY = 0;
     if(!m_touchOnPrevFrame && (m_tsState.touchDetected == 1))
-    {
         m_pressDownTime = m_api->time();
-        pressDown = true;
-    }
-    // press up detection
-    if(m_touchOnPrevFrame && !m_tsState.touchDetected)
-        pressUp = true;
-
-    if(pressUp && m_api->time() - m_pressDownTime < 0.1f)
+    if(m_touchOnPrevFrame)
     {
-        for(uint32_t g = 0; g < m_gamesCount; g++)
+        if(!m_tsState.touchDetected && m_api->time() - m_pressDownTime < 0.1f)
         {
-            Rect& rect = m_games[g].uiRect;
-            if(rect.IsPointInside(m_prevTouchX, m_prevTouchY))
-            {
-                selectedGame = g;
-                break;
-            }
+            click = true;
+            clickX = m_prevTouchX;
+            clickY = m_prevTouchY;
         }
-
-        if(selectedGame == ~0u && m_refreshRect.IsPointInside(m_prevTouchX, m_prevTouchY))
-            updatePressed = true;
-    }
-    else if(m_touchOnPrevFrame && (m_tsState.touchDetected == 1))
-    {
-        int vecX = (int)m_tsState.touchX[0] - (int)m_prevTouchX;
-        for(uint32_t g = 0; g < m_gamesCount; g++)
-            m_games[g].uiRect.x += vecX;
+        else if(m_tsState.touchDetected == 1)
+        {
+            move = true;
+            moveVecX = (int)m_tsState.touchX[0] - (int)m_prevTouchX;
+            moveVecY = (int)m_tsState.touchY[0] - (int)m_prevTouchY;
+        }
     }
 
     m_touchOnPrevFrame = false;
@@ -394,10 +388,49 @@ void Context::ProcessInput()
         m_touchOnPrevFrame = true;
     }
 
-    if(selectedGame != ~0u)
-        OnGameSelected(selectedGame);
-    if(updatePressed)
-        OnUpdatePressed();
+    if(m_state == kMainScreenPasswordWidget)
+    {
+        if(click)
+            m_passwordWidget.OnClick(clickX, clickY);
+    }
+    else
+    {
+        uint32_t selectedGame = ~0u;
+        bool refreshPressed = false;
+        bool changePasswordPressed = false;
+
+        if(click)
+        {
+            if(m_refreshRect.IsPointInside(clickX, clickY))
+                refreshPressed = true;
+            else if(m_changePasswordRect.IsPointInside(clickX, clickY))
+                changePasswordPressed = true;
+            else
+            {
+                for(uint32_t g = 0; g < m_gamesCount; g++)
+                {
+                    Rect& rect = m_games[g].uiRect;
+                    if(rect.IsPointInside(clickX, clickY))
+                    {
+                        selectedGame = g;
+                        break;
+                    }
+                }
+            }
+        }
+        else if(move)
+        {
+            for(uint32_t g = 0; g < m_gamesCount; g++)
+                m_games[g].uiRect.x += moveVecX;
+        }
+
+        if(selectedGame != ~0u)
+            OnGameSelected(selectedGame);
+        if(refreshPressed)
+            OnRefreshPressed();
+        if(changePasswordPressed)
+            OnChangePasswordPressed();
+    }
 }
 
 
@@ -431,7 +464,7 @@ void Context::OnGameSelected(uint32_t gameIdx)
 }
 
 
-void Context::OnUpdatePressed()
+void Context::OnRefreshPressed()
 {
     if(m_state == kMainScreenReady && !m_iconRequestsInFlight)
     {
@@ -449,6 +482,16 @@ void Context::OnUpdatePressed()
             if(m_request)
                 m_state = kMainScreenWaitGameList;
         }
+    }
+}
+
+
+void Context::OnChangePasswordPressed()
+{
+    if(m_state == kMainScreenReady && !m_iconRequestsInFlight)
+    {
+        m_passwordWidget.Activate();
+        m_state = kMainScreenPasswordWidget;
     }
 }
 
@@ -589,12 +632,17 @@ void Context::Render(float dt)
         m_api->LCD_SetFont(kFont24);
         m_api->LCD_DisplayStringAt(0, 100, "Loading...", kTextAlignCenter);
     }
+    else if(m_state == kMainScreenPasswordWidget)
+    {
+        m_passwordWidget.OnRender();
+    }
     else
     {
         m_api->LCD_DrawImage(m_backgroundRect, m_iconCache.background, kBackgroundWidth * 4);
         uint8_t* networkIcon = m_api->GetNetwokConnectionStatus() == kNetwokConnectionStatusGlobalUp ? m_iconCache.networkOnIcon : m_iconCache.networkOffIcon;
         m_api->LCD_DrawImageWithBlend(m_networkRect, networkIcon, kInfoIconsWidth * 4);
         m_api->LCD_DrawImageWithBlend(m_refreshRect, m_iconCache.refreshButton, kRefreshButtonWidth * 4);
+        m_api->LCD_DrawImageWithBlend(m_changePasswordRect, m_iconCache.refreshButton, kRefreshButtonWidth * 4);
 
         if(m_state != kMainScreenReady || m_iconRequestsInFlight)
             m_api->LCD_DrawImageWithBlend(m_loadingRect, m_iconCache.loadingIcon, kInfoIconsWidth * 4);
@@ -663,6 +711,7 @@ bool Context::Update()
         {
             m_api->FreeHTTPRequest(m_request);
             m_notificationsCtx.SetAuthKey(m_authKey);
+            m_passwordWidget.SetAuthKey(m_authKey);
             m_request = RequestGamesList(m_api, m_authKey);
             m_state = kMainScreenWaitGameList;
         }
@@ -741,6 +790,24 @@ bool Context::Update()
 
         m_api->FreeHTTPRequest(m_request);
         m_request = NULL;
+    }
+
+    if(m_state == kMainScreenPasswordWidget)
+    {
+        m_passwordWidget.Update(dt);
+        if(m_passwordWidget.GetState() == PasswordWidget::kStateHidden)
+        {
+            m_state = kMainScreenReady;
+            if(m_passwordWidget.GetResult())
+            {
+                m_authKey = ~0u;
+                m_api->strcpy(m_password, m_passwordWidget.GetPassword());
+                void* f = m_api->fopen("/fs/password", "w");
+                m_api->fwrite(m_password, m_api->strlen(m_password), f);
+                m_api->fclose(f);
+                OnRefreshPressed();
+            }
+        }
     }
 
     Render(dt);
