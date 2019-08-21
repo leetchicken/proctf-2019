@@ -11,13 +11,13 @@
 
 ## Flags
 
-Flags are private messages in bb threads. They encrypts by `pgp_sym_encrypt` function from `pgcrypto` extension.
+Flags are private messages in bb threads. They are encrypted by `pgp_sym_encrypt` function from `pgcrypto` extension.
 
 ## Vuln
 
-In `BB::Model::Boards->create_message()` input `$data` not filter, so we have an INSERT SQL injection.
+In `BB::Model::Boards->create_message()` input `$data` is not filtered, so we have an INSERT SQL injection.
 
-Next, we need get a decryption key, it stored in web app config (`b_b.conf`) and in ENV var `ENC_KEY` of `postgres` proccess. Web app config lie in `bb_web` container, so we can get key only via ENV. This can be done via `pg_read_binary_file('/proc/1/environ', 0, 1024)` because `bb` connect to databse with postgres user as a result of misconfiguration.
+Next, we need get a decryption key, it is stored in web app config (`b_b.conf`) and in ENV var `ENC_KEY` of `postgres` proccess. Web app config is in `bb_web` container, so we can get key only via ENV. This can be done via `pg_read_binary_file('/proc/1/environ', 0, 1024)` because `bb` connects to databse with postgres user as a result of misconfiguration.
 
 Final message with sploit can look like this:
 
