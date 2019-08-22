@@ -6,8 +6,25 @@
 #include "team.h"
 
 
+struct UsersStorageRecord
+{
+    IPAddr ip;
+    AuthKey authKey;
+    char userName[kMaxUserNameLen];
+    char password[kMaxPasswordLen];
+};
+static const char* kUsersStorageFileName = "data/users.dat";
+
+
+static std::mutex GUsersGuard;
+static std::unordered_map<std::string, User*> GUsers;
+static std::unordered_map<AuthKey, User*> GAuthUsers;
+static std::thread GUpdateThread;
+static std::thread GNetworkThread;
+
+
 User::User(const std::string& name, const std::string& password, Team* team)
-    : m_name(name), m_password(password), m_team(team)
+    : m_team(team), m_name(name), m_password(password)
 {
 
 }
@@ -19,60 +36,22 @@ Team* User::GetTeam()
 }
 
 
-void User::SetAuthKey(uint32_t k)
-{
-    m_authKey = k;
-}
-
-
-uint32_t User::GetAuthKey() const
-{
-    return m_authKey;
-}
-
-
-uint32_t User::GenerateAuthKey()
-{
-    m_authKey = 0;
-    for(uint32_t i = 0; i < 4; i++)
-        m_authKey |= (rand() % 255) << (i * 8);
-    return m_authKey;
-}
-
-
 const std::string& User::GetName() const
 {
     return m_name;
 }
 
 
-const std::string& User::GetPassword() const
-{
-    return m_password;
-}
-
-
-void User::ChangePassword(const std::string& newPassword)
-{
-    m_password = newPassword;
-    m_authKey = kInvalidAuthKey;
-}
-
-
-void User::SetIPAddr(IPAddr ipAddr)
-{
-    m_ipAddr = ipAddr;
-}
-
-
 IPAddr User::GetIPAddr() const
 {
+    std::lock_guard<std::mutex> guard(GUsersGuard);
     return m_ipAddr;
 }
 
 
 bool User::AddNotification(Notification* n)
 {
+    std::lock_guard<std::mutex> guard(m_notificationMutex);
     if(m_notifications.size() >= kNotificationQueueSize)
     {
         printf("  Console %s: notification queue overflowed\n", inet_ntoa(m_ipAddr));
@@ -87,9 +66,9 @@ bool User::AddNotification(Notification* n)
 }
 
 
-
 Notification* User::GetNotification()
 {
+    std::lock_guard<std::mutex> guard(m_notificationMutex);
     if(m_notifications.empty())
         return nullptr;
     auto* retVal = m_notifications.front();
@@ -100,6 +79,7 @@ Notification* User::GetNotification()
 
 uint32_t User::GetNotificationsInQueue()
 {
+    std::lock_guard<std::mutex> guard(m_notificationMutex);
     return m_notifications.size();
 }
 
@@ -108,12 +88,16 @@ void User::Update()
 {
     float dt = GetTime() - m_lastUserNotifyTime;
     if(!m_notifications.empty() && dt > 5.0f)
+    {
+        std::lock_guard<std::mutex> guard(m_notificationMutex);
         NotifyUser();
+    }
 }
 
 
 void User::SetNotifySocket(int sock)
 {
+    std::lock_guard<std::mutex> guard(m_notificationMutex);
     if(m_notifySocket >= 0)
         close(m_notifySocket);
     m_notifySocket = sock;
@@ -170,98 +154,12 @@ void User::DumpStats(std::string& out, IPAddr hwConsoleIp) const
 }
 
 
-struct UsersStorageRecord
+static uint32_t GenerateAuthKey()
 {
-    IPAddr ip;
-    AuthKey authKey;
-    char userName[kMaxUserNameLen];
-    char password[kMaxPasswordLen];
-};
-static const char* kUsersStorageFileName = "data/users.dat";
-
-
-static std::mutex GUsersGuard;
-static std::unordered_map<std::string, User*> GUsers;
-static std::unordered_map<AuthKey, User*> GAuthUsers;
-static std::thread GUpdateThread;
-static std::thread GNetworkThread;
-
-
-static void DumpUsersStorage()
-{
-    FILE* f = fopen(kUsersStorageFileName, "w");
-    if(!f)
-    {
-        printf("Failed to open users storage\n");
-        return;
-    }
-
-    for(auto iter : GUsers)
-    {
-        UsersStorageRecord record;
-        User* u = iter.second;
-        memset(&record, 0, sizeof(record));
-        record.authKey = u->GetAuthKey();
-        record.ip = u->GetIPAddr();
-        auto& name = u->GetName();
-        auto& password = u->GetPassword();
-        memcpy(record.userName, name.c_str(), name.length());
-        memcpy(record.password, password.c_str(), password.length());
-        fwrite(&record, sizeof(record), 1, f);
-    }
-
-    fclose(f);
-}
-
-
-static void ReadUsersStorage()
-{
-    const uint32_t kRecordSize = sizeof(UsersStorageRecord);
-
-    FILE* storage = fopen(kUsersStorageFileName, "r");
-	if(storage)
-	{
-		fseek(storage, 0, SEEK_END);
-		size_t fileSize = ftell(storage);
-		fseek(storage, 0, SEEK_SET);
-
-        bool error = false;
-        if((fileSize % kRecordSize) == 0)
-        {
-            uint32_t recordsNum = fileSize / kRecordSize;
-            for(uint32_t i = 0; i < recordsNum; i++)
-            {
-                UsersStorageRecord record;
-				if(fread(&record, kRecordSize, 1, storage) != 1)
-                {
-                    error = true;
-                    printf("Failed to read consoles storage\n");
-                    break;
-                }
-
-                in_addr addr;
-                addr.s_addr = record.ip;
-                Team* team = FindTeam(addr);
-                if(!team)
-                    continue;
-
-                User* user = new User(record.userName, record.password, team);
-                GUsers[record.userName] = user;
-                user->SetAuthKey(record.authKey);
-                user->SetIPAddr(record.ip);
-                GAuthUsers[record.authKey] = user;
-            }
-        }
-        else
-        {
-            printf("Consoles storage is corrupted\n");
-        }
-
-        if(!error)
-            printf("Consoles storage has been read succefully\n");
-
-        fclose(storage);
-    }
+    uint32_t authKey = 0;
+    for(uint32_t i = 0; i < 4; i++)
+        authKey |= (rand() % 255) << (i * 8);
+    return authKey;
 }
 
 
@@ -337,15 +235,17 @@ static void NetworkThread()
             continue;
         }
 
-        std::lock_guard<std::mutex> guard(GUsersGuard);
-        IPAddr ipAddr = clientAddr.sin_addr.s_addr;
         User* user = nullptr;
-        for(auto& iter : GUsers)
         {
-            if(iter.second->GetIPAddr() == ipAddr)
+            std::lock_guard<std::mutex> guard(GUsersGuard);
+            IPAddr ipAddr = clientAddr.sin_addr.s_addr;
+            for(auto& iter : GUsers)
             {
-                user = iter.second;
-                break;
+                if(iter.second->GetIPAddr() == ipAddr)
+                {
+                    user = iter.second;
+                    break;
+                }
             }
         }
 
@@ -362,7 +262,7 @@ static void NetworkThread()
 }
 
 
-EUserErrorCodes AddUser(const std::string& name, const std::string& password, Team* team)
+EUserErrorCodes User::Add(const std::string& name, const std::string& password, Team* team)
 {
     std::lock_guard<std::mutex> guard(GUsersGuard);
 
@@ -384,13 +284,13 @@ EUserErrorCodes AddUser(const std::string& name, const std::string& password, Te
 
     printf("  new user\n");
 
-    DumpUsersStorage();
+    DumpStorage();
 
     return kUserErrorOk;
 }
 
 
-User* GetUser(const std::string& name)
+User* User::Get(const std::string& name)
 {
     std::lock_guard<std::mutex> guard(GUsersGuard);
     auto iter = GUsers.find(name);
@@ -400,7 +300,7 @@ User* GetUser(const std::string& name)
 }
 
 
-EUserErrorCodes AuthorizeUser(const std::string& name, const std::string& password, IPAddr ipAddr, AuthKey& authKey)
+EUserErrorCodes User::Authorize(const std::string& name, const std::string& password, IPAddr ipAddr, AuthKey& authKey)
 {
     std::lock_guard<std::mutex> guard(GUsersGuard);
     auto usersIter = GUsers.find(name);
@@ -412,13 +312,13 @@ EUserErrorCodes AuthorizeUser(const std::string& name, const std::string& passwo
 
     User* user = usersIter->second;    
 
-    if(user->GetPassword() != password)
+    if(user->m_password != password)
     {
         printf("  ERROR: invalid password\n");
         return kUserErrorInvalidCredentials;
     }
 
-    authKey = user->GetAuthKey();
+    authKey = user->m_authKey;
     auto authUsersIter = GAuthUsers.find(authKey);
     if(authUsersIter != GAuthUsers.end())
     {
@@ -426,13 +326,13 @@ EUserErrorCodes AuthorizeUser(const std::string& name, const std::string& passwo
         User* user2 = authUsersIter->second;
         if(user != user2)
         {
-            printf("  CRITICAL ERROR, mismatched user data '%s':%u '%s':%u\n", user->GetName().c_str(), authKey, user2->GetName().c_str(), user2->GetAuthKey());
+            printf("  CRITICAL ERROR, mismatched user data '%s':%u '%s':%u\n", user->m_name.c_str(), authKey, user2->m_name.c_str(), user2->m_authKey);
             exit(1);
         }
         GAuthUsers.erase(authUsersIter);
     }
 
-    authKey = user->GenerateAuthKey();
+    authKey = GenerateAuthKey();
     const uint32_t kMaxTriesCount = 5;
     uint32_t triesCount = 0;
     while(GAuthUsers.find(authKey) != GAuthUsers.end())
@@ -443,32 +343,22 @@ EUserErrorCodes AuthorizeUser(const std::string& name, const std::string& passwo
             exit(1);
         }
 
-        authKey = user->GenerateAuthKey();
+        authKey = GenerateAuthKey();
         triesCount++;
     }
 
     printf("  auth key: %x\n", authKey);
     GAuthUsers[authKey] = user;
-    user->SetIPAddr(ipAddr);
+    user->m_authKey = authKey;
+    user->m_ipAddr = ipAddr;
 
-    DumpUsersStorage();
+    DumpStorage();
 
     return kUserErrorOk;
 }
 
 
-static void ChangeUserPassword(User* user, const std::string& newPassword)
-{
-    uint32_t authKey = user->GetAuthKey();
-    GAuthUsers.erase(authKey);
-
-    user->ChangePassword(newPassword);
-
-    DumpUsersStorage();
-}
-
-
-EUserErrorCodes ChangeUserPassword(const std::string& userName, const std::string& newPassword)
+EUserErrorCodes User::ChangePassword(const std::string& userName, const std::string& newPassword)
 {
     std::lock_guard<std::mutex> guard(GUsersGuard);
 
@@ -480,13 +370,13 @@ EUserErrorCodes ChangeUserPassword(const std::string& userName, const std::strin
     }
     
     User* user = iter->second;
-    ChangeUserPassword(user, newPassword);
+    ChangePassword(user, newPassword);
 
     return kUserErrorOk;
 }
 
 
-EUserErrorCodes ChangeUserPassword(AuthKey authKey, const std::string& newPassword, Team* team)
+EUserErrorCodes User::ChangePassword(AuthKey authKey, const std::string& newPassword, Team* team)
 {
     std::lock_guard<std::mutex> guard(GUsersGuard);
 
@@ -505,13 +395,13 @@ EUserErrorCodes ChangeUserPassword(AuthKey authKey, const std::string& newPasswo
         return kUserErrorForbidden;
     }
 
-    ChangeUserPassword(user, newPassword);
+    ChangePassword(user, newPassword);
 
     return kUserErrorOk;
 }
 
 
-User* GetUser(AuthKey authKey)
+User* User::Get(AuthKey authKey)
 {
     std::lock_guard<std::mutex> guard(GUsersGuard);
     auto iter = GAuthUsers.find(authKey);
@@ -521,7 +411,7 @@ User* GetUser(AuthKey authKey)
 }
 
 
-void GetUsers(std::vector<User*>& users)
+void User::GetUsers(std::vector<User*>& users)
 {
     std::lock_guard<std::mutex> guard(GUsersGuard);
     users.reserve(GUsers.size());
@@ -530,7 +420,7 @@ void GetUsers(std::vector<User*>& users)
 }
 
 
-void BroadcastNotification(Notification* n, User* sourceUser)
+void User::BroadcastNotification(Notification* n, User* sourceUser)
 {
     std::lock_guard<std::mutex> guard(GUsersGuard);
     for(auto& iter : GUsers)
@@ -543,9 +433,99 @@ void BroadcastNotification(Notification* n, User* sourceUser)
 }
 
 
-void UsersStart()
+void User::Start()
 {
-    ReadUsersStorage();
+    ReadStorage();
     GUpdateThread = std::thread(UpdateThread);
     GNetworkThread = std::thread(NetworkThread);
+}
+
+
+void User::DumpStorage()
+{
+    FILE* f = fopen(kUsersStorageFileName, "w");
+    if(!f)
+    {
+        printf("Failed to open users storage\n");
+        return;
+    }
+
+    for(auto iter : GUsers)
+    {
+        UsersStorageRecord record;
+        User* u = iter.second;
+        memset(&record, 0, sizeof(record));
+        record.authKey = u->m_authKey;
+        record.ip = u->m_ipAddr;
+        auto& name = u->m_name;
+        auto& password = u->m_password;
+        memcpy(record.userName, name.c_str(), name.length());
+        memcpy(record.password, password.c_str(), password.length());
+        fwrite(&record, sizeof(record), 1, f);
+    }
+
+    fclose(f);
+}
+
+
+void User::ReadStorage()
+{
+    const uint32_t kRecordSize = sizeof(UsersStorageRecord);
+
+    FILE* storage = fopen(kUsersStorageFileName, "r");
+	if(storage)
+	{
+		fseek(storage, 0, SEEK_END);
+		size_t fileSize = ftell(storage);
+		fseek(storage, 0, SEEK_SET);
+
+        bool error = false;
+        if((fileSize % kRecordSize) == 0)
+        {
+            uint32_t recordsNum = fileSize / kRecordSize;
+            for(uint32_t i = 0; i < recordsNum; i++)
+            {
+                UsersStorageRecord record;
+				if(fread(&record, kRecordSize, 1, storage) != 1)
+                {
+                    error = true;
+                    printf("Failed to read consoles storage\n");
+                    break;
+                }
+
+                in_addr addr;
+                addr.s_addr = record.ip;
+                Team* team = FindTeam(addr);
+                if(!team)
+                    continue;
+
+                User* user = new User(record.userName, record.password, team);
+                GUsers[record.userName] = user;
+                user->m_authKey = record.authKey;
+                user->m_ipAddr = record.ip;
+                GAuthUsers[record.authKey] = user;
+            }
+        }
+        else
+        {
+            printf("Consoles storage is corrupted\n");
+        }
+
+        if(!error)
+            printf("Consoles storage has been read succefully\n");
+
+        fclose(storage);
+    }
+}
+
+
+void User::ChangePassword(User* user, const std::string& newPassword)
+{
+    uint32_t authKey = user->m_authKey;
+    GAuthUsers.erase(authKey);
+
+    user->m_password = newPassword;
+    user->m_authKey = kInvalidAuthKey;
+
+    DumpStorage();
 }

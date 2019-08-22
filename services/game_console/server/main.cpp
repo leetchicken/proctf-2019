@@ -82,7 +82,7 @@ static User* CheckAuthority(const QueryString& queryString)
     if(authKey == kInvalidAuthKey)
         return nullptr;
 
-    auto user = GetUser(authKey);
+    auto user = User::Get(authKey);
     if(!user)
     {
         printf("  ERROR: Unauthorized access, auth key: %x\n", authKey);
@@ -205,7 +205,7 @@ HttpResponse RequestHandler::GetRegister(HttpRequest request)
     printf("  user name: %s\n", userName.c_str());
     printf("  password:  %s\n", password.c_str());
 
-    auto ret = AddUser(userName, password, team);
+    auto ret = User::Add(userName, password, team);
 
     if(ret == kUserErrorTooLong)
         return HttpResponse(MHD_HTTP_BAD_REQUEST);
@@ -231,7 +231,7 @@ HttpResponse RequestHandler::GetAuth(HttpRequest request)
     printf("  password:  %s\n", password.c_str());
 
     AuthKey authKey;
-    auto ret = AuthorizeUser(userName, password, request.clientIp.s_addr, authKey);
+    auto ret = User::Authorize(userName, password, request.clientIp.s_addr, authKey);
     if(ret == kUserErrorInvalidCredentials)
     {
         printf("  invalid credentials\n");
@@ -270,7 +270,7 @@ HttpResponse RequestHandler::GetChangePassword(HttpRequest request)
     printf("  auth key: %x\n", authKey);
     printf("  new password: %s\n", password.c_str());
 
-    auto ret = ChangeUserPassword(authKey, password, team);
+    auto ret = User::ChangePassword(authKey, password, team);
     if(ret == kUserErrorInvalidAuthKey)
         return HttpResponse(MHD_HTTP_BAD_REQUEST);
     else if(ret == kUserErrorUnauthorized)
@@ -453,7 +453,7 @@ HttpResponse RequestHandler::GetChecksystemStatus(HttpRequest request)
     std::vector<Team*> teams;
     GetTeams(teams);
     std::vector<User*> users;
-    GetUsers(users);
+    User::GetUsers(users);
     for(auto team : teams)
     {
         IPAddr hwConsoleIp = GetHwConsoleIp(team->network);
@@ -543,7 +543,7 @@ HttpResponse RequestHandler::GetChecksystemCheck(HttpRequest request)
         return BuildChecksystemResponse(kCheckerCheckerError, "Failed to found team by IP");
     printf("  team:    %s\n", team->name.c_str());
 
-    User* hwConsoleUser = GetUser(team->name);
+    User* hwConsoleUser = User::Get(team->name);
     if(!hwConsoleUser)
         return BuildChecksystemResponse(kCheckerMumble, "HW Console user is not registered");
 
@@ -581,9 +581,9 @@ HttpResponse RequestHandler::GetChecksystemChangePassword(HttpRequest request)
     printf("  user name: %s\n", userName.c_str());
     printf("  password:  %s\n", password.c_str());
 
-    if(!ChangeUserPassword(userName, password))
+    if(User::ChangePassword(userName, password) == kUserErrorInvalidCredentials)
     {
-        printf("  Password change failed\n");
+        printf("  Password change failed, invalid user name\n");
         return HttpResponse(MHD_HTTP_BAD_REQUEST);
     }
 
@@ -610,7 +610,7 @@ HttpResponse RequestHandler::GetChecksystemNotification(HttpRequest request)
 
     Notification* n = new Notification("Hackerdom", message);
     n->AddRef();
-    BroadcastNotification(n, nullptr);
+    User::BroadcastNotification(n, nullptr);
     n->Release();
 
     return HttpResponse(MHD_HTTP_OK);
@@ -668,7 +668,7 @@ HttpResponse RequestHandler::PostChecksystemFlag(HttpRequest request, HttpPostPr
         return BuildChecksystemResponse(kCheckerCheckerError, "Failed to found team by IP");
     printf("  team:    %s\n", team->name.c_str());
 
-    User* hwConsoleUser = GetUser(team->name);
+    User* hwConsoleUser = User::Get(team->name);
     if(!hwConsoleUser)
         return BuildChecksystemResponse(kCheckerMumble, "HW Console user is not registered");
 
@@ -722,7 +722,7 @@ void NotificationProcessor::FinalizeRequest()
         return;
     }
 
-    User* sourceUser = GetUser(m_authKey);
+    User* sourceUser = User::Get(m_authKey);
 
     printf("  notification from user '%s' team %u '%s'\n", sourceUser->GetName().c_str(), team->number, team->name.c_str());
 
@@ -750,7 +750,7 @@ void NotificationProcessor::FinalizeRequest()
 
     Notification* n = new Notification(m_content, m_contentLength);
     n->AddRef();
-    BroadcastNotification(n, sourceUser);
+    User::BroadcastNotification(n, sourceUser);
     n->Release();
 
     Complete(HttpResponse(MHD_HTTP_OK));
@@ -784,7 +784,7 @@ int main()
     if(!TeamsStart())
         return -1;
 
-    UsersStart();
+    User::Start();
 
     RequestHandler handler;
     HttpServer server(&handler);
