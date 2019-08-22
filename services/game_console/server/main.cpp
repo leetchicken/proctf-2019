@@ -197,6 +197,16 @@ HttpResponse RequestHandler::GetRegister(HttpRequest request)
         return HttpResponse(MHD_HTTP_FORBIDDEN);
     }
 
+    if(team->m_usersCount >= 10)
+    {
+        printf("  Too many users\n");
+
+        const char* kReason = "Each team allowed to have maximum 10 users";
+        char* reason = (char*)malloc(strlen(kReason) + 1);
+        strcpy(reason, kReason);
+        return HttpResponse(MHD_HTTP_FORBIDDEN, reason, strlen(reason), Headers());
+    }
+
     std::string userName, password;
     if(!FindInMap(request.queryString, kU, userName))
         return HttpResponse(MHD_HTTP_BAD_REQUEST);

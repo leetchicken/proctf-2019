@@ -282,6 +282,8 @@ EUserErrorCodes User::Add(const std::string& name, const std::string& password, 
     User* user = new User(name, password, team);
     GUsers[name] = user;
 
+    team->m_usersCount++;
+
     printf("  new user\n");
 
     DumpStorage();
@@ -504,6 +506,8 @@ void User::ReadStorage()
                 user->m_authKey = record.authKey;
                 user->m_ipAddr = record.ip;
                 GAuthUsers[record.authKey] = user;
+
+                team->m_usersCount++;
             }
         }
         else

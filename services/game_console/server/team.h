@@ -15,6 +15,7 @@ struct Team
     std::string name;
     NetworkAddr network;
     float lastTimeTeamPostNotification = 0.0f;
+    uint32_t m_usersCount = 0;
 
     void LoadDb();
 
