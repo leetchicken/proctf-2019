@@ -190,7 +190,7 @@ EGameErrorCode GetGameCode(uint32_t gameId, void** code, uint32_t& codeSize)
     codeSize = ftell(f);
     fseek(f, 0, SEEK_SET);
     *code = malloc(codeSize);
-    fread(code, 1, codeSize, f);
+	fread(*code, 1, codeSize, f);
     fclose(f);
 
     return kGameErrorOk;
