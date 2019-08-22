@@ -22,6 +22,30 @@ struct User
 {
     static const uint32_t kNotificationQueueSize = 32;
 
+    enum ESocketState
+    {
+        kSocketStateClosed = 0,
+        kSocketStateReady,
+        kSocketStateSending,
+        kSocketStateReceiving
+    };
+
+    struct Socket
+    {
+        ESocketState state = kSocketStateClosed;
+        int fd = -1;
+        uint8_t sendBuffer[16];
+        uint32_t sendBufferSize = 0;
+        uint32_t sendBufferOffset = 0;
+        uint8_t recvBuffer[16];
+        uint32_t recvBufferSize = 0;
+        uint32_t recvBufferOffset = 0;
+        float lastTouchTime = 0.0f;
+
+        int Send();
+        int Recv();
+    };
+
     User() = delete;
     User(const std::string& name, const std::string& password, Team* team);
 
@@ -32,8 +56,10 @@ struct User
     bool AddNotification(Notification* n);
     Notification* GetNotification();
     uint32_t GetNotificationsInQueue();
-    void Update();
-    void SetNotifySocket(int sock);
+
+    void SetSocket(int sock);
+    Socket& GetSocket();
+    bool Update();
 
     void DumpStats(std::string& out, IPAddr hwConsoleIp) const;
 
@@ -58,7 +84,7 @@ private:
 
     mutable std::mutex m_notificationMutex;
     std::list<Notification*> m_notifications;
-    int m_notifySocket = -1;
+    Socket m_socket;
     float m_lastUserNotifyTime = 0.0f;
 
     void NotifyUser();
@@ -66,4 +92,5 @@ private:
     static void DumpStorage();
     static void ReadStorage();
     static void ChangePassword(User* user, const std::string& newPassword);
+    static void NetworkThread();
 };

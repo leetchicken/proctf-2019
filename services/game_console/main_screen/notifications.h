@@ -20,6 +20,7 @@ private:
     HTTPRequest* m_getRequest;
     int32_t m_pendingNotificationsNum;
     float m_lastConnectTime;
+    bool m_isConnected;
 
     uint32_t m_authKey;
 
