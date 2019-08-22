@@ -38,7 +38,7 @@ os.system("mkdir BUILD/server/data")
 os.system("cp server/data/*.xml BUILD/server/data")
 print("")
 
-os.system("mkdir BUILD/SDK; cp SDK.md BUILD/SDK/")
+os.system("mkdir BUILD/SDK; cp SDK.md.html BUILD/SDK/")
 
 gamesXml = ET.ElementTree(file="server/data/games.xml").getroot()
 for game in gamesXml:

@@ -306,7 +306,37 @@ HttpResponse RequestHandler::HandleGet(HttpRequest request)
     static const std::string kP("p");
 
     printf("  IP: %s\n", inet_ntoa(request.clientIp));
-    if (ParseUrl(request.url, 1, "register"))
+    if (ParseUrl(request.url, 1, ""))
+    {
+        const char* fileName = "";
+        auto team = FindTeam(request.clientIp, false);
+        if(team)
+            fileName = "data/SDK.md.html";
+        else
+            fileName = "data/jury.html";            
+
+        FILE* f = fopen(fileName, "r");
+	    if (!f)
+        {
+            printf( "failed to read '%s'\n", fileName);
+            return HttpResponse(MHD_HTTP_INTERNAL_SERVER_ERROR);
+        }
+
+        fseek(f, 0, SEEK_END);
+        size_t fileSize = ftell(f);
+        fseek(f, 0, SEEK_SET);
+        char* fileData = (char*)malloc(fileSize);
+        fread(fileData, 1, fileSize, f);
+        fclose(f);
+
+        HttpResponse response;
+        response.code = MHD_HTTP_OK;
+        response.headers.insert({"Content-Type", "text/html"});
+        response.content = fileData;
+        response.contentLength = fileSize;
+        return response;
+    }
+    else if (ParseUrl(request.url, 1, "register"))
     {
         auto team = FindTeam(request.clientIp);
         if(!team)
@@ -591,7 +621,10 @@ HttpResponse RequestHandler::HandleGet(HttpRequest request)
     {
         auto team = FindTeam(request.clientIp, false);
         if(team)
+        {
+            printf(" ERROR: Forbidden\n");
             return HttpResponse(MHD_HTTP_FORBIDDEN);
+        }
 
         std::string data;
         char buf[512];
@@ -709,9 +742,12 @@ HttpResponse RequestHandler::HandleGet(HttpRequest request)
     }
     else if (ParseUrl(request.url, 1, "checksystem_change_password"))
     {
-        auto team = FindTeam(request.clientIp);
+        auto team = FindTeam(request.clientIp, false);
         if(team)
+        {
+            printf(" ERROR: Forbidden\n");
             return HttpResponse(MHD_HTTP_FORBIDDEN);
+        }
 
         std::string userName, password;
         if(!FindInMap(request.queryString, kU, userName))
@@ -722,31 +758,14 @@ HttpResponse RequestHandler::HandleGet(HttpRequest request)
         printf("  password:  %s\n", password.c_str());
 
         if(!ChangeUserPassword(userName, password))
+        {
+            printf("  Password change failed\n");
             return HttpResponse(MHD_HTTP_BAD_REQUEST);
+        }
+
+        printf("  Password changed\n");
 
         return HttpResponse(MHD_HTTP_OK);
-    }
-
-    return HttpResponse(MHD_HTTP_NOT_FOUND);
-}
-
-
-HttpResponse RequestHandler::HandlePost(HttpRequest request, HttpPostProcessor** postProcessor)
-{
-    printf("  IP: %s\n", inet_ntoa(request.clientIp));
-    if(ParseUrl(request.url, 1, "notification")) 
-    {
-        if(!CheckAuthority(request.queryString))
-            return HttpResponse(MHD_HTTP_UNAUTHORIZED);
-
-        uint32_t contentLength;
-        static const std::string kContentLength("content-length");
-        FindInMap(request.headers, kContentLength, contentLength);
-        if(contentLength == 0 || contentLength > kMaxNotificationSize)
-            return HttpResponse(MHD_HTTP_BAD_REQUEST);
-
-		*postProcessor = new NotificationProcessor(request);
-        return HttpResponse();
     }
     else if(ParseUrl(request.url, 1, "checksystem_notification")) 
     {
@@ -776,6 +795,28 @@ HttpResponse RequestHandler::HandlePost(HttpRequest request, HttpPostProcessor**
         n->Release();
 
         return HttpResponse(MHD_HTTP_OK);
+    }
+
+    return HttpResponse(MHD_HTTP_NOT_FOUND);
+}
+
+
+HttpResponse RequestHandler::HandlePost(HttpRequest request, HttpPostProcessor** postProcessor)
+{
+    printf("  IP: %s\n", inet_ntoa(request.clientIp));
+    if(ParseUrl(request.url, 1, "notification")) 
+    {
+        if(!CheckAuthority(request.queryString))
+            return HttpResponse(MHD_HTTP_UNAUTHORIZED);
+
+        uint32_t contentLength;
+        static const std::string kContentLength("content-length");
+        FindInMap(request.headers, kContentLength, contentLength);
+        if(contentLength == 0 || contentLength > kMaxNotificationSize)
+            return HttpResponse(MHD_HTTP_BAD_REQUEST);
+
+		*postProcessor = new NotificationProcessor(request);
+        return HttpResponse();
     }
     else if(ParseUrl(request.url, 1, "checksystem_putflag")) 
     {
