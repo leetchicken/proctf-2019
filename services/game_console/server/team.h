@@ -3,21 +3,17 @@
 #include <string>
 #include <mutex>
 #include <map>
+#include <vector>
 #include "notification.h"
 #include "misc.h"
-
-
-struct TeamDesc
-{
-    uint32_t number;
-    std::string name;
-    NetworkAddr network;
-};
+#include <arpa/inet.h>
 
 
 struct Team
 {
-    TeamDesc desc;
+    uint32_t number;
+    std::string name;
+    NetworkAddr network;
     float lastTimeTeamPostNotification = 0.0f;
 
     void LoadDb();
@@ -32,3 +28,8 @@ private:
     FILE* storage = nullptr;
     std::map<std::string, std::string> flags;
 };
+
+
+bool TeamsStart();
+Team* FindTeam(in_addr ipAddr, bool showError = true);
+void GetTeams(std::vector<Team*>& teams);

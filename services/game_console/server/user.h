@@ -46,3 +46,26 @@ private:
 
     void NotifyUser();
 };
+
+
+enum EUserErrorCodes
+{
+    kUserErrorOk = 0,
+    kUserErrorTooLong,
+    kUserErrorAlreadyExists,
+    kUserErrorInvalidCredentials,
+    kUserErrorInvalidAuthKey,
+    kUserErrorUnauthorized,
+    kUserErrorForbidden,
+};
+
+
+EUserErrorCodes AddUser(const std::string& name, const std::string& password, Team* team);
+User* GetUser(const std::string& name);
+EUserErrorCodes AuthorizeUser(const std::string& name, const std::string& password, IPAddr ipAddr, AuthKey& authKey);
+EUserErrorCodes ChangeUserPassword(const std::string& userName, const std::string& newPassword);
+EUserErrorCodes ChangeUserPassword(AuthKey authKey, const std::string& newPassword, Team* team);
+User* GetUser(AuthKey authKey);
+void GetUsers(std::vector<User*>& users);
+void BroadcastNotification(Notification* n, User* sourceUser);
+void UsersStart();

@@ -1,6 +1,8 @@
 #include "team.h"
 #include <stdio.h>
 #include <string.h>
+#include <unordered_map>
+#include <pugixml.hpp>
 
 
 static const uint32_t kFlagIdLen = 8;
@@ -11,7 +13,7 @@ static const uint32_t kRecordSize = kFlagIdLen + kFlagLen;
 void Team::LoadDb()
 {
     char filename[256];
-    sprintf(filename, "data/%s.dat", desc.name.c_str());
+    sprintf(filename, "data/%s.dat", name.c_str());
 
     bool error = false;
     storage = fopen(filename, "r+");
@@ -75,10 +77,10 @@ void Team::DumpStats(std::string& out, IPAddr hwConsoleIp)
     std::lock_guard<std::mutex> guard(mutex);
 
     char buf[512];
-    sprintf(buf, "Team%u '%s':\n", desc.number, desc.name.c_str());
+    sprintf(buf, "Team%u '%s':\n", number, name.c_str());
     out.append(buf);
 
-    sprintf(buf, "  Network: %s\n", inet_ntoa(desc.network));
+    sprintf(buf, "  Network: %s\n", inet_ntoa(network));
     out.append(buf);
 
     sprintf(buf, "  Last time team post notification: %f\n", lastTimeTeamPostNotification);
@@ -119,4 +121,69 @@ const char* Team::GetFlag(const char* flagId)
     if(iter == flags.end())
         return nullptr;
     return iter->second.c_str();
+}
+
+
+std::unordered_map<NetworkAddr, Team> GTeams;
+
+
+static bool LoadTeamsDatabase()
+{
+    pugi::xml_document doc;
+    if (!doc.load_file("data/teams.xml")) 
+    {
+        printf("Failed to teams load database\n");
+        return false;
+    }
+
+    printf("Teams database:\n");
+    pugi::xml_node teamsNode = doc.child("Teams");
+    for (pugi::xml_node teamNode = teamsNode.first_child(); teamNode; teamNode = teamNode.next_sibling())
+    {
+        const char* netStr = teamNode.attribute("net").as_string();
+        NetworkAddr net = inet_aton(netStr);
+
+        Team& team = GTeams[net];
+        team.number = teamNode.attribute("number").as_uint();
+        team.name = teamNode.attribute("name").as_string();
+        if(team.name.length() > kMaxUserNameLen)
+        {
+            printf("  ERROR: too long user name: %s\n", team.name.c_str());
+            exit(1);
+        }
+		team.network = net;
+        printf("  %u %s\n", team.number, team.name.c_str());
+        printf("    network: %s(%08X)\n", netStr, net);
+        team.LoadDb();
+    }
+
+    return true;
+}
+
+
+bool TeamsStart()
+{
+    return LoadTeamsDatabase();
+}
+
+
+Team* FindTeam(in_addr ipAddr, bool showError)
+{
+    NetworkAddr netAddr = SockaddrToNetworkAddr(ipAddr);
+    auto iter = GTeams.find(netAddr);
+    if(iter == GTeams.end())
+    {
+        if(showError)
+            printf("  ERROR: Unknown network: %s\n", inet_ntoa(ipAddr));
+        return nullptr;
+    }
+    return &iter->second;
+}
+
+
+void GetTeams(std::vector<Team*>& teams)
+{
+    teams.reserve(GTeams.size());
+    for(auto& iter : GTeams)
+        teams.push_back(&iter.second);
 }
