@@ -42,27 +42,32 @@ namespace IdentityServer.Repositories
             var rabbitUser = await _managementClient.CreateUserAsync(userInfo);
             _logger.LogInformation($"RabbitMQ user {username} created");
 
-            var logsExchangeName = $"logs.{username}";
-            var exchangeInfo = new ExchangeInfo(logsExchangeName, ExchangeType.Fanout);
+            var logExchangeName = $"logs.{username}";
+            var exchangeInfo = new ExchangeInfo(logExchangeName, ExchangeType.Fanout);
             await _managementClient.CreateExchangeAsync(exchangeInfo, vhost);
             _logger.LogInformation($"RabbitMQ exchange for user {username} created");
             
+            var logQueueName = (await _bus.Advanced.QueueDeclareAsync("")).Name;
+
+            var logExchange = await _managementClient.GetExchangeAsync(logExchangeName, vhost);
+            var logQueue = await _managementClient.GetQueueAsync(logQueueName, vhost);
+            await _managementClient.CreateBindingAsync(logExchange, logQueue, new BindingInfo(""));
+            
             var permissionInfo = new PermissionInfo(rabbitUser, vhost)
                 .DenyAllConfigure()
-                .SetRead("^amp\\.")
+                .SetRead("^amq\\.")
                 .SetWrite("^logs\\.");
             await _managementClient.CreatePermissionAsync(permissionInfo);
             _logger.LogInformation($"RabbitMQ permissions for user {username} set");
 
-            var feedbackExchange = await _managementClient.GetExchangeAsync("feedback", vhost);
+            var errorExchange = await _managementClient.GetExchangeAsync("errors", vhost);
             
-            var feedbackQueueName = (await _bus.Advanced.QueueDeclareAsync("")).Name;
-            _logger.LogInformation($"RabbitMQ feedback queue for user {username} created");
+            var errorQueueName = (await _bus.Advanced.QueueDeclareAsync("")).Name;
+            _logger.LogInformation($"RabbitMQ errors queue for user {username} created");
             
-            var feedbackQueue = await _managementClient.GetQueueAsync(feedbackQueueName, vhost);
-            var bindingInfo = new BindingInfo(username);
-            await _managementClient.CreateBindingAsync(feedbackExchange, feedbackQueue, bindingInfo);
-            _logger.LogInformation($"RabbitMQ feedback queue for user {username} bound to feedback exchange");
+            var errorQueue = await _managementClient.GetQueueAsync(errorQueueName, vhost);
+            await _managementClient.CreateBindingAsync(errorExchange, errorQueue, new BindingInfo(username));
+            _logger.LogInformation($"RabbitMQ error queue for user {username} bound to error exchange");
 
             await _elasticsearchClient.CreateUserAsync(username, password);
             _logger.LogInformation($"ElasticSearch user {username} created");
@@ -79,8 +84,9 @@ namespace IdentityServer.Repositories
                 Salt = salt,
                 PasswordHash = passwordHash,
                 LogIndexName = username,
-                LogExchangeName = logsExchangeName,
-                FeedbackQueueName = feedbackQueueName
+                LogExchangeName = logExchangeName,
+                LogQueueName = logQueueName,
+                ErrorQueueName = errorQueueName
             };
             await _userRepository.CreateAsync(user);
             _logger.LogInformation($"UserInfo for user {username} saved to MongoDB");

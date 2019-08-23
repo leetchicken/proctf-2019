@@ -52,7 +52,7 @@ if [ ! -f definitions.json ] || [ ! -f internal_users.yml ] || [ ! -f LogProcess
       "arguments": {}
     },
     {
-      "name": "feedback",
+      "name": "errors",
       "vhost": "/",
       "type": "topic",
       "durable": true,

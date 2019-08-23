@@ -1,19 +1,13 @@
 using MongoDB.Bson.Serialization.Attributes;
 
-namespace IdentityServer.Models
+namespace LogProcessor.Models
 {
     [BsonIgnoreExtraElements]
     public class UserMongoDocument
     {
         [BsonId]
         public string Username { get; set; }
-
-        [BsonElement("salt")]
-        public byte[] Salt { get; set; }
         
-        [BsonElement("hash")]
-        public byte[] PasswordHash { get; set; }
-
         [BsonElement("log_index")]
         public string LogIndexName { get; set; }
         
@@ -34,8 +28,6 @@ namespace IdentityServer.Models
             return new UserMongoDocument
             {
                 Username = user.Username,
-                Salt = user.Salt,
-                PasswordHash = user.PasswordHash,
                 LogIndexName = user.LogIndexName,
                 LogExchangeName = user.LogExchangeName,
                 LogQueueName = user.LogQueueName,
@@ -48,8 +40,6 @@ namespace IdentityServer.Models
             return new User
             {
                 Username = Username,
-                Salt = Salt,
-                PasswordHash = PasswordHash,
                 LogIndexName = LogIndexName,
                 LogExchangeName = LogExchangeName,
                 LogQueueName = LogQueueName,

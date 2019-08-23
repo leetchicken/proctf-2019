@@ -4,24 +4,29 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Deer.Messages;
 using EasyNetQ;
-using EasyNetQ.Topology;
+using LogProcessor.Models;
 
 namespace LogProcessor
 {
     public class LogConsumerService : ILogConsumerService
     {
         private readonly IBus _bus;
+        private readonly IUserRepository _userRepository;
         private readonly ConcurrentDictionary<string, IDisposable> _consumers = new ConcurrentDictionary<string, IDisposable>();
 
-        public LogConsumerService(IBus bus)
+        public LogConsumerService(IBus bus, IUserRepository userRepository)
         {
             _bus = bus;
+            _userRepository = userRepository;
         }
         
-        public Task StartAsync()
+        public async Task StartAsync()
         {
-            // TODO load all users
-            return Task.CompletedTask;
+            var users = await _userRepository.GetUsersAsync();
+            foreach (var user in users)
+            {
+                await ConsumeUserAsync(user);
+            }
         }
 
         public Task StopAsync()
@@ -36,15 +41,14 @@ namespace LogProcessor
 
         public async Task AddConsumerForUserAsync(string username)
         {
-            var logsExchangeName = $"logs.{username}";
-            var exchange = await _bus.Advanced.ExchangeDeclareAsync(logsExchangeName, ExchangeType.Fanout, true);
-            var queue = await _bus.Advanced.QueueDeclareAsync("", durable: false, autoDelete: true);
+            var user = await _userRepository.GetUserAsync(username);
+            await ConsumeUserAsync(user);
+        }
 
-            // TODO write errors & oks to feedback exchange
-            var consumer = _bus.Advanced.Consume<LogData>(queue, (m, mri) => { });
-            _consumers.TryAdd(username, consumer);
-
-            await _bus.Advanced.BindAsync(exchange, queue, "");
+        private async Task ConsumeUserAsync(User user)
+        {
+            var queue = await _bus.Advanced.QueueDeclareAsync(user.LogQueueName, passive: true);
+            _consumers.TryAdd(user.Username, _bus.Advanced.Consume<LogData>(queue, (m, mri) => { }));
         }
 
         public Task RemoveConsumerForUserAsync(string username)
