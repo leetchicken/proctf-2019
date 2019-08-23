@@ -4,7 +4,6 @@
 #include <unordered_map>
 #include <thread>
 #include <vector>
-#include <poll.h>
 #include "team.h"
 
 
@@ -85,47 +84,70 @@ uint32_t User::GetNotificationsInQueue()
 }
 
 
-void User::SetSocket(int sock)
+void User::SetSocket(Socket* socket)
 {
-    if(m_socket.fd >= 0)
-        close(m_socket.fd);
-    m_socket.fd = sock;
-    m_socket.state = sock >= 0 ? kSocketStateReady : kSocketStateClosed;
-    m_socket.recvBufferSize = 0;
-    m_socket.recvBufferOffset = 0;
-    m_socket.sendBufferSize = 0;
-    m_socket.sendBufferOffset = 0;
-}
-
-
-User::Socket& User::GetSocket()
-{
-    return m_socket;
-}
-
-
-bool User::Update()
-{
-	std::lock_guard<std::mutex> guard(m_notificationMutex);
-    float dt = GetTime() - m_lastUserNotifyTime;
-    bool sockReady = m_socket.state == kSocketStateReady;
-    if(!m_notifications.empty() && dt > 5.0f && sockReady)
+    if(m_socket)
     {
-        m_socket.sendBufferSize = 16;
-        for(uint32_t i = 0; i < m_socket.sendBufferSize; i++)
-            m_socket.sendBuffer[i] = rand();
-        uint32_t num = m_notifications.size();
-        memcpy(m_socket.sendBuffer, &num, sizeof(num));
-        m_socket.sendBufferOffset = 0;
-
-        m_socket.state = kSocketStateSending;
-        m_socket.lastTouchTime = GetTime();
-        m_lastUserNotifyTime = GetTime();
-
-        return true;
+        printf("NOTIFY: close previous connection\n");
+        m_socket->Close();
     }
 
-    return false;
+    m_socket = socket;
+
+    m_socket->state = Socket::kStateReady;
+    m_socket->recvBufferSize = 0;
+    m_socket->recvBufferOffset = 0;
+    m_socket->sendBufferSize = 0;
+    m_socket->sendBufferOffset = 0;
+
+    m_socket->updateCallback = [this](Socket* sock)
+    {
+        if(sock->state == Socket::kStateReady)
+        {
+            std::lock_guard<std::mutex> guard(m_notificationMutex);
+            float dt = GetTime() - m_lastUserNotifyTime;
+            if(!m_notifications.empty() && dt > 5.0f)
+            {
+                sock->sendBufferSize = 16;
+                for(uint32_t i = 0; i < sock->sendBufferSize; i++)
+                    sock->sendBuffer[i] = rand();
+                uint32_t num = m_notifications.size();
+                memcpy(sock->sendBuffer, &num, sizeof(num));
+                sock->sendBufferOffset = 0;
+
+                sock->state = Socket::kStateSending;
+                sock->lastTouchTime = GetTime();
+                m_lastUserNotifyTime = GetTime();
+            }
+        }
+        else if(sock->state == Socket::kStateSending)
+        {
+            if(sock->sendBufferOffset == sock->sendBufferSize)
+            {
+                sock->state = Socket::kStateReceiving;
+                sock->recvBufferSize = 16;
+                sock->recvBufferOffset = 0;
+            }
+        }
+        else if(sock->state == Socket::kStateReceiving)
+        {
+            if(sock->recvBufferOffset == sock->recvBufferSize)
+                sock->state = Socket::kStateReady;
+        }
+    };
+
+    m_socket->timeoutCallback = [this](Socket* socket){
+        m_socket->Close();
+        m_socket = nullptr;
+    };
+    m_socket->closedByPeerCallback = m_socket->timeoutCallback;
+    m_socket->errorCallback = m_socket->timeoutCallback;
+}
+
+
+Socket* User::GetSocket()
+{
+    return m_socket;
 }
 
 
@@ -336,10 +358,71 @@ void User::BroadcastNotification(Notification* n, User* sourceUser)
 }
 
 
+static bool AcceptConnection(Socket* socket, const sockaddr_in& clientAddr)
+{
+    printf("NOTIFY: Accepted connection from: %s\n", inet_ntoa(clientAddr.sin_addr));
+
+    socket->recvBufferSize = sizeof(AuthKey);
+    socket->recvBufferOffset = 0;
+    socket->state = Socket::kStateReceiving;
+
+    socket->updateCallback = [](Socket* socket){
+        if(socket->recvBufferOffset == socket->recvBufferSize)
+        {
+            AuthKey authKey;
+            memcpy(&authKey, socket->recvBuffer, 4);
+            
+            User* user = User::Get(authKey);
+            if(!user)
+            {
+                printf("NOTIFY: Unknown auth key %u, close connection\n", authKey);
+                socket->Close();
+                return;
+            }
+
+            sockaddr_in addr;
+            socklen_t addrLen = sizeof(addr);
+            int ret = getpeername(socket->fd, (sockaddr*)&addr, &addrLen);
+            if(ret < 0)
+            {
+                printf("NOTIFY: getpeername failed: %s\n", strerror(errno));
+                socket->Close();
+                return;
+            }
+
+            if(user->GetIPAddr() != addr.sin_addr.s_addr)
+            {
+                printf("NOTIFY: mismatched IP addresses\n");
+                socket->Close();
+                return;
+            }
+
+            user->SetSocket(socket);
+            printf("NOTIFY: OK\n");
+        }
+    };
+
+    socket->timeoutCallback = [](Socket* socket){
+        printf("NOTIFY: socket timeout\n");
+        socket->Close();
+    };
+    socket->closedByPeerCallback = [](Socket* socket){
+        printf("NOTIFY: connection closed by peer\n");
+        socket->Close();
+    };
+    socket->errorCallback = [](Socket* socket){
+        printf("NOTIFY: socket error: %s\n", strerror(errno));
+        socket->Close();
+    };
+
+    return true;
+}
+
+
 void User::Start()
 {
     ReadStorage();
-    GNetworkThread = std::thread(NetworkThread);
+    GNetworkThread = std::thread(NetworkManager, AcceptConnection, kNotifyPort);
 }
 
 
@@ -432,276 +515,4 @@ void User::ChangePassword(User* user, const std::string& newPassword)
     user->m_authKey = kInvalidAuthKey;
 
     DumpStorage();
-}
-
-
-int User::Socket::Send()
-{
-    void* ptr = &sendBuffer[sendBufferOffset];
-    uint32_t remain = sendBufferSize - sendBufferOffset;
-    int ret = send(fd, ptr, remain, 0);
-    if(ret < 0)
-        printf("send failed %s\n", strerror(errno));
-    else
-        sendBufferOffset += ret;
-    lastTouchTime = GetTime();
-    return ret;
-}
-
-
-int User::Socket::Recv()
-{
-    void* ptr = &recvBuffer[recvBufferOffset];
-    uint32_t remain = recvBufferSize - recvBufferOffset;
-    int ret = recv(fd, ptr, remain, 0);
-    if(ret == 0)
-        printf("connection closed by peer\n");
-    else if(ret < 0)
-        printf("recv failed %s\n", strerror(errno));
-    else
-        recvBufferOffset += ret;
-    lastTouchTime = GetTime();
-    return ret;
-}
-
-
-static int AcceptConnection(int listenSock)
-{
-    sockaddr_in clientAddr;
-    socklen_t addrLen = sizeof(clientAddr);
-    int fd = accept(listenSock, (sockaddr*)&clientAddr, &addrLen);
-    if(fd < 0)
-    {
-        printf("NOTIFY: accept failed: %s\n", strerror(errno));
-        return -1;
-    }
-
-    printf("NOTIFY: Accepted connection from: %s\n", inet_ntoa(clientAddr.sin_addr));
-
-    return fd;
-}
-
-
-static User* AcceptSocket(const User::Socket& socket, AuthKey authKey)
-{
-    User* user = User::Get(authKey);
-    if(!user)
-    {
-        printf("NOTIFY: Unknown auth key %u address, close connection\n", authKey);
-        close(socket.fd);
-        return nullptr;
-    }
-
-    sockaddr_in addr;
-    socklen_t addrLen = sizeof(addr);
-    int ret = getpeername(socket.fd, (sockaddr*)&addr, &addrLen);
-    if(ret < 0)
-    {
-        printf("NOTIFY: getpeername failed: %s\n", strerror(errno));
-        return nullptr;
-    }
-
-    if(user->GetIPAddr() != addr.sin_addr.s_addr)
-    {
-        printf("NOTIFY: mismatched IP addresses\n");
-        return nullptr;
-    }
-
-    printf("NOTIFY: OK\n");
-
-    user->SetSocket(socket.fd);
-
-    return user;
-}
-
-
-static void AddSocketToPollFds(const User::Socket& socket, std::vector<pollfd>& pollFds)
-{
-    pollfd pollFd;
-    pollFd.fd = socket.fd;
-    pollFd.revents = 0;
-
-    if(socket.state == User::kSocketStateSending)
-    {
-        pollFd.events = POLLOUT;
-        pollFds.push_back(pollFd);
-    }
-    else if(socket.state == User::kSocketStateReceiving)
-    {
-		pollFd.events = POLLIN;
-        pollFds.push_back(pollFd);
-    }
-}
-
-
-void User::NetworkThread()
-{
-    int listenSock = socket(AF_INET, SOCK_STREAM, 0);
-    if (listenSock < 0)
-    {
-        printf("NOTIFY: socket failed\n");
-        return;
-    }
-
-    int opt_val = 1;
-	setsockopt(listenSock, SOL_SOCKET, SO_REUSEADDR, &opt_val, sizeof(opt_val));
-
-	sockaddr_in addr;
-	memset(&addr, 0, sizeof(sockaddr_in));
-	addr.sin_family = AF_INET;
-	addr.sin_port = htons(kNotifyPort);
-	inet_aton("0.0.0.0", &addr.sin_addr);
-    int ret = bind(listenSock, (sockaddr*)&addr, sizeof(addr));
-	if(ret < 0)
-	{
-		printf("NOTIFY: bind failed: %s\n", strerror(errno));
-		close(listenSock);
-		return;
-	}
-
-	ret = listen(listenSock, 128);
-    if(ret < 0)
-	{
-		printf("NOTIFY: listen failed: %s\n", strerror(errno));
-		close(listenSock);
-		return;
-	}
-
-    std::vector<pollfd> pollFds;
-    std::vector<User*> users;
-    std::unordered_map<int, User*> fdToUser;
-    std::unordered_map<int, User::Socket> unknownSockets;
-
-    pollfd listenSockPollFd;
-	listenSockPollFd.fd = listenSock;
-	listenSockPollFd.events = POLLIN;
-	listenSockPollFd.revents = 0;
-	pollFds.push_back(listenSockPollFd);
-
-    while(1)
-    {
-        pollFds.clear();
-        pollFds.push_back(listenSockPollFd);
-
-        for(auto& iter : unknownSockets)
-            AddSocketToPollFds(iter.second, pollFds);
-
-        size_t userSocketsIdx = pollFds.size();
-
-        users.clear();
-        GetUsers(users);
-        for(auto user : users)
-        {
-            user->Update();
-            auto& socket = user->GetSocket();
-            AddSocketToPollFds(socket, pollFds);            
-        }
-
-        int ret = poll(pollFds.data(), pollFds.size(), 1);
-		if(ret < 0)
-		{
-			printf("poll failed %s\n", strerror(errno));
-			exit(1);
-		}
-
-        if(pollFds[0].revents == POLLIN)
-        {
-            int fd = AcceptConnection(listenSock);
-            if(fd >= 0)
-            {
-                auto& socket = unknownSockets[fd];
-                socket.fd = fd;
-                socket.recvBufferSize = sizeof(AuthKey);
-                socket.recvBufferOffset = 0;
-                socket.state = User::kSocketStateReceiving;
-				socket.lastTouchTime = GetTime();
-            }
-        }
-
-        for(size_t i = 1; i < userSocketsIdx; i++)
-        {
-            auto& pollFd = pollFds[i];
-            auto& socket = unknownSockets[pollFd.fd];
-            if((pollFd.revents & pollFd.events) == 0)
-            {
-                if(GetTime() - socket.lastTouchTime > 5.0f)
-                {
-                    printf("socket timeout\n");
-                    close(socket.fd);
-                    unknownSockets.erase(socket.fd);
-                }
-            }
-            else if((pollFd.revents & POLLHUP) == POLLHUP)
-            {
-                printf("connection closed by peer\n");
-                close(socket.fd);
-                unknownSockets.erase(socket.fd);
-            }
-            else
-            {
-                if(socket.Recv() <= 0)
-                {
-                    close(socket.fd);
-                    unknownSockets.erase(socket.fd);
-                }
-                else if(socket.recvBufferOffset == socket.recvBufferSize)
-                {
-                    AuthKey authKey;
-                    memcpy(&authKey, socket.recvBuffer, 4);
-                    User* user = AcceptSocket(socket, authKey);
-                    if(user)
-                        fdToUser[socket.fd] = user;
-                    unknownSockets.erase(socket.fd);
-                }
-            }
-        }
-
-        for(size_t i = userSocketsIdx; i < pollFds.size(); i++)
-		{
-			auto& pollFd = pollFds[i];
-            User* user = fdToUser[pollFd.fd];
-            auto& socket = user->GetSocket();
-            if((pollFd.revents & pollFd.events) == 0)
-            {
-                bool timeout = GetTime() - socket.lastTouchTime > 5.0f;
-                bool inWork = socket.state == User::kSocketStateSending || socket.state == User::kSocketStateReceiving;
-                if(timeout && inWork)
-                {
-                    printf("socket timeout\n");
-                    user->SetSocket(-1);
-                    fdToUser.erase(pollFd.fd);
-                }
-            }
-            else if((pollFd.revents & POLLHUP) == POLLHUP)
-            {
-                printf("connection closed by peer\n");
-                user->SetSocket(-1);
-                fdToUser.erase(pollFd.fd);
-            }
-            else if(socket.state == User::kSocketStateSending)
-            {
-                if(socket.Send() < 0)
-                {
-                    user->SetSocket(-1);
-                    fdToUser.erase(pollFd.fd);
-                }
-                else if(socket.sendBufferOffset == socket.sendBufferSize)
-                {
-                    socket.state = User::kSocketStateReceiving;
-                    socket.recvBufferSize = 16;
-                    socket.recvBufferOffset = 0;
-                }
-            }
-            else if(socket.state == User::kSocketStateReceiving)
-            {
-                if(socket.Recv() <= 0)
-                {
-                    user->SetSocket(-1);
-                    fdToUser.erase(pollFd.fd);
-                }
-                else if(socket.recvBufferOffset == socket.recvBufferSize)
-                    socket.state = User::kSocketStateReady;
-            }
-        }
-    }
 }

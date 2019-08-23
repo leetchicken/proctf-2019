@@ -4,47 +4,12 @@
 #include "misc.h"
 #include "notification.h"
 #include "team.h"
-
-
-enum EUserErrorCodes
-{
-    kUserErrorOk = 0,
-    kUserErrorTooLong,
-    kUserErrorAlreadyExists,
-    kUserErrorInvalidCredentials,
-    kUserErrorInvalidAuthKey,
-    kUserErrorUnauthorized,
-    kUserErrorForbidden,
-};
+#include "network.h"
 
 
 struct User
 {
     static const uint32_t kNotificationQueueSize = 32;
-
-    enum ESocketState
-    {
-        kSocketStateClosed = 0,
-        kSocketStateReady,
-        kSocketStateSending,
-        kSocketStateReceiving
-    };
-
-    struct Socket
-    {
-        ESocketState state = kSocketStateClosed;
-        int fd = -1;
-        uint8_t sendBuffer[16];
-        uint32_t sendBufferSize = 0;
-        uint32_t sendBufferOffset = 0;
-        uint8_t recvBuffer[16];
-        uint32_t recvBufferSize = 0;
-        uint32_t recvBufferOffset = 0;
-        float lastTouchTime = 0.0f;
-
-        int Send();
-        int Recv();
-    };
 
     User() = delete;
     User(const std::string& name, const std::string& password, Team* team);
@@ -57,9 +22,8 @@ struct User
     Notification* GetNotification();
     uint32_t GetNotificationsInQueue();
 
-    void SetSocket(int sock);
-    Socket& GetSocket();
-    bool Update();
+    void SetSocket(Socket* socket);
+    Socket* GetSocket();
 
     void DumpStats(std::string& out, IPAddr hwConsoleIp) const;
 
@@ -84,7 +48,7 @@ private:
 
     mutable std::mutex m_notificationMutex;
     std::list<Notification*> m_notifications;
-    Socket m_socket;
+    Socket* m_socket = nullptr;
     float m_lastUserNotifyTime = 0.0f;
 
     void NotifyUser();
