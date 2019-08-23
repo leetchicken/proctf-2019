@@ -354,7 +354,7 @@ private:
         m_request = m_api->AllocHTTPRequest();
         if(!m_request)
             return;
-        m_request->httpMethod = kHttpMethodGet;
+        m_request->httpMethod = kHttpMethodPost;
         m_api->sprintf(m_request->url, "http://%s:%u/change_password?auth=%x&p=%s", kServerIP, kServerPort, m_authKey, m_password);
         if(!m_api->SendHTTPRequest(m_request))
             m_api->FreeHTTPRequest(m_request);

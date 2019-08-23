@@ -30,7 +30,6 @@ private:
     HttpResponse GetMainPage(HttpRequest request);
     HttpResponse GetRegister(HttpRequest request);
     HttpResponse GetAuth(HttpRequest request);
-    HttpResponse GetChangePassword(HttpRequest request);
     HttpResponse GetGamesList(HttpRequest request);
     HttpResponse GetGameIcon(HttpRequest request);
     HttpResponse GetGameAsset(HttpRequest request);
@@ -39,11 +38,12 @@ private:
     HttpResponse GetChecksystemStatus(HttpRequest request);
     HttpResponse GetChecksystemGetFlag(HttpRequest request);
     HttpResponse GetChecksystemCheck(HttpRequest request);
-    HttpResponse GetChecksystemChangePassword(HttpRequest request);
-    HttpResponse GetChecksystemNotification(HttpRequest request);
 
+    HttpResponse PostChangePassword(HttpRequest request);
     HttpResponse PostNotification(HttpRequest request, HttpPostProcessor** postProcessor);
     HttpResponse PostChecksystemFlag(HttpRequest request, HttpPostProcessor** postProcessor);
+    HttpResponse PostChecksystemChangePassword(HttpRequest request);
+    HttpResponse PostChecksystemNotification(HttpRequest request);
 };
 
 
@@ -117,8 +117,6 @@ HttpResponse RequestHandler::HandleGet(HttpRequest request)
         return GetRegister(request);
     else if (ParseUrl(request.url, 1, "auth"))
         return GetAuth(request);
-    else if (ParseUrl(request.url, 1, "change_password"))
-        return GetChangePassword(request);
     else if (ParseUrl(request.url, 1, "list"))
         return GetGamesList(request);
     else if(ParseUrl(request.url, 1, "icon"))
@@ -135,10 +133,6 @@ HttpResponse RequestHandler::HandleGet(HttpRequest request)
         return GetChecksystemGetFlag(request);
     else if(ParseUrl(request.url, 1, "checksystem_check"))
         return GetChecksystemCheck(request);
-    else if (ParseUrl(request.url, 1, "checksystem_change_password"))
-        return GetChecksystemChangePassword(request);
-    else if(ParseUrl(request.url, 1, "checksystem_notification"))
-        return GetChecksystemNotification(request);
 
     return HttpResponse(MHD_HTTP_NOT_FOUND);
 }
@@ -147,10 +141,16 @@ HttpResponse RequestHandler::HandleGet(HttpRequest request)
 HttpResponse RequestHandler::HandlePost(HttpRequest request, HttpPostProcessor** postProcessor)
 {
     printf("  IP: %s\n", inet_ntoa(request.clientIp));
-    if(ParseUrl(request.url, 1, "notification"))
+    if (ParseUrl(request.url, 1, "change_password"))
+        return PostChangePassword(request);
+    else if(ParseUrl(request.url, 1, "notification"))
         return PostNotification(request, postProcessor);
     else if(ParseUrl(request.url, 1, "checksystem_putflag")) 
         return PostChecksystemFlag(request, postProcessor);
+    else if (ParseUrl(request.url, 1, "checksystem_change_password"))
+        return PostChecksystemChangePassword(request);
+    else if(ParseUrl(request.url, 1, "checksystem_notification"))
+        return PostChecksystemNotification(request);
 
     return HttpResponse(MHD_HTTP_NOT_FOUND);
 }
@@ -261,34 +261,6 @@ HttpResponse RequestHandler::GetAuth(HttpRequest request)
     response.contentLength = sizeof(responseData);
     memcpy(response.content, &responseData, response.contentLength);
     return response;
-}
-
-
-HttpResponse RequestHandler::GetChangePassword(HttpRequest request)
-{
-    auto team = FindTeam(request.clientIp);
-    if(!team)
-        return HttpResponse(MHD_HTTP_FORBIDDEN);
-
-    AuthKey authKey = kInvalidAuthKey;
-    if(!FindInMap(request.queryString, kAuth, authKey, 16))
-        return HttpResponse(MHD_HTTP_BAD_REQUEST);
-    std::string password;
-    if(!FindInMap(request.queryString, kP, password))
-        return HttpResponse(MHD_HTTP_BAD_REQUEST);
-
-    printf("  auth key: %x\n", authKey);
-    printf("  new password: %s\n", password.c_str());
-
-    auto ret = User::ChangePassword(authKey, password, team);
-    if(ret == kUserErrorInvalidAuthKey)
-        return HttpResponse(MHD_HTTP_BAD_REQUEST);
-    else if(ret == kUserErrorUnauthorized)
-        return HttpResponse(MHD_HTTP_UNAUTHORIZED);
-    else if(ret == kUserErrorForbidden)
-        return HttpResponse(MHD_HTTP_FORBIDDEN);
-
-    return HttpResponse(MHD_HTTP_OK);
 }
 
 
@@ -574,54 +546,29 @@ HttpResponse RequestHandler::GetChecksystemCheck(HttpRequest request)
 }
 
 
-HttpResponse RequestHandler::GetChecksystemChangePassword(HttpRequest request)
+HttpResponse RequestHandler::PostChangePassword(HttpRequest request)
 {
-    auto team = FindTeam(request.clientIp, false);
-    if(team)
-    {
-        printf(" ERROR: Forbidden\n");
+    auto team = FindTeam(request.clientIp);
+    if(!team)
         return HttpResponse(MHD_HTTP_FORBIDDEN);
-    }
 
-    std::string userName, password;
-    if(!FindInMap(request.queryString, kU, userName))
+    AuthKey authKey = kInvalidAuthKey;
+    if(!FindInMap(request.queryString, kAuth, authKey, 16))
         return HttpResponse(MHD_HTTP_BAD_REQUEST);
+    std::string password;
     if(!FindInMap(request.queryString, kP, password))
         return HttpResponse(MHD_HTTP_BAD_REQUEST);
-    printf("  user name: %s\n", userName.c_str());
-    printf("  password:  %s\n", password.c_str());
 
-    if(User::ChangePassword(userName, password) == kUserErrorInvalidCredentials)
-    {
-        printf("  Password change failed, invalid user name\n");
+    printf("  auth key: %x\n", authKey);
+    printf("  new password: %s\n", password.c_str());
+
+    auto ret = User::ChangePassword(authKey, password, team);
+    if(ret == kUserErrorInvalidAuthKey)
         return HttpResponse(MHD_HTTP_BAD_REQUEST);
-    }
-
-    printf("  Password changed\n");
-
-    return HttpResponse(MHD_HTTP_OK);
-}
-
-
-HttpResponse RequestHandler::GetChecksystemNotification(HttpRequest request)
-{
-    auto team = FindTeam(request.clientIp, false);
-    if(team)
-    {
-        printf(" ERROR: Forbidden\n");
+    else if(ret == kUserErrorUnauthorized)
+        return HttpResponse(MHD_HTTP_UNAUTHORIZED);
+    else if(ret == kUserErrorForbidden)
         return HttpResponse(MHD_HTTP_FORBIDDEN);
-    }
-
-    static std::string kMessage("message");
-
-    const char* message = FindInMap(request.queryString, kMessage);
-    if(!message)
-        return HttpResponse(MHD_HTTP_BAD_REQUEST);
-
-    Notification* n = new Notification("Hackerdom", message);
-    n->AddRef();
-    User::BroadcastNotification(n, nullptr);
-    n->Release();
 
     return HttpResponse(MHD_HTTP_OK);
 }
@@ -690,6 +637,59 @@ HttpResponse RequestHandler::PostChecksystemFlag(HttpRequest request, HttpPostPr
     hwConsoleUser->AddNotification(n);
 
     return BuildChecksystemResponse(kCheckerOk, "OK");
+}
+
+
+HttpResponse RequestHandler::PostChecksystemChangePassword(HttpRequest request)
+{
+    auto team = FindTeam(request.clientIp, false);
+    if(team)
+    {
+        printf(" ERROR: Forbidden\n");
+        return HttpResponse(MHD_HTTP_FORBIDDEN);
+    }
+
+    std::string userName, password;
+    if(!FindInMap(request.queryString, kU, userName))
+        return HttpResponse(MHD_HTTP_BAD_REQUEST);
+    if(!FindInMap(request.queryString, kP, password))
+        return HttpResponse(MHD_HTTP_BAD_REQUEST);
+    printf("  user name: %s\n", userName.c_str());
+    printf("  password:  %s\n", password.c_str());
+
+    if(User::ChangePassword(userName, password) == kUserErrorInvalidCredentials)
+    {
+        printf("  Password change failed, invalid user name\n");
+        return HttpResponse(MHD_HTTP_BAD_REQUEST);
+    }
+
+    printf("  Password changed\n");
+
+    return HttpResponse(MHD_HTTP_OK);
+}
+
+
+HttpResponse RequestHandler::PostChecksystemNotification(HttpRequest request)
+{
+    auto team = FindTeam(request.clientIp, false);
+    if(team)
+    {
+        printf(" ERROR: Forbidden\n");
+        return HttpResponse(MHD_HTTP_FORBIDDEN);
+    }
+
+    static std::string kMessage("message");
+
+    const char* message = FindInMap(request.queryString, kMessage);
+    if(!message)
+        return HttpResponse(MHD_HTTP_BAD_REQUEST);
+
+    Notification* n = new Notification("Hackerdom", message);
+    n->AddRef();
+    User::BroadcastNotification(n, nullptr);
+    n->Release();
+
+    return HttpResponse(MHD_HTTP_OK);
 }
 
 
