@@ -13,7 +13,10 @@ serverAddr = argv[1]
 userName = argv[2]
 password = argv[3]
 
-url = 'http://%s:8000/auth?u=%s&p=%s' % (serverAddr, userName, password)
+url = 'http://%s/register?u=%s&p=%s' % (serverAddr, userName, password)
+r = requests.get(url)
+
+url = 'http://%s/auth?u=%s&p=%s' % (serverAddr, userName, password)
 r = requests.get(url)
 if r.status_code != 200:
     exit(1)
@@ -38,7 +41,7 @@ while True:
             print("Notifications available: %u" % notificationsNum)
             notifySock.send(data)
 
-            url = 'http://%s:8000/notification?auth=%x' % (serverAddr, authKey)
+            url = 'http://%s/notification?auth=%x' % (serverAddr, authKey)
             r = requests.get(url)
             if r.status_code != 200:
                 printf("Get notification failed")
@@ -49,19 +52,19 @@ while True:
 
     method = int(random.uniform(0, 6))
     if method == 0:
-        url = 'http://%s:8000/auth?u=%s&p=%s' % (serverAddr, userName, password)
+        url = 'http://%s/auth?u=%s&p=%s' % (serverAddr, userName, password)
     if method == 1:
-        url = 'http://%s:8000/list?auth=%x' % (serverAddr, authKey)
+        url = 'http://%s/list?auth=%x' % (serverAddr, authKey)
     if method == 2:
         gameIdx = int(random.uniform(1, 4))
-        url = 'http://%s:8000/icon?auth=%x&id=%u' % (serverAddr, authKey, gameIdx)
+        url = 'http://%s/icon?auth=%x&id=%u' % (serverAddr, authKey, gameIdx)
     if method == 3:
         gameIdx = int(random.uniform(1, 4))
-        url = 'http://%s:8000/code?auth=%x&id=%u' % (serverAddr, authKey, gameIdx)
+        url = 'http://%s/code?auth=%x&id=%u' % (serverAddr, authKey, gameIdx)
     if method == 4:
         l_userName = ''.join(random.choice(string.ascii_uppercase + string.digits) for i in range(8))
         l_password = ''.join(random.choice(string.ascii_uppercase + string.digits) for i in range(8))
-        url = 'http://%s:8000/register?u=%s&p=%s' % (serverAddr, l_userName, l_password)
+        url = 'http://%s/register?u=%s&p=%s' % (serverAddr, l_userName, l_password)
         continue
     if method == 5:
         sender = ''.join(random.choice(string.ascii_uppercase + string.digits) for i in range(8))
@@ -72,7 +75,7 @@ while True:
         notification += struct.pack('I', len(message))
         notification += bytes(message, 'utf-8')
 
-        url = 'http://%s:8000/notification?auth=%x' % (serverAddr, authKey)
+        url = 'http://%s/notification?auth=%x' % (serverAddr, authKey)
         print(url)
         requests.post(url=url, data=notification, headers={'Content-Type': 'application/octet-stream'})
 

@@ -56,5 +56,4 @@ private:
     static void DumpStorage();
     static void ReadStorage();
     static void ChangePassword(User* user, const std::string& newPassword);
-    static void NetworkThread();
 };
