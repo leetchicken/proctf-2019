@@ -1,35 +1,34 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <arpa/inet.h>
-#include <sys/types.h>
-#include <sys/socket.h>
 #include <unistd.h>
-#include <utility>
 #include <string.h>
 #include <thread>
 #include <mutex>
 #include <map>
 #include "checksystem.h"
+#include "network.h"
+#include "../common.h"
+
 
 struct HwConsole
 {
-    int socket = -1;
+    HwConsole() = default;
+
+    std::mutex mutex;
+    Socket* socket = nullptr;
     IPAddr addr = ~0u;
+    bool checkInProgress = false;
+    uint32_t rasterResult = 0;
+    bool checkResult = false;
+
+    void StartCheck();
+    void Reset();
 };
 
-static const uint32_t kScreenSize = 32;
-static const uint32_t kBitsForCoord = 5;
-static std::mutex GMutex;
+
 static std::map<NetworkAddr, HwConsole> GConsoles;
 static std::thread GNetworkThread;
-
-
-struct Point2D
-{
-    int32_t x;
-    int32_t y;
-};
 
 
 static Point2D GeneratePoint(Point2D& encodedV)
@@ -43,56 +42,13 @@ static Point2D GeneratePoint(Point2D& encodedV)
 }
 
 
-static int32_t EdgeFunction(const Point2D& a, const Point2D& b, const Point2D& c) 
+void HwConsole::StartCheck()
 {
-    return (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
-}
+    std::lock_guard<std::mutex> guard(mutex);
 
+    if(checkInProgress || !socket)
+        return;
 
-static bool RasterizeAndCompare(Point2D* v, uint32_t valToCompare)
-{
-    int32_t minX = kScreenSize - 1;
-    int32_t minY = kScreenSize - 1;
-    int32_t maxX = 0;
-    int32_t maxY = 0;
-
-    for(uint32_t vi = 0; vi < 3; vi++)
-    {
-        if(v[vi].x > maxX) maxX = v[vi].x;
-        if(v[vi].y > maxY) maxY = v[vi].y;
-        if(v[vi].x < minX) minX = v[vi].x;
-        if(v[vi].y < minY) minY = v[vi].y;
-    }
-
-    int doubleTriArea = EdgeFunction(v[0], v[1], v[2]);
-    if(doubleTriArea <= 0)
-        return true;
-
-    Point2D p;
-    uint32_t result = 0;
-    for(p.y = minY; p.y <= maxY; p.y++)
-    {
-        for(p.x = minX; p.x <= maxX; p.x++)
-        {
-            int32_t w0 = EdgeFunction(v[1], v[2], p);
-            int32_t w1 = EdgeFunction(v[2], v[0], p);
-            int32_t w2 = EdgeFunction(v[0], v[1], p);
-
-            if((w0 | w1 | w2) >= 0) 
-            {
-                result += w0;
-                result += w1 << std::min(p.x, 31);
-                result += w2 << std::min(p.x + p.y, 31);
-            }
-        }
-    }
-
-    return result == valToCompare;
-}
-
-
-bool Check(int sock)
-{
     Point2D v[3];
     Point2D encodedV[3];
     for(uint32_t i = 0; i < 3; i++)
@@ -105,119 +61,128 @@ bool Check(int sock)
         std::swap(encodedV[0], encodedV[1]);
     }
 
-	int ret = Send(sock, encodedV, sizeof(encodedV));
-    if(ret < 0)
-        return false; 
+    socket->sendBufferSize = sizeof(encodedV);
+    socket->sendBufferOffset = 0;
+    memcpy(socket->sendBuffer, encodedV, sizeof(encodedV));
+    socket->state = Socket::kStateSending;
+    socket->lastTouchTime = GetTime();
 
-    uint32_t result;
-	ret = Recv(sock, &result, sizeof(result));
-    if(ret <= 0)
-        return false;
-
-    if(RasterizeAndCompare(v, result))
-    {
-        printf("CHECKSYSTEM: OK\n");
-        return true;
-    }
-    else
-    {
-        printf("CHECKSYSTEM: Does no match\n");
-        return false;
-    }
-
-    return false;
+    rasterResult = Rasterize(v);
+    checkResult = false;
+    checkInProgress = true;
 }
 
 
-static void NetworkThread()
+void HwConsole::Reset()
 {
-    int listenSock = socket(AF_INET, SOCK_STREAM, 0);
-    if (listenSock < 0)
+    socket->Close();
+    socket = nullptr;
+    addr = ~0u;
+    checkResult = false;
+    checkInProgress = false;
+}
+
+
+static bool AcceptConnection(Socket* socket, const sockaddr_in& clientAddr)
+{
+    printf("CHECKSYSTEM: Accepted connection from: %s\n", inet_ntoa(clientAddr.sin_addr));
+
+    NetworkAddr netAddr = SockaddrToNetworkAddr(clientAddr.sin_addr);
+    auto iter = GConsoles.find(netAddr);
+    if(iter == GConsoles.end())
     {
-        printf("CHECKSYSTEM: socket failed\n");
-        return;
+        printf("CHECKSYSTEM: unknown network, close connection\n");
+        return false;
     }
-
-    int opt_val = 1;
-	setsockopt(listenSock, SOL_SOCKET, SO_REUSEADDR, &opt_val, sizeof(opt_val));
-
-	sockaddr_in addr;
-	memset(&addr, 0, sizeof(sockaddr_in));
-	addr.sin_family = AF_INET;
-	addr.sin_port = htons(kChecksystemPort);
-	inet_aton("0.0.0.0", &addr.sin_addr);
-    int ret = bind(listenSock, (sockaddr*)&addr, sizeof(addr));
-	if(ret < 0)
-	{
-		printf("CHECKSYSTEM: bind failed: %s\n", strerror(errno));
-		close(listenSock);
-		return;
-	}
-
-	ret = listen(listenSock, 128);
-    if(ret < 0)
-	{
-		printf("CHECKSYSTEM: listen failed: %s\n", strerror(errno));
-		close(listenSock);
-		return;
-	}
-
-    while(1)
+    
+    HwConsole* console = &iter->second;
     {
-        sockaddr_in clientAddr;
-        socklen_t addrLen = sizeof(clientAddr);
-        int newSocket = accept4(listenSock, (sockaddr*)&clientAddr, &addrLen, SOCK_NONBLOCK);
-        if(newSocket < 0)
+        std::lock_guard<std::mutex> guard(console->mutex);
+        if(console->socket)
         {
-            printf("CHECKSYSTEM: accept failed: %s\n", strerror(errno));
-            sleep(1);
-            continue;
+            printf("CHECKSYSTEM: close previous connection\n");
+            console->socket->Close();
         }
 
-        printf("CHECKSYSTEM: Accepted connection: %s\n", inet_ntoa(clientAddr.sin_addr));
-
-        if(!Check(newSocket))
-        {
-            close(newSocket);
-            printf("CHECKSYSTEM: Is HW Console - no\n");
-            continue;
-        }
-        printf("CHECKSYSTEM: Is HW Console - yes\n");
-
-        NetworkAddr netAddr = SockaddrToNetworkAddr(clientAddr.sin_addr);
-
-        {
-            std::lock_guard<std::mutex> guard(GMutex);
-            auto iter = GConsoles.find(netAddr);
-            if(iter == GConsoles.end())
-            {
-                printf("CHECKSYSTEM: Unknown network: %s\n", inet_ntoa(netAddr));
-                close(newSocket);
-                continue;
-            }
-            if(iter->second.socket >= 0)
-            {
-                printf("CHECKSYSTEM: close previous connection\n");
-                close(iter->second.socket);
-            }
-            iter->second.socket = newSocket;
-            iter->second.addr = clientAddr.sin_addr.s_addr;
-        }
+        console->socket = socket;
+        console->addr = clientAddr.sin_addr.s_addr;
+        console->checkInProgress = false;
+        console->checkResult = false;
     }
+    socket->userData = console;
+
+    console->StartCheck();
+
+    socket->updateCallback = [](Socket* socket){
+        if(socket->state == Socket::kStateSending)
+        {
+            if(socket->sendBufferOffset == socket->sendBufferSize)
+            {
+                socket->state = Socket::kStateReceiving;
+                socket->recvBufferSize = sizeof(uint32_t);
+                socket->recvBufferOffset = 0;
+            }
+        }
+        else if(socket->state == Socket::kStateReceiving)
+        {
+            if(socket->recvBufferOffset == socket->recvBufferSize)
+            {
+                uint32_t result;
+                memcpy(&result, socket->recvBuffer, sizeof(uint32_t));
+                HwConsole* console = (HwConsole*)socket->userData;
+
+                std::lock_guard<std::mutex> guard(console->mutex);
+
+                if(console->rasterResult == result)
+                {
+                    printf("CHECKSYSTEM: OK\n");
+                    socket->state = Socket::kStateReady;
+                    console->checkResult = true;
+                }
+                else
+                {
+                    printf("CHECKSYSTEM: Does no match\n");
+                    console->Reset();
+                }
+
+                console->checkInProgress = false;
+            }
+        }
+    };
+
+    socket->timeoutCallback = [](Socket* socket){
+        printf("CHECKSYSTEM: socket timeout\n");
+        HwConsole* console = (HwConsole*)socket->userData;
+        std::lock_guard<std::mutex> guard(console->mutex);
+        console->Reset();
+    };
+    socket->closedByPeerCallback = [](Socket* socket){
+        printf("CHECKSYSTEM: connection closed by peer\n");
+        HwConsole* console = (HwConsole*)socket->userData;
+        std::lock_guard<std::mutex> guard(console->mutex);
+        console->Reset();
+    };
+    socket->errorCallback = [](Socket* socket){
+        printf("CHECKSYSTEM: socket error: %s\n", strerror(errno));
+        HwConsole* console = (HwConsole*)socket->userData;
+        std::lock_guard<std::mutex> guard(console->mutex);
+        console->Reset();
+    };
+
+    return true;
 }
 
 
 void InitChecksystem(const std::vector<NetworkAddr>& teamsNet)
 {
     for(auto& net : teamsNet)
-        GConsoles.insert({net, HwConsole()});
-    GNetworkThread = std::thread(NetworkThread);
+        GConsoles[net];
+    GNetworkThread = std::thread(NetworkManager, AcceptConnection, kChecksystemPort);
 }
 
 
 IPAddr GetHwConsoleIp(NetworkAddr teamNet)
 {
-    std::lock_guard<std::mutex> guard(GMutex);
     auto iter = GConsoles.find(teamNet);
     if(iter == GConsoles.end())
         return ~0u;
@@ -227,23 +192,25 @@ IPAddr GetHwConsoleIp(NetworkAddr teamNet)
 
 bool Check(NetworkAddr teamNet)
 {
-    std::lock_guard<std::mutex> guard(GMutex);
-
     auto iter = GConsoles.find(teamNet);
     if(iter == GConsoles.end())
     {
         printf("CHECKSYSTEM: unkown network passed\n");
         return false;
     }
-    int sock = iter->second.socket;
 
-    bool ret = Check(sock);
-    if(!ret)
+    HwConsole* console = &iter->second;
+    console->StartCheck();
+    while(1)
     {
-        close(sock);
-        iter->second.socket = -1;
-        iter->second.addr = ~0u;
+        {
+            std::lock_guard<std::mutex> guard(console->mutex);
+            if(!console->checkInProgress)
+                return console->checkResult;
+        }
+
+        usleep(1000);
     }
 
-    return ret;
+    return false;
 }
