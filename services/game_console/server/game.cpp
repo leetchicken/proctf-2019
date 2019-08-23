@@ -7,7 +7,7 @@
 
 
 std::mutex GMutex;
-std::map<uint32_t, GameDesc> GGamesDatabase;
+std::map<uint32_t, GameDesc*> GGamesDatabase;
 
 
 static bool EnumerateAssets(const char* gameName, std::vector<std::string>& assets)
@@ -62,18 +62,21 @@ static bool LoadGamesDatabase()
     pugi::xml_node gamesNode = doc.child("Games");
     for (pugi::xml_node gameNode = gamesNode.first_child(); gameNode; gameNode = gameNode.next_sibling())
     {
-        GameDesc desc;
-        desc.id = gameNode.attribute("id").as_uint();
-        desc.name = gameNode.attribute("name").as_string();
-        desc.desc = gameNode.attribute("desc").as_string();
-        if(!EnumerateAssets(desc.name.c_str(), desc.assets))
+        GameDesc* desc = new GameDesc();
+        desc->id = gameNode.attribute("id").as_uint();
+        desc->name = gameNode.attribute("name").as_string();
+        desc->desc = gameNode.attribute("desc").as_string();
+        if(!EnumerateAssets(desc->name.c_str(), desc->assets))
+        {
+            delete desc;
             return false;
-        GGamesDatabase.insert({desc.id, desc});
-        printf("  %x %s '%s'\n", desc.id, desc.name.c_str(), desc.desc.c_str());
+        }
+        GGamesDatabase.insert({desc->id, desc});
+        printf("  %x %s '%s'\n", desc->id, desc->name.c_str(), desc->desc.c_str());
         printf("  assets:\n");
-        if(desc.assets.empty())
+        if(desc->assets.empty())
             printf("   <none>\n");
-        for(auto& assetName : desc.assets)
+        for(auto& assetName : desc->assets)
             printf("   %s\n", assetName.c_str());
     }
 
@@ -90,7 +93,7 @@ static GameDesc* FindGame(uint32_t id)
         printf("  unknown game\n");
         return nullptr;
     }
-    return &iter->second;
+    return iter->second;
 }
 
 
@@ -103,7 +106,7 @@ bool GamesStart()
 }
 
 
-void GetGamesList(std::vector<GameDesc>& list)
+void GetGamesList(std::vector<GameDesc*>& list)
 {
     std::lock_guard<std::mutex> guard(GMutex);
     list.reserve(GGamesDatabase.size());
@@ -194,4 +197,70 @@ EGameErrorCode GetGameCode(uint32_t gameId, void** code, uint32_t& codeSize)
     fclose(f);
 
     return kGameErrorOk;
+}
+
+
+static uint32_t GenerateId()
+{
+    uint32_t id = 0;
+    for(uint32_t i = 0; i < 4; i++)
+        id |= (rand() % 255) << (i * 8);
+    return id;
+}
+
+
+bool AddGame(void* zipFile, uint32_t zipFileSize, const char* zipName)
+{
+    char buf[512];
+    sprintf(buf, "data/%s", zipName);
+    FILE* f = fopen(buf, "w");
+    fwrite(zipFile, 1, zipFileSize, f);
+    fclose(f);
+
+    char gameName[256];
+    memset(gameName, 0, sizeof(gameName));
+    strncpy(gameName, zipName, strlen(zipName) - 4);
+    sprintf(buf, "cd data; mkdir %s; mv %s.zip %s/; cd %s; unzip -o %s.zip", gameName, gameName, gameName, gameName, gameName);
+    system(buf);
+
+    uint32_t id;
+    while(1)
+    {
+        id = GenerateId();
+        auto iter = GGamesDatabase.find(id);
+        if(iter == GGamesDatabase.end())
+            break;
+    }
+
+    GameDesc* desc = new GameDesc();
+    desc->id = id;
+    desc->name = gameName;
+    desc->desc = gameName;
+    if(!EnumerateAssets(desc->name.c_str(), desc->assets))
+    {
+        delete desc;
+        return false;
+    }
+
+    pugi::xml_document doc;
+    if (!doc.load_file("data/games.xml")) 
+    {
+        printf("Failed to load games database\n");
+        delete desc;
+        return false;
+    }
+
+    pugi::xml_node gamesNode = doc.child("Games");
+    pugi::xml_node gameNode = gamesNode.append_child("Game");
+    gameNode.append_attribute("name") = gameName;
+    gameNode.append_attribute("desc") = gameName;
+    gameNode.append_attribute("id").set_value(id);
+    doc.save_file("data/games.xml");
+
+    std::lock_guard<std::mutex> guard(GMutex);
+    GGamesDatabase.insert({desc->id, desc});
+
+    printf("  new game '%s' added\n", gameName);
+
+    return true;
 }

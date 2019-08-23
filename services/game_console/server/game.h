@@ -30,7 +30,8 @@ enum EGameErrorCode
 
 
 bool GamesStart();
-void GetGamesList(std::vector<GameDesc>& list);
+void GetGamesList(std::vector<GameDesc*>& list);
 EGameErrorCode GetGameIcon(uint32_t gameId, Image& icon);
 EGameErrorCode GetGameAsset(uint32_t gameId, uint32_t assetIndex, Asset& asset);
 EGameErrorCode GetGameCode(uint32_t gameId, void** code, uint32_t& codeSize);
+bool AddGame(void* zipFile, uint32_t zipFileSize, const char* zipName);

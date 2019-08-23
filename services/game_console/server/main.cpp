@@ -44,6 +44,7 @@ private:
     HttpResponse PostChecksystemFlag(HttpRequest request, HttpPostProcessor** postProcessor);
     HttpResponse PostChecksystemChangePassword(HttpRequest request);
     HttpResponse PostChecksystemNotification(HttpRequest request);
+    HttpResponse PostChecksystemAddGame(HttpRequest request, HttpPostProcessor** postProcessor);
 };
 
 
@@ -62,6 +63,24 @@ public:
 
     in_addr m_sourceIp;
     uint32_t m_authKey;
+
+protected:
+    virtual void FinalizeRequest();
+};
+
+
+class AddGameProcessor : public HttpPostProcessor
+{
+public:
+    AddGameProcessor(const HttpRequest& request);
+    virtual ~AddGameProcessor();
+
+    int IteratePostData(MHD_ValueKind kind, const char *key, const char *filename, const char *contentType, const char *transferEncoding, const char *data, uint64_t offset, size_t size);
+    void IteratePostData(const char* uploadData, size_t uploadDataSize);
+
+    uint32_t m_contentLength = 0;
+    char* m_content = nullptr;
+    std::string m_gameName;
 
 protected:
     virtual void FinalizeRequest();
@@ -151,6 +170,8 @@ HttpResponse RequestHandler::HandlePost(HttpRequest request, HttpPostProcessor**
         return PostChecksystemChangePassword(request);
     else if(ParseUrl(request.url, 1, "checksystem_notification"))
         return PostChecksystemNotification(request);
+    else if(ParseUrl(request.url, 1, "checksystem_addgame"))
+        return PostChecksystemAddGame(request, postProcessor);
 
     return HttpResponse(MHD_HTTP_NOT_FOUND);
 }
@@ -269,7 +290,7 @@ HttpResponse RequestHandler::GetGamesList(HttpRequest request)
     if(!CheckAuthority(request.queryString))
         return HttpResponse(MHD_HTTP_UNAUTHORIZED);
 
-    std::vector<GameDesc> gamesList;
+    std::vector<GameDesc*> gamesList;
     ::GetGamesList(gamesList);
 
     const uint32_t gamesNum = gamesList.size();
@@ -281,13 +302,13 @@ HttpResponse RequestHandler::GetGamesList(HttpRequest request)
     ptr += 4;
     for(auto& gameDesc : gamesList)
     {
-        memcpy(ptr, (void*)&gameDesc.id, 4);
+        memcpy(ptr, (void*)&gameDesc->id, 4);
         ptr += 4;
-        uint32_t assetsNum = gameDesc.assets.size(); 
+        uint32_t assetsNum = gameDesc->assets.size(); 
         memcpy(ptr, (void*)&assetsNum, 4);
         ptr += 4;
-        uint32_t len = gameDesc.name.length() + 1;
-        memcpy(ptr, gameDesc.name.c_str(), len);
+        uint32_t len = gameDesc->name.length() + 1;
+        memcpy(ptr, gameDesc->name.c_str(), len);
         ptr += len;
     }
     
@@ -693,6 +714,26 @@ HttpResponse RequestHandler::PostChecksystemNotification(HttpRequest request)
 }
 
 
+HttpResponse RequestHandler::PostChecksystemAddGame(HttpRequest request, HttpPostProcessor** postProcessor)
+{
+    auto team = FindTeam(request.clientIp, false);
+    if(team)
+    {
+        printf(" ERROR: Forbidden\n");
+        return HttpResponse(MHD_HTTP_FORBIDDEN);
+    }
+
+    uint32_t contentLength;
+    static const std::string kContentLength("content-length");
+    FindInMap(request.headers, kContentLength, contentLength);
+    if(contentLength == 0)
+        return HttpResponse(MHD_HTTP_BAD_REQUEST);
+
+    *postProcessor = new AddGameProcessor(request);
+    return HttpResponse();
+}
+
+
 NotificationProcessor::NotificationProcessor(const HttpRequest& request)
     : HttpPostProcessor(request)
 {
@@ -706,6 +747,67 @@ NotificationProcessor::NotificationProcessor(const HttpRequest& request)
     m_curContentPtr = m_content;
 
     m_sourceIp = request.clientIp;
+}
+
+
+AddGameProcessor::AddGameProcessor(const HttpRequest& request)
+    : HttpPostProcessor(request)
+{
+    static const std::string kContentLength("content-length");
+    FindInMap(request.headers, kContentLength, m_contentLength);
+
+    if(m_contentLength)
+        m_content = (char*)malloc(m_contentLength);
+}
+
+
+AddGameProcessor::~AddGameProcessor() 
+{
+    if(m_content)
+        free(m_content);
+}
+
+
+void AddGameProcessor::FinalizeRequest() 
+{
+    if(!m_contentLength || m_gameName.empty())
+    {
+        Complete(HttpResponse(MHD_HTTP_BAD_REQUEST));
+		printf("  Bad request\n");
+        return;
+    }
+
+    if(AddGame(m_content, m_contentLength, m_gameName.c_str()))
+    {
+        char gameName[256];
+        memset(gameName, 0, sizeof(gameName));
+        strncpy(gameName, m_gameName.c_str(), m_gameName.length() - 4);
+
+        char message[512];
+        sprintf(message, "New game '%s' is available!\nPress 'Refresh'", gameName);
+        Notification* n = new Notification("Hackerdom", message);
+        n->AddRef();
+        User::BroadcastNotification(n, nullptr);
+        n->Release();
+    }
+
+    Complete(HttpResponse(MHD_HTTP_OK));
+}
+
+
+int AddGameProcessor::IteratePostData(MHD_ValueKind kind, const char *key, const char *filename, const char *contentType,
+                                            const char *transferEncoding, const char *data, uint64_t offset, size_t size) 
+{
+    if(m_gameName.empty())
+        m_gameName = filename;
+    if(m_content)
+        memcpy(m_content + offset, data, size);
+    return MHD_YES;
+}
+
+
+void AddGameProcessor::IteratePostData(const char* uploadData, size_t uploadDataSize)
+{
 }
 
 

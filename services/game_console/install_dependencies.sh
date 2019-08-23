@@ -17,5 +17,5 @@ apt-get install libc6:i386 libncurses5:i386 libstdc++6:i386
 pip install mbed-cli
 mbed config -G GCC_ARM_PATH $1
 pip install -r hw/mbed-os/requirements.txt
-apt install libpugixml-dev libmicrohttpd-dev
+apt install libpugixml-dev libmicrohttpd-dev unzip
 
