@@ -7,6 +7,8 @@ import sqlite3
 import pika
 import json
 import re
+import uuid
+import time
 from random import randint
 from elasticsearch.exceptions import ConnectionError, AuthenticationException, AuthorizationException
 from elasticsearch import Elasticsearch
@@ -97,6 +99,67 @@ def check(args):
     host = args[0]
     trace("check(%s)" % host)
 
+    username = get_random_username()
+    while is_user_exists(username):
+        trace("User '%s' already exists, appending random digit to username" % username)
+        username = username + str(randint(0, 9))
+
+    password = username
+
+    trace("Generated username '%s'" % username)
+    save_to_db(str(uuid.uuid4()), username, password)
+    trace("Username '%s' saved to checker users.db" % username)
+
+    identity_server_client = IdentityServerHttpClient(host)
+
+    trace("Registering user '%s'" % username)
+    result, feedback_queue = identity_server_client.create_new_user(username, password)
+    if result != OK:
+        sys.exit(result)
+    trace("User '%s' registered" % username)
+
+    msg = {}
+    msg[get_random_username()] = get_random_log()
+    msg['content'] = {}
+    msg[get_random_username()] = get_random_log()
+    msg_json = json.dumps(msg)
+
+    credentials = pika.PlainCredentials(username, password)
+
+    try:
+        connection = pika.BlockingConnection(pika.ConnectionParameters(host, credentials=credentials))
+        channel = connection.channel()
+
+        logs_exchange = 'logs.' + username
+        channel.basic_publish(logs_exchange, '', msg_json, pika.BasicProperties(type='Deer.Messages.LogData,LogProcessor'))
+
+        count = 0
+        while count < 5:
+            method_frame, header_frame, body = channel.basic_get(queue = feedback_queue, auto_ack=True)
+            if method_frame:
+                break
+            count += 1
+            time.sleep(1)
+        connection.close()
+
+        if not method_frame:
+            verdict(CORRUPT, "Can't get error message")
+
+        error_msg_str = body.decode('utf-8')
+        if not 'Unexpected character encountered while parsing value' in error_msg_str:
+            verdict(CORRUPT, "Unexpected error message", "Unexpected error message: %s" % error_msg_str)
+
+    except pika.exceptions.AMQPConnectionError as e:
+        if str(e):
+            trace_msg = "Connection error: %s" % e
+        else:
+            trace_msg = "Connection error"
+
+        if '(403)' in str(e):
+            verdict(CORRUPT, "Access refused", trace_msg)
+        else:
+            verdict(DOWN, "Connection error", trace_msg)
+
     sys.exit(OK)
 
 def put(args):
@@ -141,7 +204,7 @@ def put(args):
             channel = connection.channel()
 
             logs_exchange = 'logs.' + username
-            channel.basic_publish(logs_exchange, '', msg_json, pika.BasicProperties(content_type='application/json', delivery_mode=1, type='Deer.Messages.LogData,LogProcessor'))
+            channel.basic_publish(logs_exchange, '', msg_json, pika.BasicProperties(type='Deer.Messages.LogData,LogProcessor'))
             connection.close()
         except pika.exceptions.AMQPConnectionError as e:
             if str(e):
