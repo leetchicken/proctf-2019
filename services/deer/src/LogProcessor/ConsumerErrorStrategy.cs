@@ -85,6 +85,11 @@ namespace LogProcessor
                 try
                 {
                     var user = _userRepository.GetUserByLogQueueAsync(context.Info.Queue);
+                    if (user == null)
+                    {
+                        _logger.LogWarning($"Can't get user by queue '{context.Info.Queue}'");
+                        return AckStrategies.Ack;
+                    }
 
                     Connect();
                     using (var model = _connection.CreateModel())

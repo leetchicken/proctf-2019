@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Deer.Messages;
 using EasyNetQ;
 using LogProcessor.Models;
+using Microsoft.Extensions.Logging;
 
 namespace LogProcessor
 {
@@ -12,12 +13,16 @@ namespace LogProcessor
     {
         private readonly IBus _bus;
         private readonly IUserRepository _userRepository;
+        private readonly ILogRepository _logRepository;
+        private readonly ILogger<LogConsumerService> _logger;
         private readonly ConcurrentDictionary<string, IDisposable> _consumers = new ConcurrentDictionary<string, IDisposable>();
 
-        public LogConsumerService(IBus bus, IUserRepository userRepository)
+        public LogConsumerService(IBus bus, IUserRepository userRepository, ILogRepository logRepository, ILogger<LogConsumerService> logger)
         {
             _bus = bus;
             _userRepository = userRepository;
+            _logRepository = logRepository;
+            _logger = logger;
         }
         
         public async Task StartAsync()
@@ -48,7 +53,10 @@ namespace LogProcessor
         private async Task ConsumeUserAsync(User user)
         {
             var queue = await _bus.Advanced.QueueDeclareAsync(user.LogQueueName, passive: true);
-            _consumers.TryAdd(user.Username, _bus.Advanced.Consume<LogData>(queue, (m, mri) => { }));
+            _consumers.TryAdd(user.Username, _bus.Advanced.Consume<LogData>(queue, async (m, mri) =>
+            {
+                await _logRepository.IndexAsync(user.LogIndexName, m.Body);
+            }));
         }
 
         public Task RemoveConsumerForUserAsync(string username)

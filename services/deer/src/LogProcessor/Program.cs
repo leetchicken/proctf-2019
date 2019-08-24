@@ -1,4 +1,5 @@
-﻿using EasyNetQ;
+﻿using System;
+using EasyNetQ;
 using EasyNetQ.Consumer;
 using LogProcessor.Models;
 using Microsoft.Extensions.Configuration;
@@ -35,6 +36,9 @@ namespace LogProcessor
                         sp.GetRequiredService<IMongoClient>().GetDatabase(new MongoUrl(sp.GetRequiredService<IConfiguration>().GetConnectionString("MongoDb")).DatabaseName));
 
                     services.AddSingleton(sp => sp.GetRequiredService<IMongoDatabase>().GetCollection<UserMongoDocument>("users"));
+                    
+                    services.AddSingleton<ILogRepository>(sp =>
+                        new LogRepository(new Uri(sp.GetRequiredService<IConfiguration>().GetConnectionString("ElasticSearch"), UriKind.Absolute)));
                     
                     services.AddSingleton<IUserRepository, UserRepository>();
                     services.AddSingleton<ILogConsumerService, LogConsumerService>();

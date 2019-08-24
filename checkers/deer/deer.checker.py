@@ -5,7 +5,11 @@ import sys
 import traceback
 import sqlite3
 import pika
+import json
+import re
 from random import randint
+from elasticsearch.exceptions import ConnectionError, AuthenticationException, AuthorizationException
+from elasticsearch import Elasticsearch
 from identity_server_http_client import IdentityServerHttpClient
 
 OK, CORRUPT, MUMBLE, DOWN, CHECKER_ERROR = 101, 102, 103, 104, 110
@@ -43,7 +47,7 @@ def is_user_exists(username):
         return False
     return True
 
-def add_user(flag_id, username, password):
+def save_to_db(flag_id, username, password):
     db_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'users.db')
     conn = sqlite3.connect(db_path)
     cur = conn.cursor()
@@ -51,12 +55,38 @@ def add_user(flag_id, username, password):
     conn.commit()
     conn.close()
 
+def get_username_from_db(flag_id):
+    db_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'users.db')
+    conn = sqlite3.connect(db_path)
+    cur = conn.cursor()
+    cur.execute('SELECT username FROM users WHERE id=?', (flag_id,))
+    row = cur.fetchone()
+    conn.close()
+    return row[0]
+
 def get_random_username():
     usernames_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'usernames.txt')
     f = open(usernames_path, "r")
     usernames = f.read().splitlines()
     f.close()
     return usernames[randint(0, len(usernames) - 1)]
+
+def get_random_log(flag_data=None):
+    access_log_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'access.log')
+    f = open(access_log_path, "r")
+    logs = f.read().splitlines()
+    f.close()
+    log_line = logs[randint(0, len(logs) - 1)]
+    if flag_data:
+        log_line = log_line[:-1] + " (Flag: " + flag_data + ")\""
+    return log_line
+
+def build_log_message(log_line):
+    data = {}
+    data[get_random_username()] = get_random_log()
+    data['content'] = log_line
+    data[get_random_username()] = get_random_log()
+    return json.dumps(data)
 
 def info():
     verdict(OK, "vulns: 1:2")
@@ -85,12 +115,12 @@ def put(args):
     if vuln == "2":
         username = get_random_username()
         while is_user_exists(username):
-            trace("User '%s' already exists, appending random digit" % username)
+            trace("User '%s' already exists, appending random digit to username" % username)
             username = username + str(randint(0, 9))
 
         trace("Generated username '%s'" % username)
-        add_user(flag_id, username, password)
-        trace("Username '%s' saved to db" % username)
+        save_to_db(flag_id, username, password)
+        trace("Username '%s' saved to checker users.db" % username)
 
     trace("Registering user '%s'" % username)
     result, feedback_queue = identity_server_client.create_new_user(username, password)
@@ -102,7 +132,28 @@ def put(args):
         sys.exit(OK)
 
     if vuln == "2":
-        # TODO publish message
+        msg_json = build_log_message(get_random_log(flag_data))
+
+        credentials = pika.PlainCredentials(username, password)
+
+        try:
+            connection = pika.BlockingConnection(pika.ConnectionParameters(host, credentials=credentials))
+            channel = connection.channel()
+
+            logs_exchange = 'logs.' + username
+            channel.basic_publish(logs_exchange, '', msg_json, pika.BasicProperties(content_type='application/json', delivery_mode=1, type='Deer.Messages.LogData,LogProcessor'))
+            connection.close()
+        except pika.exceptions.AMQPConnectionError as e:
+            if str(e):
+                trace_msg = "Connection error: %s" % e
+            else:
+                trace_msg = "Connection error"
+
+            if '(403)' in str(e):
+                verdict(CORRUPT, "Access refused", trace_msg)
+            else:
+                verdict(DOWN, "Connection error", trace_msg)
+
         sys.exit(OK)
 
     verdict(CHECKER_ERROR, "Unknown vuln number for put()", "Unknown vuln number '%s' for put" % vuln)
@@ -113,9 +164,10 @@ def get(args):
     host, flag_id, flag_data, vuln = args
     trace("get(%s, %s, %s, %s)" % (host, flag_id, flag_data, vuln))
 
+    password = flag_id
+
     if vuln == "1":
         username = flag_data.rstrip('=')
-        password = flag_id
 
         credentials = pika.PlainCredentials(username, password)
 
@@ -136,7 +188,25 @@ def get(args):
         sys.exit(OK)
 
     if vuln == "2":
-        sys.exit(OK)
+        username = get_username_from_db(flag_id)
+        # TODO check certificate
+        es = Elasticsearch(['https://%s:9200' % host], http_auth=(username, password), verify_certs=False)
+
+        try:
+            res = es.search(index=username, body={"query": { "match": { "content": { "query": "flag" } } }})
+            flag_re = re.compile("Flag:\s+([^\)]+)")
+            for hit in res['hits']['hits']:
+                m = flag_re.search(hit['_source']['content'])
+                if m.group(1) == flag_data:
+                    sys.exit(OK)
+        except ConnectionError as e:
+            verdict(DOWN, "Connection error", e)
+        except AuthenticationException as e:
+            verdict(CORRUPT, "Authentication error", e)
+        except AuthorizationException as e:
+            verdict(CORRUPT, "Authorization error", e)
+
+        sys.exit(CORRUPT)
 
     verdict(CHECKER_ERROR, "Unknown vuln number for get()", "Unknown vuln number '%s' for get" % vuln)
 

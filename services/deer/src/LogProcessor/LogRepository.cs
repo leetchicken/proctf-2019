@@ -26,9 +26,7 @@ namespace LogProcessor
 
         public async Task IndexAsync(string userName, LogData logData)
         {
-            var doc = new LogData();
-            // TODO how to set type
-            await _elasticClient.IndexAsync(doc, id => id.Index(userName));
+            await _elasticClient.IndexAsync(logData, id => id.Index(userName));
         }
     }
 }
