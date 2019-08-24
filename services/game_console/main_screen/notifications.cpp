@@ -130,7 +130,7 @@ void NotificationsCtx::Render(float dt)
     m_api->LCD_SetFont(kFont12);
     m_api->LCD_SetTextColor(0xffffffff);
 
-    Rect rect(60, 15, 270, 0);
+    Rect rect(55, 10, 270, 0);
 
     if(drawTimer < kNotificationDrawTime)
     {

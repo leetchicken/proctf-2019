@@ -113,10 +113,10 @@ struct Context
         ReadCredentials();
 
         m_backgroundRect = Rect(0, 0, kBackgroundWidth, kBackgroundHeight);
-        m_networkRect = Rect(10, 10, kInfoIconsWidth, kInfoIconsHeight);
-        m_loadingRect = Rect(430, 10, kInfoIconsWidth, kInfoIconsHeight);
-        m_refreshRect = Rect(163, 238, kRefreshButtonWidth, kRefreshButtonHeight);
-        m_changePasswordRect = Rect(320, 238, kRefreshButtonWidth, kRefreshButtonHeight);
+        m_networkRect = Rect(10, 8, kInfoIconsWidth, kInfoIconsHeight);
+        m_loadingRect = Rect(436, 8, kInfoIconsWidth, kInfoIconsHeight);
+        m_refreshRect = Rect(408, 236, kButtonWidth, kButtonHeight);
+        m_changePasswordRect = Rect(444, 236, kButtonWidth, kButtonHeight);
 
         m_request = NULL;
         m_state = kMainScreenWaitForNetwork;
@@ -276,7 +276,7 @@ void ParseGamesList(API* api, HTTPRequest* request, GameDesc* games, uint32_t& g
 
     for(uint32_t i = 0; i < gamesCount; i++)
     {
-        games[i].uiRect.x = i * (kGameIconWidth + 20) + 20;
+        games[i].uiRect.x = i * (kGameIconWidth + 20) + 8;
         games[i].ResetIconState();
     }
 }
@@ -418,8 +418,22 @@ void Context::ProcessInput()
                 }
             }
         }
-        else if(move)
+        else if(move && m_gamesCount)
         {
+            const int32_t kLeftBorder = 8;
+            const int32_t kRightBorder = 472;
+            if(moveVecX > 0)
+            {
+                int x = m_games[0].uiRect.x + moveVecX;
+                if(x > kLeftBorder)
+                    moveVecX = kLeftBorder - m_games[0].uiRect.x;
+            }
+            else if(moveVecX < 0)
+            {
+                int x = m_games[m_gamesCount - 1].uiRect.x + kGameIconWidth + moveVecX;
+                if(x < kRightBorder)
+                    moveVecX = kRightBorder - (m_games[m_gamesCount - 1].uiRect.x + kGameIconWidth);
+            }
             for(uint32_t g = 0; g < m_gamesCount; g++)
                 m_games[g].uiRect.x += moveVecX;
         }
@@ -490,7 +504,7 @@ void Context::OnChangePasswordPressed()
 {
     if(m_state == kMainScreenReady && !m_iconRequestsInFlight)
     {
-        m_passwordWidget.Activate();
+        m_passwordWidget.Activate(m_password);
         m_state = kMainScreenPasswordWidget;
     }
 }
@@ -641,8 +655,8 @@ void Context::Render(float dt)
         m_api->LCD_DrawImage(m_backgroundRect, m_iconCache.background, kBackgroundWidth * 4);
         uint8_t* networkIcon = m_api->GetNetwokConnectionStatus() == kNetwokConnectionStatusGlobalUp ? m_iconCache.networkOnIcon : m_iconCache.networkOffIcon;
         m_api->LCD_DrawImageWithBlend(m_networkRect, networkIcon, kInfoIconsWidth * 4);
-        m_api->LCD_DrawImageWithBlend(m_refreshRect, m_iconCache.refreshButton, kRefreshButtonWidth * 4);
-        m_api->LCD_DrawImageWithBlend(m_changePasswordRect, m_iconCache.refreshButton, kRefreshButtonWidth * 4);
+        m_api->LCD_DrawImageWithBlend(m_refreshRect, m_iconCache.refreshButton, kButtonWidth * 4);
+        m_api->LCD_DrawImageWithBlend(m_changePasswordRect, m_iconCache.changePasswordButton, kButtonWidth * 4);
 
         if(m_state != kMainScreenReady || m_iconRequestsInFlight)
             m_api->LCD_DrawImageWithBlend(m_loadingRect, m_iconCache.loadingIcon, kInfoIconsWidth * 4);
@@ -651,14 +665,12 @@ void Context::Render(float dt)
             DrawIcon(m_api, m_screenRect, m_iconCache, m_games[g]);
 
         char buf[256];
-        m_api->LCD_SetFont(kFont8);
+        m_api->LCD_SetFont(kFont12);
         m_api->LCD_SetTextColor(0xffffffff);
-        m_api->sprintf(buf, "User name: %s", m_userName);
-        m_api->LCD_DisplayStringAt(5, 248, buf, kTextAlignNone);
-        m_api->sprintf(buf, "Password: %s", m_password);
-        m_api->LCD_DisplayStringAt(5, 256, buf, kTextAlignNone);
+        m_api->sprintf(buf, "%s", m_userName);
+        m_api->LCD_DisplayStringAt(8, 242, buf, kTextAlignNone);
         m_api->sprintf(buf, "Visit our site http://%s", kServerIP);
-        m_api->LCD_DisplayStringAt(5, 264, buf, kTextAlignNone);
+        m_api->LCD_DisplayStringAt(8, 256, buf, kTextAlignNone);
     }
 
     m_notificationsCtx.Render(dt);

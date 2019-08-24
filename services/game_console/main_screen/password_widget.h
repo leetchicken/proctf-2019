@@ -39,8 +39,8 @@ public:
         uint32_t buttonIdx = 0;
 
         Rect rect;
-        rect.width = kButtonSize;
-        rect.height = kButtonSize;
+        rect.width = kKeyButtonWidth;
+        rect.height = kKeyButtonHeight;
         rect.x = 22;
         rect.y = 100;
         for(uint32_t i = 0; i < 10; i++)
@@ -51,11 +51,11 @@ public:
             m_buttons[buttonIdx].lowerCase = symbols[i];
             m_buttons[buttonIdx].upperCase = symbols[i];
             buttonIdx++;
-            rect.x += kButtonSize + kSpaceSize;
+            rect.x += kKeyButtonWidth + kSpaceSize;
         }
 
         rect.x = 22;
-        rect.y += kButtonSize + kSpaceSize;
+        rect.y += kKeyButtonHeight + kSpaceSize;
         for(uint32_t i = 0; i < 10; i++)
         {
             char symbolsLower[] = {'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p'};
@@ -65,11 +65,11 @@ public:
             m_buttons[buttonIdx].lowerCase = symbolsLower[i];
             m_buttons[buttonIdx].upperCase = symbolsUpper[i];
             buttonIdx++;
-            rect.x += kButtonSize + kSpaceSize;
+            rect.x += kKeyButtonWidth + kSpaceSize;
         }
 
         rect.x = 44;
-        rect.y += kButtonSize + kSpaceSize;
+        rect.y += kKeyButtonHeight + kSpaceSize;
         for(uint32_t i = 0; i < 9; i++)
         {
             char symbolsLower[] = {'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l'};
@@ -79,7 +79,7 @@ public:
             m_buttons[buttonIdx].lowerCase = symbolsLower[i];
             m_buttons[buttonIdx].upperCase = symbolsUpper[i];
             buttonIdx++;
-            rect.x += kButtonSize + kSpaceSize;
+            rect.x += kKeyButtonWidth + kSpaceSize;
         }
 
         // cancel button
@@ -90,23 +90,23 @@ public:
         m_buttons[buttonIdx].rect = rect;
         buttonIdx++;
 
-        // enter button
+        // accept button
         rect.x = 440;
         rect.width = 36;
         rect.height = 84;
-        m_buttons[buttonIdx].type = kButtonEnter;
+        m_buttons[buttonIdx].type = kButtonAccept;
         m_buttons[buttonIdx].rect = rect;
         buttonIdx++;
 
         // caps lock
-        rect.width = kButtonSize;
-        rect.height = kButtonSize;
+        rect.width = kKeyButtonWidth;
+        rect.height = kKeyButtonHeight;
         rect.x = 44;
-        rect.y += kButtonSize + kSpaceSize;
+        rect.y += kKeyButtonHeight + kSpaceSize;
         m_buttons[buttonIdx].type = kButtonCapsLock;
         m_buttons[buttonIdx].rect = rect;
         buttonIdx++;
-        rect.x += kButtonSize + kSpaceSize;
+        rect.x += kKeyButtonWidth + kSpaceSize;
 
         for(uint32_t i = 0; i < 7; i++)
         {
@@ -117,7 +117,7 @@ public:
             m_buttons[buttonIdx].lowerCase = symbolsLower[i];
             m_buttons[buttonIdx].upperCase = symbolsUpper[i];
             buttonIdx++;
-            rect.x += kButtonSize + kSpaceSize;
+            rect.x += kKeyButtonWidth + kSpaceSize;
         }
         // backspace
         m_buttons[buttonIdx].type = kButtonBackspace;
@@ -126,11 +126,11 @@ public:
 
     }
 
-    void Activate()
+    void Activate(const char* password)
     {
         m_state = kStatePasswordEnter;
-        m_api->memset(m_password, 0, sizeof(m_password));
-        m_passwordLen = 0;
+        m_api->strcpy(m_password, password);
+        m_passwordLen = m_api->strlen(password);
         m_result = false;
         m_cursorTimer = 0.0f;
     }
@@ -161,7 +161,7 @@ public:
                 EraseLastSymbol();
             else if(b.type == kButtonCancel)
                 m_state = kStateHidden;
-            else if(b.type == kButtonEnter && m_passwordLen > 0)
+            else if(b.type == kButtonAccept && m_passwordLen > 0)
             {
                 RequestPasswordChange();
                 if(m_request)
@@ -233,37 +233,33 @@ public:
                 m_api->LCD_DisplayStringAt(cursorOffsetX, cursorOffsetY, m_password, kTextAlignNone);
 
             // buttons
-            uint32_t symOffsetX = (kButtonSize - fi.charWidth) / 2;
-            uint32_t symOffsetY = (kButtonSize - fi.charHeight) / 2;
+            uint32_t symOffsetX = (kKeyButtonWidth - fi.charWidth) / 2;
+            uint32_t symOffsetY = (kKeyButtonHeight - fi.charHeight) / 2;
 
             for(uint32_t i = 0; i < kButtonsCount; i++)
             {
                 Button& b = m_buttons[i];
-                uint32_t color = b.pressed ? 0xff303030 : 0xff7070ff;
                 if(b.type == kButtonSymbol)
                 {
-                    m_api->LCD_FillRect(b.rect, color);
+                    m_api->LCD_DrawImageWithBlend(b.rect, m_iconsMan.keyButton, kKeyButtonWidth * 4);
                     char symbol = m_upper ? b.upperCase : b.lowerCase;
                     m_api->LCD_DisplayChar(b.rect.x + symOffsetX, b.rect.y + symOffsetY, symbol);
                 }
                 else if(b.type == kButtonCapsLock)
                 {
-                    m_api->LCD_FillRect(b.rect, color);
-                    m_api->LCD_DisplayChar(b.rect.x + symOffsetX, b.rect.y + symOffsetY, '^');
+                    m_api->LCD_DrawImageWithBlend(b.rect, m_iconsMan.capslockButton, kKeyButtonWidth * 4);
                 }
                 else if(b.type == kButtonBackspace)
                 {
-                    m_api->LCD_FillRect(b.rect, color);
-                    symOffsetX = (b.rect.width - fi.charWidth * 2) / 2;
-                    m_api->LCD_DisplayStringAt(b.rect.x + symOffsetX, b.rect.y + symOffsetY, "<-", kTextAlignNone);
+                    m_api->LCD_DrawImageWithBlend(b.rect, m_iconsMan.backspaceButton, kKeyButtonWidth * 4);
                 }
                 else if(b.type == kButtonCancel)
                 {
-                    m_api->LCD_FillRect(b.rect, b.pressed ? 0xffff0000 : 0xffff7f7f);
+                    m_api->LCD_DrawImageWithBlend(b.rect, m_iconsMan.cancelButton, kAcceptCancelButtonWidth * 4);
                 }
-                else if(b.type == kButtonEnter)
+                else if(b.type == kButtonAccept)
                 {
-                    m_api->LCD_FillRect(b.rect, b.pressed ? 0xff00ff00 : 0xff7fff7f);
+                    m_api->LCD_DrawImageWithBlend(b.rect, m_iconsMan.acceptButton, kAcceptCancelButtonWidth * 4);
                 }
                 b.pressed = false;
             }
@@ -274,7 +270,7 @@ public:
         }
         else if(m_state == kStateDrawResult)
         {
-            m_api->LCD_DisplayStringAt(0, 130, m_result ? "OK" : "Fail", kTextAlignCenter);
+            m_api->LCD_DisplayStringAt(0, 130, m_result ? "OK" : "Failed", kTextAlignCenter);
         }
     }
 
@@ -301,7 +297,7 @@ private:
         kButtonCapsLock,
         kButtonBackspace,
         kButtonCancel,
-        kButtonEnter
+        kButtonAccept
     };
 
     struct Button
@@ -315,7 +311,6 @@ private:
 
     static const uint32_t kMaxPasswordLen = 16;
     static const uint32_t kButtonsCount = 40;
-    static const uint32_t kButtonSize = 40;
     static const uint32_t kSpaceSize = 4;
 
     API* m_api;
