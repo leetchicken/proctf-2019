@@ -9,37 +9,51 @@ public final class ImageGetHandler: ChannelInboundHandler {
     let dirSize: UInt32 = 500
     let storageDir = "./storage"
 
+    let filesProvider: FilesProvider
+
+    init(_ filesProvider: FilesProvider){
+        self.filesProvider = filesProvider
+    }
+
     public func channelRead(context: ChannelHandlerContext, data: NIOAny) {
         var byteBuffer = unwrapInboundIn(data)
-        if byteBuffer.readableBytes > (dirSize.bitWidth / 8) {
+        if byteBuffer.readableBytes > MemoryLayout<Int32>.size {
+            print("Invalid file id length \(byteBuffer.readableBytes)")
             context.close(promise: nil)
             return
         }
-        guard let fileNumBytes = byteBuffer.readBytes(length: byteBuffer.readableBytes) else {
+        // guard let fileIdBytes = byteBuffer.readBytes(length: byteBuffer.readableBytes) else {
+        //     context.close(promise: nil)
+        //     return
+        // }
+
+        guard let id: Int32 = byteBuffer.readInteger() else {
+            print("Can't read file id from client")
             context.close(promise: nil)
             return
         }
-        var fileId : UInt32 = 0
-        for byte in fileNumBytes {
-            fileId = fileId << 8
-            fileId = fileId | UInt32(byte)
-        }
 
-        let fileDir = fileId / dirSize
-        let fileNum = fileId % dirSize
+        // var fileId : UInt32 = 0
+        // for byte in fileNumBytes {
+        //     fileId = fileId << 8
+        //     fileId = fileId | UInt32(byte)
+        // }
 
-        let filePath = "\(storageDir)/\(fileDir)/\(fileNum)"
+        let path = filesProvider.getFilePathForId(id);
 
-        let fm  = FileManager.default
-        
-        
-        print("reading file \(filePath)")
-        guard let data = try fm.contents(atPath: filePath) else {
-            print("Failed to read file: \(filePath)")
-            context.close(promise: nil)                
+        print("Reading file \(path)")
+        guard let data = try? Data(contentsOf: path) else {
+            print("Can't read file from \(path)")
+            context.close(promise: nil)
             return
-        }
-        print("read \(data.count)")        
+        }        
+        print("READ FILE: \(data.count) bytes from \(path)")
+
+        var buffer = context.channel.allocator.buffer(capacity: data.count)
+        buffer.writeBytes(data)
+
+// Responding with our g^b mod p back to Client
+        context.write(self.wrapOutboundOut(buffer), promise: nil)
     }
 
     public func channelReadComplete(context: ChannelHandlerContext) {

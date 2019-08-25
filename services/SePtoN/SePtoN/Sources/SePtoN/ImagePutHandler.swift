@@ -48,6 +48,43 @@ public final class ImagePutHandler: ChannelInboundHandler {
         }
     }
 
+    public func processKeyExchange(_ context: ChannelHandlerContext, _ data: NIOAny) {
+// Expecting from Client no more than 128 bytes of his DH part: g^a mod p
+        var byteBuffer = unwrapInboundIn(data)
+        if byteBuffer.readableBytes > 128 + 1 {
+            context.close(promise: nil)
+            return
+        }
+        guard let newData = byteBuffer.readBytes(length: byteBuffer.readableBytes) else {
+            context.close(promise: nil)
+            return
+        }
+        
+        let yA = BigUInt(Data(newData))
+
+        let xB = BigUInt.randomInteger(withExactWidth: 20 * 8)
+        let yB = g.power(xB, modulus: p)
+
+        let key = yA.power(xB, modulus: p)
+        let keyMaterial = Array(key.serialize())
+        
+        print("Key: ", key)
+        print()
+
+        guard let masterKey = try? SPN.CalcMasterKey(keyMaterial) else {
+            print("Failed to generate masterKey from DH-derived key \(key)")
+            context.close(promise: nil)
+            return
+        }
+        spn = SPN(masterKey)
+
+        var yBbuffer = context.channel.allocator.buffer(capacity: 128 + 1)
+        yBbuffer.writeBytes(yB.serialize())
+
+// Responding with our g^b mod p back to Client
+        context.write(self.wrapOutboundOut(yBbuffer), promise: nil)
+    } 
+
     public func processImageTransfer(_ context: ChannelHandlerContext, _ data: NIOAny) {
         print()
         print("IMAGE TRANSFER")
@@ -87,7 +124,8 @@ public final class ImagePutHandler: ChannelInboundHandler {
             return
         }
 
-        guard let newC = try? spn?.encryptWithPadding(Array(newImageData), SPN.generateIV()) else {
+        guard let newC = try? spn?.encryptWithPadding(imageBytes, SPN.generateIV()) else {
+        // guard let newC = try? spn?.encryptWithPadding(Array(newImageData), SPN.generateIV()) else {
             print("!! Failed to encryptWithPadding newImageData of \(newImageData.count) bytes")
             context.close(promise: nil)
             return
@@ -111,46 +149,9 @@ public final class ImagePutHandler: ChannelInboundHandler {
         result.writeInteger(id)
 
         context.write(self.wrapOutboundOut(result), promise: nil)
-    }
+    }    
 
-    public func processKeyExchange(_ context: ChannelHandlerContext, _ data: NIOAny) {
-// Expecting from Client no more than 128 bytes of his DH part: g^a mod p
-        var byteBuffer = unwrapInboundIn(data)
-        if byteBuffer.readableBytes > 128 + 1 {
-            context.close(promise: nil)
-            return
-        }
-        guard let newData = byteBuffer.readBytes(length: byteBuffer.readableBytes) else {
-            context.close(promise: nil)
-            return
-        }
-        
-        let yA = BigUInt(Data(newData))
-
-        let xB = BigUInt.randomInteger(withExactWidth: 20 * 8)
-        let yB = g.power(xB, modulus: p)
-
-        let key = yA.power(xB, modulus: p)
-        let keyMaterial = Array(key.serialize())
-        
-        print("Key: ", key)
-        print()
-
-        guard let masterKey = try? SPN.CalcMasterKey(keyMaterial) else {
-            print("Failed to generate masterKey from DH-derived key \(key)")
-            context.close(promise: nil)
-            return
-        }
-        spn = SPN(masterKey)
-
-        var yBbuffer = context.channel.allocator.buffer(capacity: 128 + 1)
-        yBbuffer.writeBytes(yB.serialize())
-
-// Responding with our g^b mod p back to Client
-        context.write(self.wrapOutboundOut(yBbuffer), promise: nil)
-    } 
-
-    public func channelReadComplete(context: ChannelHandlerContext) {
+    public func channelReadComplete(context: ChannelHandlerContext) {        
         context.flush()
     }
 

@@ -31,7 +31,7 @@ public class SePtoN {
 
 	public func start(){		
 		let _ = startServer(self.groupPut, { ImagePutHandler(self.filesProvider) }, host, portPut)
-		let _ = startServer(self.groupGet, { ImageGetHandler() }, host, portGet)
+		let _ = startServer(self.groupGet, { ImageGetHandler(self.filesProvider) }, host, portGet)
 
 		// try channelPut.closeFuture.wait()
 		// try channelGet.closeFuture.wait()
