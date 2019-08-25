@@ -6,7 +6,6 @@ using System.Net;
 using System.Net.Sockets;
 using System.Numerics;
 using System.Text;
-using log4net;
 using SPN;
 
 namespace SePtoN_Checker
@@ -16,18 +15,16 @@ namespace SePtoN_Checker
 		public static int ProcessCheck(string host)
 		{
 			var sw = Stopwatch.StartNew();
-			log.Info("Processing Check");
+			Console.WriteLine("Processing Check");
 
 
 
-			log.Info($"Check done in {sw.Elapsed}");
+			Console.WriteLine($"Check done in {sw.Elapsed}");
 			return (int)ExitCode.OK;
 		}
 
 
 
-
-		private static readonly ILog log = LogManager.GetLogger(typeof(ServiceMethods));
 
 		public static int ProcessPut(string host, string id, string flag)
 		{
@@ -47,7 +44,7 @@ namespace SePtoN_Checker
 					stream.WriteBigIntBigEndian(yA);
 
 					var yB = stream.ReadBigIntBigEndian();
-					var keyMaterial = DH.DeriveKey(yB, xA).ToByteArray(isBigEndian:true);
+					var keyMaterial = DH.DeriveKey(yB, xA).ToByteArray(isBigEndian:true, isUnsigned:true);
 					var masterKey = SubstitutionPermutationNetwork.CalcMasterKey(keyMaterial);
 
 					var flagPicture = FlagsPainter.DrawFlag(flag);

@@ -4,8 +4,6 @@ using System.Drawing;
 using System.Drawing.Text;
 using System.Reflection;
 using System.Text;
-using log4net;
-using log4net.Config;
 using SPN;
 
 namespace SePtoN_Checker
@@ -14,8 +12,6 @@ namespace SePtoN_Checker
 	{
 		static int Main(string[] args)
 		{
-			var logRepository = LogManager.GetRepository(Assembly.GetEntryAssembly());
-			XmlConfigurator.Configure(logRepository);
 			try
 			{
 				if(args.Length < 1)
@@ -46,8 +42,6 @@ namespace SePtoN_Checker
 				return ExitWithMessage(ExitCode.CHECKER_ERROR, e.ToString());
 			}
 			return (int)ExitCode.CHECKER_ERROR;
-
-
 		}
 
 		private static int ProcessCheck(string[] args)
@@ -102,11 +96,11 @@ namespace SePtoN_Checker
 			{
 				if(exitCode == ExitCode.OK)
 				{
-					log.InfoFormat(stderr);
+					Console.WriteLine(stderr);
 				}
 				else
 				{
-					log.ErrorFormat(stderr);
+					Console.Error.WriteLine(stderr);
 				}
 			}
 
@@ -117,7 +111,5 @@ namespace SePtoN_Checker
 		private const string CommandCheck = "check";
 		private const string CommandPut = "put";
 		private const string CommandGet = "get";
-
-		private static readonly ILog log = LogManager.GetLogger(typeof(Program));
 	}
 }
