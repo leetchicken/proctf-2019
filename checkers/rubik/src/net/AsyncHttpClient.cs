@@ -102,7 +102,7 @@ namespace checker.net
 
 		public readonly CookieContainer Cookies;
 
-		private static readonly Version HttpVersion = new Version(2, 0);
+		private static readonly Version HttpVersion = new Version(1, 1);
 		private readonly Uri baseUri;
 	}
 

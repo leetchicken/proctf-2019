@@ -156,7 +156,7 @@ namespace checker.rubik
 				throw new CheckerException(ExitCode.CORRUPT, "flag not found");
 		}
 
-		private const int Port = 5001;
+		private const int Port = 5071;
 
 		private const int MaxHttpBodySize = 16 * 1024;
 		private const int NetworkOpTimeout = 5000;

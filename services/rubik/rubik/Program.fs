@@ -35,8 +35,8 @@ module Program =
         (new WebHostBuilder())
             //.UseConfigurationSection(SettingsManager.ConfigRoot.GetSection("Host"))
             .UseKestrel(fun _ options ->
-                options.ListenLocalhost(5001, fun listenOptions ->
-                    listenOptions.Protocols <- HttpProtocols.Http2
+                options.ListenAnyIP(5071, fun listenOptions ->
+                    //listenOptions.Protocols <- HttpProtocols.Http2
                     listenOptions.UseHttps(Path.Combine(Directory.GetCurrentDirectory(), "localhost.pfx"), "1234") |> ignore
                 )
                 options.AddServerHeader <- false
