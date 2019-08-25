@@ -9,6 +9,7 @@ import (
 	"github.com/gorilla/schema"
 
 	"handy/server/backends"
+	"handy/server/data"
 	"handy/server/util"
 )
 
@@ -32,6 +33,7 @@ func (h *taskHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// TODO: should return html
 func (h *taskHandler) handleGet(w http.ResponseWriter, r *http.Request) {
 	id, lui, err := util.RetrieveUserInfo(r)
 	if err == util.UserNotPresentError {
@@ -42,7 +44,7 @@ func (h *taskHandler) handleGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	result := map[string][]*backends.TaskInfo{}
+	result := map[string][]*data.TaskInfo{}
 	tasksFrom, err := h.ts.RetrieveTasksFromUser(id)
 	if err != nil {
 		HandleError(w, fmt.Errorf("failed to retrieve tasks from user: %s", err), http.StatusInternalServerError)
@@ -83,13 +85,13 @@ func (h *taskHandler) handlePost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	decoder := schema.NewDecoder()
-	ti := &backends.TaskInfo{}
+	ti := &data.TaskInfo{}
 	if err := decoder.Decode(ti, r.PostForm); err != nil {
 		HandleError(w, fmt.Errorf("failed to parse form: %s", err), http.StatusBadRequest)
 		return
 	}
 
-	ti.RequesterID = id
+	ti.RequesterId = id
 	if err = h.ts.CreateTask(ti); err != nil {
 		HandleError(w, fmt.Errorf("failed to create task: %s", err), http.StatusBadRequest)
 		return

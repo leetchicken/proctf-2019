@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"context"
-	"log"
+	"fmt"
 	"net/http"
 
 	"handy/server/backends"
@@ -50,26 +50,27 @@ func (hw *handlerWrapper) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	r = r.WithContext(ctx)
 
 	pw := &proxyingResponseWriter{
-		w:        w,
-		finished: false,
-		status:   http.StatusOK,
+		w: w,
 	}
 	hw.h.ServeHTTP(pw, r)
 
-	err := hw.aw.Write(r, pw.status)
+	err := hw.aw.Write(r)
 	if err != nil {
-		if !pw.finished {
-			HandleError(w, err, http.StatusBadRequest)
-		} else {
-			log.Printf("Failed to write audit log: %s", err)
+		HandleError(w, err, http.StatusBadRequest)
+		return
+	}
+
+	for _, p := range pw.proxied {
+		if err = p(); err != nil {
+			HandleError(w, err, http.StatusInternalServerError)
 		}
 	}
 }
 
 type proxyingResponseWriter struct {
-	w        http.ResponseWriter
-	finished bool
-	status   int
+	proxied []func() error
+
+	w http.ResponseWriter
 }
 
 func (w *proxyingResponseWriter) Header() http.Header {
@@ -77,13 +78,20 @@ func (w *proxyingResponseWriter) Header() http.Header {
 }
 
 func (w *proxyingResponseWriter) Write(buf []byte) (int, error) {
-	w.finished = true
-	w.status = http.StatusOK
-	return w.w.Write(buf)
+	w.proxied = append(w.proxied, func() error {
+		if cnt, err := w.w.Write(buf); err != nil {
+			return err
+		} else if cnt != len(buf) {
+			return fmt.Errorf("failed to write result: %d/%d bytes written", cnt, len(buf))
+		}
+		return nil
+	})
+	return len(buf), nil
 }
 
 func (w *proxyingResponseWriter) WriteHeader(statusCode int) {
-	w.finished = true
-	w.status = statusCode
-	w.w.WriteHeader(statusCode)
+	w.proxied = append(w.proxied, func() error {
+		w.w.WriteHeader(statusCode)
+		return nil
+	})
 }

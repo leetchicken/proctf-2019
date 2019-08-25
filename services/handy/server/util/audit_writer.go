@@ -13,7 +13,7 @@ func NewAuditWriter() *AuditWriter {
 	return &AuditWriter{}
 }
 
-func (w *AuditWriter) Write(r *http.Request, status int) error {
+func (w *AuditWriter) Write(r *http.Request) error {
 	userStr := "<anonymous>"
 	id, lui, err := RetrieveUserInfo(r)
 	if err == nil {

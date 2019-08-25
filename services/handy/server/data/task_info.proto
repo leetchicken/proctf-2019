@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package handy;
+
+option go_package = "data";
+
+message TaskInfo {
+  string requester_id = 1;
+
+  string master_id = 2;
+
+  string description = 3;
+}

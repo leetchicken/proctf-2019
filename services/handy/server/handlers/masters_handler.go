@@ -28,6 +28,7 @@ func (h *masterHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// TODO: should return html
 func (h *masterHandler) handleGet(w http.ResponseWriter, r *http.Request) {
 	_, _, err := util.RetrieveUserInfo(r)
 	if err == util.UserNotPresentError {
@@ -44,7 +45,6 @@ func (h *masterHandler) handleGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: replace with html
 	resultJSON, err := json.Marshal(masters)
 	if err != nil {
 		HandleError(w, fmt.Errorf("failed to marshal response: %s", err), http.StatusInternalServerError)
