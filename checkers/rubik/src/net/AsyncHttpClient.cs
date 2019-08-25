@@ -15,7 +15,7 @@ namespace checker.net
 		public AsyncHttpClient(Uri baseUri, bool cookies = false)
 		{
 			this.baseUri = baseUri;
-			Cookies = cookies ? new CookieContainer(10, 10, 32768) : null;
+			Cookies = cookies ? new CookieContainer(4, 4, 4096) : null;
 		}
 
 		public async Task<HttpResult> DoRequestAsync(HttpMethod method, string relative, byte[] data = null, int timeout = 10000, int maxBodySize = 64 * 1024)
@@ -102,7 +102,7 @@ namespace checker.net
 
 		public readonly CookieContainer Cookies;
 
-		private static readonly Version HttpVersion = new Version(2, 0);
+		private static readonly Version HttpVersion = new Version(1, 1);
 		private readonly Uri baseUri;
 	}
 

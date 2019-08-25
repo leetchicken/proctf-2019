@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<body>
+    <head>
+        <title>Game Console Jury</title>
+    </head>
+    <p><a href="/checksystem_status">Status</a></p>
+    <form action="/checksystem_change_password">
+        <p>Change password</p>
+        <p>User name:<input type="text" name="u" value=""></p>
+        <p>Password: <input type="text" name="p" value=""></p>
+        <p><button type="submit">Submit</button></p>
+    </form>
+    <form action="/checksystem_notification">
+        <p>Send notification</p>
+        <p>Message:<input type="text" name="message" value=""></p>
+        <p><button type="submit">Submit</button></p>
+    </form>
+    <form action="/checksystem_addgame" method="POST" enctype="multipart/form-data">
+        <p>Add game</p>
+        <p><input type="file" name="game_zip"></p>
+        <p><button type="submit">Submit</button></p>
+    </form>
+</body>
+</html>

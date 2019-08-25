@@ -45,13 +45,13 @@ namespace checker.rubik
 
 			await RndUtil.RndDelay(MaxDelay).ConfigureAwait(false);
 
-			var login = RndText.RandomWord(RndUtil.GetInt(10, 32)).RandomLeet().RandomUpperCase();
-			var pass = RndText.RandomWord(RndUtil.GetInt(10, 32)).RandomLeet().RandomUpperCase();
-			var flag = RndText.RandomWord(RndUtil.GetInt(10, 32)).RandomLeet().RandomUpperCase();
+			var login = RndText.RandomWord(RndUtil.GetInt(MinRandomFieldLength, MaxRandomFieldLength)).RandomLeet().RandomUpperCase();
+			var pass = RndText.RandomWord(RndUtil.GetInt(MinRandomFieldLength, MaxRandomFieldLength)).RandomLeet().RandomUpperCase();
+			var flag = RndText.RandomWord(RndUtil.GetInt(MinRandomFieldLength, MaxRandomFieldLength)).RandomLeet().RandomUpperCase();
 
 			await Console.Error.WriteLineAsync($"name '{login}', pass '{pass}', bio '{flag}'").ConfigureAwait(false);
 
-			var solution = RndRubik.RandomSolution(20, 400);
+			var solution = RndRubik.RandomSolution(MinRandomSolutionLength, MaxRandomSolutionLength);
 			var query = $"?login={WebUtility.UrlEncode(login)}&pass={WebUtility.UrlEncode(pass)}&bio={WebUtility.UrlEncode(flag)}&puzzle={WebUtility.UrlEncode(rubik.Value)}&solution={WebUtility.UrlEncode(solution)}";
 
 			result = await client.DoRequestAsync(HttpMethod.Post, ApiSolve + query, null, NetworkOpTimeout, MaxHttpBodySize).ConfigureAwait(false);
@@ -83,16 +83,23 @@ namespace checker.rubik
 
 			await Console.Error.WriteLineAsync($"rubik '{rubik.Rubik}', signed '{rubik.Value}'").ConfigureAwait(false);
 
-			var solution = DoIt.TryOrDefault(() => SolveHelper.ConvertOutputSolution(RubikSolver.FindSolution(SolveHelper.ConvertInputCube(rubik.Rubik), 1024)));
-			if(solution == default)
+			string solution;
+			try
+			{
+				solution = DoIt.TryOrDefault(() => SolveHelper.ConvertOutputSolution(RubikSolver.FindSolution(SolveHelper.ConvertInputCube(rubik.Rubik), 32, 10000)));
+			}
+			catch(RubikSolveException e)
+			{
+				await Console.Error.WriteLineAsync(e.Message).ConfigureAwait(false);
 				throw new CheckerException(ExitCode.MUMBLE, $"invalid {ApiGenerate} response");
+			}
 
 			await Console.Error.WriteLineAsync($"solution '{solution}'").ConfigureAwait(false);
 
 			await RndUtil.RndDelay(MaxDelay).ConfigureAwait(false);
 
-			var login = RndText.RandomWord(RndUtil.GetInt(10, 32)).RandomLeet().RandomUpperCase();
-			var pass = RndText.RandomWord(RndUtil.GetInt(10, 32)).RandomLeet().RandomUpperCase();
+			var login = RndText.RandomWord(RndUtil.GetInt(MinRandomFieldLength, MaxRandomFieldLength)).RandomLeet().RandomUpperCase();
+			var pass = RndText.RandomWord(RndUtil.GetInt(MinRandomFieldLength, MaxRandomFieldLength)).RandomLeet().RandomUpperCase();
 
 			await Console.Error.WriteLineAsync($"name '{login}', pass '{pass}', bio '{flag}'").ConfigureAwait(false);
 
@@ -149,12 +156,18 @@ namespace checker.rubik
 				throw new CheckerException(ExitCode.CORRUPT, "flag not found");
 		}
 
-		private const int Port = 5001;
+		private const int Port = 5071;
 
 		private const int MaxHttpBodySize = 16 * 1024;
 		private const int NetworkOpTimeout = 5000;
 
 		private const int MaxDelay = 1000;
+
+		private const int MinRandomSolutionLength = 5;
+		private const int MaxRandomSolutionLength = 500;
+
+		private const int MinRandomFieldLength = 10;
+		private const int MaxRandomFieldLength = 32;
 
 		private static Uri GetBaseUri(string host) => new Uri($"https://{host}:{Port}/");
 

@@ -18,6 +18,12 @@ struct IconsManager
     uint8_t* networkOffIcon;
     uint8_t* networkOnIcon;
     uint8_t* refreshButton;
+    uint8_t* changePasswordButton;
+    uint8_t* keyButton;
+    uint8_t* capslockButton;
+    uint8_t* backspaceButton;
+    uint8_t* cancelButton;
+    uint8_t* acceptButton;
 
     IconsManager()
     {
@@ -54,8 +60,28 @@ struct IconsManager
         curSdram = ReadIcon("/fs/network_on.bmp", networkOnIcon, infoIconSize);
 
         refreshButton = curSdram;
-        uint32_t refreshButtonSize = kRefreshButtonWidth * kRefreshButtonHeight * 4;
-        curSdram = ReadIcon("/fs/refresh.bmp", refreshButton, refreshButtonSize);
+        uint32_t buttonSize = kButtonWidth * kButtonHeight * 4;
+        curSdram = ReadIcon("/fs/refresh.bmp", refreshButton, buttonSize);
+
+        changePasswordButton = curSdram;
+        curSdram = ReadIcon("/fs/account.bmp", changePasswordButton, buttonSize);
+
+        keyButton = curSdram;
+        uint32_t keyButtonSize = kKeyButtonWidth * kKeyButtonHeight * 4;
+        curSdram = ReadIcon("/fs/button.bmp", keyButton, keyButtonSize);
+
+        capslockButton = curSdram;
+        curSdram = ReadIcon("/fs/capslock.bmp", capslockButton, keyButtonSize);
+
+        backspaceButton = curSdram;
+        curSdram = ReadIcon("/fs/backspace.bmp", backspaceButton, keyButtonSize);
+
+        cancelButton = curSdram;
+        uint32_t acceptCancelSize = kAcceptCancelButtonWidth * kAcceptCancelButtonHeight * 4;
+        curSdram = ReadIcon("/fs/cancel.bmp", cancelButton, acceptCancelSize);
+
+        acceptButton = curSdram;
+        curSdram = ReadIcon("/fs/accept.bmp", acceptButton, acceptCancelSize);
 
         return curSdram;
     }
