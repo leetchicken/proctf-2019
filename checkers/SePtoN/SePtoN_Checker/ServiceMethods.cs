@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Numerics;
+using System.Security.Cryptography;
 using System.Text;
 using SPN;
 
@@ -17,33 +18,26 @@ namespace SePtoN_Checker
 			var sw = Stopwatch.StartNew();
 			Console.WriteLine("Processing Check");
 
-
+			Console.WriteLine("Nothing to do");
 
 			Console.WriteLine($"Check done in {sw.Elapsed}");
 			return (int)ExitCode.OK;
 		}
 
 
-
-
 		public static int ProcessPut(string host, string id, string flag)
 		{
 			try
 			{
-				var tcpClient = new TcpClient();
-				tcpClient.ReceiveTimeout = tcpClient.SendTimeout = NetworkOperationTimeout;
-
-				var connectedSuccessfully = tcpClient.ConnectAsync(IPAddress.Parse(host), PORT).Wait(ConnectTimeout);
-				if(!connectedSuccessfully)
-					throw new ServiceException( ExitCode.DOWN, $"Failed to connect to service in timeout {ConnectTimeout}");
+				var tcpClient = ConnectToService(host, PUT_PORT);
 
 				using(var stream = tcpClient.GetStream())
 				{
 					var xA = DH.GenerateRandomXA(DH_x_bitsCount);
 					var yA = DH.CalculateYA(xA);
-					stream.WriteBigIntBigEndian(yA);
+					stream.WriteBigEndian(yA);
 
-					var yB = stream.ReadBigIntBigEndian();
+					var yB = stream.ReadBigIntBigEndian(NetworkStreamExtensions.DH_y_bytesCount);
 					var keyMaterial = DH.DeriveKey(yB, xA).ToByteArray(isBigEndian:true, isUnsigned:true);
 					var masterKey = SubstitutionPermutationNetwork.CalcMasterKey(keyMaterial);
 
@@ -53,11 +47,18 @@ namespace SePtoN_Checker
 
 					stream.WriteLengthFieldAware(encryptedData);
 
-					var data = stream.ReadLengthFieldAware();
-					var imageId = BitConverter.ToInt32(data.Reverse().ToArray());
+					var imageId = stream.ReadIntBigEndian();
 
 					Console.Error.WriteLine($"Got image id {imageId}");
 
+					var state = new State
+					{
+						FileId = imageId,
+						MasterKeyHex = Convert.ToBase64String(masterKey),
+						SourceImageMd5Hex = MD5.Create().ComputeHash(flagPicture).ToHex()
+					};
+
+					Console.WriteLine(state.ToJsonString().ToBase64String());
 					return (int)ExitCode.OK;
 				}
 			}
@@ -73,33 +74,89 @@ namespace SePtoN_Checker
 
 		public static int ProcessGet(string host, string id, string flag)
 		{
-			throw new NotImplementedException();
+			var state = JsonHelper.ParseJson<State>(id.ToStringFromBase64());
+			var imageId = state.FileId;
+
+			var spn = new SubstitutionPermutationNetwork(Convert.FromBase64String(state.MasterKeyHex));
+
+			try
+			{
+				var tcpClient = ConnectToService(host, GET_PORT);
+				using(var stream = tcpClient.GetStream())
+				{
+					stream.WriteBigEndian(imageId);
+
+					var encryptedData = stream.ReadLengthFieldAware();
+					var imageData = spn.DecryptWithPadding(encryptedData);
+
+					var receivedImageMd5Hex = MD5.Create().ComputeHash(imageData).ToHex();
+					if(receivedImageMd5Hex != state.SourceImageMd5Hex)
+						throw new ServiceException(ExitCode.CORRUPT, $"Source image md5 {state.SourceImageMd5Hex} != received {receivedImageMd5Hex}");
+
+					return (int)ExitCode.OK;
+				}
+			}
+			catch(ServiceException)
+			{
+				throw;
+			}
+			catch(Exception e)
+			{
+				throw new ServiceException(ExitCode.DOWN, string.Format("General failure"), innerException: e);
+			}
 		}
 
-		
+		private static TcpClient ConnectToService(string host, int port)
+		{
+			var tcpClient = new TcpClient();
+			tcpClient.ReceiveTimeout = tcpClient.SendTimeout = NetworkOperationTimeout;
+
+			var connectedSuccessfully = tcpClient.ConnectAsync(IPAddress.Parse(host), port).Wait(ConnectTimeout);
+			if(!connectedSuccessfully)
+				throw new ServiceException(ExitCode.DOWN, $"Failed to connect to service in timeout {ConnectTimeout}");
+
+			return tcpClient;
+		}
+
+
 		const int DH_x_bitsCount = 20 * 8;
 
 		private const int NetworkOperationTimeout = 3000;
 		private const int ConnectTimeout = 1000;
 
-		public const int PORT = 31337;
+		public const int PUT_PORT = 31337;
+		public const int GET_PORT = 31338;
 	}
 
 	static class NetworkStreamExtensions
 	{
-		const int DH_y_bytesCount = 128 * 1 + 1;
+		public const int DH_y_bytesCount = 128 * 1 + 1;
 
-		public static void WriteBigIntBigEndian(this NetworkStream stream, BigInteger bigInteger)
+		public static int ReadIntBigEndian(this NetworkStream stream)
+		{
+			var data = stream.ReadLengthFieldAware();
+			if(data.Length == 0 || data.Length != sizeof(int))
+				throw new ServiceException(ExitCode.MUMBLE, $"Expected {sizeof(int)} bytes of int, but got {data.Length}");
+			return BitConverter.ToInt32(data.Reverse().ToArray());
+		}
+
+		public static void WriteBigEndian(this NetworkStream stream, int integer)
+		{
+			var buffer = BitConverter.GetBytes(integer).Reverse().ToArray();
+			stream.WriteLengthFieldAware(buffer);
+		}
+
+		public static void WriteBigEndian(this NetworkStream stream, BigInteger bigInteger)
 		{
 			var buffer = bigInteger.ToByteArray(isBigEndian: true);
 			stream.WriteLengthFieldAware(buffer);
 		}
 
-		public static BigInteger ReadBigIntBigEndian(this NetworkStream stream)
+		public static BigInteger ReadBigIntBigEndian(this NetworkStream stream, int maxBytesCount)
 		{
 			var data = stream.ReadLengthFieldAware();
-			if(data.Length == 0 || data.Length > DH_y_bytesCount)
-				throw new ServiceException(ExitCode.MUMBLE, $"Expected non-negative amount of no more than {DH_y_bytesCount} bytes of yB, but got {data.Length}");
+			if(data.Length == 0 || data.Length > maxBytesCount)
+				throw new ServiceException(ExitCode.MUMBLE, $"Expected non-negative amount of no more than {maxBytesCount} bytes, but got {data.Length}");
 
 			return new BigInteger(data, isUnsigned:true, isBigEndian: true);
 		}
