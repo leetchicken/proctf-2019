@@ -96,9 +96,9 @@ public final class SPN {
 		newData.reserveCapacity(data.count + padLength)
 		newData += data
 
-		while(i < data.count + padLength) {
+		while(i < padLength) {
 			newData.append(UInt8(padLength))
-			i+=1
+			i+=1			
 		}
 
 		return newData;
@@ -107,6 +107,7 @@ public final class SPN {
 
 	func encryptCBC(_ data: [UInt8], _ iv: [UInt8]) throws -> [UInt8] {
 		if (data.count == 0 || data.count % SPN.blockSizeBytes != 0 || iv.count == 0 || iv.count % SPN.blockSizeBytes != 0) {
+			print("data \(data.count) iv \(iv.count)")
 			throw SPNError.unpaddedInput
 		}
 
@@ -117,11 +118,16 @@ public final class SPN {
 		
 		var prevC = iv
 		while(i < data.count){
+
+
 			let p = Array(data[i..<(i+SPN.blockSizeBytes)])
 			let c = encryptBlock(SPN.xorBlock(p, prevC))
 			result += c
 			prevC = c
 			i += SPN.blockSizeBytes
+
+			
+
 		}
 
 		return result
@@ -130,6 +136,7 @@ public final class SPN {
 	func encryptBlock(_ block: [UInt8]) -> [UInt8] {
 		var result = block
 		for roundNum in (0..<SPN.roundsCount) {
+
 			result = encryptRound(result, subkeys[roundNum], sboxes[roundNum], roundNum == SPN.roundsCount - 1)
 		}
 
@@ -138,7 +145,10 @@ public final class SPN {
 	}
 
 	func encryptRound(_ input: [UInt8], _ subKey: [UInt8], _ sboxes: [SBox], _ skipPermutation: Bool) -> [UInt8] {
-		var result = zip(input, subKey).map { $0.0 ^ $0.1 }
+// var start = DispatchTime.now()
+		var result = SPN.xorBlock(input, subKey)
+// print("Done in \(Double(DispatchTime.now().uptimeNanoseconds - start.uptimeNanoseconds) ) nanosec")
+// start = DispatchTime.now()
 
 		for i in (0..<result.count) {
 			var leftPart = UInt8(result[i] >> 4)
@@ -149,19 +159,37 @@ public final class SPN {
 
 			result[i] = (leftPart << 4) | rightPart
 		}
+// print("Done in \(Double(DispatchTime.now().uptimeNanoseconds - start.uptimeNanoseconds) ) nanosec")
+// start = DispatchTime.now()
 
 		if(!skipPermutation) {
-			let pboxInput = result.reduce(UInt64(0), { x, y in 
-				(x << 8) | UInt64(y)
-			})
+			let pboxInput = assembleUInt64(result)
+// print("Done in \(Double(DispatchTime.now().uptimeNanoseconds - start.uptimeNanoseconds) ) nanosec")
+// start = DispatchTime.now()
+
 			var pboxOutput = pbox.permute(pboxInput)
+
+// print("Done in \(Double(DispatchTime.now().uptimeNanoseconds - start.uptimeNanoseconds) ) nanosec")
+// start = DispatchTime.now()
 
 			for i in (0..<result.count) {
 				result[result.count - i - 1] = UInt8(pboxOutput & 0xFF)
 				pboxOutput >>= 8
 			}			
+// print("Done in \(Double(DispatchTime.now().uptimeNanoseconds - start.uptimeNanoseconds) ) nanosec")
+
 		}
 
+// print("=================")
+
+		return result
+	}
+
+	func assembleUInt64(_ data: [UInt8]) -> UInt64 {
+		var result: UInt64 = 0
+		for c in data {
+			result = (result << 8) | UInt64(c)
+		}
 		return result
 	}
 
@@ -225,9 +253,7 @@ public final class SPN {
 	func decryptRound(_ input: [UInt8], _ subKey: [UInt8], _ sboxes: [SBox], _ skipPermutation: Bool) -> [UInt8] {
 		var result = input
 		if(!skipPermutation) {
-			let pboxInput = result.reduce(UInt64(0), { x, y in 
-				(x << 8) | UInt64(y)
-			})
+			let pboxInput = assembleUInt64(result)
 			var pboxOutput = pbox.invPermute(pboxInput)
 
 			for i in (0..<result.count) {
@@ -246,7 +272,7 @@ public final class SPN {
 			result[i] = (leftPart << 4) | rightPart
 		}		
 
-		result = zip(result, subKey).map { $0.0 ^ $0.1}	
+		result = SPN.xorBlock(result, subKey)
 
 		return result
 	}
@@ -260,7 +286,11 @@ public final class SPN {
 	}
 
 	static func xorBlock(_ lhs: [UInt8], _ rhs: [UInt8]) -> [UInt8] {
-		return zip(lhs, rhs).map { $0.0 ^ $0.1}
+		var result = Array(lhs)
+		for i in (0..<result.count) {
+			result[i] = lhs[i] ^ rhs[i]
+		}
+		return result
 	}
 
 	let sboxes: [[SBox]]

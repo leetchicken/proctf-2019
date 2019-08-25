@@ -10,6 +10,12 @@ public final class ImagePutHandler: ChannelInboundHandler {
     let p :BigUInt = "124325339146889384540494091085456630009856882741872806181731279018491820800119460022367403769795008250021191767583423221479185609066059226301250167164084041279837566626881119772675984258163062926954046545485368458404445166682380071370274810671501916789361956272226105723317679562001235501455748016154805420913"
     let g :BigUInt = "115740200527109164239523414760926155534485715860090261532154107313946218459149402375178179458041461723723231563839316251515439564315555249353831328479173170684416728715378198172203100328308536292821245983596065287318698169565702979765910089654821728828592422299160041156491980943427556153020487552135890973413"
 
+    let filesProvider: FilesProvider
+
+    init(_ filesProvider: FilesProvider){
+        self.filesProvider = filesProvider
+    }
+
     public typealias InboundIn = ByteBuffer
     public typealias OutboundOut = ByteBuffer
 
@@ -23,8 +29,6 @@ public final class ImagePutHandler: ChannelInboundHandler {
 
     // public func channelActive(context: ChannelHandlerContext) {
     //     let remoteAddress = context.remoteAddress!
-    //     let channel = context.channel      
-    //     context.writeAndFlush(self.wrapOutboundOut(buffer), promise: nil)
     // }
 
     public func channelRead(context: ChannelHandlerContext, data: NIOAny) {
@@ -54,25 +58,62 @@ public final class ImagePutHandler: ChannelInboundHandler {
             return
         }
 
-        guard let imageData = try? spn?.decryptWithPadding(c) else {
+        // let start = DispatchTime.now()
+
+        guard let imageBytes = try? spn?.decryptWithPadding(c) else {
             print("!! Failed to decryptWithPadding c of \(c.count) bytes")
             context.close(promise: nil)
             return
         }
 
-        guard let image = try? Image(data: Data(imageData), as: .bmp) else {
+        // let end = DispatchTime.now()
+        // let nanoTime = end.uptimeNanoseconds - start.uptimeNanoseconds
+        // let timeInterval = Double(nanoTime) / 1_000_000_000
+
+        // print("Decrypted \(imageBytes.count) bytes in \(timeInterval) sec")
+
+        guard let image = try? Image(data: Data(imageBytes), as: .bmp) else {
             print("!! Failed to parse decrypted image bytes as valid Image")
             context.close(promise: nil)
             return
         }
 
-        print("GOT VALID IMAGE \(image.size)")
+        print("GOT VALID IMAGE: \(image.size)")
 
-        let currentDirectory = URL(fileURLWithPath: FileManager().currentDirectoryPath)
-        let destination = currentDirectory.appendingPathComponent("image.png")
-        let success = image.write(to: destination)
+        guard let newImageData = try? image.export(as: .bmp(compression: false)) else {
+            print("!! Failed to serialze image of size \(image.size) ")
+            context.close(promise: nil)
+            return
+        }
 
-        print("SAVED IMAGE: \(success)")
+        guard let newC = try? spn?.encryptWithPadding(Array(newImageData), SPN.generateIV()) else {
+            print("!! Failed to encryptWithPadding newImageData of \(newImageData.count) bytes")
+            context.close(promise: nil)
+            return
+        }
+
+        guard let destination = try? filesProvider.generateNextFilePath() else {
+            print("!! Can't get next filePath")
+            context.close(promise: nil)
+            return
+        }
+
+        // guard let dummy = try? Data(newC).write(to: destination, options: .atomic) else {
+        //     print("!! Failed to save newC of \(newC.count) bytes to \(destination):")
+        //     context.close(promise: nil)
+        //     return
+        // }
+
+        guard let dummy = try? Data(newC).write(to: destination, options: .atomic) else {
+            print("!! Failed to save newC of \(newC.count) bytes to \(destination):")
+            context.close(promise: nil)
+            return
+        }
+
+        try? Data(imageBytes).write(to: URL(fileURLWithPath: "source.bmp"))
+        try? newImageData.write(to: URL(fileURLWithPath: "processed.bmp"))
+
+        print("SAVED DATA: \(destination.path), size: \(newC.count)")
 
         var result = context.channel.allocator.buffer(capacity: 4)
         result.writeBytes([0, 0, 0, 0]) //TODO watermark image, encrypt it back, save to file and respond with fileId

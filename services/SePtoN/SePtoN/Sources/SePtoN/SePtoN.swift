@@ -18,6 +18,7 @@ public class SePtoN {
 		self.groupGet = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
 	}
 
+	let filesProvider = FilesProvider()
 
 	var groupPut: EventLoopGroup
 	var groupGet: EventLoopGroup
@@ -29,7 +30,7 @@ public class SePtoN {
 	
 
 	public func start(){		
-		let _ = startServer(self.groupPut, { ImagePutHandler() }, host, portPut)
+		let _ = startServer(self.groupPut, { ImagePutHandler(self.filesProvider) }, host, portPut)
 		let _ = startServer(self.groupGet, { ImageGetHandler() }, host, portGet)
 
 		// try channelPut.closeFuture.wait()

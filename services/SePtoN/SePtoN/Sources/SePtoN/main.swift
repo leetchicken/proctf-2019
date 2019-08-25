@@ -1,15 +1,16 @@
 import Foundation
 
-let spn = SPN([7, 6, 5, 4, 3, 2, 1, 0])
 
-let plain: [UInt8] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
-let iv: [UInt8] = SPN.generateIV()
+// let spn = SPN([7, 6, 5, 4, 3, 2, 1, 0])
 
-print(plain)
-let enc = try! spn.encryptCBC(plain, iv)
-print(enc)
-let dec = try! spn.decryptCBC(enc)
-print(dec)
+// let plain: [UInt8] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+// let iv: [UInt8] = SPN.generateIV()
+
+// print(plain)
+// let enc = try! spn.encryptCBC(plain, iv)
+// print(enc)
+// let dec = try! spn.decryptCBC(enc)
+// print(dec)
 
 
 let arguments = CommandLine.arguments
