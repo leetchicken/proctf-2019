@@ -30,6 +30,8 @@ module Program =
         Rubik.Rubik.Test() |> ignore
 #endif
 
+        RubikDb.Init()
+
         (new WebHostBuilder())
             //.UseConfigurationSection(SettingsManager.ConfigRoot.GetSection("Host"))
             .UseKestrel(fun _ options ->

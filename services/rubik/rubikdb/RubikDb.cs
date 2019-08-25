@@ -42,6 +42,12 @@ namespace rubikdb
 
 		public static IEnumerable<Solution> TakeSolutions() => SolutionIndex.TakeLast();
 
+		public static void Init()
+		{
+			UserStore.Init();
+			SolutionStore.Init();
+		}
+
 		public static void Close()
 		{
 			UserStore.Flush();
@@ -49,9 +55,9 @@ namespace rubikdb
 		}
 
 		private static readonly RubikIndex<string, User> UserIndex = new RubikIndex<string, User>(TimeSpan.FromMinutes(60), user => user.Login, null, StringComparer.Ordinal);
-		private static readonly RubikStore<User> UserStore = new RubikStore<User>("data/users.db", user => UserIndex.TryAdd(user, user.Created));
+		private static readonly RubikStore<User> UserStore = new RubikStore<User>("data/users.db", new UserSerializer(), user => { if(user != null) UserIndex.TryAdd(user, user.Created); });
 
 		private static readonly RubikIndex<Guid, Solution> SolutionIndex = new RubikIndex<Guid, Solution>(TimeSpan.FromMinutes(30), sln => sln.Id);
-		private static readonly RubikStore<Solution> SolutionStore = new RubikStore<Solution>("data/solutions.db", sln => SolutionIndex.TryAdd(sln, sln.Created));
+		private static readonly RubikStore<Solution> SolutionStore = new RubikStore<Solution>("data/solutions.db", new SolutionSerializer(), sln => { if(sln != null) SolutionIndex.TryAdd(sln, sln.Created); });
 	}
 }
