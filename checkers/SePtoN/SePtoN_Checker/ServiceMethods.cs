@@ -35,7 +35,7 @@ namespace SePtoN_Checker
 
 				var connectedSuccessfully = tcpClient.ConnectAsync(IPAddress.Parse(host), PORT).Wait(ConnectTimeout);
 				if(!connectedSuccessfully)
-					throw new ServiceException( ExitCode.DOWN, $"Failed to connect to service in timeount {ConnectTimeout}");
+					throw new ServiceException( ExitCode.DOWN, $"Failed to connect to service in timeout {ConnectTimeout}");
 
 				using(var stream = tcpClient.GetStream())
 				{
@@ -53,7 +53,12 @@ namespace SePtoN_Checker
 
 					stream.WriteLengthFieldAware(encryptedData);
 
-					return -1;
+					var data = stream.ReadLengthFieldAware();
+					var imageId = BitConverter.ToInt32(data.Reverse().ToArray());
+
+					Console.Error.WriteLine($"Got image id {imageId}");
+
+					return (int)ExitCode.OK;
 				}
 			}
 			catch(ServiceException)
@@ -74,7 +79,7 @@ namespace SePtoN_Checker
 		
 		const int DH_x_bitsCount = 20 * 8;
 
-		private const int NetworkOperationTimeout = 1000;
+		private const int NetworkOperationTimeout = 3000;
 		private const int ConnectTimeout = 1000;
 
 		public const int PORT = 31337;
@@ -114,19 +119,31 @@ namespace SePtoN_Checker
 		{
 			byte[] lengthBuffer = new byte[sizeof(ushort)];
 
-			lengthBuffer[0] = (byte)stream.ReadByte();
-			lengthBuffer[1] = (byte)stream.ReadByte();
+			var b0 = stream.ReadByte();
+			if(b0 == -1)
+				throw new ServiceException(ExitCode.MUMBLE, $"Can't read message length's first byte");
+
+			var b1 = stream.ReadByte();
+			if(b1 == -1)
+				throw new ServiceException(ExitCode.MUMBLE, $"Can't read message length's second byte");
+
+			lengthBuffer[0] = (byte)b0;
+			lengthBuffer[1] = (byte)b1;
 			var length = BitConverter.ToUInt16(lengthBuffer.Reverse().ToArray()); //NOTE making it BigEndian
 
 			var result = new byte[length];
 
 			var leftBytes = length;
 
-			while(leftBytes > 0)
+			int readBytes;
+			do 
 			{
-				var readBytes = stream.Read(new Span<byte>(result, length - leftBytes, leftBytes));
+				readBytes = stream.Read(new Span<byte>(result, length - leftBytes, leftBytes));
 				leftBytes = (ushort)(leftBytes - readBytes);
-			}
+			} while(leftBytes > 0 && readBytes > 0);
+
+			if(leftBytes > 0)
+				throw new ServiceException(ExitCode.MUMBLE, $"Expected {leftBytes} bytes but not received all of them. Have {leftBytes} left");
 
 			return result;
 		}
