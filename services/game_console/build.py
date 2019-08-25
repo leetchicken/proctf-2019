@@ -34,11 +34,15 @@ os.system("mkdir BUILD/server")
 if os.system("cd server; make clean; make -j8") != 0:
     exit(1)
 os.system("cp server/server BUILD/server/")
+os.system("cp server/docker_build.sh BUILD/server/")
+os.system("cp server/Dockerfile BUILD/server/")
+os.system("cp server/entrypoint.sh BUILD/server/")
 os.system("mkdir BUILD/server/data")
 os.system("cp server/data/*.xml BUILD/server/data")
+os.system("cp server/data/*.html BUILD/server/data")
 print("")
 
-os.system("mkdir BUILD/SDK; cp SDK.md BUILD/SDK/")
+os.system("mkdir BUILD/SDK; cp SDK.md.html BUILD/SDK/")
 
 gamesXml = ET.ElementTree(file="server/data/games.xml").getroot()
 for game in gamesXml:
