@@ -39,6 +39,7 @@ os.system("cp server/Dockerfile BUILD/server/")
 os.system("cp server/entrypoint.sh BUILD/server/")
 os.system("mkdir BUILD/server/data")
 os.system("cp server/data/*.xml BUILD/server/data")
+os.system("cp server/data/*.html BUILD/server/data")
 print("")
 
 os.system("mkdir BUILD/SDK; cp SDK.md.html BUILD/SDK/")
