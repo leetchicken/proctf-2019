@@ -5,5 +5,25 @@ package handy;
 option go_package = "data";
 
 message UserInfo {
+  string id = 1;
+
+  string username = 2;
+
+  string password_hash = 3;
+
+  bool is_master = 4;
+}
+
+message LocalUserInfo {
   string username = 1;
+
+  bool is_master = 2;
+}
+
+message ProfileUserInfo {
+  string id = 1;
+
+  string username = 2;
+
+  bool is_master = 3;
 }

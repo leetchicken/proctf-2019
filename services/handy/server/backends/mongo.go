@@ -12,7 +12,7 @@ import (
 var (
 	mongoConnectString  = flag.String("mongo-connect-string", "mongodb://localhost:27017", "MongoDB address to connect to")
 	mongoConnectTimeout = flag.Duration("mongo-connect-timeout", 10*time.Second, "MongoDB connection timeout")
-	mongoDatabaseName = flag.String("mongo-db-name", "handy", "Name of the database to use in MongoDB")
+	mongoDatabaseName   = flag.String("mongo-db-name", "handy", "Name of the database to use in MongoDB")
 )
 
 func MongoDatabase() (*mongo.Database, error) {
@@ -21,5 +21,5 @@ func MongoDatabase() (*mongo.Database, error) {
 	if err != nil {
 		return nil, err
 	}
-	return client.Database("mongoDatabaseName"), nil
+	return client.Database(*mongoDatabaseName), nil
 }

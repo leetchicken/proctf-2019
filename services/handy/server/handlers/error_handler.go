@@ -1,8 +1,8 @@
 package handlers
 
 import (
-	"net/http"
 	"log"
+	"net/http"
 )
 
 func HandleError(w http.ResponseWriter, err error, status int) {

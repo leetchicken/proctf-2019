@@ -3,9 +3,11 @@
 
 package data
 
-import proto "github.com/golang/protobuf/proto"
-import fmt "fmt"
-import math "math"
+import (
+	fmt "fmt"
+	proto "github.com/golang/protobuf/proto"
+	math "math"
+)
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
@@ -16,10 +18,13 @@ var _ = math.Inf
 // is compatible with the proto package it is being compiled against.
 // A compilation error at this line likely means your copy of the
 // proto package needs to be updated.
-const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
+const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 
 type UserInfo struct {
-	Username             string   `protobuf:"bytes,1,opt,name=username,proto3" json:"username,omitempty"`
+	Id                   string   `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Username             string   `protobuf:"bytes,2,opt,name=username,proto3" json:"username,omitempty"`
+	PasswordHash         string   `protobuf:"bytes,3,opt,name=password_hash,json=passwordHash,proto3" json:"password_hash,omitempty"`
+	IsMaster             bool     `protobuf:"varint,4,opt,name=is_master,json=isMaster,proto3" json:"is_master,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -29,16 +34,17 @@ func (m *UserInfo) Reset()         { *m = UserInfo{} }
 func (m *UserInfo) String() string { return proto.CompactTextString(m) }
 func (*UserInfo) ProtoMessage()    {}
 func (*UserInfo) Descriptor() ([]byte, []int) {
-	return fileDescriptor_user_info_6c88e35228a422d5, []int{0}
+	return fileDescriptor_84fe32b1d3884b9c, []int{0}
 }
+
 func (m *UserInfo) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_UserInfo.Unmarshal(m, b)
 }
 func (m *UserInfo) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_UserInfo.Marshal(b, m, deterministic)
 }
-func (dst *UserInfo) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_UserInfo.Merge(dst, src)
+func (m *UserInfo) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_UserInfo.Merge(m, src)
 }
 func (m *UserInfo) XXX_Size() int {
 	return xxx_messageInfo_UserInfo.Size(m)
@@ -49,6 +55,13 @@ func (m *UserInfo) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_UserInfo proto.InternalMessageInfo
 
+func (m *UserInfo) GetId() string {
+	if m != nil {
+		return m.Id
+	}
+	return ""
+}
+
 func (m *UserInfo) GetUsername() string {
 	if m != nil {
 		return m.Username
@@ -56,18 +69,143 @@ func (m *UserInfo) GetUsername() string {
 	return ""
 }
 
-func init() {
-	proto.RegisterType((*UserInfo)(nil), "handy.UserInfo")
+func (m *UserInfo) GetPasswordHash() string {
+	if m != nil {
+		return m.PasswordHash
+	}
+	return ""
 }
 
-func init() { proto.RegisterFile("user_info.proto", fileDescriptor_user_info_6c88e35228a422d5) }
+func (m *UserInfo) GetIsMaster() bool {
+	if m != nil {
+		return m.IsMaster
+	}
+	return false
+}
 
-var fileDescriptor_user_info_6c88e35228a422d5 = []byte{
-	// 90 bytes of a gzipped FileDescriptorProto
+type LocalUserInfo struct {
+	Username             string   `protobuf:"bytes,1,opt,name=username,proto3" json:"username,omitempty"`
+	IsMaster             bool     `protobuf:"varint,2,opt,name=is_master,json=isMaster,proto3" json:"is_master,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *LocalUserInfo) Reset()         { *m = LocalUserInfo{} }
+func (m *LocalUserInfo) String() string { return proto.CompactTextString(m) }
+func (*LocalUserInfo) ProtoMessage()    {}
+func (*LocalUserInfo) Descriptor() ([]byte, []int) {
+	return fileDescriptor_84fe32b1d3884b9c, []int{1}
+}
+
+func (m *LocalUserInfo) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_LocalUserInfo.Unmarshal(m, b)
+}
+func (m *LocalUserInfo) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_LocalUserInfo.Marshal(b, m, deterministic)
+}
+func (m *LocalUserInfo) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_LocalUserInfo.Merge(m, src)
+}
+func (m *LocalUserInfo) XXX_Size() int {
+	return xxx_messageInfo_LocalUserInfo.Size(m)
+}
+func (m *LocalUserInfo) XXX_DiscardUnknown() {
+	xxx_messageInfo_LocalUserInfo.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_LocalUserInfo proto.InternalMessageInfo
+
+func (m *LocalUserInfo) GetUsername() string {
+	if m != nil {
+		return m.Username
+	}
+	return ""
+}
+
+func (m *LocalUserInfo) GetIsMaster() bool {
+	if m != nil {
+		return m.IsMaster
+	}
+	return false
+}
+
+type ProfileUserInfo struct {
+	Id                   string   `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Username             string   `protobuf:"bytes,2,opt,name=username,proto3" json:"username,omitempty"`
+	IsMaster             bool     `protobuf:"varint,3,opt,name=is_master,json=isMaster,proto3" json:"is_master,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *ProfileUserInfo) Reset()         { *m = ProfileUserInfo{} }
+func (m *ProfileUserInfo) String() string { return proto.CompactTextString(m) }
+func (*ProfileUserInfo) ProtoMessage()    {}
+func (*ProfileUserInfo) Descriptor() ([]byte, []int) {
+	return fileDescriptor_84fe32b1d3884b9c, []int{2}
+}
+
+func (m *ProfileUserInfo) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ProfileUserInfo.Unmarshal(m, b)
+}
+func (m *ProfileUserInfo) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ProfileUserInfo.Marshal(b, m, deterministic)
+}
+func (m *ProfileUserInfo) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ProfileUserInfo.Merge(m, src)
+}
+func (m *ProfileUserInfo) XXX_Size() int {
+	return xxx_messageInfo_ProfileUserInfo.Size(m)
+}
+func (m *ProfileUserInfo) XXX_DiscardUnknown() {
+	xxx_messageInfo_ProfileUserInfo.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ProfileUserInfo proto.InternalMessageInfo
+
+func (m *ProfileUserInfo) GetId() string {
+	if m != nil {
+		return m.Id
+	}
+	return ""
+}
+
+func (m *ProfileUserInfo) GetUsername() string {
+	if m != nil {
+		return m.Username
+	}
+	return ""
+}
+
+func (m *ProfileUserInfo) GetIsMaster() bool {
+	if m != nil {
+		return m.IsMaster
+	}
+	return false
+}
+
+func init() {
+	proto.RegisterType((*UserInfo)(nil), "handy.UserInfo")
+	proto.RegisterType((*LocalUserInfo)(nil), "handy.LocalUserInfo")
+	proto.RegisterType((*ProfileUserInfo)(nil), "handy.ProfileUserInfo")
+}
+
+func init() { proto.RegisterFile("user_info.proto", fileDescriptor_84fe32b1d3884b9c) }
+
+var fileDescriptor_84fe32b1d3884b9c = []byte{
+	// 193 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x09, 0x6e, 0x88, 0x02, 0xff, 0xe2, 0xe2, 0x2f, 0x2d, 0x4e, 0x2d,
 	0x8a, 0xcf, 0xcc, 0x4b, 0xcb, 0xd7, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x62, 0xcd, 0x48, 0xcc,
-	0x4b, 0xa9, 0x54, 0x52, 0xe3, 0xe2, 0x08, 0x05, 0xca, 0x78, 0x02, 0x25, 0x84, 0xa4, 0xb8, 0x38,
-	0x40, 0xaa, 0xf2, 0x12, 0x73, 0x53, 0x25, 0x18, 0x15, 0x18, 0x35, 0x38, 0x83, 0xe0, 0x7c, 0x27,
-	0xb6, 0x28, 0x96, 0x94, 0xc4, 0x92, 0xc4, 0x24, 0x36, 0xb0, 0x6e, 0x63, 0x40, 0x00, 0x00, 0x00,
-	0xff, 0xff, 0xd3, 0x41, 0x3c, 0x3c, 0x50, 0x00, 0x00, 0x00,
+	0x4b, 0xa9, 0x54, 0xaa, 0xe0, 0xe2, 0x08, 0x05, 0xca, 0x78, 0x02, 0x25, 0x84, 0xf8, 0xb8, 0x98,
+	0x32, 0x53, 0x24, 0x18, 0x15, 0x18, 0x35, 0x38, 0x83, 0x80, 0x2c, 0x21, 0x29, 0x2e, 0x0e, 0x90,
+	0xae, 0xbc, 0xc4, 0xdc, 0x54, 0x09, 0x26, 0xb0, 0x28, 0x9c, 0x2f, 0xa4, 0xcc, 0xc5, 0x5b, 0x90,
+	0x58, 0x5c, 0x5c, 0x9e, 0x5f, 0x94, 0x12, 0x9f, 0x91, 0x58, 0x9c, 0x21, 0xc1, 0x0c, 0x56, 0xc0,
+	0x03, 0x13, 0xf4, 0x00, 0x8a, 0x09, 0x49, 0x73, 0x71, 0x66, 0x16, 0xc7, 0xe7, 0x26, 0x16, 0x97,
+	0xa4, 0x16, 0x49, 0xb0, 0x00, 0x15, 0x70, 0x04, 0x71, 0x64, 0x16, 0xfb, 0x82, 0xf9, 0x4a, 0x1e,
+	0x5c, 0xbc, 0x3e, 0xf9, 0xc9, 0x89, 0x39, 0x70, 0xeb, 0x91, 0xad, 0x63, 0x44, 0xb3, 0x0e, 0xc5,
+	0x24, 0x26, 0x34, 0x93, 0xa2, 0xb8, 0xf8, 0x03, 0x8a, 0xf2, 0xd3, 0x32, 0x73, 0x52, 0xc9, 0xf2,
+	0x0a, 0x8a, 0xd9, 0xcc, 0xa8, 0x66, 0x3b, 0xb1, 0x45, 0xb1, 0xa4, 0x24, 0x96, 0x24, 0x26, 0xb1,
+	0x81, 0x43, 0xcd, 0x18, 0x10, 0x00, 0x00, 0xff, 0xff, 0xbd, 0x12, 0x5e, 0x09, 0x48, 0x01, 0x00,
+	0x00,
 }

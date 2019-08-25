@@ -48,3 +48,10 @@ User Info in Cookies:
     - Username
 
 cookie = id + encrypt(hash + serialize(user_info))
+
+# TODO
+
+* Add bio
+* Add hashing to CookieInfo
+* Wrap handlers
+* Html

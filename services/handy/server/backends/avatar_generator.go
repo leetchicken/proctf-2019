@@ -3,9 +3,7 @@ package backends
 import (
 	"fmt"
 	"io"
-	"encoding/base64"
 
-	"github.com/google/uuid"
 	"github.com/nullrocks/identicon"
 )
 
@@ -32,19 +30,19 @@ func NewAvatarGenerator() (*AvatarGenerator, error) {
 	}, nil
 }
 
-func (g *AvatarGenerator) GenerateAvatar(id uuid.UUID, size int, w io.Writer) error {
-	if size < 1 || size > maxSize {
-		return fmt.Errorf("Invalid size: %d should be greater than 0 and no more than %d", size, maxSize)
+type GenerateAvatarInfo struct {
+	ID   string
+	Size int
+}
+
+func (g *AvatarGenerator) GenerateAvatar(gai *GenerateAvatarInfo, w io.Writer) error {
+	if gai.Size < 1 || gai.Size > maxSize {
+		return fmt.Errorf("Invalid size: %d should be greater than 0 and no more than %d", gai.Size, maxSize)
 	}
-	idBytes, err := id.MarshalBinary()
+	ii, err := g.ig.Draw(gai.ID)
 	if err != nil {
 		return err
 	}
-	encodedID := base64.StdEncoding.EncodeToString(idBytes)
-	ii, err := g.ig.Draw(encodedID)
-	if err != nil {
-		return err
-	}
-	ii.Png(size, w)
+	ii.Png(gai.Size, w)
 	return nil
 }

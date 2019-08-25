@@ -1,10 +1,10 @@
 package main
 
 import (
+	"flag"
 	"log"
 	"net/http"
 	"os"
-	"flag"
 
 	gorilla_handlers "github.com/gorilla/handlers"
 
@@ -39,11 +39,13 @@ func main() {
 		log.Fatalf("Failed to create AvatarGenerator: %s", err)
 	}
 
-	hw := handlers.NewHandlerWrapper(auditWriter, cookieStorage)
-	http.HandleFunc("/login", hw.WrapHandler(handlers.NewLoginHandler(cookieStorage, userStorage)))
-	http.HandleFunc("/register", hw.WrapHandler(handlers.NewRegisterHandler(userStorage)))
-	http.HandleFunc("/profile/picture", hw.WrapHandler(handlers.NewProfilePictureHandler(avatarGenerator)))
-	http.HandleFunc("/tasks", hw.WrapHandler(handlers.NewTaskHandler(taskStorage)))
-	http.HandleFunc("/", hw.WrapHandler(handlers.NewRootHandler(userStorage)))
+	hwf := handlers.NewHandlerWrapperFactory(auditWriter, cookieStorage)
+	http.Handle("/login", hwf.Wrap(handlers.NewLoginHandler(cookieStorage, userStorage)))
+	http.Handle("/register", hwf.Wrap(handlers.NewRegisterHandler(userStorage)))
+	http.Handle("/profile", hwf.Wrap(handlers.NewProfileHandler(userStorage)))
+	http.Handle("/profile/picture", hwf.Wrap(handlers.NewProfilePictureHandler(avatarGenerator)))
+	http.Handle("/tasks", hwf.Wrap(handlers.NewTaskHandler(taskStorage)))
+	http.Handle("/masters", hwf.Wrap(handlers.NewMasterHandler(userStorage)))
+	http.Handle("/", hwf.Wrap(handlers.NewRootHandler()))
 	log.Fatal(http.ListenAndServe("localhost:8080", gorilla_handlers.LoggingHandler(os.Stdout, http.DefaultServeMux)))
 }

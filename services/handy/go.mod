@@ -8,6 +8,7 @@ require (
 	github.com/golang/snappy v0.0.1 // indirect
 	github.com/google/uuid v1.1.1
 	github.com/gorilla/handlers v1.4.2
+	github.com/gorilla/schema v1.1.0
 	github.com/nullrocks/identicon v0.0.0-20180626043057-7875f45b0022
 	github.com/xdg/scram v0.0.0-20180814205039-7eeb5667e42c // indirect
 	github.com/xdg/stringprep v1.0.0 // indirect
