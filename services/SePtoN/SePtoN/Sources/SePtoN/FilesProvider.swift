@@ -6,9 +6,9 @@ public final class FilesProvider {
 	let dataDirectory: URL	
 
 	let dataDirName = "data"
-	let filesGroupSize = 1000
+	let filesGroupSize: Int32 = 1000
 
-	var nextFileId: Int = 0
+	var nextFileId: Int32 = 0
 
 	init() {
 		dispatchQueue = DispatchQueue(label: "imagesPutLockQueue")		
@@ -32,7 +32,7 @@ public final class FilesProvider {
 
 			let lastFileId = try fileManager
 						.contentsOfDirectory(at: lastIdsGroupPath, includingPropertiesForKeys: nil, options: [])
-						.compactMap { Int($0.lastPathComponent) }
+						.compactMap { Int32($0.lastPathComponent) }
 						.max()
 
 			if(lastFileId != nil) {				
@@ -43,19 +43,20 @@ public final class FilesProvider {
         }
 	}
 
-	public func generateNextFilePath() throws -> URL {
-		var path : URL!
+	public func generateNextFilePath() throws -> (Int32, URL) {		
+		var id : Int32!
 		self.dispatchQueue.sync {
-			path = getFilePathForId(nextFileId)
+			id = nextFileId			
 			nextFileId += 1			
 		}
+		let path = getFilePathForId(id)
 
 		try FileManager.default.createDirectory(at: path.deletingLastPathComponent(), withIntermediateDirectories: true)
-		return path
+		return (id, path)
 	}
 
-	public func getFilePathForId(_ id: Int) -> URL {
+	public func getFilePathForId(_ id: Int32) -> URL {
 		let fileIdsGroup = (id / filesGroupSize) * filesGroupSize;
-		return dataDirectory.appendingPathComponent(String(fileIdsGroup)).appendingPathComponent(String(nextFileId))		
+		return dataDirectory.appendingPathComponent(String(fileIdsGroup)).appendingPathComponent(String(id))		
 	}
 }

@@ -22,6 +22,7 @@ public final class ImagePutHandler: ChannelInboundHandler {
     private enum State {
         case keyExchange
         case imageTransfer
+        case done
     }
 
     private var state: State = .keyExchange
@@ -41,8 +42,8 @@ public final class ImagePutHandler: ChannelInboundHandler {
 
         if case .imageTransfer = self.state {
             processImageTransfer(context, data)
-
-            context.close(promise: nil)
+            state = .done
+            // context.close(promise: nil)
             return
         }
     }
@@ -92,37 +93,27 @@ public final class ImagePutHandler: ChannelInboundHandler {
             return
         }
 
-        guard let destination = try? filesProvider.generateNextFilePath() else {
+        guard let (id, fileUrl) = try? filesProvider.generateNextFilePath() else {
             print("!! Can't get next filePath")
             context.close(promise: nil)
             return
         }
 
-        // guard let dummy = try? Data(newC).write(to: destination, options: .atomic) else {
-        //     print("!! Failed to save newC of \(newC.count) bytes to \(destination):")
-        //     context.close(promise: nil)
-        //     return
-        // }
-
-        guard let dummy = try? Data(newC).write(to: destination, options: .atomic) else {
-            print("!! Failed to save newC of \(newC.count) bytes to \(destination):")
+        guard let dummy = try? Data(newC).write(to: fileUrl, options: .atomic) else {
+            print("!! Failed to save newC of \(newC.count) bytes to \(fileUrl):")
             context.close(promise: nil)
             return
         }
 
-        try? Data(imageBytes).write(to: URL(fileURLWithPath: "source.bmp"))
-        try? newImageData.write(to: URL(fileURLWithPath: "processed.bmp"))
-
-        print("SAVED DATA: \(destination.path), size: \(newC.count)")
+        print("SAVED DATA: \(fileUrl.path), id \(id) size: \(newC.count)")
 
         var result = context.channel.allocator.buffer(capacity: 4)
-        result.writeBytes([0, 0, 0, 0]) //TODO watermark image, encrypt it back, save to file and respond with fileId
+        result.writeInteger(id)
 
         context.write(self.wrapOutboundOut(result), promise: nil)
     }
 
     public func processKeyExchange(_ context: ChannelHandlerContext, _ data: NIOAny) {
-
 // Expecting from Client no more than 128 bytes of his DH part: g^a mod p
         var byteBuffer = unwrapInboundIn(data)
         if byteBuffer.readableBytes > 128 + 1 {
@@ -135,17 +126,13 @@ public final class ImagePutHandler: ChannelInboundHandler {
         }
         
         let yA = BigUInt(Data(newData))
-        // print(newData)
-        // print("yA: ", yA)
-        // print()
 
         let xB = BigUInt.randomInteger(withExactWidth: 20 * 8)
         let yB = g.power(xB, modulus: p)
-        // print("yB: ", yB)
 
         let key = yA.power(xB, modulus: p)
         let keyMaterial = Array(key.serialize())
-        // print(keyMaterial)
+        
         print("Key: ", key)
         print()
 
