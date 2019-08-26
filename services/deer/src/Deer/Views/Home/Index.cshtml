@@ -1,0 +1,42 @@
+@model Deer.Models.User
+
+@{
+    Layout = "_Layout";
+}
+
+<div class="container text-monospace">
+<nav class="navbar navbar-expand navbar-light bg-light">
+  <ul class="navbar-nav ml-auto">
+    <li class="nav-item active">
+      <span class="nav-link">@User.Identity.Name</span>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" href="@Url.Action("LogOut", "Account")"><i class="fas fa-sign-out-alt"></i> Logout</a>
+      </li>
+  </ul>
+</nav>
+
+<div class="d-flex justify-content-center h-100 text-monospace">
+    <div class="card">
+        <div class="card-header">
+            <h3>Info</h3>
+        </div>
+        <div class="card-body">
+            <table>
+                <tr>
+                    <td>Log exchange:</td>
+                    <td>@Model.LogExchangeName</td>
+                </tr>
+                <tr>
+                    <td>Error queue:</td>
+                    <td>@Model.ErrorQueueName</td>
+                </tr>
+                <tr>
+                    <td>Log index:</td>
+                    <td>@Model.LogIndexName</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+</div>
+</div>

@@ -40,25 +40,13 @@ services:
     image: mongo
     container_name: deer-mongo
 
-  log_processor:
-    image: proctf/deer-log-processor
-    build: src/LogProcessor/
-    container_name: deer-log-processor
+  deer:
+    image: proctf/deer
+    build: src/Deer/
+    container_name: deer
     restart: on-failure
     volumes:
-      - ./LogProcessor.appsettings.json:/app/appsettings.json
-    links:
-      - elasticsearch
-      - mongodb
-      - rabbitmq
-
-  identity_server:
-    image: proctf/deer-identity-server
-    build: src/IdentityServer/
-    container_name: deer-identity-server
-    restart: on-failure
-    volumes:
-      - ./IdentityServer.appsettings.json:/app/appsettings.json
+      - ./Deer.appsettings.json:/app/appsettings.json
     ports:
       - 5000:5000
     expose:
