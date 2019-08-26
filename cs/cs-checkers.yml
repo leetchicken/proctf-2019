@@ -20,12 +20,14 @@
         - software-properties-common
     tags: docker
 
-  - name: install docker key
+  - name: install docker repo key
     apt_key: url=https://download.docker.com/linux/debian/gpg
     tags: docker
 
   - name: add docker repo
-    shell: echo "deb [arch=amd64] https://download.docker.com/linux/debian $(lsb_release -cs) stable" > /etc/apt/sources.list.d/docker.list
+    apt_repository:
+      repo: deb [arch=amd64] https://download.docker.com/linux/debian {{ ansible_distribution_release }} stable
+      filename: docker
     tags: docker
 
   - name: install docker
@@ -34,22 +36,25 @@
         - docker-ce
         - docker-ce-cli
         - containerd.io
-      update_cache: yes
     tags: docker
 
   - name: add cs_user to docker
     user: name="{{cs_user}}" groups=docker append=yes
     tags: docker
 
-  - name: build binder
-    command: ./build.sh
-    args:
-      chdir: "{{cs_dir}}/checkers/Binder"
-    tags: binder
+  - name: install .net repo key
+    apt_key: url=https://packages.microsoft.com/keys/microsoft.asc
+    tags: net
 
-  - name: build tmp dir
-    file: path="{{cs_dir}}/checkers/Binder/checker/tmp" state=directory owner="{{cs_user}}" group="{{cs_user}}"
-    tags: binder
+  - name: add .net repo
+    apt_repository:
+      repo: deb [arch=amd64] https://packages.microsoft.com/debian/9/prod stretch main
+      filename: microsoft
+    tags: net
+
+  - name: install .net sdk
+    apt: name=dotnet-sdk-2.2
+    tags: net
 
   - name: install sys deps
     apt:
@@ -61,3 +66,23 @@
       executable: pip3
       name:
         - requests
+
+  - name: build binder
+    command: ./build.sh
+    args:
+      chdir: "{{cs_dir}}/checkers/Binder"
+    become: yes
+    become_user: "{{cs_user}}"
+    tags: binder
+
+  - name: binder tmp dir
+    file: path="{{cs_dir}}/checkers/Binder/checker/tmp" state=directory owner="{{cs_user}}" group="{{cs_user}}"
+    tags: binder
+
+  - name: build rubik
+    command: dotnet build -c Release
+    args:
+      chdir: "{{cs_dir}}/checkers/rubik/src"
+    become: yes
+    become_user: "{{cs_user}}"
+    tags: rubik
