@@ -4,6 +4,7 @@
 #include <dirent.h>
 #include <map>
 #include <mutex>
+#include "log.h"
 
 
 std::mutex GMutex;
@@ -41,7 +42,7 @@ static bool EnumerateAssets(const char* gameName, std::vector<std::string>& asse
     } 
     else 
     {
-        printf("Failed to open directory %s\n", dirName);
+        Log("Failed to open directory %s\n", dirName);
         return false;
     }
 
@@ -54,11 +55,11 @@ static bool LoadGamesDatabase()
     pugi::xml_document doc;
     if (!doc.load_file("data/games.xml")) 
     {
-        printf("Failed to load games database\n");
+        Log("Failed to load games database\n");
         return false;
     }
 
-    printf("Games database:\n");
+    Log("Games database:\n");
     pugi::xml_node gamesNode = doc.child("Games");
     for (pugi::xml_node gameNode = gamesNode.first_child(); gameNode; gameNode = gameNode.next_sibling())
     {
@@ -72,12 +73,12 @@ static bool LoadGamesDatabase()
             return false;
         }
         GGamesDatabase.insert({desc->id, desc});
-        printf("  %x %s '%s'\n", desc->id, desc->name.c_str(), desc->desc.c_str());
-        printf("  assets:\n");
+        Log("  %x %s '%s'\n", desc->id, desc->name.c_str(), desc->desc.c_str());
+        Log("  assets:\n");
         if(desc->assets.empty())
-            printf("   <none>\n");
+            Log("   <none>\n");
         for(auto& assetName : desc->assets)
-            printf("   %s\n", assetName.c_str());
+            Log("   %s\n", assetName.c_str());
     }
 
     return true;
@@ -90,7 +91,7 @@ static GameDesc* FindGame(uint32_t id)
     auto iter = GGamesDatabase.find(id);
     if(iter == GGamesDatabase.end())
     {
-        printf("  unknown game\n");
+        Log("  unknown game\n");
         return nullptr;
     }
     return iter->second;
@@ -124,16 +125,16 @@ EGameErrorCode GetGameIcon(uint32_t gameId, Image& icon)
     std::string iconFilePath = "data/";
     iconFilePath.append(gameDesc->name);
     iconFilePath.append("/icon.png");
-    printf("  %s\n", iconFilePath.c_str());
+    Log("  %s\n", iconFilePath.c_str());
     if(!read_png(iconFilePath.c_str(), icon))
     {
-        printf("  failed to read icon\n");
+        Log("  failed to read icon\n");
         return kGameErrorInternal;
     }
 
     if(icon.width != kIconWidth || icon.height != kIconHeight)
     {
-        printf("  invalid icon size: %ux%u\n", icon.width, icon.height);
+        Log("  invalid icon size: %ux%u\n", icon.width, icon.height);
         return kGameErrorInternal;
     }
 
@@ -149,7 +150,7 @@ EGameErrorCode GetGameAsset(uint32_t gameId, uint32_t assetIndex, Asset& asset)
 
     if(assetIndex >= gameDesc->assets.size())
     {
-        printf("  invalid asset index\n");
+        Log("  invalid asset index\n");
         return kGameErrorNotFound;
     }
 
@@ -158,10 +159,10 @@ EGameErrorCode GetGameAsset(uint32_t gameId, uint32_t assetIndex, Asset& asset)
     assetFilePath.append(gameDesc->name);
     assetFilePath.append("/");
     assetFilePath.append(asset.name.c_str());
-    printf("  %s\n", assetFilePath.c_str());
+    Log("  %s\n", assetFilePath.c_str());
     if(!read_png(assetFilePath.c_str(), asset.image))
     {
-        printf("  failed to read asset\n");
+        Log("  failed to read asset\n");
         return kGameErrorInternal;
     }
 
@@ -181,11 +182,11 @@ EGameErrorCode GetGameCode(uint32_t gameId, void** code, uint32_t& codeSize)
     std::string codeFilePath = "data/";
     codeFilePath.append(gameDesc->name);
     codeFilePath.append("/code.bin");
-    printf("  %s\n", codeFilePath.c_str());
+    Log("  %s\n", codeFilePath.c_str());
     FILE* f = fopen(codeFilePath.c_str(), "r");
     if (!f)
     {
-        printf( "failed to read code\n");
+        Log( "failed to read code\n");
         return kGameErrorInternal;
     }
 
@@ -245,7 +246,7 @@ bool AddGame(void* zipFile, uint32_t zipFileSize, const char* zipName)
     pugi::xml_document doc;
     if (!doc.load_file("data/games.xml")) 
     {
-        printf("Failed to load games database\n");
+        Log("Failed to load games database\n");
         delete desc;
         return false;
     }
@@ -260,7 +261,7 @@ bool AddGame(void* zipFile, uint32_t zipFileSize, const char* zipName)
     std::lock_guard<std::mutex> guard(GMutex);
     GGamesDatabase.insert({desc->id, desc});
 
-    printf("  new game '%s' added\n", gameName);
+    Log("  new game '%s' added\n", gameName);
 
     return true;
 }

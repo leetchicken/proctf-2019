@@ -5,6 +5,7 @@
 #include <unordered_map>
 #include "network.h"
 #include "misc.h"
+#include "log.h"
 
 
 void Socket::Close()
@@ -44,7 +45,7 @@ bool NetworkManager(AcceptConnectionCallback acceptConnection, uint16_t port)
     int listenSock = socket(AF_INET, SOCK_STREAM, 0);
     if (listenSock < 0)
     {
-        printf("socket failed: %s\n", strerror(errno));
+        Log("socket failed: %s\n", strerror(errno));
         return false;
     }
 
@@ -59,7 +60,7 @@ bool NetworkManager(AcceptConnectionCallback acceptConnection, uint16_t port)
     int ret = bind(listenSock, (sockaddr*)&addr, sizeof(addr));
 	if(ret < 0)
 	{
-		printf("bind failed: %s\n", strerror(errno));
+		Log("bind failed: %s\n", strerror(errno));
 		close(listenSock);
 		return false;
 	}
@@ -67,7 +68,7 @@ bool NetworkManager(AcceptConnectionCallback acceptConnection, uint16_t port)
 	ret = listen(listenSock, 128);
     if(ret < 0)
 	{
-		printf("listen failed: %s\n", strerror(errno));
+		Log("listen failed: %s\n", strerror(errno));
 		close(listenSock);
 		return false;
 	}
@@ -129,7 +130,7 @@ bool NetworkManager(AcceptConnectionCallback acceptConnection, uint16_t port)
 
         for(int fd : socketsToRemove)
         {
-            printf("close connection\n");
+            Log("close connection\n");
             close(fd);
             Socket* socket = sockets[fd];
             delete socket;
@@ -139,7 +140,7 @@ bool NetworkManager(AcceptConnectionCallback acceptConnection, uint16_t port)
         int ret = poll(pollFds.data(), pollFds.size(), 1);
 		if(ret < 0)
 		{
-			printf("poll failed %s\n", strerror(errno));
+			Log("poll failed %s\n", strerror(errno));
 			exit(1);
 		}
         if(ret == 0)
@@ -151,7 +152,7 @@ bool NetworkManager(AcceptConnectionCallback acceptConnection, uint16_t port)
             socklen_t addrLen = sizeof(clientAddr);
             int fd = accept(listenSock, (sockaddr*)&clientAddr, &addrLen);
             if(fd < 0)
-                printf("accept failed: %s\n", strerror(errno));
+                Log("accept failed: %s\n", strerror(errno));
             else
             {
                 Socket* socket = new Socket();

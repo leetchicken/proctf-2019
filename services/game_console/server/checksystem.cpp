@@ -9,6 +9,7 @@
 #include "checksystem.h"
 #include "network.h"
 #include "../common.h"
+#include "log.h"
 
 
 struct HwConsole
@@ -85,13 +86,13 @@ void HwConsole::Reset()
 
 static bool AcceptConnection(Socket* socket, const sockaddr_in& clientAddr)
 {
-    printf("CHECKSYSTEM: Accepted connection from: %s\n", inet_ntoa(clientAddr.sin_addr));
+    Log("CHECKSYSTEM: Accepted connection from: %s\n", inet_ntoa(clientAddr.sin_addr));
 
     NetworkAddr netAddr = SockaddrToNetworkAddr(clientAddr.sin_addr);
     auto iter = GConsoles.find(netAddr);
     if(iter == GConsoles.end())
     {
-        printf("CHECKSYSTEM: unknown network, close connection\n");
+        Log("CHECKSYSTEM: unknown network, close connection\n");
         return false;
     }
     
@@ -100,7 +101,7 @@ static bool AcceptConnection(Socket* socket, const sockaddr_in& clientAddr)
         std::lock_guard<std::mutex> guard(console->mutex);
         if(console->socket)
         {
-            printf("CHECKSYSTEM: close previous connection\n");
+            Log("CHECKSYSTEM: close previous connection\n");
             console->socket->Close();
         }
 
@@ -135,13 +136,13 @@ static bool AcceptConnection(Socket* socket, const sockaddr_in& clientAddr)
 
                 if(console->rasterResult == result)
                 {
-                    printf("CHECKSYSTEM: OK\n");
+                    Log("CHECKSYSTEM: OK\n");
                     socket->state = Socket::kStateReady;
                     console->checkResult = true;
                 }
                 else
                 {
-                    printf("CHECKSYSTEM: Does no match\n");
+                    Log("CHECKSYSTEM: Does no match\n");
                     console->Reset();
                 }
 
@@ -151,19 +152,19 @@ static bool AcceptConnection(Socket* socket, const sockaddr_in& clientAddr)
     };
 
     socket->timeoutCallback = [](Socket* socket){
-        printf("CHECKSYSTEM: socket timeout\n");
+        Log("CHECKSYSTEM: socket timeout\n");
         HwConsole* console = (HwConsole*)socket->userData;
         std::lock_guard<std::mutex> guard(console->mutex);
         console->Reset();
     };
     socket->closedByPeerCallback = [](Socket* socket){
-        printf("CHECKSYSTEM: connection closed by peer\n");
+        Log("CHECKSYSTEM: connection closed by peer\n");
         HwConsole* console = (HwConsole*)socket->userData;
         std::lock_guard<std::mutex> guard(console->mutex);
         console->Reset();
     };
     socket->errorCallback = [](Socket* socket){
-        printf("CHECKSYSTEM: socket error: %s\n", strerror(errno));
+        Log("CHECKSYSTEM: socket error: %s\n", strerror(errno));
         HwConsole* console = (HwConsole*)socket->userData;
         std::lock_guard<std::mutex> guard(console->mutex);
         console->Reset();
@@ -195,7 +196,7 @@ bool Check(NetworkAddr teamNet)
     auto iter = GConsoles.find(teamNet);
     if(iter == GConsoles.end())
     {
-        printf("CHECKSYSTEM: unkown network passed\n");
+        Log("CHECKSYSTEM: unkown network passed\n");
         return false;
     }
 

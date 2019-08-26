@@ -10,6 +10,7 @@
 #include "notification.h"
 #include "user.h"
 #include "game.h"
+#include "log.h"
 
 
 static const std::string kU("u");
@@ -38,6 +39,8 @@ private:
     HttpResponse GetChecksystemStatus(HttpRequest request);
     HttpResponse GetChecksystemGetFlag(HttpRequest request);
     HttpResponse GetChecksystemCheck(HttpRequest request);
+    HttpResponse GetChecksystemLog(HttpRequest request);
+    HttpResponse GetChecksystemFullLog(HttpRequest request);
 
     HttpResponse PostChangePassword(HttpRequest request);
     HttpResponse PostNotification(HttpRequest request, HttpPostProcessor** postProcessor);
@@ -92,11 +95,11 @@ static User* CheckAuthority(const QueryString& queryString)
     AuthKey authKey = ~0u;
     if(!FindInMap(queryString, kAuth, authKey, 16))
     {
-        printf("  ERROR: Bad request\n");
+        Log("  ERROR: Bad request\n");
         return nullptr;
     }
 
-    printf("  auth key: %x\n", authKey);
+    Log("  auth key: %x\n", authKey);
 
     if(authKey == kInvalidAuthKey)
         return nullptr;
@@ -104,7 +107,7 @@ static User* CheckAuthority(const QueryString& queryString)
     auto user = User::Get(authKey);
     if(!user)
     {
-        printf("  ERROR: Unauthorized access, auth key: %x\n", authKey);
+        Log("  ERROR: Unauthorized access, auth key: %x\n", authKey);
         return nullptr;
     }
 
@@ -114,7 +117,7 @@ static User* CheckAuthority(const QueryString& queryString)
 
 static HttpResponse BuildChecksystemResponse(int errorCode, const char* data)
 {
-    printf("  Response: %d %s\n", errorCode, data);
+    Log("  Response: %d %s\n", errorCode, data);
 
     HttpResponse response;
     response.code = MHD_HTTP_OK;
@@ -129,7 +132,7 @@ static HttpResponse BuildChecksystemResponse(int errorCode, const char* data)
 
 HttpResponse RequestHandler::HandleGet(HttpRequest request)
 {
-    printf("  IP: %s\n", inet_ntoa(request.clientIp));
+    Log("  IP: %s\n", inet_ntoa(request.clientIp));
     if (ParseUrl(request.url, 1, ""))
         return GetMainPage(request);
     else if (ParseUrl(request.url, 1, "register"))
@@ -152,6 +155,10 @@ HttpResponse RequestHandler::HandleGet(HttpRequest request)
         return GetChecksystemGetFlag(request);
     else if(ParseUrl(request.url, 1, "checksystem_check"))
         return GetChecksystemCheck(request);
+    else if(ParseUrl(request.url, 1, "checksystem_log"))
+        return GetChecksystemLog(request);
+    else if(ParseUrl(request.url, 1, "checksystem_fulllog"))
+        return GetChecksystemFullLog(request);
 
     return HttpResponse(MHD_HTTP_NOT_FOUND);
 }
@@ -159,7 +166,7 @@ HttpResponse RequestHandler::HandleGet(HttpRequest request)
 
 HttpResponse RequestHandler::HandlePost(HttpRequest request, HttpPostProcessor** postProcessor)
 {
-    printf("  IP: %s\n", inet_ntoa(request.clientIp));
+    Log("  IP: %s\n", inet_ntoa(request.clientIp));
     if (ParseUrl(request.url, 1, "change_password"))
         return PostChangePassword(request);
     else if(ParseUrl(request.url, 1, "notification"))
@@ -189,7 +196,7 @@ HttpResponse RequestHandler::GetMainPage(HttpRequest request)
     FILE* f = fopen(fileName, "r");
     if (!f)
     {
-        printf( "failed to read '%s'\n", fileName);
+        Log( "failed to read '%s'\n", fileName);
         return HttpResponse(MHD_HTTP_INTERNAL_SERVER_ERROR);
     }
 
@@ -214,13 +221,13 @@ HttpResponse RequestHandler::GetRegister(HttpRequest request)
     auto team = FindTeam(request.clientIp);
     if(!team)
     {
-        printf(" ERROR: Forbidden\n");
+        Log(" ERROR: Forbidden\n");
         return HttpResponse(MHD_HTTP_FORBIDDEN);
     }
 
     if(team->m_usersCount >= 10)
     {
-        printf("  Too many users\n");
+        Log("  Too many users\n");
 
         const char* kReason = "Each team allowed to have maximum 10 users";
         char* reason = (char*)malloc(strlen(kReason) + 1);
@@ -233,8 +240,8 @@ HttpResponse RequestHandler::GetRegister(HttpRequest request)
         return HttpResponse(MHD_HTTP_BAD_REQUEST);
     if(!FindInMap(request.queryString, kP, password))
         return HttpResponse(MHD_HTTP_BAD_REQUEST);
-    printf("  user name: %s\n", userName.c_str());
-    printf("  password:  %s\n", password.c_str());
+    Log("  user name: %s\n", userName.c_str());
+    Log("  password:  %s\n", password.c_str());
 
     auto ret = User::Add(userName, password, team);
 
@@ -258,14 +265,14 @@ HttpResponse RequestHandler::GetAuth(HttpRequest request)
         return HttpResponse(MHD_HTTP_BAD_REQUEST);
     if(!FindInMap(request.queryString, kP, password))
         return HttpResponse(MHD_HTTP_BAD_REQUEST);
-    printf("  user name: %s\n", userName.c_str());
-    printf("  password:  %s\n", password.c_str());
+    Log("  user name: %s\n", userName.c_str());
+    Log("  password:  %s\n", password.c_str());
 
     AuthKey authKey;
     auto ret = User::Authorize(userName, password, request.clientIp.s_addr, authKey);
     if(ret == kUserErrorInvalidCredentials)
     {
-        printf("  invalid credentials\n");
+        Log("  invalid credentials\n");
         return HttpResponse(MHD_HTTP_FORBIDDEN);
     }
 
@@ -330,7 +337,7 @@ HttpResponse RequestHandler::GetGameIcon(HttpRequest request)
     uint32_t id = ~0u;
     if(!FindInMap(request.queryString, kId, id, 16))
         return HttpResponse(MHD_HTTP_BAD_REQUEST);
-    printf("  id: %x\n", id);
+    Log("  id: %x\n", id);
 
     Image icon;
     auto ret = ::GetGameIcon(id, icon);
@@ -360,12 +367,12 @@ HttpResponse RequestHandler::GetGameAsset(HttpRequest request)
     uint32_t id = ~0u;
     if(!FindInMap(request.queryString, kId, id, 16))
         return HttpResponse(MHD_HTTP_BAD_REQUEST);
-    printf("  id: %x\n", id);
+    Log("  id: %x\n", id);
 
     uint32_t index = ~0u;
     if(!FindInMap(request.queryString, kIndex, index, 10))
         return HttpResponse(MHD_HTTP_BAD_REQUEST);
-    printf("  index: %u\n", index);
+    Log("  index: %u\n", index);
 
     Asset asset;
     auto ret = ::GetGameAsset(id, index, asset);
@@ -399,7 +406,7 @@ HttpResponse RequestHandler::GetGameCode(HttpRequest request)
     uint32_t id = ~0u;
     if(!FindInMap(request.queryString, kId, id, 16))
         return HttpResponse(MHD_HTTP_BAD_REQUEST);
-    printf("  id: %x\n", id);
+    Log("  id: %x\n", id);
 
     void* code = nullptr;
     uint32_t codeSize = 0;
@@ -444,7 +451,7 @@ HttpResponse RequestHandler::GetChecksystemStatus(HttpRequest request)
     auto team = FindTeam(request.clientIp, false);
     if(team)
     {
-        printf(" ERROR: Forbidden\n");
+        Log(" ERROR: Forbidden\n");
         return HttpResponse(MHD_HTTP_FORBIDDEN);
     }
 
@@ -490,7 +497,7 @@ HttpResponse RequestHandler::GetChecksystemGetFlag(HttpRequest request)
     auto team = FindTeam(request.clientIp, false);
     if(team)
     {
-        printf("  ERROR: Forbidden\n");
+        Log("  ERROR: Forbidden\n");
         return HttpResponse(MHD_HTTP_FORBIDDEN);
     }
 
@@ -500,24 +507,24 @@ HttpResponse RequestHandler::GetChecksystemGetFlag(HttpRequest request)
     const char* addrStr = FindInMap(request.queryString, kAddr);
     if(!addrStr)
         return HttpResponse(MHD_HTTP_BAD_REQUEST);
-    printf("  addr:    %s\n", addrStr);
+    Log("  addr:    %s\n", addrStr);
 
     const char* flagId = FindInMap(request.queryString, kFlagId);
     if(!flagId)
         return HttpResponse(MHD_HTTP_BAD_REQUEST);
-    printf("  flag id: %s\n", flagId);
+    Log("  flag id: %s\n", flagId);
 
     in_addr addr;
     inet_aton(addrStr, (in_addr*)&addr);
     team = FindTeam(addr);
     if(!team)
         return BuildChecksystemResponse(kCheckerCheckerError, "Failed to found team by IP");
-    printf("  team:    %s\n", team->name.c_str());
+    Log("  team:    %s\n", team->name.c_str());
 
     const char* flag = team->GetFlag(flagId);
     if(!flag)
         return BuildChecksystemResponse(kCheckerCheckerError, "Failed to found flag");
-    printf("  flag:    %s\n", flag);
+    Log("  flag:    %s\n", flag);
 
     return BuildChecksystemResponse(kCheckerOk, flag);
 }
@@ -528,7 +535,7 @@ HttpResponse RequestHandler::GetChecksystemCheck(HttpRequest request)
     auto team = FindTeam(request.clientIp, false);
     if(team)
     {
-        printf("  ERROR: Forbidden\n");
+        Log("  ERROR: Forbidden\n");
         return HttpResponse(MHD_HTTP_FORBIDDEN);
     }
 
@@ -537,14 +544,14 @@ HttpResponse RequestHandler::GetChecksystemCheck(HttpRequest request)
     const char* addrStr = FindInMap(request.queryString, kAddr);
     if(!addrStr)
         return HttpResponse(MHD_HTTP_BAD_REQUEST);
-    printf("  addr:    %s\n", addrStr);
+    Log("  addr:    %s\n", addrStr);
 
     in_addr addr;
     inet_aton(addrStr, (in_addr*)&addr);
     team = FindTeam(addr);
     if(!team)
         return BuildChecksystemResponse(kCheckerCheckerError, "Failed to found team by IP");
-    printf("  team:    %s\n", team->name.c_str());
+    Log("  team:    %s\n", team->name.c_str());
 
     User* hwConsoleUser = User::Get(team->name);
     if(!hwConsoleUser)
@@ -567,6 +574,58 @@ HttpResponse RequestHandler::GetChecksystemCheck(HttpRequest request)
 }
 
 
+HttpResponse RequestHandler::GetChecksystemLog(HttpRequest request)
+{
+    auto team = FindTeam(request.clientIp, false);
+    if(team)
+    {
+        Log("  ERROR: Forbidden\n");
+        return HttpResponse(MHD_HTTP_FORBIDDEN);
+    }
+
+    static const std::string kPage("page");
+
+    uint32_t pageIdx = ~0u;
+    FindInMap(request.queryString, kPage, pageIdx);
+
+    uint32_t pageSize = 0;
+    char* page = GetPage(pageIdx, pageSize);
+
+    HttpResponse response;
+    response.code = MHD_HTTP_OK;
+    response.headers.insert({"Content-Type", "text/plain"});
+    response.content = page;
+    response.contentLength = pageSize;
+    return response;
+}
+
+
+HttpResponse RequestHandler::GetChecksystemFullLog(HttpRequest request)
+{
+    auto team = FindTeam(request.clientIp, false);
+    if(team)
+    {
+        Log("  ERROR: Forbidden\n");
+        return HttpResponse(MHD_HTTP_FORBIDDEN);
+    }
+
+    static const std::string kPage("page");
+
+    uint32_t pageIdx = ~0u;
+    FindInMap(request.queryString, kPage, pageIdx);
+
+    uint32_t size = 0;
+    char* log = GetFullLog(size);
+
+    HttpResponse response;
+    response.code = MHD_HTTP_OK;
+    response.headers.insert({"Content-Type", "text/plain"});
+    response.content = log;
+    response.contentLength = size;
+    return response;
+}
+
+
 HttpResponse RequestHandler::PostChangePassword(HttpRequest request)
 {
     auto team = FindTeam(request.clientIp);
@@ -580,8 +639,8 @@ HttpResponse RequestHandler::PostChangePassword(HttpRequest request)
     if(!FindInMap(request.queryString, kP, password))
         return HttpResponse(MHD_HTTP_BAD_REQUEST);
 
-    printf("  auth key: %x\n", authKey);
-    printf("  new password: %s\n", password.c_str());
+    Log("  auth key: %x\n", authKey);
+    Log("  new password: %s\n", password.c_str());
 
     auto ret = User::ChangePassword(authKey, password, team);
     if(ret == kUserErrorInvalidAuthKey)
@@ -616,7 +675,7 @@ HttpResponse RequestHandler::PostChecksystemFlag(HttpRequest request, HttpPostPr
     auto team = FindTeam(request.clientIp, false);
     if(team)
     {
-        printf(" ERROR: Forbidden\n");
+        Log(" ERROR: Forbidden\n");
         return HttpResponse(MHD_HTTP_FORBIDDEN);
     }
 
@@ -627,24 +686,24 @@ HttpResponse RequestHandler::PostChecksystemFlag(HttpRequest request, HttpPostPr
     const char* addrStr = FindInMap(request.queryString, kAddr);
     if(!addrStr)
         return HttpResponse(MHD_HTTP_BAD_REQUEST);
-    printf("  addr:    %s\n", addrStr);
+    Log("  addr:    %s\n", addrStr);
 
     const char* flagId = FindInMap(request.queryString, kFlagId);
     if(!flagId)
         return HttpResponse(MHD_HTTP_BAD_REQUEST);
-    printf("  flag id: %s\n", flagId);
+    Log("  flag id: %s\n", flagId);
 
     const char* flag = FindInMap(request.queryString, kFlag);
     if(!flag)
         return HttpResponse(MHD_HTTP_BAD_REQUEST);
-    printf("  flag:    %s\n", flag);
+    Log("  flag:    %s\n", flag);
 
     in_addr addr;
     inet_aton(addrStr, (in_addr*)&addr);
     team = FindTeam(addr);
     if(!team)
         return BuildChecksystemResponse(kCheckerCheckerError, "Failed to found team by IP");
-    printf("  team:    %s\n", team->name.c_str());
+    Log("  team:    %s\n", team->name.c_str());
 
     User* hwConsoleUser = User::Get(team->name);
     if(!hwConsoleUser)
@@ -666,7 +725,7 @@ HttpResponse RequestHandler::PostChecksystemChangePassword(HttpRequest request)
     auto team = FindTeam(request.clientIp, false);
     if(team)
     {
-        printf(" ERROR: Forbidden\n");
+        Log(" ERROR: Forbidden\n");
         return HttpResponse(MHD_HTTP_FORBIDDEN);
     }
 
@@ -675,16 +734,16 @@ HttpResponse RequestHandler::PostChecksystemChangePassword(HttpRequest request)
         return HttpResponse(MHD_HTTP_BAD_REQUEST);
     if(!FindInMap(request.queryString, kP, password))
         return HttpResponse(MHD_HTTP_BAD_REQUEST);
-    printf("  user name: %s\n", userName.c_str());
-    printf("  password:  %s\n", password.c_str());
+    Log("  user name: %s\n", userName.c_str());
+    Log("  password:  %s\n", password.c_str());
 
     if(User::ChangePassword(userName, password) == kUserErrorInvalidCredentials)
     {
-        printf("  Password change failed, invalid user name\n");
+        Log("  Password change failed, invalid user name\n");
         return HttpResponse(MHD_HTTP_BAD_REQUEST);
     }
 
-    printf("  Password changed\n");
+    Log("  Password changed\n");
 
     return HttpResponse(MHD_HTTP_OK);
 }
@@ -695,7 +754,7 @@ HttpResponse RequestHandler::PostChecksystemNotification(HttpRequest request)
     auto team = FindTeam(request.clientIp, false);
     if(team)
     {
-        printf(" ERROR: Forbidden\n");
+        Log(" ERROR: Forbidden\n");
         return HttpResponse(MHD_HTTP_FORBIDDEN);
     }
 
@@ -719,7 +778,7 @@ HttpResponse RequestHandler::PostChecksystemAddGame(HttpRequest request, HttpPos
     auto team = FindTeam(request.clientIp, false);
     if(team)
     {
-        printf(" ERROR: Forbidden\n");
+        Log(" ERROR: Forbidden\n");
         return HttpResponse(MHD_HTTP_FORBIDDEN);
     }
 
@@ -773,7 +832,7 @@ void AddGameProcessor::FinalizeRequest()
     if(!m_contentLength || m_gameName.empty())
     {
         Complete(HttpResponse(MHD_HTTP_BAD_REQUEST));
-		printf("  Bad request\n");
+		Log("  Bad request\n");
         return;
     }
 
@@ -823,7 +882,7 @@ void NotificationProcessor::FinalizeRequest()
     if(!m_contentLength)
     {
         Complete(HttpResponse(MHD_HTTP_BAD_REQUEST));
-		printf("  Bad request\n");
+		Log("  Bad request\n");
         return;
     }
 
@@ -836,13 +895,13 @@ void NotificationProcessor::FinalizeRequest()
 
     User* sourceUser = User::Get(m_authKey);
 
-    printf("  notification from user '%s' team %u '%s'\n", sourceUser->GetName().c_str(), team->number, team->name.c_str());
+    Log("  notification from user '%s' team %u '%s'\n", sourceUser->GetName().c_str(), team->number, team->name.c_str());
 
     float curTime = GetTime();
     if(curTime - team->lastTimeTeamPostNotification < 1.0f)
     {
         team->lastTimeTeamPostNotification = curTime;
-        printf("  too fast\n");
+        Log("  too fast\n");
 
         const char* kTooFast = "Bad boy/girl, its too fast";
         char* tooFast = (char*)malloc(strlen(kTooFast) + 1);
@@ -855,7 +914,7 @@ void NotificationProcessor::FinalizeRequest()
 
     if(!Notification::Validate(m_content, m_contentLength))
     {
-        printf("  corrupted notification\n");
+        Log("  corrupted notification\n");
         Complete(HttpResponse(MHD_HTTP_BAD_REQUEST));
         return;
     }

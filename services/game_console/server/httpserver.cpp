@@ -1,6 +1,7 @@
 #include "httpserver.h"
 #include <string.h>
 #include <algorithm>
+#include "log.h"
 
 #define POSTBUFFERSIZE 65536
 
@@ -28,11 +29,11 @@ void HttpServer::Start(uint32_t port)
 
 	if (!daemon)
 	{
-		printf("Failed to start MHD_Daemon!\n");
+		Log("Failed to start MHD_Daemon!\n");
 		exit(1);
 	}
 
-	printf("Listening on port %d...\n", port);
+	Log("Listening on port %d...\n", port);
 
 	isRunning = true;
 }
@@ -62,7 +63,7 @@ int HttpServer::HandleRequest(void* param,
 	QueryString queryString;
 	if (!*context)
 	{
-		printf("Received request: %s %s\n", method, url);
+		Log("Received request: %s %s\n", method, url);
 
 		if (!strcmp(method, "POST"))
 		{
@@ -131,7 +132,7 @@ void HttpServer::PostProcessRequest(void* param,
                                     MHD_RequestTerminationCode toe)
 {
 #if DEBUG
-	printf(":: post process request started\n");
+	Log(":: post process request started\n");
 #endif
 
 	HttpPostProcessor* postProcessor = (HttpPostProcessor*)*context;
@@ -164,7 +165,7 @@ int HttpServer::IterateQueryString(void* cls, enum MHD_ValueKind kind, const cha
 int HttpServer::SendResponse(MHD_Connection* connection, HttpResponse response)
 {
 #if DEBUG
-	printf(":: send response");
+	Log(":: send response\n");
 #endif
 
 	MHD_Response* mhdResponse =
@@ -187,7 +188,7 @@ int HttpServer::SendResponse(MHD_Connection* connection, HttpResponse response)
 
 void HttpServer::OnFatalError(void* param, const char* file, uint32_t line, const char* reason)
 {
-	printf("Fatal: %s at %s, line %d\n", reason, file, line);
+	Log("Fatal: %s at %s, line %d\n", reason, file, line);
 	exit(1);
 }
 

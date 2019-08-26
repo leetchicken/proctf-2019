@@ -5,6 +5,7 @@
 #include <thread>
 #include <vector>
 #include "team.h"
+#include "log.h"
 
 
 struct UsersStorageRecord
@@ -54,7 +55,7 @@ bool User::AddNotification(Notification* n)
 	std::lock_guard<std::mutex> guard(m_notificationMutex);
     if(m_notifications.size() >= kNotificationQueueSize)
     {
-        printf("  Console %s: notification queue overflowed\n", inet_ntoa(m_ipAddr));
+        Log("  Console %s: notification queue overflowed\n", inet_ntoa(m_ipAddr));
         return false;
     }
     m_notifications.push_back(n);
@@ -88,7 +89,7 @@ void User::SetSocket(Socket* socket)
 {
     if(m_socket)
     {
-        printf("NOTIFY: close previous connection\n");
+        Log("NOTIFY: close previous connection\n");
         m_socket->Close();
     }
 
@@ -118,6 +119,8 @@ void User::SetSocket(Socket* socket)
                 sock->state = Socket::kStateSending;
                 sock->lastTouchTime = GetTime();
                 m_lastUserNotifyTime = GetTime();
+
+                Log("Notify user '%s'\n", m_name.c_str());
             }
         }
         else if(sock->state == Socket::kStateSending)
@@ -191,14 +194,14 @@ EUserErrorCodes User::Add(const std::string& name, const std::string& password, 
 
     if(name.length() > kMaxUserNameLen || password.length() > kMaxPasswordLen)
     {
-        printf("  ERROR: too long\n");
+        Log("  ERROR: too long\n");
         return kUserErrorTooLong;
     }
 
     auto iter = GUsers.find(name);
     if(iter != GUsers.end())
     {
-        printf("  ERROR: already exists\n");
+        Log("  ERROR: already exists\n");
         return kUserErrorAlreadyExists;
     }
 
@@ -207,7 +210,7 @@ EUserErrorCodes User::Add(const std::string& name, const std::string& password, 
 
     team->m_usersCount++;
 
-    printf("  new user\n");
+    Log("  new user\n");
 
     DumpStorage();
 
@@ -231,7 +234,7 @@ EUserErrorCodes User::Authorize(const std::string& name, const std::string& pass
     auto usersIter = GUsers.find(name);
     if(usersIter == GUsers.end())
     {
-        printf("  ERROR: invalid user name\n");
+        Log("  ERROR: invalid user name\n");
         return kUserErrorInvalidCredentials;
     }
 
@@ -239,7 +242,7 @@ EUserErrorCodes User::Authorize(const std::string& name, const std::string& pass
 
     if(user->m_password != password)
     {
-        printf("  ERROR: invalid password\n");
+        Log("  ERROR: invalid password\n");
         return kUserErrorInvalidCredentials;
     }
 
@@ -247,11 +250,11 @@ EUserErrorCodes User::Authorize(const std::string& name, const std::string& pass
     auto authUsersIter = GAuthUsers.find(authKey);
     if(authUsersIter != GAuthUsers.end())
     {
-        printf("  reauth detected, prev auth key: %x\n", authKey);
+        Log("  reauth detected, prev auth key: %x\n", authKey);
         User* user2 = authUsersIter->second;
         if(user != user2)
         {
-            printf("  CRITICAL ERROR, mismatched user data '%s':%u '%s':%u\n", user->m_name.c_str(), authKey, user2->m_name.c_str(), user2->m_authKey);
+            Log("  CRITICAL ERROR, mismatched user data '%s':%u '%s':%u\n", user->m_name.c_str(), authKey, user2->m_name.c_str(), user2->m_authKey);
             exit(1);
         }
         GAuthUsers.erase(authUsersIter);
@@ -264,7 +267,7 @@ EUserErrorCodes User::Authorize(const std::string& name, const std::string& pass
     {
         if(triesCount >= kMaxTriesCount)
         {
-            printf("  CRITICAL ERROR, dublicate user was found, auth key: %x\n", authKey);
+            Log("  CRITICAL ERROR, dublicate user was found, auth key: %x\n", authKey);
             exit(1);
         }
 
@@ -272,7 +275,7 @@ EUserErrorCodes User::Authorize(const std::string& name, const std::string& pass
         triesCount++;
     }
 
-    printf("  auth key: %x\n", authKey);
+    Log("  auth key: %x\n", authKey);
     GAuthUsers[authKey] = user;
     user->m_authKey = authKey;
     user->m_ipAddr = ipAddr;
@@ -290,7 +293,7 @@ EUserErrorCodes User::ChangePassword(const std::string& userName, const std::str
     auto iter = GUsers.find(userName);
     if(iter == GUsers.end())
     {
-        printf("  ERROR: invalid user name\n");
+        Log("  ERROR: invalid user name\n");
         return kUserErrorInvalidCredentials;
     }
     
@@ -316,7 +319,7 @@ EUserErrorCodes User::ChangePassword(AuthKey authKey, const std::string& newPass
 
     if(user->GetTeam() != team)
     {
-        printf("  Team '%s' tries to change password for '%s' from '%s' team\n", team->name.c_str(), user->GetName().c_str(), user->GetTeam()->name.c_str());
+        Log("  Team '%s' tries to change password for '%s' from '%s' team\n", team->name.c_str(), user->GetName().c_str(), user->GetTeam()->name.c_str());
         return kUserErrorForbidden;
     }
 
@@ -360,7 +363,7 @@ void User::BroadcastNotification(Notification* n, User* sourceUser)
 
 static bool AcceptConnection(Socket* socket, const sockaddr_in& clientAddr)
 {
-    printf("NOTIFY: Accepted connection from: %s\n", inet_ntoa(clientAddr.sin_addr));
+    Log("NOTIFY: Accepted connection from: %s\n", inet_ntoa(clientAddr.sin_addr));
 
     socket->recvBufferSize = sizeof(AuthKey);
     socket->recvBufferOffset = 0;
@@ -375,7 +378,7 @@ static bool AcceptConnection(Socket* socket, const sockaddr_in& clientAddr)
             User* user = User::Get(authKey);
             if(!user)
             {
-                printf("NOTIFY: Unknown auth key %u, close connection\n", authKey);
+                Log("NOTIFY: Unknown auth key %u, close connection\n", authKey);
                 socket->Close();
                 return;
             }
@@ -385,33 +388,33 @@ static bool AcceptConnection(Socket* socket, const sockaddr_in& clientAddr)
             int ret = getpeername(socket->fd, (sockaddr*)&addr, &addrLen);
             if(ret < 0)
             {
-                printf("NOTIFY: getpeername failed: %s\n", strerror(errno));
+                Log("NOTIFY: getpeername failed: %s\n", strerror(errno));
                 socket->Close();
                 return;
             }
 
             if(user->GetIPAddr() != addr.sin_addr.s_addr)
             {
-                printf("NOTIFY: mismatched IP addresses\n");
+                Log("NOTIFY: mismatched IP addresses\n");
                 socket->Close();
                 return;
             }
 
             user->SetSocket(socket);
-            printf("NOTIFY: OK\n");
+            Log("NOTIFY: OK\n");
         }
     };
 
     socket->timeoutCallback = [](Socket* socket){
-        printf("NOTIFY: socket timeout\n");
+        Log("NOTIFY: socket timeout\n");
         socket->Close();
     };
     socket->closedByPeerCallback = [](Socket* socket){
-        printf("NOTIFY: connection closed by peer\n");
+        Log("NOTIFY: connection closed by peer\n");
         socket->Close();
     };
     socket->errorCallback = [](Socket* socket){
-        printf("NOTIFY: socket error: %s\n", strerror(errno));
+        Log("NOTIFY: socket error: %s\n", strerror(errno));
         socket->Close();
     };
 
@@ -431,7 +434,7 @@ void User::DumpStorage()
     FILE* f = fopen(kUsersStorageFileName, "w");
     if(!f)
     {
-        printf("Failed to open users storage\n");
+        Log("Failed to open users storage\n");
         return;
     }
 
@@ -474,7 +477,7 @@ void User::ReadStorage()
 				if(fread(&record, kRecordSize, 1, storage) != 1)
                 {
                     error = true;
-                    printf("Failed to read consoles storage\n");
+                    Log("Failed to read consoles storage\n");
                     break;
                 }
 
@@ -495,11 +498,11 @@ void User::ReadStorage()
         }
         else
         {
-            printf("Consoles storage is corrupted\n");
+            Log("Consoles storage is corrupted\n");
         }
 
         if(!error)
-            printf("Consoles storage has been read succefully\n");
+            Log("Consoles storage has been read succefully\n");
 
         fclose(storage);
     }
