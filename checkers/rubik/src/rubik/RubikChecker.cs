@@ -15,13 +15,7 @@ namespace checker.rubik
 {
 	internal class RubikChecker : IChecker
 	{
-		public async Task<string> Info()
-		{
-			var vulns = "vulns: 1";
-			await Console.Out.WriteLineAsync(vulns).ConfigureAwait(false);
-
-			return vulns;
-		}
+		public Task<string> Info() => Task.FromResult("vulns: 1");
 
 		public async Task Check(string host)
 		{
