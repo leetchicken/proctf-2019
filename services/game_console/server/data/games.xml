@@ -1,6 +1,6 @@
 <Games>
-    <Game name="SDKExample0" id="0x00000001" desc="SDK Example 0" />
-    <Game name="SDKExample1" id="0x00000002" desc="SDK Example 1" />
-    <Game name="SDKExample2" id="0x00000003" desc="SDK Example 2" />
+    <Game name="SDKExample0" id="0x00000001" desc="SDK Example 0" sdk="true"/>
+    <Game name="SDKExample1" id="0x00000002" desc="SDK Example 1" sdk="true"/>
+    <Game name="SDKExample2" id="0x00000003" desc="SDK Example 2" sdk="true"/>
     <Game name="Tennis" id="0x00000004" desc="Tennis"/>
 </Games>

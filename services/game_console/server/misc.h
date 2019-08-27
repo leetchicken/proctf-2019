@@ -30,3 +30,4 @@ float GetTime();
 NetworkAddr SockaddrToNetworkAddr(in_addr a);
 const char* inet_ntoa(IPAddr addr);
 IPAddr inet_aton(const char*);
+char* ReadFile(const char* fileName, uint32_t& size);

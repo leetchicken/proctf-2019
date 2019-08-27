@@ -29,6 +29,7 @@ public:
 
 private:
     HttpResponse GetMainPage(HttpRequest request);
+    HttpResponse GetSDKZip(HttpRequest request);
     HttpResponse GetRegister(HttpRequest request);
     HttpResponse GetAuth(HttpRequest request);
     HttpResponse GetGamesList(HttpRequest request);
@@ -135,6 +136,8 @@ HttpResponse RequestHandler::HandleGet(HttpRequest request)
     Log("  IP: %s\n", inet_ntoa(request.clientIp));
     if (ParseUrl(request.url, 1, ""))
         return GetMainPage(request);
+    else if (ParseUrl(request.url, 1, "SDK.zip"))
+        return GetSDKZip(request);
     else if (ParseUrl(request.url, 1, "register"))
         return GetRegister(request);
     else if (ParseUrl(request.url, 1, "auth"))
@@ -193,23 +196,37 @@ HttpResponse RequestHandler::GetMainPage(HttpRequest request)
     else
         fileName = "data/jury.html";            
 
-    FILE* f = fopen(fileName, "r");
-    if (!f)
+    uint32_t fileSize = 0;
+    char* fileData = ReadFile(fileName, fileSize);
+    if (!fileData)
     {
         Log( "failed to read '%s'\n", fileName);
         return HttpResponse(MHD_HTTP_INTERNAL_SERVER_ERROR);
     }
 
-    fseek(f, 0, SEEK_END);
-    size_t fileSize = ftell(f);
-    fseek(f, 0, SEEK_SET);
-    char* fileData = (char*)malloc(fileSize);
-    fread(fileData, 1, fileSize, f);
-    fclose(f);
-
     HttpResponse response;
     response.code = MHD_HTTP_OK;
     response.headers.insert({"Content-Type", "text/html"});
+    response.content = fileData;
+    response.contentLength = fileSize;
+    return response;
+}
+
+
+HttpResponse RequestHandler::GetSDKZip(HttpRequest request)
+{
+    const char* fileName = "data/SDK.zip";
+    uint32_t fileSize = 0;
+    char* fileData = ReadFile(fileName, fileSize);
+    if (!fileData)
+    {
+        Log( "failed to read '%s'\n", fileName);
+        return HttpResponse(MHD_HTTP_INTERNAL_SERVER_ERROR);
+    }
+
+    HttpResponse response;
+    response.code = MHD_HTTP_OK;
+    response.headers.insert({"Content-Type", "application/octet-stream"});
     response.content = fileData;
     response.contentLength = fileSize;
     return response;
