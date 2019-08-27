@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
-#include "misc.h"
+#include <sys/time.h>
 
 static const uint32_t kPageSize = 256;
 
@@ -26,6 +26,20 @@ static Line& NewLine()
 }
 
 
+void Time(char* buf)
+{
+    timeval tv;
+	gettimeofday(&tv, nullptr);
+
+	// Convert it to local.
+	struct tm platformTime;
+	localtime_r(&tv.tv_sec, &platformTime);
+
+    sprintf(buf, "[%02u:%02u:%04u %02u:%02u:%02u:%03u] ", platformTime.tm_mday, platformTime.tm_mon + 1, platformTime.tm_year + 1900,
+            platformTime.tm_hour, platformTime.tm_min, platformTime.tm_sec, tv.tv_usec / 1000);
+}
+
+
 void Log(const char* formatStr, ...)
 {
     std::lock_guard<std::mutex> guard(GMutex);
@@ -33,7 +47,7 @@ void Log(const char* formatStr, ...)
     char buf[1024];
 
     auto& newLine = NewLine();
-    sprintf(buf, "[%.2f] ", GetTime());
+    Time(buf);
     newLine.text.append(buf);
 
     va_list args;
