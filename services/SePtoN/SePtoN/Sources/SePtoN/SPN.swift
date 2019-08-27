@@ -52,14 +52,15 @@ public final class SPN {
 	}
 
 	static func CalcMasterKey(_ keyMaterial: [UInt8]) throws -> [UInt8] {
-		if (keyMaterial.count == 0 || keyMaterial.count % SPN.blockSizeBytes != 0) {
-			throw SPNError.unpaddedInput
+		if (keyMaterial.count < SPN.blockSizeBytes) {
+			throw SPNError.notEnoughKeyMaterial
 		}
 
 		var i = SPN.blockSizeBytes
 		var masterKey = Array(keyMaterial[0..<i])
-        while (i < keyMaterial.count) {
-        	masterKey = SPN.xorBlock(masterKey, Array(keyMaterial[i..<(i+SPN.blockSizeBytes)]))
+        while (i+SPN.blockSizeBytes <= keyMaterial.count) {
+        	var k = Array(keyMaterial[i..<(i+SPN.blockSizeBytes)])
+        	SPN.xorBlock(&masterKey, &k)
         	i += SPN.blockSizeBytes
         }
         return masterKey
@@ -106,6 +107,8 @@ public final class SPN {
 
 
 	func encryptCBC(_ data: [UInt8], _ iv: [UInt8]) throws -> [UInt8] {
+// var start = ProcessInfo.processInfo.systemUptime
+
 		if (data.count == 0 || data.count % SPN.blockSizeBytes != 0 || iv.count == 0 || iv.count % SPN.blockSizeBytes != 0) {
 			print("data \(data.count) iv \(iv.count)")
 			throw SPNError.unpaddedInput
@@ -120,8 +123,11 @@ public final class SPN {
 		while(i < data.count){
 
 
-			let p = Array(data[i..<(i+SPN.blockSizeBytes)])
-			let c = encryptBlock(SPN.xorBlock(p, prevC))
+			var p = Array(data[i..<(i+SPN.blockSizeBytes)])
+			SPN.xorBlock(&p, &prevC)
+// var start = ProcessInfo.processInfo.systemUptime
+			let c = encryptBlock(p)
+// print("----Encrypted block in \(ProcessInfo.processInfo.systemUptime - start) sec")
 			result += c
 			prevC = c
 			i += SPN.blockSizeBytes
@@ -129,58 +135,68 @@ public final class SPN {
 			
 
 		}
-
+// print("--------EncryptedCBC in \(ProcessInfo.processInfo.systemUptime - start) sec")
 		return result
 	}
 
 	func encryptBlock(_ block: [UInt8]) -> [UInt8] {
 		var result = block
-		for roundNum in (0..<SPN.roundsCount) {
 
-			result = encryptRound(result, subkeys[roundNum], sboxes[roundNum], roundNum == SPN.roundsCount - 1)
+		for roundNum in (0..<SPN.roundsCount) {
+// var start = ProcessInfo.processInfo.systemUptime
+			result = encryptRound(&result, &subkeys[roundNum], &sboxes[roundNum], roundNum == SPN.roundsCount - 1)
+// print("--------Encrypted round in \(ProcessInfo.processInfo.systemUptime - start) sec")
 		}
+
 
 		result = xorWithLastSubKey(result);
 		return result;
 	}
 
-	func encryptRound(_ input: [UInt8], _ subKey: [UInt8], _ sboxes: [SBox], _ skipPermutation: Bool) -> [UInt8] {
-// var start = DispatchTime.now()
-		var result = SPN.xorBlock(input, subKey)
-// print("Done in \(Double(DispatchTime.now().uptimeNanoseconds - start.uptimeNanoseconds) ) nanosec")
-// start = DispatchTime.now()
+	func encryptRound(_ input: inout [UInt8], _ subKey: inout [UInt8], _ sboxes: inout [SBox], _ skipPermutation: Bool) -> [UInt8] {
+		var result = Array(input)
+
+var start = ProcessInfo.processInfo.systemUptime		
+		SPN.xorBlock(&result, &subKey)
+// print("Xor in \(ProcessInfo.processInfo.systemUptime - start) sec")
+// start = ProcessInfo.processInfo.systemUptime
 
 		for i in (0..<result.count) {
+
+
 			var leftPart = UInt8(result[i] >> 4)
 			var rightPart = UInt8(result[i] & 0x0F)
+
 
 			leftPart = sboxes[i * 2].substitute(leftPart)
 			rightPart = sboxes[i * 2 + 1].substitute(rightPart)
 
+
 			result[i] = (leftPart << 4) | rightPart
+
 		}
-// print("Done in \(Double(DispatchTime.now().uptimeNanoseconds - start.uptimeNanoseconds) ) nanosec")
-// start = DispatchTime.now()
+// print("SBoxes in \(ProcessInfo.processInfo.systemUptime - start) sec")
+// start = ProcessInfo.processInfo.systemUptime
 
 		if(!skipPermutation) {
 			let pboxInput = assembleUInt64(result)
-// print("Done in \(Double(DispatchTime.now().uptimeNanoseconds - start.uptimeNanoseconds) ) nanosec")
-// start = DispatchTime.now()
+// print("PBoxIn in \(ProcessInfo.processInfo.systemUptime - start) sec")
+// start = ProcessInfo.processInfo.systemUptime
 
 			var pboxOutput = pbox.permute(pboxInput)
 
-// print("Done in \(Double(DispatchTime.now().uptimeNanoseconds - start.uptimeNanoseconds) ) nanosec")
-// start = DispatchTime.now()
+// print("PBoxPermute in \(ProcessInfo.processInfo.systemUptime - start) sec")
+// start = ProcessInfo.processInfo.systemUptime
 
 			for i in (0..<result.count) {
 				result[result.count - i - 1] = UInt8(pboxOutput & 0xFF)
 				pboxOutput >>= 8
 			}			
-// print("Done in \(Double(DispatchTime.now().uptimeNanoseconds - start.uptimeNanoseconds) ) nanosec")
+// print("other in \(ProcessInfo.processInfo.systemUptime - start) sec")
 
 		}
-
-// print("=================")
+// print("Done in \(ProcessInfo.processInfo.systemUptime - start) sec")
+// print("====")
 
 		return result
 	}
@@ -231,7 +247,8 @@ public final class SPN {
 		var prevC = Array(data[0..<i])
 		while(i < data.count){
 			let c = Array(data[i..<(i+SPN.blockSizeBytes)])
-			let p = SPN.xorBlock(decryptBlock(c), prevC)
+			var p = decryptBlock(c)
+			SPN.xorBlock(&p, &prevC)
 			result += p
 			prevC = c
 			i += SPN.blockSizeBytes
@@ -245,12 +262,12 @@ public final class SPN {
 		result = xorWithLastSubKey(result);
 
 		for roundNum in (0..<SPN.roundsCount).reversed() {			
-			result = decryptRound(result, subkeys[roundNum], sboxes[roundNum], roundNum == SPN.roundsCount - 1)
+			result = decryptRound(&result, &subkeys[roundNum], &sboxes[roundNum], roundNum == SPN.roundsCount - 1)
 		}		
 		return result;
 	}
 
-	func decryptRound(_ input: [UInt8], _ subKey: [UInt8], _ sboxes: [SBox], _ skipPermutation: Bool) -> [UInt8] {
+	func decryptRound(_ input: inout [UInt8], _ subKey: inout [UInt8], _ sboxes: inout [SBox], _ skipPermutation: Bool) -> [UInt8] {
 		var result = input
 		if(!skipPermutation) {
 			let pboxInput = assembleUInt64(result)
@@ -272,7 +289,7 @@ public final class SPN {
 			result[i] = (leftPart << 4) | rightPart
 		}		
 
-		result = SPN.xorBlock(result, subKey)
+		SPN.xorBlock(&result, &subKey)
 
 		return result
 	}
@@ -285,21 +302,20 @@ public final class SPN {
 		return result
 	}
 
-	static func xorBlock(_ lhs: [UInt8], _ rhs: [UInt8]) -> [UInt8] {
-		var result = Array(lhs)
-		for i in (0..<result.count) {
-			result[i] = lhs[i] ^ rhs[i]
-		}
-		return result
+	static func xorBlock(_ lhs: inout [UInt8], _ rhs: inout [UInt8]) {
+		for i in (0..<lhs.count) {
+			lhs[i] ^= rhs[i]
+		}		
 	}
 
-	let sboxes: [[SBox]]
+	var sboxes: [[SBox]]
 	let pbox: PBox
-	let subkeys: [[UInt8]];
+	var subkeys: [[UInt8]];
 	let masterKey: [UInt8]
 }
 
 enum SPNError: Error {
+	case notEnoughKeyMaterial
     case unpaddedInput
     case invalidPadding
 }

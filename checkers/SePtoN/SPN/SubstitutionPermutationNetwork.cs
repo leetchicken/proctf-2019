@@ -72,11 +72,11 @@ namespace SPN
 
 		public static byte[] CalcMasterKey(byte[] keyMaterial)
 		{
-			if(keyMaterial.Length == 0 || keyMaterial.Length % BlockSizeBytes != 0)
-				throw new Exception($"Key material length {keyMaterial.Length} is not aligned to BlockSizeBytes {BlockSizeBytes}");
+			if(keyMaterial.Length < BlockSizeBytes)
+				throw new Exception($"Key material length {keyMaterial.Length} is not enough, it's less than {BlockSizeBytes}");
 
 			var result = keyMaterial.Take(BlockSizeBytes).ToArray();
-			for(int i = BlockSizeBytes; i < keyMaterial.Length; i += BlockSizeBytes)
+			for(int i = BlockSizeBytes; i + BlockSizeBytes <= keyMaterial.Length; i += BlockSizeBytes)
 				result = XorBlock(result, keyMaterial.Skip(i).Take(BlockSizeBytes).ToArray());
 
 			return result;
