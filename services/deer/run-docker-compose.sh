@@ -43,15 +43,6 @@ if [ ! -f definitions.json ] || [ ! -f internal_users.yml ] || [ ! -f LogProcess
   "policies": [],
   "exchanges": [
     {
-      "name": "users",
-      "vhost": "/",
-      "type": "fanout",
-      "durable": true,
-      "auto_delete": false,
-      "internal": false,
-      "arguments": {}
-    },
-    {
       "name": "errors",
       "vhost": "/",
       "type": "topic",
@@ -61,44 +52,17 @@ if [ ! -f definitions.json ] || [ ! -f internal_users.yml ] || [ ! -f LogProcess
       "arguments": {}
     }
   ],
-  "queues": [
-    {
-      "name": "users.log-processor",
-      "vhost": "/",
-      "durable": true,
-      "auto_delete": false,
-      "arguments": {}
-    }
-  ],
-  "bindings": [
-    {
-      "source": "users",
-      "vhost": "/",
-      "destination": "users.log-processor",
-      "destination_type": "queue",
-      "routing_key": "*",
-      "arguments": {}
-    }
-  ]
+  "queues": [],
+  "bindings": []
 }
 EOF
 
-	cat << EOF > LogProcessor.appsettings.json
+	cat << EOF > Deer.appsettings.json
 {
     "ConnectionStrings": {
         "ElasticSearch": "https://admin:$ES_ADMIN_PASSWORD@elasticsearch:9200",
         "MongoDb": "mongodb://mongodb/users",
-        "RabbitMq": "host=rabbitmq;username=admin;password=$RABBIT_ADMIN_PASSWORD"
-    }
-}
-EOF
-
-	cat << EOF > IdentityServer.appsettings.json
-{
-    "ConnectionStrings": {
-        "ElasticSearch": "https://admin:$ES_ADMIN_PASSWORD@elasticsearch:9200",
-        "MongoDb": "mongodb://mongodb/users",
-        "RabbitMq": "host=rabbitmq;username=admin;password=$RABBIT_ADMIN_PASSWORD"
+        "RabbitMq": "host=rabbitmq;username=admin;password=$RABBIT_ADMIN_PASSWORD;prefetchcount=1"
     },
     "Kestrel": {
         "EndPoints": {

@@ -6,6 +6,7 @@ using Deer.Repositories;
 using EasyNetQ;
 using EasyNetQ.ConnectionString;
 using EasyNetQ.Consumer;
+using EasyNetQ.Logging;
 using EasyNetQ.Management.Client;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
@@ -22,8 +23,6 @@ namespace Deer
     {
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddLogging();
-            
             services.AddSingleton<IConfiguration>(sp =>
             {
                 var env = sp.GetRequiredService<IHostingEnvironment>();
@@ -31,6 +30,7 @@ namespace Deer
             });
 
             services.AddSingleton(sp => new ConnectionStringParser().Parse(sp.GetRequiredService<IConfiguration>().GetConnectionString("RabbitMq")));
+            
             services.AddSingleton(sp => RabbitHutch.CreateBus(sp.GetRequiredService<IConfiguration>().GetConnectionString("RabbitMq"),
                 sr =>
                 {
@@ -66,7 +66,10 @@ namespace Deer
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
             
-            services.AddHostedService<RabbitMqService>();
+            LogProvider.IsDisabled = true;
+            
+            services.AddHostedService<LogConsumerService>();
+            services.AddHostedService<HangfireService>();
         }
 
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)

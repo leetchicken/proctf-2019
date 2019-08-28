@@ -8,12 +8,20 @@
     <ItemGroup>
         <PackageReference Include="EasyNetQ" Version="3.6.0" />
         <PackageReference Include="EasyNetQ.Management.Client" Version="1.2.0" />
+        <PackageReference Include="Hangfire.Core" Version="1.6.13" />
         <PackageReference Include="Hangfire.MemoryStorage" Version="1.6.1" />
         <PackageReference Include="Microsoft.AspNetCore.App" />
         <PackageReference Include="Microsoft.AspNetCore.Razor.Design" Version="2.2.0" PrivateAssets="All" />
         <PackageReference Include="MongoDB.Driver" Version="2.9.1" />
         <PackageReference Include="NEST" Version="7.2.1" />
         <PackageReference Include="NLog.Extensions.Logging" Version="1.5.2" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Content Update="NLog.config">
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
     </ItemGroup>
 
 </Project>

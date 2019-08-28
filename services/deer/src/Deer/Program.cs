@@ -14,11 +14,11 @@ namespace Deer
 
         private static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
             WebHost.CreateDefaultBuilder(args)
-                .UseStartup<Startup>()
-                .ConfigureLogging((hostingContext, logging) =>
-                {
-                    logging.ClearProviders();
-                    logging.AddNLog();
-                });
+            .ConfigureLogging((hostingContext, logging) =>
+                            {
+                                logging.ClearProviders();
+                                logging.AddNLog();
+                            })
+                .UseStartup<Startup>();
     }
 }

