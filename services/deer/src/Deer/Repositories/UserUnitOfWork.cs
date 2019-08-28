@@ -64,7 +64,7 @@ namespace Deer.Repositories
             var errorExchange = await _managementClient.GetExchangeAsync("errors", vhost);
             
             var errorQueueName = (await _bus.Advanced.QueueDeclareAsync("")).Name;
-            _logger.LogInformation($"RabbitMQ errors queue for user '{username}' created");
+            _logger.LogInformation($"RabbitMQ error queue for user '{username}' created");
             
             var errorQueue = await _managementClient.GetQueueAsync(errorQueueName, vhost);
             await _managementClient.CreateBindingAsync(errorExchange, errorQueue, new BindingInfo(username));
@@ -96,6 +96,39 @@ namespace Deer.Repositories
             _logger.LogInformation($"Added log consumer for user '{username}'");
             
             return true;
+        }
+
+        public async Task DeleteUserAsync(Models.User user)
+        {
+            await _logConsumerService.RemoveConsumerForUserAsync(user.Username);
+            _logger.LogInformation($"Log consumer for user '{user.Username}' deleted");
+            
+            await _userRepository.DeleteAsync(user.Username);
+            _logger.LogInformation($"User '{user.Username}' deleted from MongoDB");
+
+            await _elasticsearchClient.DeleteIndexAsync(user.LogIndexName);
+            _logger.LogInformation($"ElasticSearch index for '{user.Username}' deleted");
+            
+            await _elasticsearchClient.DeleteUserAsync(user.Username);
+            _logger.LogInformation($"ElasticSearch user '{user.Username}' deleted");
+
+            var vhost = await _managementClient.GetVhostAsync("/");
+            
+            var errorQueue = await _managementClient.GetQueueAsync(user.ErrorQueueName, vhost);
+            await _managementClient.DeleteQueueAsync(errorQueue);
+            _logger.LogInformation($"RabbitMQ error queue for user '{user.Username}' deleted");
+
+            var logQueue = await _managementClient.GetQueueAsync(user.LogQueueName, vhost);
+            await _managementClient.DeleteQueueAsync(logQueue);
+            _logger.LogInformation($"RabbitMQ log queue for user '{user.Username}' deleted");
+            
+            var logExchange = await _managementClient.GetExchangeAsync(user.LogExchangeName, vhost);
+            await _managementClient.DeleteExchangeAsync(logExchange);
+            _logger.LogInformation($"RabbitMQ exchange for user '{user.Username}' deleted");
+            
+            var rabbitUser = await _managementClient.GetUserAsync(user.Username);
+            await _managementClient.DeleteUserAsync(rabbitUser);
+            _logger.LogInformation($"RabbitMQ user '{user.Username}' deleted");
         }
     }
 }

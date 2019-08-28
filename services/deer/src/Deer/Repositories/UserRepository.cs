@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Deer.Models;
@@ -13,6 +14,12 @@ namespace Deer.Repositories
         public UserRepository(IMongoCollection<UserMongoDocument> userCollection)
         {
             _userCollection = userCollection;
+        }
+
+        public async Task DeleteAsync(string username)
+        {
+            var filter = Builders<UserMongoDocument>.Filter.Eq(d => d.Username, username);
+            await _userCollection.DeleteOneAsync(filter);
         }
 
         public async Task<IEnumerable<User>> GetUsersAsync()
@@ -41,6 +48,12 @@ namespace Deer.Repositories
             var filter = Builders<UserMongoDocument>.Filter.Eq(d => d.LogQueueName, logQueueName);
             var doc = _userCollection.FindSync(filter, new FindOptions<UserMongoDocument> {Limit = 1}).SingleOrDefault();
             return doc?.ToUser();
+        }
+
+        public async Task<IEnumerable<User>> GetOldUsersAsync()
+        {
+            var filter = Builders<UserMongoDocument>.Filter.Lt(d => d.Created, DateTime.UtcNow.AddMinutes(-1));
+            return ToUsers((await _userCollection.FindAsync(filter)).ToEnumerable());
         }
 
         public async Task CreateAsync(User user)

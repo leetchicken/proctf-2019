@@ -1,3 +1,4 @@
+using System;
 using MongoDB.Bson.Serialization.Attributes;
 
 namespace Deer.Models.MongoDb
@@ -25,6 +26,10 @@ namespace Deer.Models.MongoDb
 
         [BsonElement("error_queue")]
         public string ErrorQueueName { get; set; }
+        
+        [BsonElement("created")]
+        [BsonDateTimeOptions(Kind = DateTimeKind.Utc)]
+        public DateTime Created { get; set; }
 
         public static UserMongoDocument Create(User user)
         {
@@ -39,7 +44,8 @@ namespace Deer.Models.MongoDb
                 LogIndexName = user.LogIndexName,
                 LogExchangeName = user.LogExchangeName,
                 LogQueueName = user.LogQueueName,
-                ErrorQueueName = user.ErrorQueueName
+                ErrorQueueName = user.ErrorQueueName,
+                Created = DateTime.UtcNow
             };
         }
 

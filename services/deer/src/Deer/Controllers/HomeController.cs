@@ -18,6 +18,11 @@ namespace Deer.Controllers
         public async Task<IActionResult> Index()
         {
             var user = await _userRepository.GetUserAsync(User.Identity.Name);
+            if (user == null)
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
             return View(user);
         }
     }

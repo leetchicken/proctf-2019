@@ -23,11 +23,11 @@ namespace Deer
             var storage = new MemoryStorage();
             GlobalConfiguration.Configuration.UseStorage(storage);
             _server = new HangfireJobServer(storage);
-            // TODO add RecurringJob
+            RecurringJob.AddOrUpdate<DeleteOldUsersJob>(nameof(DeleteOldUsersJob), j => j.Run(), Cron.Minutely);
             _logger.LogInformation($"{nameof(HangfireService)} started");
             return Task.CompletedTask;
         }
-
+        
         public Task StopAsync(CancellationToken cancellationToken)
         {
             _server.Dispose();

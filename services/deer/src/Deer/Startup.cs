@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using Deer.EasyNetQ;
+using Deer.Hangfire;
 using Deer.Models.MongoDb;
 using Deer.Repositories;
 using EasyNetQ;
@@ -8,6 +9,7 @@ using EasyNetQ.ConnectionString;
 using EasyNetQ.Consumer;
 using EasyNetQ.Logging;
 using EasyNetQ.Management.Client;
+using Hangfire;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -61,6 +63,7 @@ namespace Deer
 
             services.AddSingleton<IUserUnitOfWork, UserUnitOfWork>();
             services.AddSingleton<ILogConsumerService, LogConsumerService>();
+            services.AddSingleton<DeleteOldUsersJob>();
 
             services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie();
 
@@ -79,6 +82,8 @@ namespace Deer
                 app.UseDeveloperExceptionPage();
             }
 
+            GlobalConfiguration.Configuration.UseActivator(new ContainerJobActivator(app.ApplicationServices));
+            
             app.UseStaticFiles();
             app.UseAuthentication();
             app.UseMvcWithDefaultRoute();

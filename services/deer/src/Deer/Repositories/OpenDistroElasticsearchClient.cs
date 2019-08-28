@@ -52,9 +52,20 @@ namespace Deer.Repositories
             response.EnsureSuccessStatusCode();
         }
 
+        public async Task DeleteUserAsync(string username)
+        {
+            var response = await _httpClient.DeleteAsync($"/_opendistro/_security/api/internalusers/{username}");
+            response.EnsureSuccessStatusCode();
+        }
+
         public async Task CreateIndexAsync(string index)
         {
             await _elasticClient.Indices.CreateAsync(index, cd => cd.Settings(isd => isd.NumberOfShards(1).NumberOfReplicas(0)));
+        }
+
+        public async Task DeleteIndexAsync(string index)
+        {
+            await _elasticClient.Indices.DeleteAsync(index);
         }
 
         public void Dispose()
