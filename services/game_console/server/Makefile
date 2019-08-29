@@ -1,6 +1,6 @@
 #.PHONY: debug release clean
 CXXFLAGS = -c -g -std=c++17 -I../libpng -Wall
-SOURCES = misc.cpp notification.cpp network.cpp user.cpp team.cpp game.cpp main.cpp httpserver.cpp checksystem.cpp
+SOURCES = misc.cpp log.cpp notification.cpp network.cpp user.cpp team.cpp game.cpp main.cpp httpserver.cpp checksystem.cpp
 LDFLAGS = -lmicrohttpd -lpugixml -L../libpng -lpng -lrt -pthread
 OBJS = $(SOURCES:.cpp=.o)
 

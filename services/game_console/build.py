@@ -42,7 +42,7 @@ os.system("cp server/data/*.xml BUILD/server/data")
 os.system("cp server/data/*.html BUILD/server/data")
 print("")
 
-os.system("mkdir BUILD/SDK; cp SDK.md.html BUILD/SDK/")
+os.system("mkdir BUILD/SDK")
 
 gamesXml = ET.ElementTree(file="server/data/games.xml").getroot()
 for game in gamesXml:
@@ -54,14 +54,20 @@ for game in gamesXml:
 	os.system("cp server/data/%s/code.bin BUILD/server/data/%s/" % (name, name))
 	os.system("cp server/data/%s/*.png BUILD/server/data/%s/" % (name, name))
 
-	os.system("mkdir BUILD/SDK/%s" % name)
-	os.system("cp server/data/%s/code.bin BUILD/SDK/%s/" % (name, name))
-	os.system("cp server/data/%s/*.h BUILD/SDK/%s/" % (name, name))
-	os.system("cp server/data/%s/*.cpp BUILD/SDK/%s/" % (name, name))
-	os.system("cp server/data/%s/*.png BUILD/SDK/%s/" % (name, name))
-	os.system("cp server/data/%s/makefile BUILD/SDK/%s/" % (name, name))
-	os.system("cp server/data/%s/merge.py BUILD/SDK/%s/" % (name, name))
+	if game.get("sdk"):
+		os.system("mkdir BUILD/SDK/%s" % name)
+		os.system("cp server/data/%s/code.bin BUILD/SDK/%s/" % (name, name))
+		os.system("cp server/data/%s/*.h BUILD/SDK/%s/" % (name, name))
+		os.system("cp server/data/%s/*.cpp BUILD/SDK/%s/" % (name, name))
+		os.system("cp server/data/%s/*.png BUILD/SDK/%s/" % (name, name))
+		os.system("cp server/data/%s/makefile BUILD/SDK/%s/" % (name, name))
+		os.system("cp server/data/%s/merge.py BUILD/SDK/%s/" % (name, name))
 	print("")
+
+os.system("cp hw/api.h BUILD/SDK/")
+os.system("cd BUILD/SDK; zip SDK.zip `find .`")
+os.system("mv BUILD/SDK/SDK.zip BUILD/server/data")
+print("")
 
 print("Build main_screen")
 if os.system("cd main_screen; make") != 0:

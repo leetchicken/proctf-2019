@@ -52,7 +52,4 @@ services: |
   {name => 'game_console',   path => 'checkers/game_console/checker.py', timeout => 15, host_suffix => '7'},
   {name => 'bb',             path => 'checkers/bb/bb.checker.pl', timeout => 15, host_suffix => '6'},
   {name => 'binder',         path => 'checkers/Binder/check.sh', timeout => 15, host_suffix => '2'},
-  {name => 'up1',            path => 't/checkers/up.pl', timeout => 15},
-  {name => 'up2',            path => 't/checkers/up.pl', timeout => 15},
-  {name => 'random1',        path => 't/checkers/random.pl', timeout => 15},
-  {name => 'random2',        path => 't/checkers/random.pl', timeout => 15},
+  {name => 'rubik',          path => 'checkers/rubik/checker.sh', timeout => 15, host_suffix => '4'},

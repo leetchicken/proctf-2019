@@ -43,13 +43,13 @@ namespace checker
 					await Debug(checker, args.Host).ConfigureAwait(false);
 					break;
 				case Command.Info:
-					await checker.Info().ConfigureAwait(false);
+					await Console.Out.WriteLineAsync(await checker.Info().ConfigureAwait(false)).ConfigureAwait(false);
 					break;
 				case Command.Check:
 					await checker.Check(args.Host).ConfigureAwait(false);
 					break;
 				case Command.Put:
-					await checker.Put(args.Host, args.Id, args.Flag, args.Vuln).ConfigureAwait(false);
+					await Console.Out.WriteLineAsync(await checker.Put(args.Host, args.Id, args.Flag, args.Vuln).ConfigureAwait(false)).ConfigureAwait(false);
 					break;
 				case Command.Get:
 					await checker.Get(args.Host, args.Id, args.Flag, args.Vuln).ConfigureAwait(false);

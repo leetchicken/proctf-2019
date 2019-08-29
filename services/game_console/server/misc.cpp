@@ -4,6 +4,7 @@
 #include <poll.h>
 #include <stdio.h>
 #include <errno.h>
+#include <stdlib.h>
 
 
 float GetTime()
@@ -31,4 +32,24 @@ IPAddr inet_aton(const char* addrStr)
     in_addr addr;
     inet_aton(addrStr, &addr);
     return addr.s_addr;
+}
+
+
+char* ReadFile(const char* fileName, uint32_t& size)
+{
+    FILE* f = fopen(fileName, "r");
+    if (!f)
+    {
+        size = 0;
+        return nullptr;
+    }
+
+    fseek(f, 0, SEEK_END);
+    size = ftell(f);
+    fseek(f, 0, SEEK_SET);
+    char* fileData = (char*)malloc(size);
+    fread(fileData, 1, size, f);
+    fclose(f);
+
+    return fileData;
 }

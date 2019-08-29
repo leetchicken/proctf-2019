@@ -3,6 +3,7 @@
 #include <string.h>
 #include <unordered_map>
 #include <pugixml.hpp>
+#include "log.h"
 
 
 static const uint32_t kFlagIdLen = 8;
@@ -33,7 +34,7 @@ void Team::LoadDb()
 				if(fread(flagId, kFlagIdLen, 1, storage) != 1)
                 {
                     error = true;
-                    printf("Failed to read storage %s\n", filename);
+                    Log("Failed to read storage %s\n", filename);
                     break;
                 }
 
@@ -42,7 +43,7 @@ void Team::LoadDb()
 				if(fread(flag, kFlagLen, 1, storage) != 1)
                 {
                     error = true;
-                    printf("Failed to read storage %s\n", filename);
+                    Log("Failed to read storage %s\n", filename);
                     break;
                 }
 
@@ -51,15 +52,15 @@ void Team::LoadDb()
         }
         else
         {
-            printf("Storage corrupted %s\n", filename);
+            Log("Storage corrupted %s\n", filename);
             error = true;
         }
 
-        printf("Storage has been read succefully %s\n", filename);
+        Log("Storage has been read succefully %s\n", filename);
     }
     else
     {
-        printf("Storage does not exists %s\n", filename);
+        Log("Storage does not exists %s\n", filename);
         error = true;
     }
 
@@ -100,7 +101,7 @@ void Team::PutFlag(const char* flagId, const char* flag)
 
     if(strlen(flagId) != kFlagIdLen || strlen(flag) != kFlagLen)
     {
-        printf("CRITICAL ERROR: Invalid length of flag id or flag: %s %s\n", flagId, flag);
+        Log("CRITICAL ERROR: Invalid length of flag id or flag: %s %s\n", flagId, flag);
         exit(1);
     }
 
@@ -132,11 +133,11 @@ static bool LoadTeamsDatabase()
     pugi::xml_document doc;
     if (!doc.load_file("data/teams.xml")) 
     {
-        printf("Failed to teams load database\n");
+        Log("Failed to teams load database\n");
         return false;
     }
 
-    printf("Teams database:\n");
+    Log("Teams database:\n");
     pugi::xml_node teamsNode = doc.child("Teams");
     for (pugi::xml_node teamNode = teamsNode.first_child(); teamNode; teamNode = teamNode.next_sibling())
     {
@@ -148,12 +149,12 @@ static bool LoadTeamsDatabase()
         team.name = teamNode.attribute("name").as_string();
         if(team.name.length() > kMaxUserNameLen)
         {
-            printf("  ERROR: too long user name: %s\n", team.name.c_str());
+            Log("  ERROR: too long user name: %s\n", team.name.c_str());
             exit(1);
         }
 		team.network = net;
-        printf("  %u %s\n", team.number, team.name.c_str());
-        printf("    network: %s(%08X)\n", netStr, net);
+        Log("  %u %s\n", team.number, team.name.c_str());
+        Log("    network: %s(%08X)\n", netStr, net);
         team.LoadDb();
     }
 
@@ -174,7 +175,7 @@ Team* FindTeam(in_addr ipAddr, bool showError)
     if(iter == GTeams.end())
     {
         if(showError)
-            printf("  ERROR: Unknown network: %s\n", inet_ntoa(ipAddr));
+            Log("  ERROR: Unknown network: %s\n", inet_ntoa(ipAddr));
         return nullptr;
     }
     return &iter->second;
