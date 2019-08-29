@@ -10,4 +10,6 @@ RUN dotnet publish -c Release -o out
 FROM mcr.microsoft.com/dotnet/core/aspnet:2.2 as runtime
 WORKDIR /app
 COPY --from=build /app/out .
+RUN adduser --system --home /app --shell /usr/sbin/nologin --no-create-home --disabled-password --disabled-login deer
+USER deer
 ENTRYPOINT ["dotnet", "Deer.dll"]
