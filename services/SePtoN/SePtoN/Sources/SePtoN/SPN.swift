@@ -156,7 +156,7 @@ public final class SPN {
 	func encryptRound(_ input: inout [UInt8], _ subKey: inout [UInt8], _ sboxes: inout [SBox], _ skipPermutation: Bool) -> [UInt8] {
 		var result = Array(input)
 
-var start = ProcessInfo.processInfo.systemUptime		
+// var start = ProcessInfo.processInfo.systemUptime		
 		SPN.xorBlock(&result, &subKey)
 // print("Xor in \(ProcessInfo.processInfo.systemUptime - start) sec")
 // start = ProcessInfo.processInfo.systemUptime

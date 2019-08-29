@@ -53,7 +53,7 @@ public final class ImageGetHandler: ChannelInboundHandler {
         buffer.writeBytes(data)
 
 // Responding with our g^b mod p back to Client
-        context.write(self.wrapOutboundOut(buffer), promise: nil)
+        context.writeAndFlush(self.wrapOutboundOut(buffer), promise: nil)
     }
 
     public func channelReadComplete(context: ChannelHandlerContext) {

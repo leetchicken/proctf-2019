@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -55,7 +56,7 @@ namespace SePtoN_Checker
 					{
 						FileId = imageId,
 						MasterKeyHex = Convert.ToBase64String(masterKey),
-						SourceImageMd5Hex = MD5.Create().ComputeHash(flagPicture).ToHex()
+						SourceImageHash = CalcImageBytesHash(flagPicture)
 					};
 
 					Console.WriteLine(state.ToJsonString().ToBase64String());
@@ -70,6 +71,22 @@ namespace SePtoN_Checker
 			{
 				throw new ServiceException(ExitCode.DOWN, string.Format("General failure"), innerException: e);
 			}
+		}
+
+		private static string CalcImageBytesHash(byte[] flagPicture)
+		{
+			if(flagPicture.Length < 14)
+				return null;
+			if(flagPicture[0] != 0x42 || flagPicture[1] != 0x4D)
+				return null;
+			if(BitConverter.ToUInt32(flagPicture.Skip(2).Take(4).ToArray()) != flagPicture.Length)
+				return null;
+
+			var pixelsOffset = BitConverter.ToUInt32(flagPicture.Skip(10).Take(4).ToArray());
+			if(pixelsOffset >= flagPicture.Length)
+				return null;
+
+			return MD5.Create().ComputeHash(flagPicture.Skip((int)pixelsOffset).Select(b => (byte)(b & 0xFE)).ToArray()).ToHex();
 		}
 
 		public static int ProcessGet(string host, string id, string flag)
@@ -87,11 +104,20 @@ namespace SePtoN_Checker
 					stream.WriteBigEndian(imageId);
 
 					var encryptedData = stream.ReadLengthFieldAware();
-					var imageData = spn.DecryptWithPadding(encryptedData);
 
-					var receivedImageMd5Hex = MD5.Create().ComputeHash(imageData).ToHex();
-					if(receivedImageMd5Hex != state.SourceImageMd5Hex)
-						throw new ServiceException(ExitCode.CORRUPT, $"Source image md5 {state.SourceImageMd5Hex} != received {receivedImageMd5Hex}");
+					byte[] imageData;
+					try
+					{
+						imageData = spn.DecryptWithPadding(encryptedData);
+					}
+					catch(Exception)
+					{
+						throw new ServiceException(ExitCode.CORRUPT, $"Received image of size {encryptedData.Length} can't be decrypted");
+					}
+
+					var receivedImageMd5Hex = CalcImageBytesHash(imageData);
+					if(receivedImageMd5Hex != state.SourceImageHash)
+						throw new ServiceException(ExitCode.CORRUPT, $"Source image md5 {state.SourceImageHash} != received {receivedImageMd5Hex}");
 
 					return (int)ExitCode.OK;
 				}

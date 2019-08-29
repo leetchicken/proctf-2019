@@ -7,6 +7,6 @@ namespace SePtoN_Checker
 	{
 		[DataMember(Name = "key")] public string MasterKeyHex;
 		[DataMember(Name = "id")] public int FileId;
-		[DataMember(Name = "md5")] public string SourceImageMd5Hex;
+		[DataMember(Name = "hash")] public string SourceImageHash;
 	}
 }
