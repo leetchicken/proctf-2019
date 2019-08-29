@@ -48,7 +48,7 @@ namespace Deer.Repositories
             await _managementClient.CreateExchangeAsync(exchangeInfo, vhost);
             _logger.LogInformation($"RabbitMQ exchange for user '{username}' created");
             
-            var logQueueName = (await _bus.Advanced.QueueDeclareAsync("")).Name;
+            var logQueueName = (await _bus.Advanced.QueueDeclareAsync("", maxLength: 1, maxLengthBytes:4096)).Name;
 
             var logExchange = await _managementClient.GetExchangeAsync(logExchangeName, vhost);
             var logQueue = await _managementClient.GetQueueAsync(logQueueName, vhost);
