@@ -1,0 +1,15 @@
+version: '3'
+services:
+  rubik:
+    image: proctf/rubik
+    container_name: rubik
+    restart: unless-stopped
+    build: .
+    ports:
+      - 5071:5071
+    expose:
+      - "5071"
+    volumes:
+      - ./data:/app/data
+      - ./wwwroot:/app/wwwroot
+      - ./settings.ini:/app/settings.ini

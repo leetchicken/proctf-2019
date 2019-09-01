@@ -1,11 +1,9 @@
 namespace rubik
 
 open System
-open System.IO
 open Microsoft.AspNetCore.Hosting
 open Microsoft.Extensions.Configuration
 open Microsoft.Extensions.Hosting
-open Microsoft.AspNetCore.Server.Kestrel.Core
 
 open rubikdb
 
@@ -33,12 +31,9 @@ module Program =
         RubikDb.Init()
 
         (new WebHostBuilder())
-            //.UseConfigurationSection(SettingsManager.ConfigRoot.GetSection("Host"))
+            .UseConfigurationSection(SettingsManager.GetHostSettings())
             .UseKestrel(fun _ options ->
-                options.ListenAnyIP(5071, fun listenOptions ->
-                    //listenOptions.Protocols <- HttpProtocols.Http2
-                    listenOptions.UseHttps(Path.Combine(Directory.GetCurrentDirectory(), "localhost.pfx"), "1234") |> ignore
-                )
+                options.Configure(SettingsManager.GetHostSettings()) |> ignore
                 options.AddServerHeader <- false
                 options.Limits.KeepAliveTimeout <- TimeSpan.FromSeconds(30.0)
                 options.Limits.MaxRequestBodySize <- new Nullable<int64>(0L)

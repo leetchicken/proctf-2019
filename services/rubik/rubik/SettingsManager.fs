@@ -20,6 +20,9 @@ type SettingsManager() =
     [<DefaultValue>]
     static val mutable private ConfigRoot: IConfigurationRoot
 
+    static member public GetHostSettings() =
+        SettingsManager.ConfigRoot.GetSection("Host")
+
     static member private Update() =
         SettingsManager.current <- SettingsManager.ConfigRoot.GetSection("Settings").Get<Settings>()
 

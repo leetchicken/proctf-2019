@@ -10,9 +10,11 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <DefineConstants></DefineConstants>
-    <Optimize>true</Optimize>
     <NoWarn>9</NoWarn>
+    <Optimize>true</Optimize>
+    <DefineConstants></DefineConstants>
+    <Deterministic>false</Deterministic>
+    <DebugType>None</DebugType>
   </PropertyGroup>
 
   <ItemGroup>
@@ -32,7 +34,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\rubikdb\rubikdb.csproj" />
+    <ProjectReference Include="../rubikdb/rubikdb.csproj" />
   </ItemGroup>
 
 </Project>

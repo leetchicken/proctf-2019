@@ -13,7 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\rubikdb\rubikdb.csproj" />
+    <ProjectReference Include="../rubikdb/rubikdb.csproj" />
   </ItemGroup>
 
 </Project>
