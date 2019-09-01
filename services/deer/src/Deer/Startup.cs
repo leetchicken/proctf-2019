@@ -55,9 +55,10 @@ namespace Deer
 
             services.AddSingleton(sp => sp.GetRequiredService<IMongoDatabase>().GetCollection<UserMongoDocument>("users"));
             services.AddSingleton<IUserRepository, UserRepository>();
-            
+
             services.AddSingleton<IOpenDistroElasticsearchClient>(sp =>
-                new OpenDistroElasticsearchClient(new Uri(sp.GetRequiredService<IConfiguration>().GetConnectionString("ElasticSearch"), UriKind.Absolute)));
+                new OpenDistroElasticsearchClient(new Uri(sp.GetRequiredService<IConfiguration>().GetConnectionString("ElasticSearch"), UriKind.Absolute),
+                    sp.GetRequiredService<ILogger<OpenDistroElasticsearchClient>>()));
             services.AddSingleton<ILogRepository>(sp =>
                 new LogRepository(new Uri(sp.GetRequiredService<IConfiguration>().GetConnectionString("ElasticSearch"), UriKind.Absolute)));
 

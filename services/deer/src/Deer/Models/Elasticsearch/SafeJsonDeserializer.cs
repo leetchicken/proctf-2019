@@ -3,20 +3,22 @@ using Newtonsoft.Json;
 
 namespace Deer.Models.Elasticsearch
 {
-    // TODO use
     public class SafeJsonDeserializer<T>
     {
         public SafeJsonDeserializer(string json, JsonSerializerSettings settings)
         {
             try
             {
-                Instance = JsonConvert.DeserializeObject<T>(json, settings);
+                Model = JsonConvert.DeserializeObject<T>(json, settings);
             }
-            catch (Exception)
+            catch (Exception e)
             {
+                Error = e;
             }
         }
 
-        public T Instance { get; }
+        public T Model { get; }
+        
+        public Exception Error { get; }
     }
 }

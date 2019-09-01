@@ -45,12 +45,12 @@ namespace Deer
 
         public Task RemoveConsumerForUserAsync(string username)
         {
-            _consumers.Remove(username, out var consumer);
-            consumer.Dispose();
+            if (_consumers.Remove(username, out var consumer))
+                consumer?.Dispose();
             return Task.CompletedTask;
         }
 
-        public Task StartAsync(CancellationToken cancellationToken)
+        public async Task StartAsync(CancellationToken cancellationToken)
         {
             if (!_bus.Advanced.IsConnected)
             {
@@ -62,9 +62,10 @@ namespace Deer
 
                 _bus.Advanced.Connected += EventHandler;
             }
+            else
+                await InitConsumersAsync();
 
             _logger.LogInformation($"{nameof(LogConsumerService)} started");
-            return Task.CompletedTask;
         }
         
         private async Task InitConsumersAsync()

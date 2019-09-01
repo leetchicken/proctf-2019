@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Deer.Models.Elasticsearch;
 using Elasticsearch.Net;
+using Microsoft.Extensions.Logging;
 using Nest;
 using Newtonsoft.Json;
 
@@ -14,14 +15,18 @@ namespace Deer.Repositories
 {
     public class OpenDistroElasticsearchClient : IOpenDistroElasticsearchClient, IDisposable
     {
+        private readonly ILogger<OpenDistroElasticsearchClient> _logger;
         private readonly HttpClient _httpClient;
         private readonly ElasticClient _elasticClient;
+        private readonly JsonSerializerSettings _jsonSerializerSettings = new JsonSerializerSettings();
 
-        public OpenDistroElasticsearchClient(Uri elasticSearchUri)
+        public OpenDistroElasticsearchClient(Uri elasticSearchUri, ILogger<OpenDistroElasticsearchClient> logger)
         {
+            _logger = logger;
             var userInfo = elasticSearchUri.UserInfo.Split(':');
             var user = userInfo[0];
             var password = userInfo[1];
+
             ServicePointManager.ServerCertificateValidationCallback +=
                 (sender, cert, chain, errors) => true;
             
@@ -46,16 +51,26 @@ namespace Deer.Repositories
 
         public async Task CreateUserAsync(string username, string password)
         {
-            var createUserJson = JsonConvert.SerializeObject(new CreateUserRequestModel {Password = password, BackendRoles = new[] {"deer_user"}});
+            var createUserJson = JsonConvert.SerializeObject(new CreateUserRequestModel(password, "deer_user"));
             var content = new StringContent(createUserJson, Encoding.UTF8, MediaTypeNames.Application.Json);
-            var response = await _httpClient.PutAsync($"/_opendistro/_security/api/internalusers/{username}", content);
-            response.EnsureSuccessStatusCode();
+            var httpResponse = await _httpClient.PutAsync($"/_opendistro/_security/api/internalusers/{username}", content);
+            httpResponse.EnsureSuccessStatusCode();
+            var response = new SafeJsonDeserializer<ElasticsearchResponseBaseModel>(await httpResponse.Content.ReadAsStringAsync(), _jsonSerializerSettings);
+            if (response.Model.Status != "CREATED")
+                _logger.LogWarning($"Create user response status for user '{username}' is unknown: {response.Model.Status}");
+            else
+                _logger.LogInformation($"Elasticsearch response: {response.Model.Message}");
         }
 
         public async Task DeleteUserAsync(string username)
         {
-            var response = await _httpClient.DeleteAsync($"/_opendistro/_security/api/internalusers/{username}");
-            response.EnsureSuccessStatusCode();
+            var httpResponse = await _httpClient.DeleteAsync($"/_opendistro/_security/api/internalusers/{username}");
+            httpResponse.EnsureSuccessStatusCode();
+            var response = new SafeJsonDeserializer<ElasticsearchResponseBaseModel>(await httpResponse.Content.ReadAsStringAsync(), _jsonSerializerSettings);
+            if (response.Model.Status != "OK")
+                _logger.LogWarning($"Delete user response status for user '{username}' is unknown: {response.Model.Status}");
+            else
+                _logger.LogInformation($"Elasticsearch response: {response.Model.Message}");
         }
 
         public async Task CreateIndexAsync(string index)
