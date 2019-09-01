@@ -40,6 +40,8 @@ cs_time_stop: 2019-10-15 22:00:00
 cs_time_break_start: 2018-01-01 01:00:00
 cs_time_break_end: 2018-01-01 01:30:00
 
+cs_static_path: '/home/cs/ctf-scoreboard-client/scoreboard/build'
+
 cs_checkers_hostname_cb: |
   sub { my ($team, $service) = @_; $service->{host_suffix} ? "$team->{host_prefix}$service->{host_suffix}" : "$team->{host}" }
 
@@ -53,3 +55,18 @@ services: |
   {name => 'bb',             path => 'checkers/bb/bb.checker.pl', timeout => 15, host_suffix => '6'},
   {name => 'binder',         path => 'checkers/Binder/check.sh', timeout => 15, host_suffix => '2'},
   {name => 'rubik',          path => 'checkers/rubik/checker.sh', timeout => 15, host_suffix => '4'},
+  {name => 'random01',        path => 't/checkers/random.pl', timeout => 1},
+  {name => 'random02',        path => 't/checkers/random.pl', timeout => 1},
+  {name => 'random03',        path => 't/checkers/random.pl', timeout => 1},
+  {name => 'random04',        path => 't/checkers/random.pl', timeout => 1},
+  {name => 'random05',        path => 't/checkers/random.pl', timeout => 1},
+  {name => 'random06',        path => 't/checkers/random.pl', timeout => 1},
+  {name => 'random07',        path => 't/checkers/random.pl', timeout => 1},
+  {name => 'random08',        path => 't/checkers/random.pl', timeout => 1},
+  {name => 'random09',        path => 't/checkers/random.pl', timeout => 1},
+  {name => 'random10',        path => 't/checkers/random.pl', timeout => 1},
+  {name => 'random11',        path => 't/checkers/random.pl', timeout => 1},
+  {name => 'random12',        path => 't/checkers/random.pl', timeout => 1},
+  {name => 'random13',        path => 't/checkers/random.pl', timeout => 1},
+  {name => 'random14',        path => 't/checkers/random.pl', timeout => 1},
+  {name => 'random15',        path => 't/checkers/random.pl', timeout => 1},
