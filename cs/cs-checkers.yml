@@ -66,6 +66,9 @@
       executable: pip3
       name:
         - requests
+        - lxml
+        - elasticsearch
+        - pika
 
   - name: build binder
     command: ./build.sh
