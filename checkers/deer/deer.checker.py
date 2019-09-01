@@ -32,28 +32,28 @@ def init_db():
         trace("SQLite db file '%s' does not exist, creating" % db_path)
         conn = sqlite3.connect(db_path)
         cur = conn.cursor()
-        cur.execute('CREATE TABLE users (id VARCHAR PRIMARY KEY NOT NULL, username VARCHAR NOT NULL, password VARCHAR NOT NULL, created INT NOT NULL)')
-        cur.execute('CREATE UNIQUE INDEX username_index ON users(username)')
+        cur.execute('CREATE TABLE users (id VARCHAR PRIMARY KEY NOT NULL, host VARCHAR NOT NULL, username VARCHAR NOT NULL, password VARCHAR NOT NULL, created INT NOT NULL)')
+        cur.execute('CREATE UNIQUE INDEX username_index ON users(username, host)')
         conn.commit()
         conn.close()
         trace("SQLite db file '%s' created" % db_path)
 
-def is_user_exists(username):
+def is_user_exists(host, username):
     db_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'users.db')
     conn = sqlite3.connect(db_path)
     cur = conn.cursor()
-    cur.execute('SELECT * FROM users WHERE username=?', (username,))
+    cur.execute('SELECT * FROM users WHERE username=? AND host=?', (username, host))
     row = cur.fetchone()
     conn.close()
     if row is None:
         return False
     return True
 
-def save_to_db(flag_id, username, password):
+def save_to_db(host, flag_id, username, password):
     db_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'users.db')
     conn = sqlite3.connect(db_path)
     cur = conn.cursor()
-    cur.execute("INSERT INTO users VALUES (?,?,?,strftime('%s','now'))", (flag_id, username, password))
+    cur.execute("INSERT INTO users VALUES (?,?,?,?,strftime('%s','now'))", (flag_id, host, username, password))
     conn.commit()
     conn.close()
 
@@ -64,6 +64,8 @@ def get_username_from_db(flag_id):
     cur.execute('SELECT username FROM users WHERE id=?', (flag_id,))
     row = cur.fetchone()
     conn.close()
+    if row is None:
+        return None
     return row[0]
 
 def get_random_username():
@@ -71,7 +73,7 @@ def get_random_username():
     f = open(usernames_path, "r")
     usernames = f.read().splitlines()
     f.close()
-    return usernames[randint(0, len(usernames) - 1)]
+    return usernames[randint(0, len(usernames) - 1)].lower()
 
 def get_random_log(flag_data=None):
     access_log_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'access.log')
@@ -100,14 +102,14 @@ def check(args):
     trace("check(%s)" % host)
 
     username = get_random_username()
-    while is_user_exists(username):
+    while is_user_exists(host, username):
         trace("User '%s' already exists, appending random digit to username" % username)
         username = username + str(randint(0, 9))
 
     password = username
 
     trace("Generated username '%s'" % username)
-    save_to_db(str(uuid.uuid4()), username, password)
+    save_to_db(host, str(uuid.uuid4()), username, password)
     trace("Username '%s' saved to checker users.db" % username)
 
     identity_server_client = IdentityServerHttpClient(host)
@@ -131,7 +133,7 @@ def check(args):
         channel = connection.channel()
 
         logs_exchange = 'logs.' + username
-        channel.basic_publish(logs_exchange, '', msg_json, pika.BasicProperties(type='Deer.Messages.LogData,LogProcessor'))
+        channel.basic_publish(logs_exchange, '', msg_json, pika.BasicProperties(type='Deer.Messages.LogData,Deer'))
 
         count = 0
         while count < 5:
@@ -173,16 +175,16 @@ def put(args):
     password = flag_id
 
     if vuln == "1":
-        username = flag_data.rstrip('=')
+        username = flag_data.rstrip('=').lower()
 
     if vuln == "2":
         username = get_random_username()
-        while is_user_exists(username):
+        while is_user_exists(host, username):
             trace("User '%s' already exists, appending random digit to username" % username)
             username = username + str(randint(0, 9))
 
         trace("Generated username '%s'" % username)
-        save_to_db(flag_id, username, password)
+        save_to_db(host, flag_id, username, password)
         trace("Username '%s' saved to checker users.db" % username)
 
     trace("Registering user '%s'" % username)
@@ -204,7 +206,7 @@ def put(args):
             channel = connection.channel()
 
             logs_exchange = 'logs.' + username
-            channel.basic_publish(logs_exchange, '', msg_json, pika.BasicProperties(type='Deer.Messages.LogData,LogProcessor'))
+            channel.basic_publish(logs_exchange, '', msg_json, pika.BasicProperties(type='Deer.Messages.LogData,Deer'))
             connection.close()
         except pika.exceptions.AMQPConnectionError as e:
             if str(e):
@@ -230,7 +232,7 @@ def get(args):
     password = flag_id
 
     if vuln == "1":
-        username = flag_data.rstrip('=')
+        username = flag_data.rstrip('=').lower()
 
         credentials = pika.PlainCredentials(username, password)
 

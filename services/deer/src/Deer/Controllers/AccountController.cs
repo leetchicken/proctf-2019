@@ -60,7 +60,7 @@ namespace Deer.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> SignUp([RegularExpression("^[a-zA-Z0-9]{1,50}$")] string username, string password)
+        public async Task<IActionResult> SignUp([RegularExpression("^[a-z0-9]{1,50}$")] string username, string password)
         {
             if (ModelState.IsValid && await _userUnitOfWork.CreateUserAsync(username, password))
             {
