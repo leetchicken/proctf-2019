@@ -43,6 +43,10 @@ namespace SePtoN_Checker
 					var masterKey = SubstitutionPermutationNetwork.CalcMasterKey(keyMaterial);
 
 					var flagPicture = FlagsPainter.DrawFlag(flag);
+
+					File.WriteAllBytes("source.bmp", flagPicture);
+					File.WriteAllBytes("key.bin", masterKey);
+
 					var spn = new SubstitutionPermutationNetwork(masterKey);
 					var encryptedData = spn.EncryptWithPadding(flagPicture, SubstitutionPermutationNetwork.GenerateRandomIV());
 
@@ -104,6 +108,7 @@ namespace SePtoN_Checker
 					stream.WriteBigEndian(imageId);
 
 					var encryptedData = stream.ReadLengthFieldAware();
+					File.WriteAllBytes("enc.bmp", encryptedData);
 
 					byte[] imageData;
 					try
@@ -114,6 +119,8 @@ namespace SePtoN_Checker
 					{
 						throw new ServiceException(ExitCode.CORRUPT, $"Received image of size {encryptedData.Length} can't be decrypted");
 					}
+
+					File.WriteAllBytes("result.bmp", imageData);
 
 					var receivedImageMd5Hex = CalcImageBytesHash(imageData);
 					if(receivedImageMd5Hex != state.SourceImageHash)

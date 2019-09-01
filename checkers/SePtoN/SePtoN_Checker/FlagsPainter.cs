@@ -12,7 +12,7 @@ namespace SePtoN_Checker
 	{
 		public static byte[] DrawFlag(string flag)
 		{
-			var image = new Bitmap(300, 25, PixelFormat.Format32bppArgb);
+			var image = new Bitmap(400, 40, PixelFormat.Format32bppArgb);
 			var rectangle = new RectangleF(0, 0, image.Width, image.Height);
 			using(Graphics g = Graphics.FromImage(image))
 			{
@@ -21,7 +21,7 @@ namespace SePtoN_Checker
 				StringFormat sf = new StringFormat();
 				sf.Alignment = StringAlignment.Center;
 				sf.LineAlignment = StringAlignment.Center;
-				g.DrawString(flag, new Font(FontFamily.GenericMonospace, 10, FontStyle.Regular), Brushes.White, rectangle, sf);
+				g.DrawString(flag, new Font(FontFamily.GenericMonospace, 14, FontStyle.Regular), Brushes.White, rectangle, sf);
 			}
 
 			var ms = new MemoryStream();

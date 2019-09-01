@@ -12,7 +12,7 @@ namespace SPN
 		public static int RoundSBoxesCount => SBoxes.Length;
 		public static int BlockSizeBytes => (SBoxes.Length * SBox.BitSize) / 8;
 
-		public const int RoundsCount = 5; //NOTE can't be less than 2
+		public const int RoundsCount = 4; //NOTE can't be less than 2
 
 //		private static uint[] SBoxDES = { 0xE, 0x4, 0xD, 0x1, 0x2, 0xF, 0xB, 0x8, 0x3, 0xA, 0x6, 0xC, 0x5, 0x9, 0x0, 0x7 };
 //		private static uint[][] SBoxes = { SBoxDES, SBoxDES, SBoxDES, SBoxDES };
@@ -62,7 +62,7 @@ namespace SPN
 		private static byte[][] SBoxes = { SBox1, SBox2, SBox3, SBox4, SBox5, SBox6, SBox7, SBox8, SBox9, SBox10, SBox11, SBox12, SBox13, SBox14, SBox15, SBox16 };
 		private static int[] PBoxOutput = { 38, 4, 15, 46, 11, 16, 33, 1, 35, 64, 51, 45, 50, 55, 27, 57, 47, 52, 43, 12, 7, 40, 42, 53, 29, 10, 56, 60, 36, 20, 58, 24, 39, 37, 26, 3, 32, 17, 22, 28, 30, 23, 63, 49, 14, 62, 19, 25, 21, 5, 9, 6, 8, 34, 18, 13, 31, 61, 44, 2, 48, 41, 54, 59 };
 
-		private static byte[] XorBlock(byte[] lhs, byte[] rhs)
+		public static byte[] XorBlock(byte[] lhs, byte[] rhs)
 		{
 			var result = new byte[lhs.Length];
 			for(int i = 0; i < Math.Min(lhs.Length, rhs.Length); i++)
@@ -96,13 +96,22 @@ namespace SPN
 			return key;
 		}
 
+		public byte[] MasterKey
+		{
+			set
+			{
+				masterKey = value;
+				subkeys = KeyShedule(masterKey).ToArray();
+			}
+		}
+
 		public SubstitutionPermutationNetwork(byte[] masterKey)
 		{
 			if(masterKey.Length != KeySizeBytes)
 				throw new Exception($"Key length {masterKey.Length} is not equal to expected {KeySizeBytes} bytes");
 
-			this.masterKey = masterKey;
-			subkeys = KeyShedule(masterKey).ToArray();
+			MasterKey = masterKey;
+			
 			sboxes = GenerateSBoxes();
 			pbox = new PBox(PBoxOutput);
 		}
@@ -407,7 +416,7 @@ namespace SPN
 
 		public readonly SBox[][] sboxes;
 		public readonly PBox pbox;
-		public readonly byte[][] subkeys;
-		private readonly byte[] masterKey;
+		private byte[][] subkeys;
+		private byte[] masterKey;
 	}
 }
