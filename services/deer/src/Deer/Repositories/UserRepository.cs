@@ -52,7 +52,7 @@ namespace Deer.Repositories
 
         public async Task<IEnumerable<User>> GetOldUsersAsync()
         {
-            var filter = Builders<UserMongoDocument>.Filter.Lt(d => d.Created, DateTime.UtcNow.AddMinutes(-20));
+            var filter = Builders<UserMongoDocument>.Filter.Lt(d => d.Created, DateTime.UtcNow.AddMinutes(-30));
             return ToUsers((await _userCollection.FindAsync(filter)).ToEnumerable());
         }
 
