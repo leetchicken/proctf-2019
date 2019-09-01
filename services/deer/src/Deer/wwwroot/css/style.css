@@ -1,0 +1,51 @@
+html,body{
+    height: 100%;
+}
+
+.container{
+    height: 100%;
+    align-content: center;
+}
+
+.card{
+    margin-top: auto;
+    margin-bottom: auto;
+    width: 600px;
+    background-color: rgba(0,0,0,0.5) !important;
+}
+
+.card-header h3{
+    color: white;
+}
+
+.card-body h6{
+    color: white;
+}
+
+.card-body table{
+    color: white;
+}
+
+.input-group-prepend span{
+    color: black;
+    border:0 !important;
+}
+
+input:focus{
+    box-shadow: 0 0 0 0 !important;
+}
+
+.login_btn{
+    color: black;
+    background-color: white;
+}
+
+.links{
+    color: white;
+}
+
+.links a{
+    margin-left: 4px;
+    color: white;
+    text-decoration: underline;
+}

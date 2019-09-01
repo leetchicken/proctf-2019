@@ -14,7 +14,6 @@ function get_es_password_hash () {
 
 if [ ! -f definitions.json ] || [ ! -f internal_users.yml ] || [ ! -f LogProcessor.appsettings.json ] || [ ! -f IdentityServer.appsettings.json ]; then
 	RABBIT_ADMIN_PASSWORD=`pwgen -Bs1 20`
-	RABBIT_LOG_PROCESSOR_PASSWORD=`pwgen -Bs1 20`
 	ES_ADMIN_PASSWORD=`pwgen -Bs1 20`
 
 	cat << EOF > definitions.json
@@ -24,13 +23,7 @@ if [ ! -f definitions.json ] || [ ! -f internal_users.yml ] || [ ! -f LogProcess
       "name": "admin",
       "password_hash": "$(get_rabbit_password_hash $RABBIT_ADMIN_PASSWORD)",
       "tags": "administrator"
-    },
-    {
-      "name": "log-processor",
-      "password_hash": "$(get_rabbit_password_hash $RABBIT_LOG_PROCESSOR_PASSWORD)",
-      "tags": ""
     }
-
   ],
   "vhosts": [
     {
@@ -44,30 +37,13 @@ if [ ! -f definitions.json ] || [ ! -f internal_users.yml ] || [ ! -f LogProcess
       "configure": ".*",
       "write": ".*",
       "read": ".*"
-    },
-    {
-      "user": "log-processor",
-      "vhost": "/",
-      "configure": "^$",
-      "write": "^$",
-      "read": "^users\.log\-processor$"
     }
-
   ],
   "parameters": [],
   "policies": [],
   "exchanges": [
     {
-      "name": "users",
-      "vhost": "/",
-      "type": "fanout",
-      "durable": true,
-      "auto_delete": false,
-      "internal": false,
-      "arguments": {}
-    },
-    {
-      "name": "feedback",
+      "name": "errors",
       "vhost": "/",
       "type": "topic",
       "durable": true,
@@ -76,41 +52,17 @@ if [ ! -f definitions.json ] || [ ! -f internal_users.yml ] || [ ! -f LogProcess
       "arguments": {}
     }
   ],
-  "queues": [
-    {
-      "name": "users.log-processor",
-      "vhost": "/",
-      "durable": true,
-      "auto_delete": false,
-      "arguments": {}
-    }
-  ],
-  "bindings": [
-    {
-      "source": "users",
-      "vhost": "/",
-      "destination": "users.log-processor",
-      "destination_type": "queue",
-      "routing_key": "*",
-      "arguments": {}
-    }
-  ]
+  "queues": [],
+  "bindings": []
 }
 EOF
 
-	cat << EOF > LogProcessor.appsettings.json
+	cat << EOF > Deer.appsettings.json
 {
     "ConnectionStrings": {
-        "RabbitMq": "host=rabbitmq;username=log-processor;password=$RABBIT_LOG_PROCESSOR_PASSWORD"
-    }
-}
-EOF
-
-	cat << EOF > IdentityServer.appsettings.json
-{
-    "ConnectionStrings": {
+        "ElasticSearch": "https://admin:$ES_ADMIN_PASSWORD@elasticsearch:9200",
         "MongoDb": "mongodb://mongodb/users",
-        "RabbitMq": "host=rabbitmq;username=admin;password=$RABBIT_ADMIN_PASSWORD"
+        "RabbitMq": "host=rabbitmq;username=admin;password=$RABBIT_ADMIN_PASSWORD;prefetchcount=1"
     },
     "Kestrel": {
         "EndPoints": {

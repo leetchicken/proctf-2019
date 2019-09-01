@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>netcoreapp2.2</TargetFramework>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="EasyNetQ" Version="3.6.0" />
+      <PackageReference Include="Hangfire.Core" Version="1.6.13" />
+      <PackageReference Include="Hangfire.MemoryStorage" Version="1.6.1" />
+    </ItemGroup>
+
+</Project>

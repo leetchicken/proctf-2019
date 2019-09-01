@@ -1,7 +1,7 @@
 definitions.json
-LogProcessor.appsettings.json
-IdentityServer.appsettings.json
+Deer.appsettings.json
 internal_users.yml
 .idea/
+*.user
 bin/
 obj/
