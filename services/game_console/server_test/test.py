@@ -8,6 +8,7 @@ import socket
 import time
 import random
 import string
+import time
 
 serverAddr = argv[1]
 userName = argv[2]
@@ -28,6 +29,8 @@ notifySock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 notifySock.connect((serverAddr, 8001))
 notifySock.send(authKeyRaw)
 
+lastNotificationTime = 0
+
 while True:
     try:
         data = notifySock.recv(16, socket.MSG_DONTWAIT)
@@ -41,16 +44,20 @@ while True:
             print("Notifications available: %u" % notificationsNum)
             notifySock.send(data)
 
-            url = 'http://%s/notification?auth=%x' % (serverAddr, authKey)
-            r = requests.get(url)
-            if r.status_code != 200:
-                printf("Get notification failed")
-            if len(r.content) > 0:
-                print("Got notification")
+            for i in range(0, notificationsNum):
+                url = 'http://%s/notification?auth=%x' % (serverAddr, authKey)
+                r = requests.get(url)
+                if r.status_code != 200:
+                    printf("Get notification failed")
+                if len(r.content) > 0:
+                    print("Got notification")
     except:
         pass
 
     method = int(random.uniform(0, 6))
+    if method == 5 and time.time() - lastNotificationTime < 5:
+        continue
+
     if method == 0:
         url = 'http://%s/auth?u=%s&p=%s' % (serverAddr, userName, password)
     if method == 1:
@@ -78,6 +85,8 @@ while True:
         url = 'http://%s/notification?auth=%x' % (serverAddr, authKey)
         print(url)
         requests.post(url=url, data=notification, headers={'Content-Type': 'application/octet-stream'})
+
+        lastNotificationTime = time.time()
 
     if method != 5:
         print(url)

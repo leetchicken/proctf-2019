@@ -11,13 +11,13 @@
 
 int main(int argc, char* argv[])
 {
-    if(argc < 3)
+    if(argc < 2)
         return -1;
 
     sockaddr_in addr;
     addr.sin_family = AF_INET;
     inet_aton(argv[1], &addr.sin_addr);
-    addr.sin_port = htons(atoi(argv[2]));
+    addr.sin_port = htons(8002);
 
     int sock = -1;
 

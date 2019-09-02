@@ -71,12 +71,14 @@ char* GetPage(uint32_t pageIdx, uint32_t& pageSize)
     std::mutex GMutex;
     uint32_t pagesNum = (GLog.size() + kPageSize - 1) / kPageSize;
     if(pageIdx == ~0u)
-        pageIdx = pagesNum - 1;
-    if(pageIdx >= pagesNum)
+        pageIdx = pagesNum;
+    if(pageIdx == 0 || pageIdx > pagesNum)
     {
         pageSize = 0;
         return nullptr;
     }
+
+    pageIdx--;
 
     uint32_t firstLineIdx = pageIdx * kPageSize;
     uint32_t lastLineIdx =  firstLineIdx + kPageSize - 1;

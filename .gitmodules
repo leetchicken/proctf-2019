@@ -1,4 +1,4 @@
 [submodule "services/game_console/hw/mbed-os"]
 	path = services/game_console/hw/mbed-os
-	url = https://github.com/ARMmbed/mbed-os.git
-	branch = tags/mbed-os-5.12.4
+	url = git@github.com:HackerDom/mbed-os.git
+	branch = hackerdom
