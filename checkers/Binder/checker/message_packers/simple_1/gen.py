@@ -38,7 +38,7 @@ class Generator:
         for i in range(3):
             c=random.choice(string.ascii_uppercase)
             password = password +c+c
-            proc = sp.Popen(['timeout',"7","./seccomp_test/wrapper",file,password],stdout=sp.PIPE)
+            proc = sp.Popen(['timeout',"-s","KILL","7","./seccomp_test/wrapper",file,password],stdout=sp.PIPE)
             out = proc.communicate()
             if not message in out[0].decode():
                 return False

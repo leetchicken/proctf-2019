@@ -37,11 +37,11 @@
 
 
         <div class="form-group">
-          <label for="challange_md5">Challange</label>
+          <label for="challange_md5">Challenge</label>
           <input name="challange" type="text" class="form-control" id="challange_md5"
                               aria-describedby="challange_md5_ar" placeholder="">
           <small id="challange_md5_ar" class="form-text text-muted">
-            Enter 8-length string for which md5("{{challange}}"+string)[0:3]=="\x00\x00\x00"
+            Enter 8-length string for which md5("{{challange}}"+string)[0:3] > 0xFFFFFaa0
           </small>
         </div>
         <button type="submit" class="btn btn-primary">Send</button>

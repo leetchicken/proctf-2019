@@ -32,7 +32,7 @@ void gen_random(char *s, const int len) {
 int main(int argc, char *argv[]) {
     char buf[17];
     unsigned char result[MD5_DIGEST_LENGTH];
-    if (argc != 3){
+    if (argc != 2){
       printf("No salt provided\n");
       return 0;
     }
@@ -41,24 +41,16 @@ int main(int argc, char *argv[]) {
       return 0;
     }
     srand (time(NULL));
-    int zeros = atoi(argv[2]);
-    if (zeros == 0){
-      printf("Zeros iz nul\n");
-      return 0;
-    }
     strcpy(buf,argv[1]);
     int i;
     while (1){
       gen_random(buf+8,8);
       //printf("%s\n",buf);
       MD5((const unsigned char*)buf, 16, result);
-      //print_md5_sum(result);
-      for (i=0; i<zeros; i++){
-        if (result[i] !=0){
-          break;
-        }
-      }
-      if (i == zeros){
+      unsigned int val = *((unsigned int *) result);
+      if (val > 0xFFFFFaa0){
+        //printf("Val: %x %x\n",val,0xF0000000);
+        //print_md5_sum(result);
         break;
       }
     }

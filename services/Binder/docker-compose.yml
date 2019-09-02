@@ -3,7 +3,7 @@ version : '2'
 services:
   binder:
     build: .
-    restart: always
+    restart: unless-stopped
     volumes:
       - ./service:/home/service
     ports:

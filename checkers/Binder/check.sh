@@ -2,4 +2,4 @@
 
 
 docker run --rm --net=host -v `pwd`/checker:/home/checker \
-                           -i binderchecker ./checker.py $@
+                                -i binderchecker ./checker.py $@
