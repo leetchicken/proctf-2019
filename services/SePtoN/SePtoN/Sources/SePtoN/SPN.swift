@@ -5,7 +5,7 @@ import Foundation
 
 public final class SPN {
 
-	static let roundsCount = 5
+	static let roundsCount = 4
 
 	static var roundSBoxesCount: Int { return SBoxes.count }
 	static var blockSizeBytes: Int { return (roundSBoxesCount * SBox.bitSize) / 8 }
