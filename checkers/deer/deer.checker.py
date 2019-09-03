@@ -11,7 +11,7 @@ import uuid
 import time
 from random import randint
 from elasticsearch.exceptions import ConnectionError, AuthenticationException, AuthorizationException
-from elasticsearch import Elasticsearch
+from elasticsearch import Elasticsearch, RequestsHttpConnection
 from identity_server_http_client import IdentityServerHttpClient
 
 OK, CORRUPT, MUMBLE, DOWN, CHECKER_ERROR = 101, 102, 103, 104, 110
@@ -255,7 +255,7 @@ def get(args):
     if vuln == "2":
         username = get_username_from_db(flag_id)
         # TODO check certificate
-        es = Elasticsearch(['https://%s:9200' % host], http_auth=(username, password), verify_certs=False)
+        es = Elasticsearch(['https://%s:9200' % host], http_auth=(username, password), verify_certs=False, connection_class=RequestsHttpConnection)
 
         try:
             res = es.search(index=username, body={"query": { "match": { "content": { "query": "flag" } } }})
