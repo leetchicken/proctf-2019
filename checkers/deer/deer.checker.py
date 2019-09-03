@@ -271,7 +271,7 @@ def get(args):
         except AuthorizationException as e:
             verdict(CORRUPT, "Authorization error", e)
 
-        sys.exit(CORRUPT)
+        verdict(CORRUPT, "Can't find flag")
 
     verdict(CHECKER_ERROR, "Unknown vuln number for get()", "Unknown vuln number '%s' for get" % vuln)
 
