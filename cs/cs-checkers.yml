@@ -83,7 +83,7 @@
     tags: binder
 
   - name: build rubik
-    command: dotnet build -c Release
+    command: dotnet publish -c Release
     args:
       chdir: "{{cs_dir}}/checkers/rubik/src"
     become: yes
