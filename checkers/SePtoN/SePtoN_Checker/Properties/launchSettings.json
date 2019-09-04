@@ -2,7 +2,7 @@
   "profiles": {
     "SePtoN_Checker": {
       "commandName": "Project",
-      "commandLineArgs": "get 10.60.2.4 eyJoYXNoIjoiM2FlYmRiMGJhYWYxYzM1ZmFhYjc3ZjAyNjlmMDIzNjciLCJpZCI6NTAsImtleSI6IndZdUxHZmZwZzNNPSJ9 0123456789012345678901234567890= 1"
+      "commandLineArgs": "put 10.60.2.4 id flag 1"
     }
   }
 }

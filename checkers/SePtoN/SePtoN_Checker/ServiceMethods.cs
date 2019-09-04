@@ -169,8 +169,8 @@ namespace SePtoN_Checker
 
 		const int DH_x_bitsCount = 20 * 8;
 
-		private const int NetworkOperationTimeout = 3000;
-		private const int ConnectTimeout = 1000;
+		private const int NetworkOperationTimeout = 5000;
+		private const int ConnectTimeout = 3000;
 
 		public const int PUT_PORT = 31337;
 		public const int GET_PORT = 31338;

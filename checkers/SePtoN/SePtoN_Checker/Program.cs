@@ -1,4 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace SePtoN_Checker
 {
@@ -6,6 +10,9 @@ namespace SePtoN_Checker
 	{
 		static int Main(string[] args)
 		{
+//			StressTest();
+//			return 1;
+
 			try
 			{
 				if(args.Length < 1)
@@ -36,6 +43,22 @@ namespace SePtoN_Checker
 				return ExitWithMessage(ExitCode.CHECKER_ERROR, e.ToString());
 			}
 			return (int)ExitCode.CHECKER_ERROR;
+		}
+
+		static void StressTest()
+		{
+			var threadsCount = 100;
+			ThreadPool.SetMinThreads(threadsCount, threadsCount);
+
+			var sw = Stopwatch.StartNew();
+			var tasks = new List<Task>();
+			for(int i = 0; i < threadsCount; i++)
+			{
+				tasks.Add(Task.Run(() => ServiceMethods.ProcessPut("10.60.2.4", "id", "flag")).ContinueWith(task => Console.WriteLine(ServiceMethods.ProcessGet("10.60.2.4", "eyJoYXNoIjoiYmY0NDY1M2M1MmE4YTY0NTI5NTc1N2EzMzYyMGRmMzkiLCJpZCI6MTQ0OCwia2V5IjoibFVOVXdKb0JFclE9In0=", "flag"))));
+			}
+
+			Task.WaitAll(tasks.ToArray());
+			Console.WriteLine(sw.Elapsed);
 		}
 
 		private static int ProcessCheck(string[] args)
