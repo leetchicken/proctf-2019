@@ -107,8 +107,6 @@ public final class SPN {
 
 
 	func encryptCBC(_ data: [UInt8], _ iv: [UInt8]) throws -> [UInt8] {
-// var start = ProcessInfo.processInfo.systemUptime
-
 		if (data.count == 0 || data.count % SPN.blockSizeBytes != 0 || iv.count == 0 || iv.count % SPN.blockSizeBytes != 0) {
 			print("data \(data.count) iv \(iv.count)")
 			throw SPNError.unpaddedInput
@@ -121,21 +119,13 @@ public final class SPN {
 		
 		var prevC = iv
 		while(i < data.count){
-
-
 			var p = Array(data[i..<(i+SPN.blockSizeBytes)])
 			SPN.xorBlock(&p, &prevC)
-// var start = ProcessInfo.processInfo.systemUptime
 			let c = encryptBlock(p)
-// print("----Encrypted block in \(ProcessInfo.processInfo.systemUptime - start) sec")
 			result += c
 			prevC = c
 			i += SPN.blockSizeBytes
-
-			
-
 		}
-// print("--------EncryptedCBC in \(ProcessInfo.processInfo.systemUptime - start) sec")
 		return result
 	}
 
@@ -143,9 +133,7 @@ public final class SPN {
 		var result = block
 
 		for roundNum in (0..<SPN.roundsCount) {
-// var start = ProcessInfo.processInfo.systemUptime
 			result = encryptRound(&result, &subkeys[roundNum], &sboxes[roundNum], roundNum == SPN.roundsCount - 1)
-// print("--------Encrypted round in \(ProcessInfo.processInfo.systemUptime - start) sec")
 		}
 
 
@@ -156,47 +144,28 @@ public final class SPN {
 	func encryptRound(_ input: inout [UInt8], _ subKey: inout [UInt8], _ sboxes: inout [SBox], _ skipPermutation: Bool) -> [UInt8] {
 		var result = Array(input)
 
-// var start = ProcessInfo.processInfo.systemUptime		
 		SPN.xorBlock(&result, &subKey)
-// print("Xor in \(ProcessInfo.processInfo.systemUptime - start) sec")
-// start = ProcessInfo.processInfo.systemUptime
 
 		for i in (0..<result.count) {
-
-
 			var leftPart = UInt8(result[i] >> 4)
 			var rightPart = UInt8(result[i] & 0x0F)
-
 
 			leftPart = sboxes[i * 2].substitute(leftPart)
 			rightPart = sboxes[i * 2 + 1].substitute(rightPart)
 
-
 			result[i] = (leftPart << 4) | rightPart
-
 		}
-// print("SBoxes in \(ProcessInfo.processInfo.systemUptime - start) sec")
-// start = ProcessInfo.processInfo.systemUptime
 
 		if(!skipPermutation) {
 			let pboxInput = assembleUInt64(result)
-// print("PBoxIn in \(ProcessInfo.processInfo.systemUptime - start) sec")
-// start = ProcessInfo.processInfo.systemUptime
 
 			var pboxOutput = pbox.permute(pboxInput)
-
-// print("PBoxPermute in \(ProcessInfo.processInfo.systemUptime - start) sec")
-// start = ProcessInfo.processInfo.systemUptime
 
 			for i in (0..<result.count) {
 				result[result.count - i - 1] = UInt8(pboxOutput & 0xFF)
 				pboxOutput >>= 8
 			}			
-// print("other in \(ProcessInfo.processInfo.systemUptime - start) sec")
-
 		}
-// print("Done in \(ProcessInfo.processInfo.systemUptime - start) sec")
-// print("====")
 
 		return result
 	}

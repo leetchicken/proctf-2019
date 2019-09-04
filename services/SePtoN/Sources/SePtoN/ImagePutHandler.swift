@@ -58,7 +58,7 @@ public final class ImagePutHandler: ChannelInboundHandler {
             context.close(promise: nil)
             return
         }
-        
+
         let yA = BigUInt(Data(newData))
 
         let xB = BigUInt.randomInteger(withExactWidth: 20 * 8)
@@ -66,8 +66,6 @@ public final class ImagePutHandler: ChannelInboundHandler {
 
         let key = yA.power(xB, modulus: p)
         let keyMaterial = Array(key.serialize())
-        
-        print("Key: ", key)
 
         guard let masterKey = try? SPN.CalcMasterKey(keyMaterial) else {
             print("Failed to generate masterKey from DH-derived key \(key)")
@@ -83,9 +81,6 @@ public final class ImagePutHandler: ChannelInboundHandler {
     } 
 
     public func processImageTransfer(_ context: ChannelHandlerContext, _ data: NIOAny) {
-        print()
-        print("IMAGE TRANSFER")
-
         var byteBuffer = unwrapInboundIn(data)
 
         guard let c = byteBuffer.readBytes(length: byteBuffer.readableBytes) else {
@@ -93,38 +88,15 @@ public final class ImagePutHandler: ChannelInboundHandler {
             return
         }
 
-        // let start = DispatchTime.now()
         guard var imageBytes = try? spn?.decryptWithPadding(c) else {
             print("!! Failed to decryptWithPadding c of \(c.count) bytes")
             context.close(promise: nil)
             return
         }
-        // let end = DispatchTime.now()
-        // let nanoTime = end.uptimeNanoseconds - start.uptimeNanoseconds
-        // let timeInterval = Double(nanoTime) / 1_000_000_000
-        // print("Decrypted \(imageBytes.count) bytes in \(timeInterval) sec")
 
+        tryInjectWatermark(&imageBytes, generateWatermark(imageBytes))        
 
-        tryInjectWatermark(&imageBytes, generateWatermark(imageBytes))
-
-
-        // guard let image = try? Image(data: Data(imageBytes), as: .bmp) else {
-        //     print("!! Failed to parse decrypted image bytes as valid Image")
-        //     context.close(promise: nil)
-        //     return
-        // }
-
-        // print("GOT VALID IMAGE: \(image.size)")
-
-        // guard let newImageData = try? image.export(as: .bmp(compression: false)) else {
-        //     print("!! Failed to serialze image of size \(image.size) ")
-        //     context.close(promise: nil)
-        //     return
-        // }
-
-        guard let newC = try? spn?.encryptWithPadding(imageBytes, SPN.generateIV()) else {
-        // guard let newC = try? spn?.encryptWithPadding(Array(newImageData), SPN.generateIV()) else {
-            // print("!! Failed to encryptWithPadding newImageData of \(newImageData.count) bytes")
+        guard let newC = try? spn?.encryptWithPadding(imageBytes, SPN.generateIV()) else {        
             print("!! Failed to encryptWithPadding newImageData of \(imageBytes.count) bytes")
             context.close(promise: nil)
             return
@@ -142,28 +114,28 @@ public final class ImagePutHandler: ChannelInboundHandler {
             return
         }
 
-        print("SAVED DATA: \(fileUrl.path), id \(id) size: \(newC.count)")
+        print("SAVED FILE: \(fileUrl.path), id \(id) size: \(newC.count)")
 
         var result = context.channel.allocator.buffer(capacity: 4)
         result.writeInteger(id)
 
         context.writeAndFlush(self.wrapOutboundOut(result), promise: nil)
-    }    
+    }
 
 
     private func generateWatermark(_ imageBytes: [UInt8]) -> [UInt8] {
-        let waterMark = imageBytes.chunks(4).map { buf in buildUInt32(buf, 0)}.reduce(0, { x, y in x ^ y} )        
+        let waterMark = imageBytes.chunks(4).map { buf in buildUInt32(buf, 0)}.reduce(0, { x, y in x ^ y} )
 
         let buf: [UInt8] = Array("The Gods demand justice: \(waterMark)".utf8)
 
-        var result = [UInt8]()        
+        var result = [UInt8]()
         result.reserveCapacity(buf.count * 8)
 
         return buf.flatMap { b in
             return (0..<8).map { bitNum in 
                 let offset = (8-1 - bitNum)
                 return (b & (1 << offset)) >> offset
-            }            
+            }
         }
     }
 
@@ -193,7 +165,7 @@ public final class ImagePutHandler: ChannelInboundHandler {
         return result
     }
 
-    public func channelReadComplete(context: ChannelHandlerContext) {        
+    public func channelReadComplete(context: ChannelHandlerContext) {
         context.flush()
     }
 

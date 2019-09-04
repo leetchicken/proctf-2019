@@ -22,10 +22,6 @@ public final class ImageGetHandler: ChannelInboundHandler {
             context.close(promise: nil)
             return
         }
-        // guard let fileIdBytes = byteBuffer.readBytes(length: byteBuffer.readableBytes) else {
-        //     context.close(promise: nil)
-        //     return
-        // }
 
         guard let id: Int32 = byteBuffer.readInteger() else {
             print("Can't read file id from client")
@@ -33,20 +29,13 @@ public final class ImageGetHandler: ChannelInboundHandler {
             return
         }
 
-        // var fileId : UInt32 = 0
-        // for byte in fileNumBytes {
-        //     fileId = fileId << 8
-        //     fileId = fileId | UInt32(byte)
-        // }
-
         let path = filesProvider.getFilePathForId(id);
 
-        print("Reading file \(path)")
         guard let data = try? Data(contentsOf: path) else {
             print("Can't read file from \(path)")
             context.close(promise: nil)
             return
-        }        
+        }
         print("READ FILE: \(data.count) bytes from \(path)")
 
         var buffer = context.channel.allocator.buffer(capacity: data.count)
