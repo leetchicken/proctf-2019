@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -8,6 +9,7 @@ using System.Net.Sockets;
 using System.Numerics;
 using System.Security.Cryptography;
 using System.Text;
+using System.Xml.Serialization;
 using SPN;
 
 namespace SePtoN_Checker
@@ -44,9 +46,6 @@ namespace SePtoN_Checker
 
 					var flagPicture = FlagsPainter.DrawFlag(flag);
 
-					File.WriteAllBytes("source.bmp", flagPicture);
-					File.WriteAllBytes("key.bin", masterKey);
-
 					var spn = new SubstitutionPermutationNetwork(masterKey);
 					var encryptedData = spn.EncryptWithPadding(flagPicture, SubstitutionPermutationNetwork.GenerateRandomIV());
 
@@ -56,11 +55,21 @@ namespace SePtoN_Checker
 
 					Console.Error.WriteLine($"Got image id {imageId}");
 
+					string imageHash;
+					try
+					{
+						imageHash = CalcImageBytesHash(flagPicture);
+					}
+					catch(Exception e)
+					{
+						throw new ServiceException(ExitCode.CHECKER_ERROR, "Failed to calc hash of generated image", innerException: e);
+					}
+
 					var state = new State
 					{
 						FileId = imageId,
 						MasterKeyHex = Convert.ToBase64String(masterKey),
-						SourceImageHash = CalcImageBytesHash(flagPicture)
+						SourceImageHash = imageHash
 					};
 
 					Console.WriteLine(state.ToJsonString().ToBase64String());
@@ -79,18 +88,18 @@ namespace SePtoN_Checker
 
 		private static string CalcImageBytesHash(byte[] flagPicture)
 		{
-			if(flagPicture.Length < 14)
-				return null;
-			if(flagPicture[0] != 0x42 || flagPicture[1] != 0x4D)
-				return null;
-			if(BitConverter.ToUInt32(flagPicture.Skip(2).Take(4).ToArray()) != flagPicture.Length)
-				return null;
-
-			var pixelsOffset = BitConverter.ToUInt32(flagPicture.Skip(10).Take(4).ToArray());
-			if(pixelsOffset >= flagPicture.Length)
-				return null;
-
-			return MD5.Create().ComputeHash(flagPicture.Skip((int)pixelsOffset).Select(b => (byte)(b & 0xFE)).ToArray()).ToHex();
+			var ms = new MemoryStream();
+			using(var bmp = new Bitmap(Image.FromStream(new MemoryStream(flagPicture))))
+			{
+				for(int x = 0; x < bmp.Width; x++)
+				{
+					for(int y = 0; y < bmp.Height; y++)
+					{
+						ms.WriteByte((byte)(bmp.GetPixel(x, y).R & 0xFE));
+					}
+				}
+				return MD5.Create().ComputeHash(ms.ToArray()).ToHex();
+			}
 		}
 
 		public static int ProcessGet(string host, string id, string flag)
@@ -107,22 +116,28 @@ namespace SePtoN_Checker
 				{
 					stream.WriteBigEndian(imageId);
 
-					var encryptedData = stream.ReadLengthFieldAware();
-					File.WriteAllBytes("enc.bmp", encryptedData);
-
+					byte[] encryptedData = null;
 					byte[] imageData;
 					try
 					{
+						encryptedData = stream.ReadLengthFieldAware();
 						imageData = spn.DecryptWithPadding(encryptedData);
 					}
-					catch(Exception)
+					catch(Exception e)
 					{
-						throw new ServiceException(ExitCode.CORRUPT, $"Received image of size {encryptedData.Length} can't be decrypted");
+						throw new ServiceException(ExitCode.CORRUPT, $"Can't receive or decrypt image of '{encryptedData?.Length}' bytes", innerException: e);
 					}
 
-					File.WriteAllBytes("result.bmp", imageData);
+					string receivedImageMd5Hex;
+					try
+					{
+						receivedImageMd5Hex = CalcImageBytesHash(imageData);
+					}
+					catch(Exception e)
+					{
+						throw new ServiceException(ExitCode.MUMBLE, "Failed to parse image from service response", innerException: e);
+					}
 
-					var receivedImageMd5Hex = CalcImageBytesHash(imageData);
 					if(receivedImageMd5Hex != state.SourceImageHash)
 						throw new ServiceException(ExitCode.CORRUPT, $"Source image md5 {state.SourceImageHash} != received {receivedImageMd5Hex}");
 
@@ -222,6 +237,8 @@ namespace SePtoN_Checker
 			var length = BitConverter.ToUInt16(lengthBuffer.Reverse().ToArray()); //NOTE making it BigEndian
 
 			var result = new byte[length];
+			if(length == 0)
+				return result;
 
 			var leftBytes = length;
 
