@@ -33,7 +33,6 @@ module Program =
         (new WebHostBuilder())
             .UseConfigurationSection(SettingsManager.GetHostSettings())
             .UseKestrel(fun _ options ->
-                options.Configure(SettingsManager.GetHostSettings()) |> ignore
                 options.AddServerHeader <- false
                 options.Limits.KeepAliveTimeout <- TimeSpan.FromSeconds(30.0)
                 options.Limits.MaxRequestBodySize <- new Nullable<int64>(0L)

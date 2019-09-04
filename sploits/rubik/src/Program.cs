@@ -13,9 +13,9 @@ namespace rubikxplt
 {
 	static class Program
 	{
-		private static readonly Version HttpVersion = new Version(2, 0);
+		private static readonly Version HttpVersion = new Version(1, 1);
 
-		private static readonly Uri BaseUri = new Uri("https://localhost:5001/");
+		private static readonly Uri BaseUri = new Uri("http://localhost:5071/");
 
 		private static readonly Uri ApiGenerate = new Uri(BaseUri, "/api/generate");
 		private static readonly Uri ApiSolve = new Uri(BaseUri, "/api/solve");
