@@ -70,7 +70,7 @@ def get_username_from_db(flag_id):
 
 def get_random_username():
     usernames_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'usernames.txt')
-    f = open(usernames_path, "r")
+    f = open(usernames_path, 'r', encoding='utf-8')
     usernames = [line.rstrip() for line in f if re.match(r'^\w+$',line)]
     f.close()
     return usernames[randint(0, len(usernames) - 1)].lower()
