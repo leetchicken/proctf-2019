@@ -118,7 +118,29 @@ func (s *UserStorage) Login(li *UserStorageLoginInfo) (*data.UserInfo, error) {
 }
 
 func (s *UserStorage) GetProfileInfo(id string) (*data.ProfileUserInfo, error) {
-	return nil, errors.New("not implemented")
+	filter := bson.D{{"id", id}}
+	cnt, err := s.users.CountDocuments(context.Background(), filter)
+	if err != nil {
+		return nil, fmt.Errorf("failed to search for a user: %s", err)
+	}
+	if cnt == 0 {
+		return nil, UserStorageUserNotFound
+	}
+
+	fr := s.users.FindOne(context.Background(), filter)
+	if err = fr.Err(); err != nil {
+		return nil, fmt.Errorf("failed to find a user: %s", err)
+	}
+	doc := &bson.D{}
+	if err = fr.Decode(doc); err != nil {
+		return nil, fmt.Errorf("failed to decode a find response: %s", err)
+	}
+
+	ui := &data.ProfileUserInfo{}
+	if err = bsonToProtobuf(doc, ui); err != nil {
+		return nil, fmt.Errorf("failed to decode protobuf: %s", err)
+	}
+	return ui, nil
 }
 
 func (s *UserStorage) GetMasters() ([]*data.ProfileUserInfo, error) {

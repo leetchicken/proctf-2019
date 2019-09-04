@@ -13,6 +13,10 @@ import (
 	"handy/server/util"
 )
 
+var (
+	listenHost = flag.String("listen-host", "0.0.0.0:8080", "Host/port to listen to.")
+)
+
 func main() {
 	flag.Parse()
 
@@ -47,5 +51,5 @@ func main() {
 	http.Handle("/tasks", hwf.Wrap(handlers.NewTaskHandler(taskStorage)))
 	http.Handle("/masters", hwf.Wrap(handlers.NewMasterHandler(userStorage)))
 	http.Handle("/", hwf.Wrap(handlers.NewRootHandler()))
-	log.Fatal(http.ListenAndServe("localhost:8080", gorilla_handlers.LoggingHandler(os.Stdout, http.DefaultServeMux)))
+	log.Fatal(http.ListenAndServe(*listenHost, gorilla_handlers.LoggingHandler(os.Stdout, http.DefaultServeMux)))
 }

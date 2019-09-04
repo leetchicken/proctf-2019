@@ -78,11 +78,13 @@ func (w *proxyingResponseWriter) Header() http.Header {
 }
 
 func (w *proxyingResponseWriter) Write(buf []byte) (int, error) {
+	storedBuf := make([]byte, len(buf))
+	copy(storedBuf, buf)
 	w.proxied = append(w.proxied, func() error {
-		if cnt, err := w.w.Write(buf); err != nil {
+		if cnt, err := w.w.Write(storedBuf); err != nil {
 			return err
-		} else if cnt != len(buf) {
-			return fmt.Errorf("failed to write result: %d/%d bytes written", cnt, len(buf))
+		} else if cnt != len(storedBuf) {
+			return fmt.Errorf("failed to write result: %d/%d bytes written", cnt, len(storedBuf))
 		}
 		return nil
 	})
