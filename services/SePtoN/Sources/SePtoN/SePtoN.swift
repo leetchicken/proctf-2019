@@ -14,8 +14,8 @@ public class SePtoN {
 		self.portPut = basePort
 		self.portGet = basePort + 1
 
-		self.groupPut = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
-		self.groupGet = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
+		self.groupPut = MultiThreadedEventLoopGroup(numberOfThreads: 2 * System.coreCount)
+		self.groupGet = MultiThreadedEventLoopGroup(numberOfThreads: 2 * System.coreCount)
 	}
 
 	let filesProvider = FilesProvider()
@@ -37,7 +37,7 @@ public class SePtoN {
 	private func startServer<THandler: ChannelInboundHandler>(_ group: EventLoopGroup, _ handlerFactory: @escaping () -> THandler, _ host: String, _ port: Int) -> Channel
 	{
 		let bootstrap = ServerBootstrap(group: group)
-		    .serverChannelOption(ChannelOptions.backlog, value: 256)
+		    .serverChannelOption(ChannelOptions.backlog, value: 1024)
 		    .serverChannelOption(ChannelOptions.socket(SocketOptionLevel(SOL_SOCKET), SO_REUSEADDR), value: 1)
 
 		    .childChannelInitializer { channel in
