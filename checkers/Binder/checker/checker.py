@@ -19,7 +19,7 @@ ua='Mozilla/5.0 (Linux; Android 6.0.1; SM-G935S Build/MMB29K; wv) AppleWebKit/53
 
 cmd = sys.argv[1]
 if cmd == "info":
-    print("vulns: %d" % len(generators))
+    print("vulns: 1:1")
     exit(101)
 ip=sys.argv[2]
 url = "http://"+ip+":3010/"
@@ -28,7 +28,7 @@ def generate_elf(password,message,vuln):
     tmp_file_path = os.path.join(os.getcwd(),binary_dir,tmp_file_name)
     #idx = random.choice(range(len(generators)))
     idx=int(vuln)
-    gen = generators[idx]
+    gen = generators[idx-1]
     if not gen.Generate(password,message,tmp_file_path):
         return None
     return tmp_file_path,idx
@@ -45,7 +45,7 @@ try:
         vuln = sys.argv[5]
         sess = requests.Session()
         r=sess.get(url+"list")
-
+        
         challange = re.findall(r'md5\("([^"]+)"\+',r.text)
         if len(challange) == 0:
             sys.stderr.write("No challange found \n")
@@ -70,7 +70,7 @@ try:
         exit(101)
     elif cmd == "get":
         password,message_id,gennum=sys.argv[3].split(",")
-        gennum = int(gennum)
+        gennum = int(gennum)-1
         flag = sys.argv[4]
         sess = requests.Session()
         r1 = sess.get(url+"list")
