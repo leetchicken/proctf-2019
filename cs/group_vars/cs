@@ -57,7 +57,7 @@ services: |
   {name => 'rubik',          path => 'checkers/rubik/checker.sh', timeout => 15, host_suffix => '4'},
   {name => 'deer',           path => 'checkers/deer/deer.checker.py', timeout => 15, host_suffix => '5'},
   {name => 'handy',          path => 'checkers/handt/checker.py', timeout => 15, host_suffix => '6'},
-  {name => 'SePtoN'          path => 'checkers/SePtoN/checker.sh', timeout => 15, host_suffix => '4'},
+  {name => 'SePtoN',         path => 'checkers/SePtoN/checker.sh', timeout => 15, host_suffix => '4'},
   {name => 'random1', path => 't/checkers/random.pl', timeout => 1},
   {name => 'random2', path => 't/checkers/random.pl', timeout => 1},
   {name => 'random3', path => 't/checkers/random.pl', timeout => 1},
