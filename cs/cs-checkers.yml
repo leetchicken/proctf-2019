@@ -60,6 +60,7 @@
     apt:
       name:
         - python3-pip
+        - libgdiplus
 
   - name: python deps
     pip:
