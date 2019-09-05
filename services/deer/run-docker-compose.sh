@@ -12,7 +12,7 @@ function get_es_password_hash () {
 	echo $HASH | sed $'s/\r//'
 }
 
-if [ ! -f definitions.json ] || [ ! -f internal_users.yml ] || [ ! -f LogProcessor.appsettings.json ] || [ ! -f IdentityServer.appsettings.json ]; then
+if [ ! -f definitions.json ] || [ ! -f internal_users.yml ] || [ ! -f Deer.appsettings.json ] || [ ! -f root-ca-key.pem ] || [ ! -f root-ca.pem ] || [ ! -f node-key.pem ] || [ ! -f node.pem ] ; then
 	RABBIT_ADMIN_PASSWORD=`pwgen -Bs1 20`
 	ES_ADMIN_PASSWORD=`pwgen -Bs1 20`
 
@@ -92,6 +92,15 @@ admin:
   description: "Admin user"
 EOF
 
+	openssl genrsa -out root-ca-key.pem 2048
+	openssl req -new -x509 -sha256 -key root-ca-key.pem -out root-ca.pem -subj "/CN=Deer CA"
+
+	openssl genrsa -out node-key-temp.pem 2048
+	openssl pkcs8 -inform PEM -outform PEM -in node-key-temp.pem -topk8 -nocrypt -v1 PBE-SHA1-3DES -out node-key.pem
+	rm node-key-temp.pem
+	openssl req -new -key node-key.pem -out node.csr -subj "/CN=Deer ES"
+	openssl x509 -req -in node.csr -CA root-ca.pem -CAkey root-ca-key.pem -CAcreateserial -sha256 -out node.pem
+	rm node.csr
 else
   echo "All files already exists"
 fi

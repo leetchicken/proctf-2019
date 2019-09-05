@@ -1,0 +1,27 @@
+cluster.name: "deer-cluster"
+node.name: "es"
+network.host: 0.0.0.0
+
+discovery.zen.minimum_master_nodes: 1
+discovery.type: single-node
+
+opendistro_security.ssl.transport.pemcert_filepath: node.pem
+opendistro_security.ssl.transport.pemkey_filepath: node-key.pem
+opendistro_security.ssl.transport.pemtrustedcas_filepath: root-ca.pem
+opendistro_security.ssl.transport.enforce_hostname_verification: false
+
+opendistro_security.ssl.http.enabled: true
+opendistro_security.ssl.http.pemcert_filepath: node.pem
+opendistro_security.ssl.http.pemkey_filepath: node-key.pem
+opendistro_security.ssl.http.pemtrustedcas_filepath: root-ca.pem
+opendistro_security.ssl.http.clientauth_mode: NONE
+
+opendistro_security.allow_unsafe_democertificates: false
+opendistro_security.allow_default_init_securityindex: true
+
+opendistro_security.audit.type: internal_elasticsearch
+opendistro_security.enable_snapshot_restore_privilege: true
+opendistro_security.check_snapshot_restore_write_privileges: true
+opendistro_security.restapi.roles_enabled: ["all_access", "security_rest_api_access"]
+
+cluster.routing.allocation.disk.threshold_enabled: false

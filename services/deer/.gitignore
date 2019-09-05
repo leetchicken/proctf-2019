@@ -1,6 +1,8 @@
 definitions.json
 Deer.appsettings.json
 internal_users.yml
+*.pem
+*.srl
 .idea/
 *.user
 bin/
