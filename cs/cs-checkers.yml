@@ -89,3 +89,11 @@
     become: yes
     become_user: "{{cs_user}}"
     tags: rubik
+
+  - name: build septon
+    command: dotnet publish -c Release
+    args:
+      chdir: "{{cs_dir}}/checkers/SePtoN/"
+    become: yes
+    become_user: "{{cs_user}}"
+    tags: septon
