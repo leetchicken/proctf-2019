@@ -19,11 +19,11 @@ namespace SePtoN_Checker
 		public static int ProcessCheck(string host)
 		{
 			var sw = Stopwatch.StartNew();
-			Console.WriteLine("Processing Check");
+			Console.Error.WriteLine("Processing Check");
 
-			Console.WriteLine("Nothing to do");
+			Console.Error.WriteLine("Nothing to do");
 
-			Console.WriteLine($"Check done in {sw.Elapsed}");
+			Console.Error.WriteLine($"Check done in {sw.Elapsed}");
 			return (int)ExitCode.OK;
 		}
 
