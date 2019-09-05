@@ -1,0 +1,12 @@
+version: '3'
+services:
+  septon:
+    image: proctf/septon
+    container_name: septon
+    restart: unless-stopped
+    build: .
+    ports:
+      - 31337:31337
+      - 31338:31338    
+    volumes:
+      - ./data:/home/SePtoN/data
