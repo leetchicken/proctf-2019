@@ -1,8 +1,8 @@
 using System;
-using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.Mime;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 using Deer.Models.Elasticsearch;
@@ -27,24 +27,27 @@ namespace Deer.Repositories
             var user = userInfo[0];
             var password = userInfo[1];
 
-            ServicePointManager.ServerCertificateValidationCallback +=
-                (sender, cert, chain, errors) => true;
+            var rootCaCert = new X509Certificate2("root-ca.pem");
             
-            // TODO remove
             var httpClientHandler = new HttpClientHandler
             {
-                ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => { return true; }
+                ServerCertificateCustomValidationCallback = (message, cert, chain, errors) =>
+                {
+                    chain.ChainPolicy.RevocationMode = X509RevocationMode.NoCheck;
+                    chain.ChainPolicy.ExtraStore.Add(rootCaCert);
+                    chain.ChainPolicy.VerificationFlags = X509VerificationFlags.AllowUnknownCertificateAuthority;
+                    return chain.Build(cert);
+                }
             };
 
             var authHeader = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(Encoding.UTF8.GetBytes($"{user}:{password}")));
 
             _httpClient = new HttpClient(httpClientHandler, true) {BaseAddress = elasticSearchUri};
             _httpClient.DefaultRequestHeaders.Authorization = authHeader;
-            
+
             var nestSettings = new ConnectionSettings(elasticSearchUri)
-            .BasicAuthentication(user, password)
-            // TODO change to AuthorityIsRoot
-            .ServerCertificateValidationCallback(CertificateValidations.AllowAll);
+                .BasicAuthentication(user, password)
+                .ServerCertificateValidationCallback(CertificateValidations.AuthorityIsRoot(rootCaCert));
             
             _elasticClient = new ElasticClient(nestSettings);
         }
