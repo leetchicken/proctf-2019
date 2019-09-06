@@ -73,7 +73,10 @@ public final class SPN {
 	}
 
 	static func keyShedule(_ masterKey: [UInt8]) -> [[UInt8]] {
-		return (0...roundsCount).map { _ in masterKey }
+		return (0...roundsCount).map { (i) -> [UInt8] in 
+				let p = (i*2) % masterKey.count
+				return Array(masterKey[p..<masterKey.count] + masterKey[0..<p])
+		}
 	}
 
 

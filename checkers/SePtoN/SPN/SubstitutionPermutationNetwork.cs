@@ -127,8 +127,12 @@ namespace SPN
 		public static int KeySizeBytes => (SBoxes.Length * SBox.BitSize) / 8;
 		private static IEnumerable<byte[]> KeyShedule(byte[] masterKey)
 		{
+			byte[] lastKey = masterKey.ToArray();
 			for(int i = 0; i < RoundsCount + 1; i++)
-				yield return masterKey.ToArray();
+			{
+				yield return lastKey;
+				lastKey = lastKey.Skip(2).Concat(lastKey.Take(2)).ToArray();
+			}
 		}
 
 		public byte[] EncryptWithPadding(byte[] data, byte[] iv)
