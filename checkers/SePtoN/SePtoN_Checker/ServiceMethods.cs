@@ -173,7 +173,7 @@ namespace SePtoN_Checker
 		private const int ConnectTimeout = 3000;
 
 		public const int PUT_PORT = 31337;
-		public const int GET_PORT = 31338;
+		public const int GET_PORT = PUT_PORT + 1;
 	}
 
 	static class NetworkStreamExtensions
