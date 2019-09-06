@@ -2,7 +2,7 @@
 
 Encrypted images storage service. Written in Swift 5.
 
-Client (checker) connects to SePtoN over TCP, exchanges key using Diffie–Hellman protocol, encrypts his BMP image with flag using custom Substitution-Permutation algorithm and sends encrypted image to the service.
+Client (checker) connects to SePtoN over TCP, exchanges key using Diffieâ€“Hellman protocol, encrypts his BMP image with flag using custom Substitution-Permutation algorithm and sends encrypted image to the service.
 Service then decrypts image, performs smoke-checks that it is valid BMP, embeds watermark-message in last bits of pixel data, encrypts resulting image and stores it to filesystem, responding to client with file id.
 When checker retrieves encrypted image file back from the service, it decrypts file and checks whether the resulting image is still similar to the one he sent (flag is still painted on the image and is still readable).
 
@@ -11,7 +11,7 @@ Service listens TCP-port 31337 for putting flags to it and TCP-port 31338 for ge
 
 ## Vuln in Substitution-Permutation cipher
 
-Service uses custom Substitution-Permutation cipher algorithm in CBC mode.
+Service uses custom Substitution-Permutation cipher algorithm in CBC mode, like one on the image (but with randomized permutation connections)
 
 ![SPN](img/SPN.png)
 
