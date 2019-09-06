@@ -25,7 +25,7 @@ Images posted by checker are roughly 64Kb in size, so hacker has 64Kb / 8b = 16k
 Now hacker needs to analyse S-Boxes and find suitable linear approximations with biggest bias and with inputs corresponding to known parts of the plaintext.
 Then hacker performs Linear Cryptanalysis using best found approximations and finds most of the last round subkey bits. Hacker also needs to notice that last round subkey is exactly equal to master key because of the cipher's key shedule. So hacker can easily brute rest key bits, knowing the BMP image header standard header content.
 
-![BMP_prefix](img/BMP_prefix.PNG)
+![BMP_prefix](img/BMP_prefix.png)
 
 See the exploit [here](https://github.com/HackerDom/proctf-2019/tree/master/checkers/SePtoN/SePtoN_Exploit).
 
