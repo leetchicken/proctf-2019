@@ -49,6 +49,7 @@ services:
     volumes:
       - ./Deer.appsettings.json:/app/appsettings.json
       - ./root-ca.pem:/app/root-ca.pem
+      - ./deer.pfx:/app/deer.pfx
     ports:
       - 5000:5000
     expose:

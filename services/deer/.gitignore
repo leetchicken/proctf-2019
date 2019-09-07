@@ -2,6 +2,7 @@ definitions.json
 Deer.appsettings.json
 internal_users.yml
 *.pem
+*.pfx
 *.srl
 .idea/
 *.user

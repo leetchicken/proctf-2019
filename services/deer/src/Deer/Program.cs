@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore;
+﻿using System.Net;
+using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Logging;
 using NLog.Extensions.Logging;
@@ -19,6 +20,13 @@ namespace Deer
                                 logging.ClearProviders();
                                 logging.AddNLog();
                             })
-                .UseStartup<Startup>();
+                .UseStartup<Startup>()
+            .ConfigureKestrel((context, options) =>
+            {
+                options.Listen(IPAddress.Any, 5000, listenOptions =>
+                {
+                    listenOptions.UseHttps("deer.pfx", "deer");
+                });
+            });
     }
 }
