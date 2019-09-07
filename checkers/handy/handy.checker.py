@@ -16,7 +16,6 @@ import requests
 
 SERVICE_NAME = 'handy'
 OK, CORRUPT, MUMBLE, DOWN, CHECKER_ERROR = 101, 102, 103, 104, 110
-SERVER_ADDR = '10.60.3.6'
 
 # How frequent new masters are created: on average every half of this number of rounds.
 MASTER_SCARCITY_FACTOR = 20
@@ -126,7 +125,7 @@ class HandyApi:
 		return profile["username"]
 
 	def _LoadUrl(self, relative_url, data=None):
-		url = '%s/%s' % (self.addr, relative_url)
+		url = 'http://%s/%s' % (self.addr, relative_url)
 		try:
 			if data is None:
 				res = self.session.get(url)
