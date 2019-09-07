@@ -2,6 +2,7 @@
   
 import sys
 import requests
+requests.packages.urllib3.disable_warnings() 
 import lxml.html as lh
 
 OK, CORRUPT, MUMBLE, DOWN, CHECKER_ERROR = 101, 102, 103, 104, 110

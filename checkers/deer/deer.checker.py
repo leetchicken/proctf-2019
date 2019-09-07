@@ -265,8 +265,7 @@ def get(args):
 
     if vuln == "2":
         username = get_username_from_db(flag_id)
-        # TODO check certificate
-        es = Elasticsearch(['https://%s:9200' % host], http_auth=(username, password), verify_certs=False, connection_class=RequestsHttpConnection)
+        es = Elasticsearch(['https://%s:9200' % host], http_auth=(username, password), verify_certs=False, ssl_show_warn=False, connection_class=RequestsHttpConnection)
 
         try:
             res = es.search(index=username, body={"query": { "match": { "content": { "query": "flag" } } }})
