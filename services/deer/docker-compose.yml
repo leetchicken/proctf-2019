@@ -29,6 +29,9 @@ services:
     container_name: deer-rabbit
     volumes:
       - ./definitions.json:/etc/rabbitmq/definitions.json
+      - ./root-ca.pem:/etc/rabbitmq/root-ca.pem
+      - ./rmqnode.pem:/etc/rabbitmq/node.pem
+      - ./rmqnode-key.pem:/etc/rabbitmq/node-key.pem
     ports:
       - 5672:5672
     expose:

@@ -9,6 +9,7 @@ import json
 import re
 import uuid
 import time
+import ssl
 from random import randint
 from elasticsearch.exceptions import ConnectionError, AuthenticationException, AuthorizationException
 from elasticsearch import Elasticsearch, RequestsHttpConnection
@@ -127,9 +128,11 @@ def check(args):
     msg_json = json.dumps(msg)
 
     credentials = pika.PlainCredentials(username, password)
+    cxt = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
+    ssl_options = pika.SSLOptions(context=cxt)
 
     try:
-        connection = pika.BlockingConnection(pika.ConnectionParameters(host, credentials=credentials))
+        connection = pika.BlockingConnection(pika.ConnectionParameters(host=host, port=5672, credentials=credentials, ssl_options=ssl_options))
         channel = connection.channel()
 
         logs_exchange = 'logs.' + username
@@ -200,9 +203,11 @@ def put(args):
         msg_json = build_log_message(get_random_log(flag_data))
 
         credentials = pika.PlainCredentials(username, password)
+        cxt = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
+        ssl_options = pika.SSLOptions(context=cxt)
 
         try:
-            connection = pika.BlockingConnection(pika.ConnectionParameters(host, credentials=credentials))
+            connection = pika.BlockingConnection(pika.ConnectionParameters(host=host, port=5672, credentials=credentials, ssl_options=ssl_options))
             channel = connection.channel()
 
             logs_exchange = 'logs.' + username
@@ -239,9 +244,11 @@ def get(args):
         username = flag_data.rstrip('=').lower()
 
         credentials = pika.PlainCredentials(username, password)
+        cxt = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
+        ssl_options = pika.SSLOptions(context=cxt)
 
         try:
-            connection = pika.BlockingConnection(pika.ConnectionParameters(host, credentials=credentials))
+            connection = pika.BlockingConnection(pika.ConnectionParameters(host=host, port=5672, credentials=credentials, ssl_options=ssl_options))
             connection.close()
         except pika.exceptions.AMQPConnectionError as e:
             if str(e):
