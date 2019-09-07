@@ -213,7 +213,7 @@ def put(*args):
 
 
 def get(*args):
-	addr, username, flag = args
+	addr, username, flag, _ = args
 
 	VerifyTaskExists(addr, username, flag)
 
