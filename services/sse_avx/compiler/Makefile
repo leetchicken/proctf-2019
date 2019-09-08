@@ -16,8 +16,9 @@ GSOURCES=$(addsuffix .cpp,$(addprefix $(GENERATED)/$(GRAMMAR),$(ANTLRGEN)))
 all: compiler
 
 compiler: dirs antlr4 main.cpp $(OBJS)
+	$(CC) $(CCARGS) frontend.cpp -o $(OUTPUT)/frontend.o 
 	$(CC) $(CCARGS) main.cpp  -o $(OUTPUT)/main.o 
-	$(CC) $(LDARGS) $(OUTPUT)/main.o $(OBJS) $(LIBS) -o compiler
+	$(CC) $(LDARGS) $(OUTPUT)/frontend.o $(OUTPUT)/main.o $(OBJS) $(LIBS) -o compiler
 
 antlr4: $(GENERATED)/.generated;
  
