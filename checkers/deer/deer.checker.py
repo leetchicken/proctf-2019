@@ -213,10 +213,17 @@ def put(args):
             logs_exchange = 'logs.' + username
             channel.basic_publish(logs_exchange, '', msg_json, pika.BasicProperties(type='Deer.Messages.LogData,Deer'))
 
-            # TODO check for errors
-            time.sleep(3)
-
+            count = 0
+            while count < 3:
+                method_frame, header_frame, body = channel.basic_get(queue = feedback_queue, auto_ack=True)
+                if method_frame:
+                    break
+                count += 1
+                time.sleep(1)
             connection.close()
+
+            if method_frame:
+                verdict(MUMBLE, "Got an error message")
         except pika.exceptions.AMQPConnectionError as e:
             if str(e):
                 trace_msg = "Connection error: %s" % e
