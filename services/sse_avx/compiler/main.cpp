@@ -36,9 +36,19 @@ enum EOpCode
     kInvalid = 0,
 
     kVectorMov,
+    kVectorAdd_f32,
+    kVectorSub_f32,
+    kVectorMul_f32,
+    kVectorDiv_f32,
     kVectorCmpEq_f32,
 
     kScalarMov,
+    kScalarAnd,
+    kScalarAndN2,
+    kScalarBranchVCCZ,
+    kScalarBranchVCCNZ,
+    kScalarBranchEXECZ,
+    kScalarBranchEXECNZ,
 
     kOpCodesNum
 };
@@ -75,8 +85,9 @@ enum InstructionType
 
 enum OperandType
 {
-    kOperandImmediate = 1 << 0,
-    kOperandRegister = 1 << 1,
+    kOperandImmediate = 0,
+    kOperandRegister = 1,
+    kOperandLabelId = 2
 };
 
 
@@ -92,9 +103,25 @@ struct Instruction
         {
             uint32_t imm;
             Register reg;
+            const char* labelId;
         };
     };
     Operand operands[3];
+};
+
+
+struct Label
+{
+    std::string name;
+    uint32_t instructionIdx;
+};
+
+
+struct ParsedCode
+{
+    std::vector<Instruction> instructions;
+    std::set<std::string> labelsVisit;
+    std::vector<Label> labels;
 };
 
 
@@ -113,6 +140,24 @@ Register ParseRegister(const std::string& str)
 class FrontEnd : public VectorAssemblerBaseListener 
 {
 public:
+    void enterLabel(VectorAssemblerParser::LabelContext* ctx) override 
+    {
+        Label label;
+        label.name = ctx->id->getText();
+        label.instructionIdx = m_parsedCode.instructions.size();
+        if(m_parsedCode.labelsVisit.find(label.name) != m_parsedCode.labelsVisit.end())
+        {
+            auto token = ctx->getStart();
+            printf("error %u:%u: label '%s' is already defined\n", token->getLine(), token->getCharPositionInLine(), label.name.c_str());
+            m_error = true;
+        }
+        else
+        {
+            m_parsedCode.labels.push_back(label);
+            m_parsedCode.labelsVisit.insert(label.name);
+        }
+    }
+
     void enterV_mov(VectorAssemblerParser::V_movContext* ctx) override
     {
         Instruction instr;
@@ -120,7 +165,51 @@ public:
         instr.type = kInstructionTypeVector;
         instr.operands[0] = ParseOperand(ctx->op0);
         instr.operands[1] = ParseOperand(ctx->op1);
-        m_instructions.push_back(instr);
+        m_parsedCode.instructions.push_back(instr);
+    }
+
+    void enterV_add_f32(VectorAssemblerParser::V_add_f32Context* ctx) override
+    {
+        Instruction instr;
+        instr.opCode = kVectorAdd_f32;
+        instr.type = kInstructionTypeVector;
+        instr.operands[0] = ParseOperand(ctx->op0);
+        instr.operands[1] = ParseOperand(ctx->op1);
+        instr.operands[2] = ParseOperand(ctx->op2);
+        m_parsedCode.instructions.push_back(instr);
+    }
+
+    void enterV_sub_f32(VectorAssemblerParser::V_sub_f32Context* ctx) override
+    {
+        Instruction instr;
+        instr.opCode = kVectorSub_f32;
+        instr.type = kInstructionTypeVector;
+        instr.operands[0] = ParseOperand(ctx->op0);
+        instr.operands[1] = ParseOperand(ctx->op1);
+        instr.operands[2] = ParseOperand(ctx->op2);
+        m_parsedCode.instructions.push_back(instr);
+    }
+
+    void enterV_mul_f32(VectorAssemblerParser::V_mul_f32Context* ctx) override
+    {
+        Instruction instr;
+        instr.opCode = kVectorMul_f32;
+        instr.type = kInstructionTypeVector;
+        instr.operands[0] = ParseOperand(ctx->op0);
+        instr.operands[1] = ParseOperand(ctx->op1);
+        instr.operands[2] = ParseOperand(ctx->op2);
+        m_parsedCode.instructions.push_back(instr);
+    }
+
+    void enterV_div_f32(VectorAssemblerParser::V_div_f32Context* ctx) override
+    {
+        Instruction instr;
+        instr.opCode = kVectorDiv_f32;
+        instr.type = kInstructionTypeVector;
+        instr.operands[0] = ParseOperand(ctx->op0);
+        instr.operands[1] = ParseOperand(ctx->op1);
+        instr.operands[2] = ParseOperand(ctx->op2);
+        m_parsedCode.instructions.push_back(instr);
     }
 
     void enterV_cmp_eq_f32(VectorAssemblerParser::V_cmp_eq_f32Context* ctx) override 
@@ -130,7 +219,7 @@ public:
         instr.type = kInstructionTypeVector;
         instr.operands[0] = ParseOperand(ctx->op0);
         instr.operands[1] = ParseOperand(ctx->op1);
-        m_instructions.push_back(instr);
+        m_parsedCode.instructions.push_back(instr);
     }
 
     void enterS_mov(VectorAssemblerParser::S_movContext* ctx) override 
@@ -140,12 +229,75 @@ public:
         instr.type = kInstructionTypeScalar;
         instr.operands[0] = ParseOperand(ctx->op0);
         instr.operands[1] = ParseOperand(ctx->op1);
-        m_instructions.push_back(instr);
+        m_parsedCode.instructions.push_back(instr);
     }
 
-    const std::vector<Instruction>& GetInstructions() const
+    void enterS_and(VectorAssemblerParser::S_andContext *ctx) override
     {
-        return m_instructions;
+        Instruction instr;
+        instr.opCode = kScalarAnd;
+        instr.type = kInstructionTypeScalar;
+        instr.operands[0] = ParseOperand(ctx->op0);
+        instr.operands[1] = ParseOperand(ctx->op1);
+        instr.operands[2] = ParseOperand(ctx->op2);
+        m_parsedCode.instructions.push_back(instr);
+    }
+
+    void enterS_andn2(VectorAssemblerParser::S_andn2Context* ctx) override
+    {
+        Instruction instr;
+        instr.opCode = kScalarAndN2;
+        instr.type = kInstructionTypeScalar;
+        instr.operands[0] = ParseOperand(ctx->op0);
+        instr.operands[1] = ParseOperand(ctx->op1);
+        instr.operands[2] = ParseOperand(ctx->op2);
+        m_parsedCode.instructions.push_back(instr);
+    }
+
+    void enterS_branch_vccz(VectorAssemblerParser::S_branch_vcczContext* ctx) override 
+    {
+        Instruction instr;
+        instr.opCode = kScalarBranchVCCZ;
+        instr.type = kInstructionTypeScalar;
+        instr.operands[0] = ParseBranch(ctx->label_id);
+        m_parsedCode.instructions.push_back(instr);
+    }
+
+    void enterS_branch_vccnz(VectorAssemblerParser::S_branch_vccnzContext* ctx) override 
+    {
+        Instruction instr;
+        instr.opCode = kScalarBranchVCCNZ;
+        instr.type = kInstructionTypeScalar;
+        instr.operands[0] = ParseBranch(ctx->label_id);
+        m_parsedCode.instructions.push_back(instr);
+    }
+
+    void enterS_branch_execz(VectorAssemblerParser::S_branch_execzContext* ctx) override 
+    {
+        Instruction instr;
+        instr.opCode = kScalarBranchEXECZ;
+        instr.type = kInstructionTypeScalar;
+        instr.operands[0] = ParseBranch(ctx->label_id);
+        m_parsedCode.instructions.push_back(instr);
+    }
+
+    void enterS_branch_execnz(VectorAssemblerParser::S_branch_execnzContext* ctx) override 
+    {
+        Instruction instr;
+        instr.opCode = kScalarBranchEXECNZ;
+        instr.type = kInstructionTypeScalar;
+        instr.operands[0] = ParseBranch(ctx->label_id);
+        m_parsedCode.instructions.push_back(instr);
+    }
+
+    const ParsedCode& GetParsedCode() const
+    {
+        return m_parsedCode;
+    }
+
+    bool HasError() const
+    {
+        return m_error;
     }
 
 private:
@@ -193,16 +345,151 @@ private:
 		return op;
     }
 
-    std::vector<Instruction> m_instructions;
+    Instruction::Operand ParseBranch(antlr4::Token* token)
+    {
+        auto str = token->getText();
+        char* labelId = new char[str.length() + 1];
+        memset(labelId, 0, str.length() + 1);
+        strcpy(labelId, str.c_str());
+
+        Instruction::Operand op;
+        op.type = kOperandLabelId;
+        op.labelId = labelId;
+        return op;
+    }
+
+    ParsedCode m_parsedCode;
+    bool m_error = false;
 };
 
 
-void GenerateCode(const std::vector<Instruction>& instructions)
+class ErrorListener: public antlr4::BaseErrorListener 
+{
+public:
+    void syntaxError(antlr4::Recognizer *recognizer, antlr4::Token *offendingSymbol,
+                    size_t line, size_t charPositionInLine, const std::string &msg,
+                    std::exception_ptr e) override 
+    {
+        printf("error %u:%u: %s\n", line, charPositionInLine, msg.c_str());
+        m_error = true;
+    }
+
+    bool m_error = false;
+};
+
+
+void DumpParsedCode(const ParsedCode& parsedCode)
+{
+    auto dumpOperand = [](Instruction::Operand op)
+    {
+        if(op.type == kOperandImmediate)
+            printf("0x%x", op.imm);
+        else if(op.type == kOperandRegister && op.reg.type == Register::kVector)
+            printf("v%u", op.reg.idx);
+        else if(op.type == kOperandRegister && op.reg.type == Register::kScalar)
+            printf("s%u", op.reg.idx);
+        else if(op.type == kOperandRegister && op.reg.type == Register::kEXEC)
+            printf("exec");
+        else if(op.type == kOperandRegister && op.reg.type == Register::kVCC)
+            printf("vcc");
+    };
+
+    auto dumpOperands = [&](const Instruction& instr, uint32_t num)
+    {
+        for(uint32_t i = 0; i < num; i++)
+        {
+            dumpOperand(instr.operands[i]);
+            if (i != num - 1)
+                printf(", ");
+        }
+        printf("\n");
+    };
+
+    for(size_t i = 0; i < parsedCode.instructions.size(); i++)
+    {
+        auto& inst = parsedCode.instructions[i];
+        for(auto& label : parsedCode.labels)
+        {
+            if(label.instructionIdx == i)
+                printf("%s:\n", label.name.c_str());
+        }
+
+        switch (inst.opCode)
+        {
+        case kVectorMov:
+            printf("v_mov ");
+            dumpOperands(inst, 2);
+            break;
+
+        case kVectorAdd_f32:
+            printf("v_add_f32 ");
+            dumpOperands(inst, 3);
+            break;
+
+        case kVectorSub_f32:
+            printf("v_sub_f32 ");
+            dumpOperands(inst, 3);
+            break;
+
+        case kVectorMul_f32:
+            printf("v_mul_f32 ");
+            dumpOperands(inst, 3);
+            break;
+
+        case kVectorDiv_f32:
+            printf("v_div_f32 ");
+            dumpOperands(inst, 3);
+            break;
+
+        case kVectorCmpEq_f32:
+            printf("v_cmp_eq_f32 ");
+            dumpOperands(inst, 2);
+            break;
+        
+        case kScalarMov:
+            printf("s_mov ");
+            dumpOperands(inst, 2);
+            break;
+
+        case kScalarAnd:
+            printf("s_and ");
+            dumpOperands(inst, 3);
+            break;
+
+        case kScalarAndN2:
+            printf("s_andn2 ");
+            dumpOperands(inst, 3);
+            break;
+
+        case kScalarBranchVCCZ:
+            printf("s_branch_vccz %s\n", inst.operands[0].labelId);
+            break;
+
+        case kScalarBranchVCCNZ:
+            printf("s_branch_vccnz %s\n", inst.operands[0].labelId);
+            break;
+
+        case kScalarBranchEXECZ:
+            printf("s_branch_execz %s\n", inst.operands[0].labelId);
+            break;
+
+        case kScalarBranchEXECNZ:
+            printf("s_branch_execnz %s\n", inst.operands[0].labelId);
+            break;
+
+        default:
+            break;
+        }
+    }
+}
+
+
+void GenerateCode(const ParsedCode& parsedCode)
 {
     std::string asmbl = kAsmStart;    
     char buf[512];
 
-    for(auto& inst : instructions)
+    for(auto& inst : parsedCode.instructions)
     {
         switch (inst.opCode)
         {
@@ -260,18 +547,26 @@ void GenerateCode(const std::vector<Instruction>& instructions)
 
 int main(int argc, const char* argv[]) 
 {
-  std::ifstream stream;
-  stream.open(argv[1]);
-  antlr4::ANTLRInputStream input(stream);
-  VectorAssemblerLexer lexer(&input);
-  antlr4::CommonTokenStream tokens(&lexer);
-  VectorAssemblerParser parser(&tokens);
+    std::ifstream stream;
+    stream.open(argv[1]);
+    antlr4::ANTLRInputStream input(stream);
+    VectorAssemblerLexer lexer(&input);
+    antlr4::CommonTokenStream tokens(&lexer);
+    ErrorListener errorListener;
+    VectorAssemblerParser parser(&tokens);
+    parser.removeErrorListeners();
+    parser.addErrorListener(&errorListener);
 
-  antlr4::tree::ParseTree *tree = parser.start();
-  FrontEnd frontEnd;
-  antlr4::tree::ParseTreeWalker::DEFAULT.walk(&frontEnd, tree);
+    antlr4::tree::ParseTree *tree = parser.start();
+    FrontEnd frontEnd;
+    antlr4::tree::ParseTreeWalker::DEFAULT.walk(&frontEnd, tree);
 
-  GenerateCode(frontEnd.GetInstructions());
+    if(errorListener.m_error || frontEnd.HasError())
+        return -1;
 
-  return 0;
+    DumpParsedCode(frontEnd.GetParsedCode());
+    //printf("\n");
+    //GenerateCode(frontEnd.GetParsedCode());
+
+    return 0;
 }
