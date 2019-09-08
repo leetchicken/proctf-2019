@@ -1,0 +1,7 @@
+output/
+generated/
+.antlr/
+*.pro
+*.pro.user
+compiler
+compiler-dbg

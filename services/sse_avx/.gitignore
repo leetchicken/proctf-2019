@@ -1,0 +1,5 @@
+*.o
+*.pro
+*.pro.user
+sse-avx*
+
