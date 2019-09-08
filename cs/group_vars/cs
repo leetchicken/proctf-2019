@@ -33,7 +33,7 @@ cs_base_url: https://ructf.org/
 cs_admin_auth: root:lee1puW7zeej
 cs_ctf_name: ProCTF 2019 Dev
 cs_flags_secret: Ai0Eebuge9wa
-cs_round_length: 40
+cs_round_length: 30
 cs_flag_life_time: 15
 cs_time_start: 2018-01-01 00:00:00
 cs_time_stop: 2019-10-15 22:00:00
