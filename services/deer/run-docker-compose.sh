@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 function get_rabbit_password_hash () {
 	local SALT="$(dd if=/dev/urandom bs=4 count=1 2> /dev/null | xxd -p)"
