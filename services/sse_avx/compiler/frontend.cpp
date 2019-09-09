@@ -23,7 +23,7 @@ void FrontEnd::enterLabel(VectorAssemblerParser::LabelContext* ctx)
     if(m_parsedCode.labelsVisit.find(label.name) != m_parsedCode.labelsVisit.end())
     {
         auto token = ctx->getStart();
-        printf("error %u:%u: label '%s' is already defined\n", token->getLine(), token->getCharPositionInLine(), label.name.c_str());
+        printf("error %u:%u: label '%s' is already defined\n", (uint32_t)token->getLine(), (uint32_t)token->getCharPositionInLine(), label.name.c_str());
         m_error = true;
     }
     else
@@ -199,6 +199,11 @@ Instruction::Operand FrontEnd::ParseOperand(antlr4::Token* token) const
         op.type = kOperandRegister;
         op.reg.type = Register::kVCC;
     }
+    else if(type == VectorAssemblerParser::SCC)
+    {
+        op.type = kOperandRegister;
+        op.reg.type = Register::kSCC;
+    }
     else if(type == VectorAssemblerParser::DECIMAL)
     {
         op.type = kOperandImmediate;
@@ -240,7 +245,7 @@ void FrontEndErrorListener::syntaxError(antlr4::Recognizer *recognizer, antlr4::
                                         size_t line, size_t charPositionInLine, const std::string &msg,
                                         std::exception_ptr e) 
 {
-    printf("error %u:%u: %s\n", line, charPositionInLine, msg.c_str());
+    printf("error %u:%u: %s\n", (uint32_t)line, (uint32_t)charPositionInLine, msg.c_str());
     m_error = true;
 }
 

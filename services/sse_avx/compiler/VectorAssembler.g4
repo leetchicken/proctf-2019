@@ -46,15 +46,15 @@ v_div_f32: V_DIV_F32 op0=VREGISTER ',' op1=VREGISTER ',' op2=VREGISTER
 v_cmp_eq_f32: V_CMP_EQ_F32 op0=VREGISTER ',' op1=VREGISTER
     ;
 
-s_mov:  S_MOV op0=SREGISTER ',' op1=(SREGISTER|EXEC|VCC)
-    |   S_MOV op0=EXEC ',' op1=SREGISTER
+s_mov:  S_MOV op0=SREGISTER ',' op1=(SREGISTER|EXEC|VCC|SCC)
+    |   S_MOV op0=EXEC ',' op1=(SREGISTER|EXEC|VCC|SCC)
     |   S_MOV op0=SREGISTER ',' op1=(DECIMAL|HEXADECIMAL|FLOAT)
     ;
 
-s_and:  S_AND op0=(SREGISTER|EXEC) ',' op1=(SREGISTER|EXEC|VCC) ',' op2=(SREGISTER|EXEC|VCC)
+s_and:  S_AND op0=(SREGISTER|EXEC) ',' op1=(SREGISTER|EXEC|VCC|SCC|DECIMAL|HEXADECIMAL) ',' op2=(SREGISTER|EXEC|VCC|SCC|DECIMAL|HEXADECIMAL)
     ;
 
-s_andn2: S_ANDN2 op0=(SREGISTER|EXEC) ',' op1=(SREGISTER|EXEC|VCC) ',' op2=(SREGISTER|EXEC|VCC)
+s_andn2: S_ANDN2 op0=(SREGISTER|EXEC) ',' op1=(SREGISTER|EXEC|VCC|SCC|DECIMAL|HEXADECIMAL) ',' op2=(SREGISTER|EXEC|VCC|SCC|DECIMAL|HEXADECIMAL)
     ;
 
 s_branch_vccz: S_BRANCH_VCCZ label_id=ID
@@ -84,9 +84,10 @@ S_BRANCH_EXECZ: 's_branch_execz';
 S_BRANCH_EXECNZ: 's_branch_execnz';
 
 VREGISTER: 'v0'|'v1'|'v2'|'v3'|'v4'|'v5'|'v6'|'v7'|'v8'|'v9'|'v10'|'v11'|'v12'|'v13'|'v14'|'v15';
-SREGISTER: 's0'|'s1'|'s2'|'s3'|'s4'|'s5'|'s6'|'s7'|'s8'|'s9'|'s10'|'s11'|'s12'|'s13'|'s14'|'s15';
-EXEC: 'exec';
+SREGISTER: 's0'|'s1'|'s2'|'s3'|'s4'|'s5'|'s6'|'s7';
 VCC: 'vcc';
+SCC: 'scc';
+EXEC: 'exec';
 DECIMAL : ('-')? ([0-9])+;
 FLOAT : ('-')? ([0-9])+ '.' ([0-9])+;
 HEXADECIMAL : '0x' ([a-fA-F0-9])+;
