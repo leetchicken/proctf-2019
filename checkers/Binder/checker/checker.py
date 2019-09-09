@@ -61,6 +61,8 @@ try:
     if cmd == "check":
         r1 = requests.get(url+"list")
         if not "Obfuscated messages" in r1.text:
+            print("Invalid start page")
+            print(r1.text)
             exit(102)
         exit(101)
     elif cmd == "put":
