@@ -17,9 +17,3 @@ To get flags from several commands you must write automatic reverse script (usin
 
 To protect service you must write you own protector of message files. You can simply pack it using upx or another packer. Or you can reverse file and pack this source code using more complex tools. To get your flag another team must reverse your file.
 
-# TODO
-
-1. Proof-of-work to protect from dos
-2. 3-4 more complex elf-file packers (tigress, ollvm or manual)
-3. Frontend design
-4. Dockerfile
