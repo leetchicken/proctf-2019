@@ -190,12 +190,12 @@ void GenerateCode(const ParsedCode& parsedCode)
 
             case kVectorCmpEq_f32:
             {
-                addLine("vmovaps [rsp + 0 * 32], ymm0\n");
+                addLine("vmovaps " TMP_LOCATION ", ymm0\n");
                 auto& reg0 = inst.operands[0].reg;
                 auto& reg1 = inst.operands[1].reg;
                 addLine("vcmpeqps ymm0, ymm%u, ymm%u\n", reg0.idx, reg1.idx);
                 addLine("vmovmskps ebx, ymm0\n");
-                addLine("vmovaps ymm0, [rsp + 0 * 32]\n");
+                addLine("vmovaps ymm0, " TMP_LOCATION "\n");
                 break;
             }
 

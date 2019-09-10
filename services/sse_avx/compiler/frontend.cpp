@@ -15,6 +15,23 @@ static Register ParseRegister(const std::string& str)
 }
 
 
+#define ADD_2OP(op_code, ctx)    \
+    Instruction instr;          \
+    instr.opCode = op_code;      \
+    instr.operands[0] = ParseOperand(ctx->op0); \
+    instr.operands[1] = ParseOperand(ctx->op1); \
+    m_parsedCode.instructions.push_back(instr);
+
+
+#define ADD_3OP(op_code, ctx)    \
+    Instruction instr;          \
+    instr.opCode = op_code;      \
+    instr.operands[0] = ParseOperand(ctx->op0); \
+    instr.operands[1] = ParseOperand(ctx->op1); \
+    instr.operands[2] = ParseOperand(ctx->op2); \
+    m_parsedCode.instructions.push_back(instr);
+
+
 void FrontEnd::enterLabel(VectorAssemblerParser::LabelContext* ctx) 
 {
     Label label;
@@ -36,106 +53,55 @@ void FrontEnd::enterLabel(VectorAssemblerParser::LabelContext* ctx)
 
 void FrontEnd::enterV_mov(VectorAssemblerParser::V_movContext* ctx)
 {
-    Instruction instr;
-    instr.opCode = kVectorMov;
-    instr.type = kInstructionTypeVector;
-    instr.operands[0] = ParseOperand(ctx->op0);
-    instr.operands[1] = ParseOperand(ctx->op1);
-    m_parsedCode.instructions.push_back(instr);
+    ADD_2OP(kVectorMov, ctx);
 }
 
 
 void FrontEnd::enterV_add_f32(VectorAssemblerParser::V_add_f32Context* ctx)
 {
-    Instruction instr;
-    instr.opCode = kVectorAdd_f32;
-    instr.type = kInstructionTypeVector;
-    instr.operands[0] = ParseOperand(ctx->op0);
-    instr.operands[1] = ParseOperand(ctx->op1);
-    instr.operands[2] = ParseOperand(ctx->op2);
-    m_parsedCode.instructions.push_back(instr);
+    ADD_3OP(kVectorAdd_f32, ctx);
 }
 
 
 void FrontEnd::enterV_sub_f32(VectorAssemblerParser::V_sub_f32Context* ctx)
 {
-    Instruction instr;
-    instr.opCode = kVectorSub_f32;
-    instr.type = kInstructionTypeVector;
-    instr.operands[0] = ParseOperand(ctx->op0);
-    instr.operands[1] = ParseOperand(ctx->op1);
-    instr.operands[2] = ParseOperand(ctx->op2);
-    m_parsedCode.instructions.push_back(instr);
+    ADD_3OP(kVectorSub_f32, ctx);
 }
 
 
 void FrontEnd::enterV_mul_f32(VectorAssemblerParser::V_mul_f32Context* ctx)
 {
-    Instruction instr;
-    instr.opCode = kVectorMul_f32;
-    instr.type = kInstructionTypeVector;
-    instr.operands[0] = ParseOperand(ctx->op0);
-    instr.operands[1] = ParseOperand(ctx->op1);
-    instr.operands[2] = ParseOperand(ctx->op2);
-    m_parsedCode.instructions.push_back(instr);
+    ADD_3OP(kVectorMul_f32, ctx);
 }
 
 
 void FrontEnd::enterV_div_f32(VectorAssemblerParser::V_div_f32Context* ctx)
 {
-    Instruction instr;
-    instr.opCode = kVectorDiv_f32;
-    instr.type = kInstructionTypeVector;
-    instr.operands[0] = ParseOperand(ctx->op0);
-    instr.operands[1] = ParseOperand(ctx->op1);
-    instr.operands[2] = ParseOperand(ctx->op2);
-    m_parsedCode.instructions.push_back(instr);
+    ADD_3OP(kVectorDiv_f32, ctx);
 }
 
 
 void FrontEnd::enterV_cmp_eq_f32(VectorAssemblerParser::V_cmp_eq_f32Context* ctx) 
 {
-    Instruction instr;
-    instr.opCode = kVectorCmpEq_f32;
-    instr.type = kInstructionTypeVector;
-    instr.operands[0] = ParseOperand(ctx->op0);
-    instr.operands[1] = ParseOperand(ctx->op1);
-    m_parsedCode.instructions.push_back(instr);
+    ADD_2OP(kVectorCmpEq_f32, ctx);
 }
 
 
 void FrontEnd::enterS_mov(VectorAssemblerParser::S_movContext* ctx) 
 {
-    Instruction instr;
-    instr.opCode = kScalarMov;
-    instr.type = kInstructionTypeScalar;
-    instr.operands[0] = ParseOperand(ctx->op0);
-    instr.operands[1] = ParseOperand(ctx->op1);
-    m_parsedCode.instructions.push_back(instr);
+    ADD_2OP(kScalarMov, ctx);
 }
 
 
 void FrontEnd::enterS_and(VectorAssemblerParser::S_andContext *ctx)
 {
-    Instruction instr;
-    instr.opCode = kScalarAnd;
-    instr.type = kInstructionTypeScalar;
-    instr.operands[0] = ParseOperand(ctx->op0);
-    instr.operands[1] = ParseOperand(ctx->op1);
-    instr.operands[2] = ParseOperand(ctx->op2);
-    m_parsedCode.instructions.push_back(instr);
+    ADD_3OP(kScalarAnd, ctx);
 }
 
 
 void FrontEnd::enterS_andn2(VectorAssemblerParser::S_andn2Context* ctx)
 {
-    Instruction instr;
-    instr.opCode = kScalarAndN2;
-    instr.type = kInstructionTypeScalar;
-    instr.operands[0] = ParseOperand(ctx->op0);
-    instr.operands[1] = ParseOperand(ctx->op1);
-    instr.operands[2] = ParseOperand(ctx->op2);
-    m_parsedCode.instructions.push_back(instr);
+    ADD_3OP(kScalarAndN2, ctx);
 }
 
 
@@ -143,7 +109,6 @@ void FrontEnd::enterS_branch_vccz(VectorAssemblerParser::S_branch_vcczContext* c
 {
     Instruction instr;
     instr.opCode = kScalarBranchVCCZ;
-    instr.type = kInstructionTypeScalar;
     instr.operands[0] = ParseBranch(ctx->label_id);
     m_parsedCode.instructions.push_back(instr);
 }
@@ -153,7 +118,6 @@ void FrontEnd::enterS_branch_vccnz(VectorAssemblerParser::S_branch_vccnzContext*
 {
     Instruction instr;
     instr.opCode = kScalarBranchVCCNZ;
-    instr.type = kInstructionTypeScalar;
     instr.operands[0] = ParseBranch(ctx->label_id);
     m_parsedCode.instructions.push_back(instr);
 }
@@ -163,7 +127,6 @@ void FrontEnd::enterS_branch_execz(VectorAssemblerParser::S_branch_execzContext*
 {
     Instruction instr;
     instr.opCode = kScalarBranchEXECZ;
-    instr.type = kInstructionTypeScalar;
     instr.operands[0] = ParseBranch(ctx->label_id);
     m_parsedCode.instructions.push_back(instr);
 }
@@ -173,7 +136,6 @@ void FrontEnd::enterS_branch_execnz(VectorAssemblerParser::S_branch_execnzContex
 {
     Instruction instr;
     instr.opCode = kScalarBranchEXECNZ;
-    instr.type = kInstructionTypeScalar;
     instr.operands[0] = ParseBranch(ctx->label_id);
     m_parsedCode.instructions.push_back(instr);
 }

@@ -5,27 +5,34 @@
 #include "VectorAssemblerBaseListener.h"
 
 
+enum InstructionType
+{
+    kInstructionTypeVector = 0,
+    kInstructionTypeScalar = 1
+};
+
+
 #define OPS(USER_DEFINE) \
-    USER_DEFINE(kVectorMov,             "v_mov",            2)\
-    USER_DEFINE(kVectorAdd_f32,         "v_add_f32",        3)\
-    USER_DEFINE(kVectorSub_f32,         "v_sub_f32",        3)\
-    USER_DEFINE(kVectorMul_f32,         "v_mul_f32",        3)\
-    USER_DEFINE(kVectorDiv_f32,         "v_div_f32",        3)\
-    USER_DEFINE(kVectorCmpEq_f32,       "v_cmp_eq_f32",     2)\
-    USER_DEFINE(kScalarMov,             "s_mov",            2)\
-    USER_DEFINE(kScalarAnd,             "s_and",            3)\
-    USER_DEFINE(kScalarAndN2,           "s_andn2",          3)\
-    USER_DEFINE(kScalarBranchVCCZ,      "s_branch_vccz",    1)\
-    USER_DEFINE(kScalarBranchVCCNZ,     "s_branch_vccnz",   1)\
-    USER_DEFINE(kScalarBranchEXECZ,     "s_branch_execz",   1)\
-    USER_DEFINE(kScalarBranchEXECNZ,    "s_branch_execnz",  1)
+    USER_DEFINE(kVectorMov,             "v_mov",            2, kInstructionTypeVector)\
+    USER_DEFINE(kVectorAdd_f32,         "v_add_f32",        3, kInstructionTypeVector)\
+    USER_DEFINE(kVectorSub_f32,         "v_sub_f32",        3, kInstructionTypeVector)\
+    USER_DEFINE(kVectorMul_f32,         "v_mul_f32",        3, kInstructionTypeVector)\
+    USER_DEFINE(kVectorDiv_f32,         "v_div_f32",        3, kInstructionTypeVector)\
+    USER_DEFINE(kVectorCmpEq_f32,       "v_cmp_eq_f32",     2, kInstructionTypeVector)\
+    USER_DEFINE(kScalarMov,             "s_mov",            2, kInstructionTypeScalar)\
+    USER_DEFINE(kScalarAnd,             "s_and",            3, kInstructionTypeScalar)\
+    USER_DEFINE(kScalarAndN2,           "s_andn2",          3, kInstructionTypeScalar)\
+    USER_DEFINE(kScalarBranchVCCZ,      "s_branch_vccz",    1, kInstructionTypeScalar)\
+    USER_DEFINE(kScalarBranchVCCNZ,     "s_branch_vccnz",   1, kInstructionTypeScalar)\
+    USER_DEFINE(kScalarBranchEXECZ,     "s_branch_execz",   1, kInstructionTypeScalar)\
+    USER_DEFINE(kScalarBranchEXECNZ,    "s_branch_execnz",  1, kInstructionTypeScalar)
 
 
 enum EOpCode
 {
     kInvalid = 0,
 
-#define DEFINE_OP(ENUM_MEMBER, MNEMONIC, OPERANDS_NUM) ENUM_MEMBER,
+#define DEFINE_OP(ENUM_MEMBER, MNEMONIC, OPERANDS_NUM, TYPE) ENUM_MEMBER,
 	OPS(DEFINE_OP)
 #undef DEFINE_OP
 
@@ -35,7 +42,7 @@ enum EOpCode
 
 static const char* kOpToMnemonic[] = {
 	"inv",
-#define DEFINE_OPTOSTR(ENUM_MEMBER, MNEMONIC, OPERANDS_NUM) MNEMONIC,
+#define DEFINE_OPTOSTR(ENUM_MEMBER, MNEMONIC, OPERANDS_NUM, TYPE) MNEMONIC,
 	OPS(DEFINE_OPTOSTR)
 #undef DEFINE_OPTOSTR
 };
@@ -43,7 +50,7 @@ static const char* kOpToMnemonic[] = {
 
 static uint32_t kOpOperandsNum[] = {
     0,
-#define DEFINE_OPERANDS_NUM( ENUM_MEMBER, MNEMONIC, OPERANDS_NUM) OPERANDS_NUM,
+#define DEFINE_OPERANDS_NUM( ENUM_MEMBER, MNEMONIC, OPERANDS_NUM, TYPE) OPERANDS_NUM,
     OPS(DEFINE_OPERANDS_NUM)
 #undef DEFINE_OPERANDS_NUM
 };
@@ -65,13 +72,6 @@ struct Register
 static_assert(sizeof(Register) == 4, "");
 
 
-enum InstructionType
-{
-    kInstructionTypeVector = 0,
-    kInstructionTypeScalar = 1
-};
-
-
 enum OperandType
 {
     kOperandImmediate = 0,
@@ -82,7 +82,6 @@ enum OperandType
 
 struct Instruction
 {
-    InstructionType type;
     EOpCode opCode;
 
     struct Operand
