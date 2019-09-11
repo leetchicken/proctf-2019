@@ -17,3 +17,38 @@ To get flags from several commands you must write automatic reverse script (usin
 
 To protect service you must write you own protector of message files. You can simply pack it using upx or another packer. Or you can reverse file and pack this source code using more complex tools. To get your flag another team must reverse your file.
 
+# Message packing
+
+Message packing algorithm is the code of checker, which takes flag and encapsulates it to some ELF-file. This file uploads to team's servers at 'put' operation of checker and verifies at 'get' operation of checker. It gives flag only in case of valid password in arguments of ELF-file. There are two message packers are presented
+
+## Simple packer
+
+Program to create ELF-file is written on C and compiled with gcc. The algorithm of password verification takes the password P and xors it with some initial 4-byte number I with next algorithm:
+
+1. Take first byte of I and xor it with first byte of P
+2. Rotate right I
+3. Take second byte of I and xor it with first byte of P
+4. Continue it for each symbol of P
+
+If resulting I equals to some constant then this constant is used to decrypt message with flag using 4-byte xor algorithm. 
+
+To extract message with flag participant must write some program which takes message and resulting key to decrypt it.
+
+## Middle packer
+
+Program to create ELF-file is written on intel x64 assembler and compiled with nasm. The algorithm of password verification is same as in previous packer, but the password verification and message decryption code is packed into some payload. This payload decrypts during program execution with some polymorfic arithmetic decoder. So the program looks like this:
+
+Decoder 1
+Decoder 2
+...
+Decoder N
+Payload
+verification and message decryption code 
+Encoder N
+...
+Encoder 2
+Encoder 1
+
+Each decoder K decodes the underlying payload till encoder K. Decoder and encoder looks like a cycle with several arithmetic operations under every byte. 
+
+To make the task harder all symbols removed with strip command. To hack each message with this packer participant must write program which unpacks verification and message decryption code and extracts mesage and key to decrypt it.
