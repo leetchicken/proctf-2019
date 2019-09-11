@@ -38,16 +38,16 @@ To extract message with flag participant must write some program which takes mes
 
 Program to create ELF-file is written on intel x64 assembler and compiled with nasm. The algorithm of password verification is same as in previous packer, but the password verification and message decryption code is packed into some payload. This payload decrypts during program execution with some polymorfic arithmetic decoder. So the program looks like this:
 
-Decoder 1
-Decoder 2
-...
-Decoder N
-Payload
-verification and message decryption code 
-Encoder N
-...
-Encoder 2
-Encoder 1
+* Decoder 1
+* Decoder 2
+* ...
+* Decoder N
+* Payload
+* Verification and message decryption code 
+* Encoder N
+* ...
+* Encoder 2
+* Encoder 1
 
 Each decoder K decodes the underlying payload till encoder K. Decoder and encoder looks like a cycle with several arithmetic operations under every byte. 
 
