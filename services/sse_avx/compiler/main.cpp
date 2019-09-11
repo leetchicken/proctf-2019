@@ -123,6 +123,83 @@ void EmitInstruction(std::string& str, const char* mnemonic, const Instruction::
 }
 
 
+void PostScalarInstruction(std::string& asmbl, const Instruction& i)
+{
+    if(kOpToType[i.opCode] != kInstructionTypeScalar || kOpOperandsNum[i.opCode] == 0)
+        return;
+
+    const Instruction::Operand& op0 = i.operands[0];
+    if(op0.type != kOperandRegister || op0.reg.type != Register::kEXEC)
+        return;
+
+    const char* storeLoad = "\
+    mov eax, edx\n\
+    xor eax, ecx\n\
+    jz save_exec%u\n\
+\n\
+    mov edx, ecx\n\
+    not edx\n\
+    and edx, eax\n\
+    jz maskload%u\n\
+    ; unpack and store\n\
+    vmovd xmm15, edx\n\
+    vshufps ymm15, ymm15, ymm15, 0\n\
+    vperm2f128 ymm15, ymm15, ymm15, 0\n\
+    vpand ymm15, ymm15, [rdi]\n\
+    vpcmpeqd ymm15, ymm15, [rdi]\n\
+    vmaskmovps [rsp], ymm15, ymm0\n\
+    vmaskmovps [rsp+32], ymm15, ymm1\n\
+    vmaskmovps [rsp+64], ymm15, ymm2\n\
+    vmaskmovps [rsp+96], ymm15, ymm3\n\
+    vmaskmovps [rsp+128], ymm15, ymm4\n\
+    vmaskmovps [rsp+160], ymm15, ymm5\n\
+    vmaskmovps [rsp+192], ymm15, ymm6\n\
+    vmaskmovps [rsp+224], ymm15, ymm7\n\
+    vmaskmovps [rsp+256], ymm15, ymm8\n\
+    vmaskmovps [rsp+288], ymm15, ymm9\n\
+    vmaskmovps [rsp+320], ymm15, ymm10\n\
+    vmaskmovps [rsp+352], ymm15, ymm11\n\
+    vmaskmovps [rsp+384], ymm15, ymm12\n\
+    vmaskmovps [rsp+416], ymm15, ymm13\n\
+    vmaskmovps [rsp+448], ymm15, ymm14\n\
+\n\
+maskload%u:\n\
+    mov edx, ecx\n\
+    and edx, eax\n\
+    jz save_exec%u\n\
+    ; unpack and load\n\
+    vmovd xmm15, edx\n\
+    vshufps ymm15, ymm15, ymm15, 0\n\
+    vperm2f128 ymm15, ymm15, ymm15, 0\n\
+    vpand ymm15, ymm15, [rdi]\n\
+    vpcmpeqd ymm15, ymm15, [rdi]\n\
+    vmaskmovps ymm0, ymm15, [rsp]\n\
+    vmaskmovps ymm1, ymm15, [rsp+32]\n\
+    vmaskmovps ymm2, ymm15, [rsp+64]\n\
+    vmaskmovps ymm3, ymm15, [rsp+96]\n\
+    vmaskmovps ymm4, ymm15, [rsp+128]\n\
+    vmaskmovps ymm5, ymm15, [rsp+160]\n\
+    vmaskmovps ymm6, ymm15, [rsp+192]\n\
+    vmaskmovps ymm7, ymm15, [rsp+224]\n\
+    vmaskmovps ymm8, ymm15, [rsp+256]\n\
+    vmaskmovps ymm9, ymm15, [rsp+288]\n\
+    vmaskmovps ymm10, ymm15, [rsp+320]\n\
+    vmaskmovps ymm11, ymm15, [rsp+352]\n\
+    vmaskmovps ymm12, ymm15, [rsp+384]\n\
+    vmaskmovps ymm13, ymm15, [rsp+416]\n\
+    vmaskmovps ymm14, ymm15, [rsp+448]\n\
+\n\
+save_exec%u:\n\
+    mov edx, ecx\n";
+
+    static uint32_t storeLoadCounter = 0;
+    char buf[2048];
+    sprintf(buf, storeLoad, storeLoadCounter, storeLoadCounter, storeLoadCounter, storeLoadCounter, storeLoadCounter);
+    storeLoadCounter++;
+    asmbl.append(buf);
+}
+
+
 void GenerateCode(const ParsedCode& parsedCode)
 {
     std::string asmbl = kAsmStart;    
@@ -153,8 +230,10 @@ void GenerateCode(const ParsedCode& parsedCode)
                 auto& dstReg = inst.operands[0].reg;
                 if(inst.operands[1].type == kOperandImmediate)
                 {
-                    addLine("mov dword " TMP_LOCATION ", 0x%x\n", inst.operands[1].imm);
-                    addLine("vbroadcastss ymm%u, " TMP_LOCATION "\n", dstReg.idx);
+                    addLine("mov eax, 0x%x\n", inst.operands[1].imm);
+                    addLine("vmovd xmm%u, eax\n", dstReg.idx);
+                    addLine("vshufps ymm%u, ymm, ymm%u, 0\n", dstReg.idx);
+                    addLine("vperm2f128 ymm%u, ymm%u, ymm%u, 0\n", dstReg.idx);
                 }
                 else if(inst.operands[1].type == kOperandRegister)
                 {
@@ -165,8 +244,9 @@ void GenerateCode(const ParsedCode& parsedCode)
                     }
                     else
                     {
-                        addLine("mov dword " TMP_LOCATION ", %s\n", EmitRegister(buf1, srcReg));
-                        addLine("vbroadcastss ymm%u, " TMP_LOCATION "\n", dstReg.idx);
+                        addLine("vmovd xmm%u, %s\n", dstReg.idx, EmitRegister(buf1, srcReg));
+                        addLine("vshufps ymm%u, ymm, ymm%u, 0\n", dstReg.idx);
+                        addLine("vperm2f128 ymm%u, ymm%u, ymm%u, 0\n", dstReg.idx);
                     }
                 }
                 break;
@@ -190,12 +270,10 @@ void GenerateCode(const ParsedCode& parsedCode)
 
             case kVectorCmpEq_f32:
             {
-                addLine("vmovaps " TMP_LOCATION ", ymm0\n");
                 auto& reg0 = inst.operands[0].reg;
                 auto& reg1 = inst.operands[1].reg;
-                addLine("vcmpeqps ymm0, ymm%u, ymm%u\n", reg0.idx, reg1.idx);
-                addLine("vmovmskps ebx, ymm0\n");
-                addLine("vmovaps ymm0, " TMP_LOCATION "\n");
+                addLine("vcmpeqps ymm15, ymm%u, ymm%u\n", reg0.idx, reg1.idx);
+                addLine("vmovmskps ebx, ymm15\n");
                 break;
             }
 
@@ -219,6 +297,8 @@ void GenerateCode(const ParsedCode& parsedCode)
             default:
                 break;
         }
+
+        PostScalarInstruction(asmbl, inst);
     }
 
     asmbl.append(kAsmEnd);

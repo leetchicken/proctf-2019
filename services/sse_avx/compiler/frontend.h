@@ -12,7 +12,7 @@ enum InstructionType
 };
 
 
-#define OPS(USER_DEFINE) \
+#define INSTRUCTIONS(USER_DEFINE) \
     USER_DEFINE(kVectorMov,             "v_mov",            2, kInstructionTypeVector)\
     USER_DEFINE(kVectorAdd_f32,         "v_add_f32",        3, kInstructionTypeVector)\
     USER_DEFINE(kVectorSub_f32,         "v_sub_f32",        3, kInstructionTypeVector)\
@@ -33,7 +33,7 @@ enum EOpCode
     kInvalid = 0,
 
 #define DEFINE_OP(ENUM_MEMBER, MNEMONIC, OPERANDS_NUM, TYPE) ENUM_MEMBER,
-	OPS(DEFINE_OP)
+	INSTRUCTIONS(DEFINE_OP)
 #undef DEFINE_OP
 
     kOpCodesNum
@@ -43,7 +43,7 @@ enum EOpCode
 static const char* kOpToMnemonic[] = {
 	"inv",
 #define DEFINE_OPTOSTR(ENUM_MEMBER, MNEMONIC, OPERANDS_NUM, TYPE) MNEMONIC,
-	OPS(DEFINE_OPTOSTR)
+	INSTRUCTIONS(DEFINE_OPTOSTR)
 #undef DEFINE_OPTOSTR
 };
 
@@ -51,8 +51,16 @@ static const char* kOpToMnemonic[] = {
 static uint32_t kOpOperandsNum[] = {
     0,
 #define DEFINE_OPERANDS_NUM( ENUM_MEMBER, MNEMONIC, OPERANDS_NUM, TYPE) OPERANDS_NUM,
-    OPS(DEFINE_OPERANDS_NUM)
+    INSTRUCTIONS(DEFINE_OPERANDS_NUM)
 #undef DEFINE_OPERANDS_NUM
+};
+
+
+static InstructionType kOpToType[] = {
+    kInstructionTypeVector,
+#define DEFINE_TYPE( ENUM_MEMBER, MNEMONIC, OPERANDS_NUM, TYPE) TYPE,
+    INSTRUCTIONS(DEFINE_TYPE)
+#undef DEFINE_TYPE
 };
 
 

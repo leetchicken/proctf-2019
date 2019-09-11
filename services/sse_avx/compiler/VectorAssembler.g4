@@ -80,7 +80,7 @@ S_BRANCH_VCCNZ: 's_branch_vccnz';
 S_BRANCH_EXECZ: 's_branch_execz';
 S_BRANCH_EXECNZ: 's_branch_execnz';
 
-VREGISTER: 'v0'|'v1'|'v2'|'v3'|'v4'|'v5'|'v6'|'v7'|'v8'|'v9'|'v10'|'v11'|'v12'|'v13'|'v14'|'v15';
+VREGISTER: 'v0'|'v1'|'v2'|'v3'|'v4'|'v5'|'v6'|'v7'|'v8'|'v9'|'v10'|'v11'|'v12'|'v13'|'v14';
 SREGISTER: 's0'|'s1'|'s2'|'s3'|'s4'|'s5'|'s6'|'s7';
 VCC: 'vcc';
 SCC: 'scc';
