@@ -5,8 +5,6 @@
 #define V0_LOCATION "[rsp + 0]"
 // TMP
 #define TMP_LOCATION "[rsp + 512]"
-// S0, S1, ..., S15, VCC, SCC, EXEC
-#define S0_LOCATION "[rsp + 512]"
 // padding, TMP
 //#define TMP_LOCATION "[rsp + 608]"
 
@@ -17,13 +15,17 @@ _start:\n\
     push rbp\n\
     mov rbp, rsp\n\
     and rsp, 0xffffffffffffffe0\n\
+    sub rsp, 32\n\
+    mov dword [rsp], rbp\n\
     sub rsp, 1024\n\
-    mov dword " TMP_LOCATION ", 0xffffffff\n\
-    vbroadcastss ymm0, " TMP_LOCATION "\n\
-    vmovaps [rsp + 586], ymm0\n\
+    mov ebx, 0x0\n\
+    mov ecx, 0xff\n\
+    mov edx, 0xff\n\
 ";
 
 static const char* kAsmEnd = "\
+    add rsp, 1024\n\
+    mov rbp, [rsp]\n\
     mov rsp, rbp\n\
     pop rbp\n\
     ret\n\
@@ -282,16 +284,51 @@ void GenerateCode(const ParsedCode& parsedCode)
                 break;
 
             case kScalarAnd:
-                addLine("mov eax, %s\n", EmitOperand(buf0, inst.operands[1]));
-                addLine("and eax, %s\n", EmitOperand(buf0, inst.operands[2]));
-                addLine("mov %s, eax\n", EmitOperand(buf0, inst.operands[0]));
+            {
+                auto& dst = inst.operands[0];
+                auto& src0 = inst.operands[1];
+                auto& src1 = inst.operands[2];
+                if(dst == src1)
+                {
+                    addLine("and %s, %s\n", EmitOperand(buf0, dst), EmitOperand(buf1, src0));
+                }
+                else if(dst == src0)
+                {
+                    addLine("and %s, %s\n", EmitOperand(buf0, dst), EmitOperand(buf1, src1));
+                }
+                else
+                {
+                    addLine("mov %s, %s\n", EmitOperand(buf0, dst), EmitOperand(buf1, src0));
+                    addLine("and %s, %s\n", EmitOperand(buf0, dst), EmitOperand(buf1, src1));
+                }
                 break;
+            }
 
             case kScalarAndN2:
-                addLine("mov eax, %s\n", EmitOperand(buf0, inst.operands[2]));
-                addLine("andn eax, %s\n", EmitOperand(buf0, inst.operands[1]));
-                addLine("mov %s, eax\n", EmitOperand(buf0, inst.operands[0]));
+            {
+                auto& dst = inst.operands[0];
+                auto& src0 = inst.operands[1];
+                auto& src1 = inst.operands[2];
+                if(dst == src1)
+                {
+                    addLine("not %s\n", EmitOperand(buf0, dst));
+                    addLine("and %s, %s\n", EmitOperand(buf0, dst), EmitOperand(buf1, src0));
+                }
+                else if(dst == src0)
+                {
+                    addLine("mov eax, %s\n", EmitOperand(buf1, src1));
+                    addLine("not eax\n");
+                    addLine("and %s, eax\n", EmitOperand(buf0, dst));
+                }
+                else
+                {
+                    addLine("mov eax, %s\n", EmitOperand(buf1, src1));
+                    addLine("not eax\n");
+                    addLine("mov %s, %s\n", EmitOperand(buf0, dst), EmitOperand(buf1, src0));
+                    addLine("and %s, eax\n", EmitOperand(buf0, dst));
+                }
                 break;
+            }
 
             
             default:
