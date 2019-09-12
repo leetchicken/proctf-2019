@@ -16,7 +16,7 @@ _start:\n\
     mov rbp, rsp\n\
     and rsp, 0xffffffffffffffe0\n\
     sub rsp, 32\n\
-    mov dword [rsp], rbp\n\
+    mov [rsp], rbp\n\
     sub rsp, 1024\n\
     mov ebx, 0x0\n\
     mov ecx, 0xff\n\
@@ -124,25 +124,18 @@ void EmitInstruction(std::string& str, const char* mnemonic, const Instruction::
     str.append("\n");
 }
 
-
-void PostScalarInstruction(std::string& asmbl, const Instruction& i)
+void EmitStoreLoad(std::string& asmbl)
 {
-    if(kOpToType[i.opCode] != kInstructionTypeScalar || kOpOperandsNum[i.opCode] == 0)
-        return;
-
-    const Instruction::Operand& op0 = i.operands[0];
-    if(op0.type != kOperandRegister || op0.reg.type != Register::kEXEC)
-        return;
-
-    const char* storeLoad = "\
+    const char* storeLoad = "\n\
+store_load_avx:\n\
     mov eax, edx\n\
     xor eax, ecx\n\
-    jz save_exec%u\n\
+    jz save_exec_avx\n\
 \n\
     mov edx, ecx\n\
     not edx\n\
     and edx, eax\n\
-    jz maskload%u\n\
+    jz maskload_avx\n\
     ; unpack and store\n\
     vmovd xmm15, edx\n\
     vshufps ymm15, ymm15, ymm15, 0\n\
@@ -165,10 +158,10 @@ void PostScalarInstruction(std::string& asmbl, const Instruction& i)
     vmaskmovps [rsp+416], ymm15, ymm13\n\
     vmaskmovps [rsp+448], ymm15, ymm14\n\
 \n\
-maskload%u:\n\
+maskload_avx:\n\
     mov edx, ecx\n\
     and edx, eax\n\
-    jz save_exec%u\n\
+    jz save_exec_avx\n\
     ; unpack and load\n\
     vmovd xmm15, edx\n\
     vshufps ymm15, ymm15, ymm15, 0\n\
@@ -191,13 +184,35 @@ maskload%u:\n\
     vmaskmovps ymm13, ymm15, [rsp+416]\n\
     vmaskmovps ymm14, ymm15, [rsp+448]\n\
 \n\
-save_exec%u:\n\
-    mov edx, ecx\n";
+save_exec_avx:\n\
+    mov edx, ecx\n\
+    jmp rbp\n";
 
-    static uint32_t storeLoadCounter = 0;
-    char buf[2048];
-    sprintf(buf, storeLoad, storeLoadCounter, storeLoadCounter, storeLoadCounter, storeLoadCounter, storeLoadCounter);
-    storeLoadCounter++;
+    asmbl.append(storeLoad);
+}
+
+
+void PostScalarInstruction(std::string& asmbl, const Instruction& i)
+{
+    if(kOpToType[i.opCode] != kInstructionTypeScalar || kOpOperandsNum[i.opCode] == 0)
+        return;
+
+    const Instruction::Operand& op0 = i.operands[0];
+    if(op0.type != kOperandRegister || op0.reg.type != Register::kEXEC)
+        return;
+
+    const char* postScalar = "\
+post_scalar_avx0_%u:\n\
+    lea rbp, [rel $]\n\
+    mov rax, post_scalar_avx1_%u - post_scalar_avx0_%u\n\
+    add rbp, rax\n\
+    jmp store_load_avx\n\
+post_scalar_avx1_%u:\n";
+
+    static uint32_t postScalarCounter = 0;
+    char buf[256];
+    sprintf(buf, postScalar, postScalarCounter, postScalarCounter, postScalarCounter, postScalarCounter);
+    postScalarCounter++;
     asmbl.append(buf);
 }
 
@@ -234,8 +249,8 @@ void GenerateCode(const ParsedCode& parsedCode)
                 {
                     addLine("mov eax, 0x%x\n", inst.operands[1].imm);
                     addLine("vmovd xmm%u, eax\n", dstReg.idx);
-                    addLine("vshufps ymm%u, ymm, ymm%u, 0\n", dstReg.idx);
-                    addLine("vperm2f128 ymm%u, ymm%u, ymm%u, 0\n", dstReg.idx);
+                    addLine("vshufps ymm%u, ymm%u, ymm%u, 0\n", dstReg.idx, dstReg.idx, dstReg.idx);
+                    addLine("vperm2f128 ymm%u, ymm%u, ymm%u, 0\n", dstReg.idx, dstReg.idx, dstReg.idx);
                 }
                 else if(inst.operands[1].type == kOperandRegister)
                 {
@@ -247,8 +262,8 @@ void GenerateCode(const ParsedCode& parsedCode)
                     else
                     {
                         addLine("vmovd xmm%u, %s\n", dstReg.idx, EmitRegister(buf1, srcReg));
-                        addLine("vshufps ymm%u, ymm, ymm%u, 0\n", dstReg.idx);
-                        addLine("vperm2f128 ymm%u, ymm%u, ymm%u, 0\n", dstReg.idx);
+                        addLine("vshufps ymm%u, ymm%u, ymm%u, 0\n", dstReg.idx, dstReg.idx, dstReg.idx);
+                        addLine("vperm2f128 ymm%u, ymm%u, ymm%u, 0\n", dstReg.idx, dstReg.idx, dstReg.idx);
                     }
                 }
                 break;
@@ -288,11 +303,11 @@ void GenerateCode(const ParsedCode& parsedCode)
                 auto& dst = inst.operands[0];
                 auto& src0 = inst.operands[1];
                 auto& src1 = inst.operands[2];
-                if(dst == src1)
+                if(dst.reg == src1.reg)
                 {
                     addLine("and %s, %s\n", EmitOperand(buf0, dst), EmitOperand(buf1, src0));
                 }
-                else if(dst == src0)
+                else if(dst.reg == src0.reg)
                 {
                     addLine("and %s, %s\n", EmitOperand(buf0, dst), EmitOperand(buf1, src1));
                 }
@@ -309,12 +324,12 @@ void GenerateCode(const ParsedCode& parsedCode)
                 auto& dst = inst.operands[0];
                 auto& src0 = inst.operands[1];
                 auto& src1 = inst.operands[2];
-                if(dst == src1)
+                if(dst.reg == src1.reg)
                 {
                     addLine("not %s\n", EmitOperand(buf0, dst));
                     addLine("and %s, %s\n", EmitOperand(buf0, dst), EmitOperand(buf1, src0));
                 }
-                else if(dst == src0)
+                else if(dst.reg == src0.reg)
                 {
                     addLine("mov eax, %s\n", EmitOperand(buf1, src1));
                     addLine("not eax\n");
@@ -339,6 +354,7 @@ void GenerateCode(const ParsedCode& parsedCode)
     }
 
     asmbl.append(kAsmEnd);
+    EmitStoreLoad(asmbl);
 
     printf("%s", asmbl.c_str());
 }

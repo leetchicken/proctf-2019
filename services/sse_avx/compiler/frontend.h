@@ -76,6 +76,11 @@ struct Register
     };
     Type type;
     uint16_t idx;
+
+    bool operator==(const Register& r) const
+    {
+        return type == r.type && idx == r.idx;
+    }
 };
 static_assert(sizeof(Register) == 4, "");
 

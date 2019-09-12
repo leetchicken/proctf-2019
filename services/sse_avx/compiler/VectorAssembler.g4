@@ -1,6 +1,7 @@
 grammar VectorAssembler;
 
 start: line+
+    |
     ;
 
 line: instruction NEW_LINE
