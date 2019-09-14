@@ -1,7 +1,10 @@
 grammar VectorAssembler;
 
-start: line+
+start: numthreads line+
     |
+    ;
+
+numthreads: '[' x=DECIMAL ',' y=DECIMAL ']' NEW_LINE
     ;
 
 line: instruction NEW_LINE

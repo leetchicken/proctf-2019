@@ -518,16 +518,128 @@ void GenerateCode(std::string& asmbl, const ParsedCode& parsedCode)
 }
 
 
+void* ReadFile(const char* fileName, uint32_t& size)
+{
+    FILE* f = fopen(fileName, "r");
+    if (!f)
+    {
+        size = 0;
+        return nullptr;
+    }
+
+    fseek(f, 0, SEEK_END);
+    size = ftell(f);
+    fseek(f, 0, SEEK_SET);
+    void* fileData = malloc(size);
+    fread(fileData, 1, size, f);
+    fclose(f);
+
+    return fileData;
+}
+
+
+bool WriteFile(const char* fileName, const void* data, uint32_t size)
+{
+    FILE* f = fopen(fileName, "w");
+    if(!f)
+        return false;
+    size_t written = fwrite(data, 1, size, f);
+    fclose(f);
+    return written == size;
+}
+
+
+bool Compile(const std::string& asmbl, uint32_t groupDimX, uint32_t groupDimY, const char* outputFile)
+{
+    const char* nasmInputFile = "/tmp/nasm_input";
+    if(!WriteFile(nasmInputFile, asmbl.c_str(), asmbl.length()))
+    {
+        printf("Failed to write file %s\n", nasmInputFile);
+        return false;
+    }
+
+    const char* nasmOutputFile = "/tmp/nasm_output";
+    char cmd[512];
+    sprintf(cmd, "nasm -f elf64 %s -o %s", nasmInputFile, nasmOutputFile);
+    if(system(cmd) != 0)
+    {
+        printf("nasm failed\n");
+        return false;
+    }
+
+    const char* ldOutputFile = "/tmp/ld_output";
+    sprintf(cmd, "ld %s -N -Ttext 0 -o %s", nasmOutputFile, ldOutputFile);
+    if(system(cmd) != 0)
+    {
+        printf("ld failed\n");
+        return false;
+    }
+
+    const char* objcopyOutputFile = "/tmp/objcopy_output";
+    sprintf(cmd, "objcopy -O binary %s %s", ldOutputFile, objcopyOutputFile);
+    if(system(cmd) != 0)
+    {
+        printf("objcopy failed\n");
+        return false;
+    }
+
+    uint32_t binarySize = 0;
+    void* binary = ReadFile(objcopyOutputFile, binarySize);
+    if(!binary)
+    {
+        printf("Failed to read file %s\n", objcopyOutputFile);
+        return false;
+    }
+
+    uint32_t patchedBinarySize = binarySize + 2 * sizeof(uint32_t);
+    void* patchedBinary = malloc(patchedBinarySize);
+    uint8_t* ptr = (uint8_t*)patchedBinary;
+    memcpy(ptr, &groupDimX, sizeof(uint32_t));
+    ptr += sizeof(uint32_t);
+    memcpy(ptr, &groupDimY, sizeof(uint32_t));
+    ptr += sizeof(uint32_t);
+    memcpy(ptr, binary, binarySize);
+
+    if(!WriteFile(outputFile, patchedBinary, patchedBinarySize))
+    {
+        printf("Failed to write file %s\n", outputFile);
+        return false;
+    }
+
+    free(binary);
+    free(patchedBinary);
+
+    return true;
+}
+
+
 int main(int argc, const char* argv[]) 
 {
-    ParsedCode parsedCode;
-    if(!Parse(argv[1], parsedCode))
+    if(argc != 3)
+    {
+        printf("compiler <input> <output>\n");
         return -1;
+    }
+
+    const char* inputFile = argv[1];
+    const char* outputFile = argv[2];
+
+    ParsedCode parsedCode;
+    if(!Parse(inputFile, parsedCode))
+        return -1;
+
+    const uint32_t kMaxGroupDim = 16;
+    if(parsedCode.groupDimX == 0 || parsedCode.groupDimX > kMaxGroupDim || 
+       parsedCode.groupDimY == 0 || parsedCode.groupDimY > kMaxGroupDim)
+    {
+        printf("Invalid group dimension\n");
+        return -1;
+    }
 
     std::string asmbl = kAsmStart;    
 
     std::vector<uint32_t> usedSgprRegisters;
-    uint32_t usedSgprRegistersMask;
+    uint32_t usedSgprRegistersMask = 0;
     for(uint32_t i = 0; i < parsedCode.instructions.size(); i++)
     {
         auto& inst = parsedCode.instructions[i];
@@ -568,6 +680,9 @@ int main(int argc, const char* argv[])
     EmitStoreLoad(asmbl);
 
     printf("%s", asmbl.c_str());
+
+    if(!Compile(asmbl, parsedCode.groupDimX, parsedCode.groupDimY, outputFile))
+        return -1;
 
     return 0;
 }
