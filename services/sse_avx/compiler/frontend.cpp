@@ -20,6 +20,11 @@ static Register ParseRegister(const std::string& str)
     instr.opCode = op_code;      \
     instr.operands[0] = ParseOperand(ctx->op0); \
     instr.operands[1] = ParseOperand(ctx->op1); \
+    if(!m_curLabel.empty()) \
+    { \
+        instr.label = m_curLabel; \
+        m_curLabel.clear(); \
+    } \
     m_parsedCode.instructions.push_back(instr);
 
 
@@ -29,25 +34,26 @@ static Register ParseRegister(const std::string& str)
     instr.operands[0] = ParseOperand(ctx->op0); \
     instr.operands[1] = ParseOperand(ctx->op1); \
     instr.operands[2] = ParseOperand(ctx->op2); \
+    if(!m_curLabel.empty()) \
+    { \
+        instr.label = m_curLabel; \
+        m_curLabel.clear(); \
+    } \
     m_parsedCode.instructions.push_back(instr);
 
 
 void FrontEnd::enterLabel(VectorAssemblerParser::LabelContext* ctx) 
 {
-    Label label;
-    label.name = ctx->id->getText();
-    label.instructionIdx = m_parsedCode.instructions.size();
-    if(m_parsedCode.labelsVisit.find(label.name) != m_parsedCode.labelsVisit.end())
+    m_curLabel = ctx->id->getText();
+    if(m_labelsVisit.find(m_curLabel) != m_labelsVisit.end())
     {
         auto token = ctx->getStart();
-        printf("error %u:%u: label '%s' is already defined\n", (uint32_t)token->getLine(), (uint32_t)token->getCharPositionInLine(), label.name.c_str());
+        printf("error %u:%u: label '%s' is already defined\n", (uint32_t)token->getLine(), (uint32_t)token->getCharPositionInLine(), m_curLabel.c_str());
+        m_curLabel.clear();
         m_error = true;
     }
     else
-    {
-        m_parsedCode.labels.push_back(label);
-        m_parsedCode.labelsVisit.insert(label.name);
-    }
+        m_labelsVisit.insert(m_curLabel);
 }
 
 
@@ -110,6 +116,11 @@ void FrontEnd::enterS_branch_vccz(VectorAssemblerParser::S_branch_vcczContext* c
     Instruction instr;
     instr.opCode = kScalarBranchVCCZ;
     instr.operands[0] = ParseBranch(ctx->label_id);
+    if(!m_curLabel.empty())
+    {
+        instr.label = m_curLabel;
+        m_curLabel.clear();
+    }
     m_parsedCode.instructions.push_back(instr);
 }
 
@@ -119,6 +130,11 @@ void FrontEnd::enterS_branch_vccnz(VectorAssemblerParser::S_branch_vccnzContext*
     Instruction instr;
     instr.opCode = kScalarBranchVCCNZ;
     instr.operands[0] = ParseBranch(ctx->label_id);
+    if(!m_curLabel.empty())
+    {
+        instr.label = m_curLabel;
+        m_curLabel.clear();
+    }
     m_parsedCode.instructions.push_back(instr);
 }
 
@@ -128,6 +144,11 @@ void FrontEnd::enterS_branch_execz(VectorAssemblerParser::S_branch_execzContext*
     Instruction instr;
     instr.opCode = kScalarBranchEXECZ;
     instr.operands[0] = ParseBranch(ctx->label_id);
+    if(!m_curLabel.empty())
+    {
+        instr.label = m_curLabel;
+        m_curLabel.clear();
+    }
     m_parsedCode.instructions.push_back(instr);
 }
 
@@ -137,6 +158,11 @@ void FrontEnd::enterS_branch_execnz(VectorAssemblerParser::S_branch_execnzContex
     Instruction instr;
     instr.opCode = kScalarBranchEXECNZ;
     instr.operands[0] = ParseBranch(ctx->label_id);
+    if(!m_curLabel.empty())
+    {
+        instr.label = m_curLabel;
+        m_curLabel.clear();
+    }
     m_parsedCode.instructions.push_back(instr);
 }
 

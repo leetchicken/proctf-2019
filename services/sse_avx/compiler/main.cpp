@@ -40,7 +40,27 @@ enum EVecType
 };
 
 
-void EmitComment(std::string& str, const Instruction& instr, uint32_t instrIdx, const std::vector<Label>& labels)
+struct XMM : public Register
+{
+    XMM(const Register& r)
+    {
+        type = r.type;
+        idx = r.idx;
+    }
+};
+
+
+struct YMM : public Register
+{
+    YMM(const Register& r)
+    {
+        type = r.type;
+        idx = r.idx;
+    }
+};
+
+
+void EmitComment(std::string& str, const Instruction& instr)
 {
     char buf[256];
 
@@ -62,13 +82,10 @@ void EmitComment(std::string& str, const Instruction& instr, uint32_t instrIdx, 
         str.append(buf);
     };
 
-    for(auto& label : labels)
+    if(!instr.label.empty())
     {
-        if(label.instructionIdx == instrIdx)
-        {
-            sprintf(buf, "    ; %s:\n", label.name.c_str());
-            str.append(buf);
-        }
+        sprintf(buf, "    ; %s:\n", instr.label.c_str());
+        str.append(buf);
     }
 
     str.append("    ; ");
@@ -145,6 +162,24 @@ std::string& operator<<(std::string& str, const Register& reg)
 
 
 template<EVecType type>
+std::string& operator<<(std::string& str, const XMM& xmm)
+{
+    char buf[16];
+    str.append(EmitRegister<kSSE>(buf, xmm));
+    return str;
+}
+
+
+template<EVecType type>
+std::string& operator<<(std::string& str, const YMM& ymm)
+{
+    char buf[16];
+    str.append(EmitRegister<kAVX>(buf, ymm));
+    return str;
+}
+
+
+template<EVecType type>
 std::string& operator<<(std::string& str, const Instruction::Operand& op)
 {
     char buf[16];
@@ -156,30 +191,30 @@ std::string& operator<<(std::string& str, const Instruction::Operand& op)
 template<EVecType type>
 void AddLine(std::string& str, uint32_t argsNum, uint32_t& argsCounter)
 {
+    str.append("\n");
 }
 
 
 template<EVecType type, typename T, typename... Args>
-void AddLine(std::string& str, uint32_t argsNum, uint32_t& argsCounter, T t, Args... args)
+void AddLine(std::string& str, uint32_t argsNum, uint32_t& argsCounter, T t, const Args&... args)
 {
     operator<<<type>(str, t);
     if(argsCounter == 0 && argsNum > 1)
         str.append(" ");
     else if(argsCounter < argsNum - 1)
         str.append(", ");
-    else
-        str.append("\n");
     argsCounter++;
     AddLine<type>(str, argsNum, argsCounter, args...);
 }
 
 
-template<EVecType type, typename... Args>
-void AddLine(std::string& str, Args... args)
+template<EVecType type, bool noTab = false, typename... Args>
+void AddLine(std::string& str, const Args&... args)
 {
     uint32_t argsNum = sizeof...(args);
     uint32_t argsCounter = 0;
-    str.append("    ");
+    if(!noTab)
+        str.append("    ");
     AddLine<type>(str, argsNum, argsCounter, args...);
 }
 
@@ -187,12 +222,13 @@ void AddLine(std::string& str, Args... args)
 template<EVecType type>
 void EmitInstruction(std::string& str, const char* mnemonic, const Instruction::Operand* operands, uint32_t operandsNum)
 {
-    char buf[256];
-    str.append("    ");
-    str.append(mnemonic);
-    str.append(" ");
     if(type == kAVX || (type == kSSE && operandsNum < 3))
     {
+        char buf[256];
+        str.append("    ");
+        str.append(mnemonic);
+        str.append(" ");
+
         for(uint32_t i = 0; i < operandsNum; i++)
         {
             operator<<<type>(str, EmitOperand<type>(buf, operands[i]));
@@ -200,13 +236,15 @@ void EmitInstruction(std::string& str, const char* mnemonic, const Instruction::
             if(i < operandsNum - 1)
                 str.append(", ");
         }
+
+        str.append("\n");
     }
     else
     {
-        AddLine<type>(str, "movps", operands[0], operands[1]);
+        if(operands[0].reg != operands[1].reg)
+            AddLine<type>(str, "movaps", operands[0], operands[1]);
         AddLine<type>(str, mnemonic, operands[0], operands[2]);
     }
-    str.append("\n");
 }
 
 
@@ -288,12 +326,12 @@ void PostScalarInstruction(std::string& asmbl, const Instruction& i)
         return;
 
     const char* postScalar = "\
-post_scalar_avx0_%u:\n\
+post_scalar%u_0:\n\
     lea rbp, [rel $]\n\
-    mov rax, post_scalar_avx1_%u - post_scalar_avx0_%u\n\
+    mov rax, post_scalar%u_1 - post_scalar%u_0\n\
     add rbp, rax\n\
     jmp store_load_avx\n\
-post_scalar_avx1_%u:\n";
+post_scalar%u_1:\n";
 
     static uint32_t postScalarCounter = 0;
     char buf[256];
@@ -314,41 +352,49 @@ void GenerateCode(std::string& asmbl, const ParsedCode& parsedCode)
         vsprintf(buf, formatStr, args);
         va_end(args);
 
-        asmbl.append("    ");
         asmbl.append(buf);
     };
-
-    char buf0[256], buf1[256], buf2[256];
 
     for(uint32_t i = 0; i < parsedCode.instructions.size(); i++)
     {
         auto& inst = parsedCode.instructions[i];
-        EmitComment(asmbl, inst, i, parsedCode.labels);
+        EmitComment(asmbl, inst);
+
+        if(!inst.label.empty())
+            addLine("%s_%s:\n", inst.label.c_str(), type == kAVX ? "avx" : "sse");
 
         switch (inst.opCode)
         {
             case kVectorMov:
             {
                 auto& dstReg = inst.operands[0].reg;
-                if(inst.operands[1].type == kOperandImmediate)
+                auto& srcReg = inst.operands[1].reg;
+                if(inst.operands[1].type == kOperandRegister && srcReg.type == Register::kVector)
                 {
-                    AddLine<type>(asmbl, "mov", "eax", inst.operands[1].imm);
-                    addLine("vmovd xmm%u, eax\n", dstReg.idx);
-                    AddLine<type>(asmbl, "vshufps", dstReg, dstReg, dstReg, 0);
-                    AddLine<type>(asmbl, "vperm2f128", dstReg, dstReg, dstReg, 0);
+                    const char* mnemonic = type == kAVX ? "vmovaps" : "movaps";
+                    EmitInstruction<type>(asmbl, mnemonic, inst.operands, 2);
                 }
-                else if(inst.operands[1].type == kOperandRegister)
+                else
                 {
-                    auto& srcReg = inst.operands[1].reg;
-                    if(srcReg.type == Register::kVector)
+                    const char* mnemonic = type == kAVX ? "vmovd" : "movd";
+                    if(inst.operands[1].type == kOperandImmediate)
                     {
-                        EmitInstruction<type>(asmbl, "vmovaps", inst.operands, 2);
+                        AddLine<type>(asmbl, "mov", "eax", inst.operands[1].imm);
+                        AddLine<type>(asmbl, mnemonic, XMM(dstReg), "eax");
                     }
                     else
                     {
-                        addLine("vmovd xmm%u, %s\n", dstReg.idx, EmitRegister<type>(buf1, srcReg));
+                        AddLine<type>(asmbl, mnemonic, XMM(dstReg), srcReg);
+                    }
+                    
+                    if(type == kAVX)
+                    {
                         AddLine<type>(asmbl, "vshufps", dstReg, dstReg, dstReg, 0);
                         AddLine<type>(asmbl, "vperm2f128", dstReg, dstReg, dstReg, 0);
+                    }
+                    else
+                    {
+                        AddLine<type>(asmbl, "shufps", dstReg, dstReg, 0);
                     }
                 }
                 break;
@@ -393,8 +439,8 @@ void GenerateCode(std::string& asmbl, const ParsedCode& parsedCode)
                 }
                 else
                 {
-                    AddLine<type>(asmbl, "movps", "xmm15", reg0);
-                    AddLine<type>(asmbl, "cmpeqps", reg0, reg1);
+                    AddLine<type>(asmbl, "movaps", "xmm15", reg0);
+                    AddLine<type>(asmbl, "cmpeqps", "xmm15", reg1);
                     AddLine<type>(asmbl, "movmskps ebx, xmm15\n");
                 }
                 break;
@@ -450,7 +496,6 @@ void GenerateCode(std::string& asmbl, const ParsedCode& parsedCode)
                 }
                 break;
             }
-
             
             default:
                 break;
@@ -459,7 +504,7 @@ void GenerateCode(std::string& asmbl, const ParsedCode& parsedCode)
         PostScalarInstruction(asmbl, inst);
     }
 
-    addLine("jmp exit\n");
+    AddLine<type>(asmbl, "jmp exit");
 }
 
 
@@ -472,6 +517,8 @@ int main(int argc, const char* argv[])
     std::string asmbl = kAsmStart;    
 
     GenerateCode<kAVX>(asmbl, parsedCode);
+    AddLine<kSSE>(asmbl, "; SSE variant");
+    GenerateCode<kSSE>(asmbl, parsedCode);
 
     asmbl.append(kAsmEnd);
     EmitStoreLoad(asmbl);

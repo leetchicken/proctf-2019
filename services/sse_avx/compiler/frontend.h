@@ -81,6 +81,11 @@ struct Register
     {
         return type == r.type && idx == r.idx;
     }
+
+    bool operator!=(const Register& r) const
+    {
+        return type != r.type || idx != r.idx;
+    }
 };
 static_assert(sizeof(Register) == 4, "");
 
@@ -108,21 +113,14 @@ struct Instruction
         };
     };
     Operand operands[3];
-};
 
-
-struct Label
-{
-    std::string name;
-    uint32_t instructionIdx;
+    std::string label;
 };
 
 
 struct ParsedCode
 {
     std::vector<Instruction> instructions;
-    std::set<std::string> labelsVisit;
-    std::vector<Label> labels;
 };
 
 
@@ -160,6 +158,8 @@ private:
     Instruction::Operand ParseBranch(antlr4::Token* token) const;
 
     ParsedCode m_parsedCode;
+    std::set<std::string> m_labelsVisit;
+    std::string m_curLabel;
     bool m_error = false;
 };
 
