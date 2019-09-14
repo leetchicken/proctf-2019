@@ -13,6 +13,7 @@ static const char *kAsmStart = "\
 global _start\n\
 _start:\n\
     push rbp\n\
+    push rbx\n\
     mov rbp, rsp\n\
     and rsp, 0xffffffffffffffe0\n\
     sub rsp, 32\n\
@@ -24,10 +25,10 @@ _start:\n\
 ";
 
 static const char* kAsmEnd = "\
-exit:\n\
     add rsp, 1024\n\
     mov rbp, [rsp]\n\
     mov rsp, rbp\n\
+    pop rbx\n\
     pop rbp\n\
     ret\n\
 ";
@@ -525,10 +526,44 @@ int main(int argc, const char* argv[])
 
     std::string asmbl = kAsmStart;    
 
+    std::vector<uint32_t> usedSgprRegisters;
+    uint32_t usedSgprRegistersMask;
+    for(uint32_t i = 0; i < parsedCode.instructions.size(); i++)
+    {
+        auto& inst = parsedCode.instructions[i];
+        uint32_t opsNum = kOpOperandsNum[inst.opCode];
+        for(uint32_t j = 0; j < opsNum; j++)
+        {
+            auto& op = inst.operands[j];
+            if(op.type != kOperandRegister)
+                continue;
+            
+            if(op.reg.type != Register::kScalar)
+                continue;
+
+            uint32_t x86RegIdx = 8 + op.reg.idx;
+            if(x86RegIdx < 12)
+                continue;
+
+            usedSgprRegistersMask |= 1 << x86RegIdx;
+        }
+    }
+    while(usedSgprRegistersMask)
+    {
+        uint32_t idx = __builtin_ctz(usedSgprRegistersMask);
+        usedSgprRegisters.push_back(idx);
+        usedSgprRegistersMask &= ~(1 << idx);
+    }
+    for(auto& reg : usedSgprRegisters)
+        AddLine(asmbl, "    push r%u", reg);
+
     GenerateCode<kAVX>(asmbl, parsedCode);
     AddLine<kSSE>(asmbl, "; SSE variant");
     GenerateCode<kSSE>(asmbl, parsedCode);
 
+    AddLine(asmbl, "exit:");
+    for(auto iter = usedSgprRegisters.rbegin(); iter != usedSgprRegisters.rend(); ++iter)
+        AddLine(asmbl, "    pop r%u", *iter);
     asmbl.append(kAsmEnd);
     EmitStoreLoad(asmbl);
 
