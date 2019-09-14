@@ -219,6 +219,19 @@ void AddLine(std::string& str, const Args&... args)
 }
 
 
+void AddLine(std::string& str, const char* formatStr, ...)
+{
+    char buf[512];
+    va_list args;
+    va_start(args, formatStr);
+    vsprintf(buf, formatStr, args);
+    va_end(args);
+
+    str.append(buf);
+    str.append("\n");
+};
+
+
 template<EVecType type>
 void EmitInstruction(std::string& str, const char* mnemonic, const Instruction::Operand* operands, uint32_t operandsNum)
 {
@@ -316,6 +329,7 @@ save_exec_avx:\n\
 }
 
 
+template<EVecType type>
 void PostScalarInstruction(std::string& asmbl, const Instruction& i)
 {
     if(kOpToType[i.opCode] != kInstructionTypeScalar || kOpOperandsNum[i.opCode] == 0)
@@ -325,43 +339,38 @@ void PostScalarInstruction(std::string& asmbl, const Instruction& i)
     if(op0.type != kOperandRegister || op0.reg.type != Register::kEXEC)
         return;
 
-    const char* postScalar = "\
-post_scalar%u_0:\n\
-    lea rbp, [rel $]\n\
-    mov rax, post_scalar%u_1 - post_scalar%u_0\n\
-    add rbp, rax\n\
-    jmp store_load_avx\n\
-post_scalar%u_1:\n";
-
     static uint32_t postScalarCounter = 0;
-    char buf[256];
-    sprintf(buf, postScalar, postScalarCounter, postScalarCounter, postScalarCounter, postScalarCounter);
+    const char* postfix = type == kAVX ? "avx" : "sse";
+
+    AddLine(asmbl, "post_scalar_%s_%u_0:", postfix, postScalarCounter);
+    AddLine(asmbl, "    lea rbp, [rel $]");
+    AddLine(asmbl, "    add rbp, post_scalar_%s_%u_1 - post_scalar_%s_%u_0", postfix, postScalarCounter, postfix, postScalarCounter);
+    AddLine(asmbl, "    jmp store_load_avx");
+    AddLine(asmbl, "post_scalar_%s_%u_1:", postfix, postScalarCounter);
+
+    AddLine(asmbl, "    mov eax, ecx");
+    AddLine(asmbl, "    and eax, 0xf0");
+    if(type == kAVX)
+        AddLine(asmbl, "    jz post_scalar_sse_%u_2", postScalarCounter);
+    else
+        AddLine(asmbl, "    jnz post_scalar_avx_%u_2", postScalarCounter);
+
+    AddLine(asmbl, "post_scalar_%s_%u_2:", postfix, postScalarCounter);
+
     postScalarCounter++;
-    asmbl.append(buf);
 }
 
 
 template<EVecType type>
 void GenerateCode(std::string& asmbl, const ParsedCode& parsedCode)
 {
-    auto addLine = [&](const char* formatStr, ...)
-    {
-        char buf[512];
-        va_list args;
-        va_start(args, formatStr);
-        vsprintf(buf, formatStr, args);
-        va_end(args);
-
-        asmbl.append(buf);
-    };
-
     for(uint32_t i = 0; i < parsedCode.instructions.size(); i++)
     {
         auto& inst = parsedCode.instructions[i];
         EmitComment(asmbl, inst);
 
         if(!inst.label.empty())
-            addLine("%s_%s:\n", inst.label.c_str(), type == kAVX ? "avx" : "sse");
+            AddLine(asmbl, "%s_%s:", inst.label.c_str(), type == kAVX ? "avx" : "sse");
 
         switch (inst.opCode)
         {
@@ -441,7 +450,7 @@ void GenerateCode(std::string& asmbl, const ParsedCode& parsedCode)
                 {
                     AddLine<type>(asmbl, "movaps", "xmm15", reg0);
                     AddLine<type>(asmbl, "cmpeqps", "xmm15", reg1);
-                    AddLine<type>(asmbl, "movmskps ebx, xmm15\n");
+                    AddLine<type>(asmbl, "movmskps ebx, xmm15");
                 }
                 break;
             }
@@ -501,7 +510,7 @@ void GenerateCode(std::string& asmbl, const ParsedCode& parsedCode)
                 break;
         }
 
-        PostScalarInstruction(asmbl, inst);
+        PostScalarInstruction<type>(asmbl, inst);
     }
 
     AddLine<type>(asmbl, "jmp exit");
