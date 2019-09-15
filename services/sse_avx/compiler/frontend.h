@@ -5,6 +5,10 @@
 #include "VectorAssemblerBaseListener.h"
 
 
+static const uint32_t kMaxVectorRegisterIdx = 14;
+static const uint32_t kMaxScalarRegisterIdx = 7;
+
+
 enum InstructionType
 {
     kInstructionTypeVector = 0,
@@ -19,6 +23,12 @@ enum InstructionType
     USER_DEFINE(kVectorMul_f32,         "v_mul_f32",        3, kInstructionTypeVector)\
     USER_DEFINE(kVectorDiv_f32,         "v_div_f32",        3, kInstructionTypeVector)\
     USER_DEFINE(kVectorCmpEq_f32,       "v_cmp_eq_f32",     2, kInstructionTypeVector)\
+    USER_DEFINE(kVectorAdd_u32,         "v_add_u32",        3, kInstructionTypeVector)\
+    USER_DEFINE(kVectorSub_u32,         "v_sub_u32",        3, kInstructionTypeVector)\
+    USER_DEFINE(kVectorMul_u32,         "v_mul_u32",        3, kInstructionTypeVector)\
+    USER_DEFINE(kVectorCmpEq_u32,       "v_cmp_eq_u32",     2, kInstructionTypeVector)\
+    USER_DEFINE(kVectorLoad,            "v_load",           3, kInstructionTypeVector)\
+    USER_DEFINE(kVectorStore,           "v_store",          3, kInstructionTypeVector)\
     USER_DEFINE(kScalarMov,             "s_mov",            2, kInstructionTypeScalar)\
     USER_DEFINE(kScalarAnd,             "s_and",            3, kInstructionTypeScalar)\
     USER_DEFINE(kScalarAndN2,           "s_andn2",          3, kInstructionTypeScalar)\
@@ -70,12 +80,14 @@ struct Register
     {
         kVector = 0,
         kScalar,
+        kScalar64,
         kVCC,
         kSCC,
         kEXEC
     };
     Type type;
-    uint16_t idx;
+    uint8_t idx;
+    uint8_t rangeLen;
 
     bool operator==(const Register& r) const
     {
@@ -86,6 +98,14 @@ struct Register
     {
         return type != r.type || idx != r.idx;
     }
+
+    Register()
+        : type(kVector), idx(0), rangeLen(0)
+    {}
+
+    Register(Type type, uint8_t idx)
+        : type(type), idx(idx), rangeLen(0)
+    {}
 };
 static_assert(sizeof(Register) == 4, "");
 
@@ -111,6 +131,9 @@ struct Instruction
             Register reg;
             const char* labelId;
         };
+
+        Operand()
+        {}
     };
     Operand operands[3];
 
@@ -137,6 +160,12 @@ public:
     void enterV_mul_f32(VectorAssemblerParser::V_mul_f32Context* ctx) override;
     void enterV_div_f32(VectorAssemblerParser::V_div_f32Context* ctx) override;
     void enterV_cmp_eq_f32(VectorAssemblerParser::V_cmp_eq_f32Context* ctx) override;
+    void enterV_add_u32(VectorAssemblerParser::V_add_u32Context* ctx) override;
+    void enterV_sub_u32(VectorAssemblerParser::V_sub_u32Context* ctx) override;
+    void enterV_mul_u32(VectorAssemblerParser::V_mul_u32Context* ctx) override;
+    void enterV_cmp_eq_u32(VectorAssemblerParser::V_cmp_eq_u32Context* ctx) override;
+    void enterV_load(VectorAssemblerParser::V_loadContext* ctx) override;
+    void enterV_store(VectorAssemblerParser::V_storeContext* ctx) override;
     void enterS_mov(VectorAssemblerParser::S_movContext* ctx) override;
     void enterS_and(VectorAssemblerParser::S_andContext *ctx) override;
     void enterS_andn2(VectorAssemblerParser::S_andn2Context* ctx) override;
@@ -157,8 +186,13 @@ public:
 
 private:
 
-    Instruction::Operand ParseOperand(antlr4::Token* token) const;
-    Instruction::Operand ParseBranch(antlr4::Token* token) const;
+    Register ParseRegister(const std::string& str, size_t type);
+    Instruction::Operand ParseOperand(antlr4::Token* token);
+    Instruction::Operand ParseBranch(antlr4::Token* token);
+    template<class CtxType>
+    void Add2OpInstruction(EOpCode opCode, CtxType* ctx);
+    template<class CtxType>
+    void Add3OpInstruction(EOpCode opCode, CtxType* ctx);
 
     ParsedCode m_parsedCode;
     std::set<std::string> m_labelsVisit;

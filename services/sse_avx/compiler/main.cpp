@@ -20,8 +20,10 @@ _start:\n\
     mov [rsp], rbp\n\
     sub rsp, 1024\n\
     mov ebx, 0x0\n\
-    mov ecx, 0xff\n\
-    mov edx, 0xff\n\
+    mov ecx, esi\n\
+    mov edx, esi\n\
+    mov rsi, rsp\n\
+    add rsi, 576\n\
 ";
 
 static const char* kAsmEnd = "\
@@ -70,9 +72,16 @@ void EmitComment(std::string& str, const Instruction& instr)
         if(op.type == kOperandImmediate)
             sprintf(buf, "0x%x", op.imm);
         else if(op.type == kOperandRegister && op.reg.type == Register::kVector)
-            sprintf(buf, "v%u", op.reg.idx);
+        {
+            if(op.reg.rangeLen == 0)
+                sprintf(buf, "v%u", op.reg.idx);
+            else
+                sprintf(buf, "v[%u:%u]", op.reg.idx, op.reg.idx + op.reg.rangeLen);
+        }
         else if(op.type == kOperandRegister && op.reg.type == Register::kScalar)
             sprintf(buf, "s%u", op.reg.idx);
+        else if(op.type == kOperandRegister && op.reg.type == Register::kScalar64)
+            sprintf(buf, "s%uq", op.reg.idx);
         else if(op.type == kOperandRegister && op.reg.type == Register::kEXEC)
             sprintf(buf, "exec");
         else if(op.type == kOperandRegister && op.reg.type == Register::kVCC)
@@ -103,6 +112,21 @@ void EmitComment(std::string& str, const Instruction& instr)
 }
 
 
+void Fmt(std::string& str, const char* formatString)
+{
+    str.append(formatString);
+};
+
+
+template<typename... Args>
+void Fmt(std::string& str, const char* formatString, Args... args)
+{
+    char buf[512];
+    sprintf(buf, formatString, args...);
+    str.append(buf);
+};
+
+
 const char* EmitImmediate(char* buf, uint32_t imm)
 {
     sprintf(buf, "0x%x", imm);
@@ -117,6 +141,8 @@ const char* EmitRegister(char* buf, const Register& reg)
         sprintf(buf, type == kAVX ? "ymm%u" : "xmm%u", reg.idx);
     else if(reg.type == Register::kScalar)
         sprintf(buf, "r%ud", 8 + reg.idx);
+    else if(reg.type == Register::kScalar64)
+        sprintf(buf, "r%u", 8 + reg.idx);
     else if(reg.type == Register::kVCC)
         sprintf(buf, "ebx");
     else if(reg.type == Register::kEXEC)
@@ -220,46 +246,12 @@ void AddLine(std::string& str, const Args&... args)
 }
 
 
-void AddLine(std::string& str, const char* formatStr, ...)
+template<typename... Args>
+void AddLine(std::string& str, const char* formatString, Args... args)
 {
-    char buf[512];
-    va_list args;
-    va_start(args, formatStr);
-    vsprintf(buf, formatStr, args);
-    va_end(args);
-
-    str.append(buf);
+    Fmt(str, formatString, args...);
     str.append("\n");
 };
-
-
-template<EVecType type>
-void EmitInstruction(std::string& str, const char* mnemonic, const Instruction::Operand* operands, uint32_t operandsNum)
-{
-    if(type == kAVX || (type == kSSE && operandsNum < 3))
-    {
-        char buf[256];
-        str.append("    ");
-        str.append(mnemonic);
-        str.append(" ");
-
-        for(uint32_t i = 0; i < operandsNum; i++)
-        {
-            operator<<<type>(str, EmitOperand<type>(buf, operands[i]));
-
-            if(i < operandsNum - 1)
-                str.append(", ");
-        }
-
-        str.append("\n");
-    }
-    else
-    {
-        if(operands[0].reg != operands[1].reg)
-            AddLine<type>(str, "movaps", operands[0], operands[1]);
-        AddLine<type>(str, mnemonic, operands[0], operands[2]);
-    }
-}
 
 
 void EmitStoreLoad(std::string& asmbl)
@@ -355,7 +347,6 @@ void PostScalarInstruction(std::string& asmbl, const Instruction& i)
         AddLine(asmbl, "    jz post_scalar_sse_%u_2", postScalarCounter);
     else
         AddLine(asmbl, "    jnz post_scalar_avx_%u_2", postScalarCounter);
-
     AddLine(asmbl, "post_scalar_%s_%u_2:", postfix, postScalarCounter);
 
     postScalarCounter++;
@@ -363,11 +354,39 @@ void PostScalarInstruction(std::string& asmbl, const Instruction& i)
 
 
 template<EVecType type>
+void EmitBroadcast(std::string& asmbl, const Register& dst, const Instruction::Operand& src)
+{
+    bool srcImm = src.type == kOperandImmediate;
+    if(srcImm)
+        AddLine<type>(asmbl, "mov", "eax", src.imm);
+
+    if(type == kAVX)
+    {
+        if(srcImm)
+            AddLine<kAVX>(asmbl, "vmovd", XMM(dst), "eax");
+        else
+            AddLine<kAVX>(asmbl, "vmovd", XMM(dst), src);
+        AddLine<kAVX>(asmbl, "vshufps", dst, dst, dst, 0);
+        AddLine<kAVX>(asmbl, "vperm2f128", dst, dst, dst, 0);
+    }
+    else
+    {
+        if(srcImm)
+            AddLine<kAVX>(asmbl, "movd", XMM(dst), "eax");
+        else
+            AddLine<kAVX>(asmbl, "movd", XMM(dst), src);
+        AddLine<kSSE>(asmbl, "shufps", dst, dst, 0);
+    }
+}
+
+
+template<EVecType type>
 void GenerateCode(std::string& asmbl, const ParsedCode& parsedCode)
 {
-    for(uint32_t i = 0; i < parsedCode.instructions.size(); i++)
+    AddLine(asmbl, "start_%s:", type == kAVX ? "avx" : "sse");
+
+    for(auto& inst : parsedCode.instructions)
     {
-        auto& inst = parsedCode.instructions[i];
         EmitComment(asmbl, inst);
 
         if(!inst.label.empty())
@@ -378,86 +397,182 @@ void GenerateCode(std::string& asmbl, const ParsedCode& parsedCode)
             case kVectorMov:
             {
                 auto& dstReg = inst.operands[0].reg;
-                auto& srcReg = inst.operands[1].reg;
-                if(inst.operands[1].type == kOperandRegister && srcReg.type == Register::kVector)
+                auto& srcOp = inst.operands[1];
+                if(srcOp.type == kOperandRegister && srcOp.reg.type == Register::kVector)
                 {
                     const char* mnemonic = type == kAVX ? "vmovaps" : "movaps";
-                    EmitInstruction<type>(asmbl, mnemonic, inst.operands, 2);
+                    AddLine<type>(asmbl, mnemonic, inst.operands[0], inst.operands[1]);
                 }
                 else
                 {
-                    const char* mnemonic = type == kAVX ? "vmovd" : "movd";
-                    if(inst.operands[1].type == kOperandImmediate)
-                    {
-                        AddLine<type>(asmbl, "mov", "eax", inst.operands[1].imm);
-                        AddLine<type>(asmbl, mnemonic, XMM(dstReg), "eax");
-                    }
-                    else
-                    {
-                        AddLine<type>(asmbl, mnemonic, XMM(dstReg), srcReg);
-                    }
-                    
-                    if(type == kAVX)
-                    {
-                        AddLine<type>(asmbl, "vshufps", dstReg, dstReg, dstReg, 0);
-                        AddLine<type>(asmbl, "vperm2f128", dstReg, dstReg, dstReg, 0);
-                    }
-                    else
-                    {
-                        AddLine<type>(asmbl, "shufps", dstReg, dstReg, 0);
-                    }
+                    EmitBroadcast<type>(asmbl, dstReg, srcOp);
                 }
                 break;
             }
 
             case kVectorAdd_f32:
-            {
-                const char* mnemonic = type == kAVX ? "vaddps" : "addps";
-                EmitInstruction<type>(asmbl, mnemonic, inst.operands, 3);
-                break;
-            }
-
             case kVectorSub_f32:
-            {
-                const char* mnemonic = type == kAVX ? "vsubps" : "subps";
-                EmitInstruction<type>(asmbl, mnemonic, inst.operands, 3);
-                break;
-            }
-
             case kVectorMul_f32:
-            {
-                const char* mnemonic = type == kAVX ? "vmulps" : "mulps";
-                EmitInstruction<type>(asmbl, mnemonic, inst.operands, 3);
-                break;
-            }
-
             case kVectorDiv_f32:
+            case kVectorAdd_u32:
+            case kVectorSub_u32:
+            case kVectorMul_u32:
             {
-                const char* mnemonic = type == kAVX ? "vdivps" : "divps";
-                EmitInstruction<type>(asmbl, mnemonic, inst.operands, 3);
+                const char* mnemonic = nullptr;
+                if(inst.opCode == kVectorAdd_f32)
+                    mnemonic = type == kAVX ? "vaddps" : "addps";
+                else if(inst.opCode == kVectorSub_f32)
+                    mnemonic = type == kAVX ? "vsubps" : "subps";
+                else if(inst.opCode == kVectorMul_f32)
+                    mnemonic = type == kAVX ? "vmulps" : "mulps";
+                else if(inst.opCode == kVectorDiv_f32)
+                    mnemonic = type == kAVX ? "vdivps" : "divps";
+                else if(inst.opCode == kVectorAdd_u32)
+                    mnemonic = type == kAVX ? "vpaddd" : "paddd";
+                else if(inst.opCode == kVectorSub_u32)
+                    mnemonic = type == kAVX ? "vpsubd" : "psubd";
+                else if(inst.opCode == kVectorMul_u32)
+                    mnemonic = type == kAVX ? "vpmulld" : "pmulld";
+                
+                Register src2;
+                if(inst.operands[2].type == kOperandImmediate)
+                {
+                    src2 = Register(Register::kVector, 15);
+                    EmitBroadcast<type>(asmbl, src2, inst.operands[2]);
+                }
+                else
+                {
+                    src2 = inst.operands[2].reg;
+                }
+
+                if(type == kAVX)
+                {
+                    AddLine<kAVX>(asmbl, mnemonic, inst.operands[0], inst.operands[1], src2);
+                }
+                else
+                {
+                    if(inst.operands[0].reg != inst.operands[1].reg)
+                        AddLine<kSSE>(asmbl, "movaps", inst.operands[0], inst.operands[1]);
+                    AddLine<kSSE>(asmbl, mnemonic, inst.operands[0], src2);
+                }
                 break;
             }
 
             case kVectorCmpEq_f32:
+            case kVectorCmpEq_u32:
             {
+                const char* mnemonic = nullptr;
+                if(inst.opCode == kVectorCmpEq_f32)
+                    mnemonic = type == kAVX ? "vcmpeqps" : "cmpeqps";
+                else if(inst.opCode == kVectorCmpEq_u32)
+                    mnemonic = type == kAVX ? "vpcmpeqd" : "pcmpeqd";
+
                 auto& reg0 = inst.operands[0].reg;
                 auto& reg1 = inst.operands[1].reg;
                 if(type == kAVX)
                 {
-                    AddLine<type>(asmbl, "vcmpeqps", "ymm15", reg0, reg1);
+                    AddLine<type>(asmbl, mnemonic, "ymm15", reg0, reg1);
                     AddLine<type>(asmbl, "vmovmskps ebx, ymm15");
                 }
                 else
                 {
                     AddLine<type>(asmbl, "movaps", "xmm15", reg0);
-                    AddLine<type>(asmbl, "cmpeqps", "xmm15", reg1);
+                    AddLine<type>(asmbl, mnemonic, "xmm15", reg1);
                     AddLine<type>(asmbl, "movmskps ebx, xmm15");
                 }
                 break;
             }
 
+            case kVectorLoad:
+            {
+                auto dstReg = inst.operands[0].reg;
+                auto& offsetReg = inst.operands[1].reg;
+                auto& srcReg = inst.operands[2].reg;
+
+                for(uint32_t v = 0; v <= dstReg.rangeLen; v++, dstReg.idx++)
+                {
+                    /*const uint32_t kHalfsNum = type == kAVX ? 2 : 1;
+                    for(uint32_t halfIdx = 0; halfIdx < kHalfsNum; halfIdx++)
+                    {
+                        AddLine<kAVX>(asmbl, "vextractf128", "xmm15", offsetReg, halfIdx);
+                        for(uint32_t i = 0; i < 4; i++)
+                        {
+                            AddLine<kAVX>(asmbl, "vpextrd", "eax", "xmm15", i);
+                            AddLine<type>(asmbl, "shl", "eax", 2);
+                            AddLine<type>(asmbl, "add", "rax", srcReg);
+                            AddLine<type>(asmbl, "mov eax, [rax]");
+                            AddLine(asmbl, "    mov [rsp + 512 + %u * 4], eax", i);
+                        }
+                    }
+                    AddLine<kAVX>(asmbl, "vmovaps", dstReg, "[rsp + 512]");*/
+                    Register temp(Register::kVector, 15);
+                    AddLine<type>(asmbl, "vmovd", XMM(temp), "ecx");
+                    AddLine<type>(asmbl, "vshufps", temp, temp, temp, "0");
+                    if(type == kAVX)
+                        AddLine<type>(asmbl, "vperm2f128", temp, temp, temp, "0");
+                    AddLine<type>(asmbl, "vpand", temp, temp, "[rdi]");
+                    AddLine<type>(asmbl, "vpcmpeqd", temp, temp, "[rdi]");
+                    
+                    asmbl.append("    vpgatherdd ");
+                    operator<<<type>(asmbl, dstReg);
+                    asmbl.append(", [");
+                    operator<<<type>(asmbl, offsetReg);
+                    asmbl.append(" * 4 + ");
+                    operator<<<type>(asmbl, srcReg);
+                    Fmt(asmbl, " + %u * 4], ", v);
+                    operator<<<type>(asmbl, temp);
+                    asmbl.append("\n");
+                }
+                break;
+            }
+
+            case kVectorStore:
+            {
+                auto srcReg = inst.operands[0].reg;
+                auto& offsetReg = inst.operands[1].reg;
+                auto& dstReg = inst.operands[2].reg;
+
+                for(uint32_t v = 0; v <= srcReg.rangeLen; v++, srcReg.idx++)
+                {
+                    const uint32_t kHalfsNum = type == kAVX ? 2 : 1;
+                    for(uint32_t halfIdx = 0; halfIdx < kHalfsNum; halfIdx++)
+                    {
+                        for(uint32_t i = 0; i < 4; i++)
+                        {
+                            uint32_t laneIdx = halfIdx * 4 + i;
+                            if(type == kAVX)
+                            {
+                                AddLine<kAVX>(asmbl, "vextractf128", "xmm15", offsetReg, halfIdx);
+                                AddLine<kAVX>(asmbl, "vpextrd", "rbp", "xmm15", i);
+                            }
+                            else
+                                AddLine<kSSE>(asmbl, "pextrd", "ebp", offsetReg, i);
+                            
+                            AddLine<type>(asmbl, "shl", "ebp", 2);
+                            AddLine<type>(asmbl, "add", "rbp", dstReg);
+                            AddLine(asmbl, "    add rbp, %u", v * 4);
+                            AddLine(asmbl, "    mov eax, %u", 1 << laneIdx);
+                            AddLine(asmbl, "    and eax, ecx");
+                            AddLine(asmbl, "    cmovz rbp, rsi");
+                            
+                            if(type == kAVX)
+                            {
+                                AddLine<kAVX>(asmbl, "vextractf128", "xmm15", srcReg, halfIdx);
+                                AddLine<kAVX>(asmbl, "vextractps", "[rbp]", "xmm15", i);
+                            }
+                            else
+                            {
+                                AddLine<kSSE>(asmbl, "extractps", "[rbp]", srcReg, i);
+                            }
+                            
+                        }
+                    }
+                }
+                break;
+            }
+
             case kScalarMov:
-                EmitInstruction<type>(asmbl, "mov", inst.operands, 2);
+                AddLine<type>(asmbl, "mov", inst.operands[0], inst.operands[1]);
                 break;
 
             case kScalarAnd:
@@ -486,6 +601,7 @@ void GenerateCode(std::string& asmbl, const ParsedCode& parsedCode)
                 auto& dst = inst.operands[0];
                 auto& src0 = inst.operands[1];
                 auto& src1 = inst.operands[2];
+                const char* tmpReg = dst.reg.type == Register::kScalar64 ? "rax" : "eax";
                 if(src1.type == kOperandRegister && dst.reg == src1.reg)
                 {
                     AddLine<type>(asmbl, "not", dst);
@@ -493,16 +609,16 @@ void GenerateCode(std::string& asmbl, const ParsedCode& parsedCode)
                 }
                 else if(src0.type == kOperandRegister && dst.reg == src0.reg)
                 {
-                    AddLine<type>(asmbl, "mov", "eax", src1);
-                    AddLine<type>(asmbl, "not eax");
-                    AddLine<type>(asmbl, "and", dst, "eax");
+                    AddLine<type>(asmbl, "mov", tmpReg, src1);
+                    AddLine<type>(asmbl, "not", tmpReg);
+                    AddLine<type>(asmbl, "and", dst, tmpReg);
                 }
                 else
                 {
-                    AddLine<type>(asmbl, "mov", "eax", src1);
-                    AddLine<type>(asmbl, "not eax");
+                    AddLine<type>(asmbl, "mov", tmpReg, src1);
+                    AddLine<type>(asmbl, "not", tmpReg);
                     AddLine<type>(asmbl, "mov", dst, src0);
-                    AddLine<type>(asmbl, "and", dst, "eax");
+                    AddLine<type>(asmbl, "and", dst, tmpReg);
                 }
                 break;
             }
@@ -650,7 +766,7 @@ int main(int argc, const char* argv[])
             if(op.type != kOperandRegister)
                 continue;
             
-            if(op.reg.type != Register::kScalar)
+            if(op.reg.type != Register::kScalar && op.reg.type != Register::kScalar64)
                 continue;
 
             uint32_t x86RegIdx = 8 + op.reg.idx;
@@ -668,6 +784,10 @@ int main(int argc, const char* argv[])
     }
     for(auto& reg : usedSgprRegisters)
         AddLine(asmbl, "    push r%u", reg);
+
+    AddLine(asmbl, "    mov eax, ecx");
+    AddLine(asmbl, "    and eax, 0xf0");
+    AddLine(asmbl, "    jz start_sse");
 
     GenerateCode<kAVX>(asmbl, parsedCode);
     AddLine<kSSE>(asmbl, "; SSE variant");
