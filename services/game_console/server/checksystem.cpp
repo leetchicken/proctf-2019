@@ -202,6 +202,7 @@ bool Check(NetworkAddr teamNet)
 
     HwConsole* console = &iter->second;
     console->StartCheck();
+    uint32_t iteration = 0;
     while(1)
     {
         {
@@ -210,7 +211,10 @@ bool Check(NetworkAddr teamNet)
                 return console->checkResult;
         }
 
+        if(iteration % 1000 == 0)
+            Log("CHECKSYSTEM: waiting for check result '%s', iteration %u\n", inet_ntoa(teamNet), iteration);
         usleep(1000);
+        iteration++;
     }
 
     return false;

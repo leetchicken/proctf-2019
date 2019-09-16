@@ -7,7 +7,6 @@
 #include "api_impl.h"
 #include "../main_screen/constants.h"
 #include "ip4string.h"
-#include "teams_data.h"
 #include "../common.h"
 
 APIImpl GAPIImpl;
@@ -138,6 +137,21 @@ void ChecksystemThread()
 }
 
 
+void RebootTimer(uint32_t textY, uint32_t charHeight)
+{
+    char buf[512];
+    int timer = 5;
+    while(timer > 0)
+    {
+        sprintf(buf, "Reboot in %d seconds", timer);
+        GAPIImpl.LCD_DisplayStringAt(10, textY, buf, kTextAlignNone);
+        textY += charHeight;
+        wait(1.0f);
+        timer--;
+    }
+}
+
+
 void FactoryReset()
 {
     printf("Factory reset\n");
@@ -176,55 +190,62 @@ void FactoryReset()
     GAPIImpl.LCD_DisplayStringAt(10, textY, buf, kTextAlignNone);
     textY += fontInfo.charHeight;
 
-    uint32_t ip;
-    stoip4(ipStr, strlen(ipStr), &ip);
-    const uint32_t kNetMask = 0x00FFFFFF;
-    uint32_t netAddr = ip & kNetMask;
-    uint32_t teamIdx = 0;
-    for(; teamIdx < kTeamsNum; teamIdx++)
+    HTTPRequest* request = GAPIImpl.AllocHTTPRequest();
+    if(!request)
     {
-        if(GTeamsData[teamIdx].net == netAddr)
-            break;
-    }
-
-    if(teamIdx == kTeamsNum)
-    {
-        GAPIImpl.LCD_DisplayStringAt(10, textY, "Factory reset failed, unknown network", kTextAlignNone);
+        GAPIImpl.LCD_DisplayStringAt(10, textY, "Factory reset failed: AllocHTTPRequest failed", kTextAlignNone);
         textY += fontInfo.charHeight;
+        RebootTimer(textY, fontInfo.charHeight);
+        return;
     }
-    else
+    request->httpMethod = kHttpMethodGet;
+    GAPIImpl.sprintf(request->url, "http://%s:%u/teamname", kServerIP, kServerPort);
+    if(!GAPIImpl.SendHTTPRequest(request))
     {
-        sprintf(buf, "Team '%s'", GTeamsData[teamIdx].name);
-        GAPIImpl.LCD_DisplayStringAt(10, textY, buf, kTextAlignNone);
-        textY += fontInfo.charHeight;        
-
-        const char* userName = GTeamsData[teamIdx].name;
-        const char* password = "00000000";
-
-        sprintf(buf, "Set userName = '%s', password = '%s'", userName, password);
-        GAPIImpl.LCD_DisplayStringAt(10, textY, buf, kTextAlignNone);
-        textY += fontInfo.charHeight;        
-
-        FILE* f = fopen("/fs/username", "w");
-        fwrite(userName, 1, strlen(userName), f);
-        fflush(f);
-        fclose(f);
-
-        f = fopen("/fs/password", "w");
-        fwrite(password, 1, strlen(password), f);
-        fflush(f);
-        fclose(f);
+        GAPIImpl.FreeHTTPRequest(request);
+        GAPIImpl.LCD_DisplayStringAt(10, textY, "Factory reset failed: SendHTTPRequest failed", kTextAlignNone);
+        textY += fontInfo.charHeight;
+        RebootTimer(textY, fontInfo.charHeight);
+        return;
     }
 
-    int timer = 5;
-    while(timer > 0)
+    while(!request->done)
     {
-        sprintf(buf, "Reboot in %d seconds", timer);
+        wait(0.1f);
+        continue;
+    }
+
+    if(request->statusCode != 200 || request->responseDataSize > 256)
+    {
+        GAPIImpl.FreeHTTPRequest(request);
+        sprintf(buf, "Factory reset failed: status code = %u, response size = %u", request->statusCode, request->responseDataSize);
         GAPIImpl.LCD_DisplayStringAt(10, textY, buf, kTextAlignNone);
         textY += fontInfo.charHeight;
-        wait(1.0f);
-        timer--;
+        RebootTimer(textY, fontInfo.charHeight);
+        return;
     }
+
+    char userName[256];
+    memset(userName, 0, sizeof(userName));
+    memcpy(userName, request->responseData, request->responseDataSize); 
+
+    const char* password = "00000000";
+
+    sprintf(buf, "Set userName = '%s', password = '%s'", userName, password);
+    GAPIImpl.LCD_DisplayStringAt(10, textY, buf, kTextAlignNone);
+    textY += fontInfo.charHeight;        
+
+    FILE* f = fopen("/fs/username", "w");
+    fwrite(userName, 1, strlen(userName), f);
+    fflush(f);
+    fclose(f);
+
+    f = fopen("/fs/password", "w");
+    fwrite(password, 1, strlen(password), f);
+    fflush(f);
+    fclose(f);
+
+    RebootTimer(textY, fontInfo.charHeight);
 }
 
 

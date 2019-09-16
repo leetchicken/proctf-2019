@@ -378,7 +378,7 @@ static bool AcceptConnection(Socket* socket, const sockaddr_in& clientAddr)
             User* user = User::Get(authKey);
             if(!user)
             {
-                Log("NOTIFY: Unknown auth key %u, close connection\n", authKey);
+                Log("NOTIFY: Unknown auth key %x, close connection\n", authKey);
                 socket->Close();
                 return;
             }
