@@ -20,6 +20,7 @@ _start:\n\
     mov [rsp], rbp\n\
     sub rsp, 1024\n\
     mov ebx, 0x0\n\
+    mov r8, rdx\n\
     mov ecx, esi\n\
     mov edx, esi\n\
     mov rsi, rsp\n\
@@ -70,7 +71,7 @@ void EmitComment(std::string& str, const Instruction& instr)
     auto emitOperand = [&](Instruction::Operand op)
     {
         if(op.type == kOperandImmediate)
-            sprintf(buf, "0x%x", op.imm);
+            sprintf(buf, "0x%llx", op.imm);
         else if(op.type == kOperandRegister && op.reg.type == Register::kVector)
         {
             if(op.reg.rangeLen == 0)
@@ -127,9 +128,9 @@ void Fmt(std::string& str, const char* formatString, Args... args)
 };
 
 
-const char* EmitImmediate(char* buf, uint32_t imm)
+const char* EmitImmediate(char* buf, uint64_t imm)
 {
-    sprintf(buf, "0x%x", imm);
+    sprintf(buf, "0x%llx", imm);
     return buf;
 }
 
@@ -171,7 +172,7 @@ std::string& operator<<(std::string& str, const char* cstr)
 
 
 template<EVecType type>
-std::string& operator<<(std::string& str, uint32_t imm)
+std::string& operator<<(std::string& str, uint64_t imm)
 {
     char buf[32];
     str.append(EmitImmediate(buf, imm));
@@ -550,7 +551,8 @@ void GenerateCode(std::string& asmbl, const ParsedCode& parsedCode)
                             
                             AddLine<type>(asmbl, "shl", "ebp", 2);
                             AddLine<type>(asmbl, "add", "rbp", dstReg);
-                            AddLine(asmbl, "    add rbp, %u", v * 4);
+                            if(v != 0)
+                                AddLine(asmbl, "    add rbp, %u", v * 4);
                             AddLine(asmbl, "    mov eax, %u", 1 << laneIdx);
                             AddLine(asmbl, "    and eax, ecx");
                             AddLine(asmbl, "    cmovz rbp, rsi");

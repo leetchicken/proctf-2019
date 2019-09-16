@@ -127,7 +127,7 @@ struct Instruction
         OperandType type;
         union
         {
-            uint32_t imm;
+            uint64_t imm;
             Register reg;
             const char* labelId;
         };

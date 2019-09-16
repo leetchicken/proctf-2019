@@ -7,7 +7,7 @@
 #include <immintrin.h>
 #include <algorithm>
 
-typedef void* (*TKernel)(void* helpMask, uint32_t initialExecMask);
+typedef void* (*TKernel)(void* helpMask, uint32_t execInitialValue, uint64_t s0qInitialValue, __m256i groupThreadIdX, __m256i groupThreadIdY);
 
 
 struct Kernel
@@ -74,6 +74,24 @@ Kernel LoadKernel(const char* filename)
 }
 
 
+struct float2x2
+{
+	float _00; float _01;
+	float _10; float _11;
+
+	float2x2 operator*(const float2x2& b)
+	{
+		float2x2 ret;
+		ret._00 = _00 * b._00 + _01 * b._10;
+		ret._01 = _00 * b._01 + _01 * b._11;
+
+		ret._10 = _10 * b._00 + _11 * b._10;
+		ret._11 = _10 * b._01 + _11 * b._11;
+		return ret;
+	}
+};
+
+
 int main(int argc, char* argv[])
 {
 	if(argc != 4)
@@ -102,14 +120,22 @@ int main(int argc, char* argv[])
 	helpMask[2] = 0x0000002000000010;
 	helpMask[3] = 0x0000008000000040;
 
-	auto* matrices = (float*)aligned_alloc(32, sizeof(float) * 12 * kWaveLength);
-	memset(matrices, 0xdc, sizeof(float) * 12 * kWaveLength);
+	uint32_t groupsNum = groupCountX * groupCountY;
+	uint32_t oneGroupSize = sizeof(float) * 12 * kWaveLength;
+
+	auto* matrices = (float*)aligned_alloc(32, oneGroupSize * groupsNum);
+	memset(matrices, 0xdc, oneGroupSize * groupsNum);
+
 	decltype(matrices) ptr = matrices;
-	for(uint32_t i = 0; i < kWaveLength; i++)
+	uint32_t counter = 0;
+	for(uint32_t g = 0; g < groupsNum; g++)
 	{
-		for(uint32_t j = 0; j < 8; j++)
-			ptr[j] = (float)(j + i * kWaveLength);
-		ptr += 12;
+		for(uint32_t i = 0; i < kWaveLength; i++)
+		{
+			for(uint32_t j = 0; j < 8; j++)
+				ptr[j] = (float)(counter++);
+			ptr += 12;
+		}
 	}
 
 	__m256i groupThreadIDXInit, groupThreadIDXInc;
@@ -122,23 +148,40 @@ int main(int argc, char* argv[])
 
 	__m256i groupThreadIDX;
 	uint32_t wavesPerX = (kernel.groupDimX + kWaveLength - 1) / kWaveLength;
-	for(uint32_t y = 0; y < kernel.groupDimY; y++)
+	for(uint32_t y = 0; y < kernel.groupDimY * groupCountY; y++)
 	{
 		groupThreadIDX = groupThreadIDXInit;
-		for(uint32_t x = 0; x < wavesPerX; x++)
+		__m256i groupThreadIdY = _mm256_set1_epi32(y);
+		for(uint32_t x = 0; x < wavesPerX * groupCountX; x++)
 		{
-			uint32_t activeLanes = std::min(kernel.groupDimX - x * kWaveLength, kWaveLength);
+			uint32_t activeLanes = std::min(kernel.groupDimX * groupCountX - x * kWaveLength, kWaveLength);
 			uint32_t activeLanesMask = (1 << activeLanes) - 1;
-			asm ("vmovaps %0, %%ymm0" :: "m"(groupThreadIDX));
-			asm ("vbroadcastss (%0), %%ymm1" :: "r"(&y));
-			asm ("mov %0, %%r8" :: "m"(matrices));
-			kernel.code(helpMask, activeLanesMask);
+			uint64_t s0q = (uint64_t)matrices;
+			kernel.code(helpMask, activeLanesMask, s0q, groupThreadIDX, groupThreadIdY);
 			groupThreadIDX = _mm256_add_epi32(groupThreadIDX, groupThreadIDXInc);
 		}
 	}
 
 	unsigned long long time2 = __rdtscp(&junk);
 	printf("%llu\n", time2 - time1);
+
+	uint32_t failedCount = 0;
+	float2x2* ptr0 = (float2x2*)matrices;
+	for(uint32_t g = 0; g < groupsNum; g++)
+	{
+		for (uint32_t i = 0; i < kWaveLength; i++)
+		{
+			float2x2& a = ptr0[0];
+			float2x2& b = ptr0[1];
+			float2x2& c = ptr0[2];
+			float2x2 cExp = a * b;
+			if (memcmp(&c, &cExp, sizeof(float2x2)) != 0)
+				failedCount++;
+			ptr0 += 3;
+		}
+	}
+
+	printf("Num failed: %u\n", failedCount);
 
     return 0;
 }

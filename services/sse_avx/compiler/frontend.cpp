@@ -263,13 +263,13 @@ Instruction::Operand FrontEnd::ParseOperand(antlr4::Token* token)
     {
         op.type = kOperandImmediate;
         auto str = token->getText();
-        op.imm = strtoul(str.c_str(), nullptr, 10);
+        op.imm = strtoull(str.c_str(), nullptr, 10);
     }
     else if(type == VectorAssemblerParser::HEXADECIMAL)
     {
         op.type = kOperandImmediate;
         auto str = token->getText();
-        op.imm = strtoul(str.c_str(), nullptr, 16);
+        op.imm = strtoull(str.c_str(), nullptr, 16);
     }
     else if(type == VectorAssemblerParser::FLOAT)
     {

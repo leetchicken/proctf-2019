@@ -1,6 +1,6 @@
 OUTPUT=output
 GENERATED=generated
-CCARGS=-c -g -O0 -I antlr4-runtime/include -I $(GENERATED) -std=c++11	
+CCARGS=-c -g -O0 -Wall -I antlr4-runtime/include -I $(GENERATED) -std=c++11	
 LDARGS=-g
 LIBS=antlr4-runtime/lib/libantlr4-runtime.a
 CC=g++
