@@ -1,14 +1,14 @@
 version: '2.0'
 services:
   polyfill:
-    build: .
+    build: polyfill_tcp
     ports:
       # - "0.0.0.0:10001:10001"
      - "127.0.0.1:10001:10001"
     volumes:
       - ./polyfill.wasm:/home/polyfill/polyfill.wasm
-      - ./start.sh:/home/polyfill/start.sh
-      - ./client_handler.sh:/home/polyfill/client_handler.sh
+      - ./polyfill_tcp/start.sh:/home/polyfill/start.sh
+      - ./polyfill_tcp/client_handler.sh:/home/polyfill/client_handler.sh
       - ./flags:/home/polyfill/flags
 
     restart: unless-stopped
