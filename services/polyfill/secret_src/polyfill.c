@@ -12,8 +12,8 @@
 #define MAXFRAMEPOLYS 25
 #define MAXPOLYPOINTS 50
 
-#define POINTS_IN_LINE (80 + 2)
-#define LINES (25 + 2)
+#define POINTS_IN_LINE 80
+#define LINES 25
 
 #define MAXPOLYSALLOCATED 50
 
@@ -478,15 +478,13 @@ void draw_poly(struct point* points, unsigned char *draw_buf) {
         #pragma clang loop unroll(disable)
         for(int l = 0; l + 1 < MAXPOLYPOINTS; l += 1) {
             if (points[l+1].x == 0 && points[l+1].y == 0) {
-                draw_line(draw_buf, points[l].x+1, points[l].y+1, points[0].x+1, points[0].y+1);
+                draw_line(draw_buf, points[l].x, points[l].y, points[0].x, points[0].y);
                 break;
             } else {
-                draw_line(draw_buf, points[l].x+1, points[l].y+1, points[l+1].x+1, points[l+1].y+1);
+                draw_line(draw_buf, points[l].x, points[l].y, points[l+1].x, points[l+1].y);
             }
         }
     }
-
-    draw_buf[0] = 2;
 
     int replace_made;
     do {
@@ -499,19 +497,19 @@ void draw_poly(struct point* points, unsigned char *draw_buf) {
                 if (draw_buf[y*POINTS_IN_LINE+x] != 0) {
                     continue;
                 }
-                if (x != 0 && draw_buf[y*POINTS_IN_LINE+(x-1)] == 2) {
+                if (x == 0 || draw_buf[y*POINTS_IN_LINE+(x-1)] == 2) {
                     draw_buf[y*POINTS_IN_LINE+x] = 2;
                     replace_made = 1;
                 }
-                if (x != (POINTS_IN_LINE-1) && draw_buf[y*POINTS_IN_LINE+(x+1)] == 2) {
+                if (x == (POINTS_IN_LINE-1) || draw_buf[y*POINTS_IN_LINE+(x+1)] == 2) {
                     draw_buf[y*POINTS_IN_LINE+x] = 2;
                     replace_made = 1;
                 }
-                if (y != 0 && draw_buf[(y-1)*POINTS_IN_LINE+x] == 2) {
+                if (y == 0 || draw_buf[(y-1)*POINTS_IN_LINE+x] == 2) {
                     draw_buf[y*POINTS_IN_LINE+x] = 2;
                     replace_made = 1;
                 }
-                if (y != (LINES-1) && draw_buf[(y+1)*POINTS_IN_LINE+x] == 2) {
+                if (y == (LINES-1) || draw_buf[(y+1)*POINTS_IN_LINE+x] == 2) {
                     draw_buf[y*POINTS_IN_LINE+x] = 2;
                     replace_made = 1;
                 }
@@ -541,9 +539,9 @@ void render(frame *frames, unsigned int frame_idx) {
         draw_poly(frames[frame_idx][poly], draw_buf);
         
         #pragma clang loop unroll(disable)
-        for(int y=1; y<LINES-1; y+=1) {
+        for(int y=0; y<LINES; y+=1) {
             #pragma clang loop unroll(disable)
-            for(int x=1; x<POINTS_IN_LINE-1; x+=1) {
+            for(int x=0; x<POINTS_IN_LINE; x+=1) {
                 if (draw_buf[y*POINTS_IN_LINE+x] != 0) {
                     rendered[y*POINTS_IN_LINE+x] = 'A' + poly;
                 }
@@ -552,9 +550,9 @@ void render(frame *frames, unsigned int frame_idx) {
     }
 
     #pragma clang loop unroll(disable)
-    for(int y=1; y<LINES-1; y+=1) {
+    for(int y=0; y<LINES; y+=1) {
         #pragma clang loop unroll(disable)
-        for(int x=1; x<POINTS_IN_LINE-1; x+=1) {
+        for(int x=0; x<POINTS_IN_LINE; x+=1) {
             if(rendered[y*POINTS_IN_LINE+x] == 0) {
                 printf(" ");
             } else {
