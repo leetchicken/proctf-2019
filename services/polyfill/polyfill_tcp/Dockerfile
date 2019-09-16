@@ -1,7 +1,7 @@
 FROM ubuntu:19.04
 
-RUN apt update
-RUN apt install -y xinetd curl xz-utils
+RUN apt-get update
+RUN apt-get install -y xinetd curl xz-utils
 
 RUN useradd --uid 10000 -m polyfill
 

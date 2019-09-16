@@ -1,6 +1,6 @@
 version: '2.0'
 services:
-  polyfill:
+  polyfill_tcp:
     build: polyfill_tcp
     ports:
       # - "0.0.0.0:10001:10001"
@@ -13,3 +13,17 @@ services:
 
     restart: unless-stopped
     mem_limit: 2000m
+  polyfill_http:
+    build: polyfill_http
+    ports:
+     - "127.0.0.1:80:8080"
+    volumes:
+      - ./polyfill.wasm:/home/polyfill/polyfill.wasm
+      - ./polyfill_http/polyfill_http.py:/home/polyfill/polyfill_http.py
+      - ./polyfill_http/polyfill.html:/home/polyfill/polyfill.html
+      - ./polyfill_http/polyfill.js:/home/polyfill/polyfill.js
+      - ./polyfill_http/polyfill_engine.wasm:/home/polyfill/polyfill_engine.wasm
+
+    restart: unless-stopped
+    mem_limit: 2000m
+
