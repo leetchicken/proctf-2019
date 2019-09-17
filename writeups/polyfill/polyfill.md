@@ -203,7 +203,7 @@ The **PP** is a pointer which is controlled by attacker, so during reparenting t
 
 Now by creating a polygon points, the login of the current user can be overwritten by victims login and *the attacker is able to see flags of other users*.
 
-The sploit can be found at [/exploits/polyfill/polyfill_sploit.py](../../exploits/polyfill/polyfill_sploit.py).
+The sploit can be found at [/sploits/polyfill/polyfill_sploit.py](../../sploits/polyfill/polyfill_sploit.py).
 
 
 
