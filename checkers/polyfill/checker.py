@@ -39,7 +39,6 @@ def get_logins(p):
     return [l for l in logins if "hack" not in l]
 
 
-
 def draw_line_low(draw_buf, x1, y1, x2, y2):
     dx = x2 - x1
     dy = abs(y2 - y1)
@@ -87,16 +86,14 @@ def draw_line(draw_buf, x1, y1, x2, y2):
             draw_line_high(draw_buf, x1, y1, x2, y2)
 
 
-
 def draw_poly(points, draw_buf):
     if not (points[0][0] == 0 and points[0][1] == 0):
         for l in range(len(points)-1):
             draw_line(draw_buf, points[l][0], points[l][1], points[l+1][0], points[l+1][1])
         draw_line(draw_buf, points[-1][0], points[-1][1], points[0][0], points[0][1])
 
-
     while(1):
-        replace_made = 0;
+        replace_made = 0
         for y in range(25):
             for x in range(80):
                 if draw_buf[y][x] != 0:
@@ -119,7 +116,8 @@ def draw_poly(points, draw_buf):
 
     for y in range(25):
         for x in range(80):
-            draw_buf[y][x] = int(draw_buf[y][x]==0)
+            draw_buf[y][x] = int(draw_buf[y][x] == 0)
+
 
 def render(polys):
     rendered = [[0] * 80 for i in range(25)]
@@ -141,7 +139,8 @@ def render(polys):
             else:
                 output.append(rendered[y][x])
         output.append("\n")
-    return "".join(output).rstrip("\n")
+    return "".join(output)
+
 
 def cmd(p, text, expected_output=1):
     if not text.endswith("\n"):
@@ -182,11 +181,9 @@ def check(host):
     p.stdin.flush()
 
     # check 1: the memory control logic is not removed
-    cmd(p, "new_poly\n"*20, expected_output=20)
-    cmd(p, "set_frame 1")
-    cmd(p, "new_poly\n"*20, expected_output=20)
-    cmd(p, "set_frame 2")
-    cmd(p, "new_poly\n"*9, expected_output=9)
+    ans = cmd(p, "new_poly\n"*25 + "set_frame 1\n" +
+                 "new_poly\n"*15 + "set_frame 2\n" +
+                 "new_poly\n"*9, expected_output=25+1+15+1+9)
 
     ans = cmd(p, "new_poly")
     if "ok" not in ans:
@@ -232,22 +229,55 @@ def check(host):
         point_pos = random.randrange(len(points))
 
         ans = cmd(p, "get_point %d %d" % (poly_pos, point_pos))
-        if ("x=%d" % (points[point_pos][0]) not in ans or
-            "y=%d" % (points[point_pos][1]) not in ans):
+        if "x=%d" % points[point_pos][0] not in ans or "y=%d" % points[point_pos][1] not in ans:
             verdict(MUMBLE, "Check failed: getting a point failed",
                     "Check failed on stage 2, getting a point failed ans=%s" % ans)
 
     ans = cmd(p, "render", expected_output=25+1)
-    first_line, ans = ans.split("\n", 1)
+    try:
+        first_line, ans = ans.split("\n", 1)
+    except Exception:
+        verdict(MUMBLE, "Render failed",
+                "Check failed on stage 2, wrong render answer")
+
     if flag not in first_line:
         verdict(MUMBLE, "Check failed: getting a secret failed",
                 "Check failed on stage 2, secret not in render answer")
 
-
-    if render(polys) != ans:
+    if render(polys).strip("\n") != ans.strip("\n"):
         verdict(MUMBLE, "Check failed: render result is unexpected",
                 "Check failed on stage 2, render result is unexpected")
 
+    # check 3: copy operations
+    poly_idx = random.randrange(len(polys))
+    cmd(p, "copy_poly %d 9" % poly_idx)
+    cmd(p, "del_point %d %d" % (poly_idx, len(polys[poly_idx]) - 1))
+
+    last_point = (random.randrange(200, 256), random.randrange(200, 256))
+    cmd(p, "add_point %d %d %d %d" % (poly_idx, len(polys[poly_idx]) - 2,
+        last_point[0], last_point[1]))
+    cmd(p, "set_frame 9")
+
+    ans = cmd(p, "get_point 0 %d" % (len(polys[poly_idx]) - 1))
+    if "x=" in ans:
+        verdict(MUMBLE, "Check failed: copying or deleting point doesnt work",
+                "Check failed on stage 3, copy or delete test fail: %s" % ans)
+
+    ans = cmd(p, "get_point 0 %d" % (len(polys[poly_idx]) - 2))
+    if "x=%d" % (last_point[0]) not in ans or "y=%d" % (last_point[1]) not in ans:
+        verdict(MUMBLE, "Check failed: copying or deleting point doesnt work",
+                "Check failed on stage 3, copy or delete test 2 fail: %s" % ans)
+
+    cmd(p, "copy_frame 8\nclear_frame\n", expected_output=3)
+    ans = cmd(p, "get_point 0 %d" % (len(polys[poly_idx]) - 2))
+    if "x=" in ans:
+        verdict(MUMBLE, "Check failed: clear frame doesnt work",
+                "Check failed on stage 3, clear frame test fail: %s" % ans)
+    cmd(p, "set_frame 8")
+    ans = cmd(p, "get_point 0 %d" % (len(polys[poly_idx]) - 2))
+    if "x=%d" % last_point[0] not in ans or "y=%d" % last_point[1] not in ans:
+        verdict(MUMBLE, "Check failed: frame copy doesnt work",
+                "Check failed on stage 3, frame copy test fail: %s" % ans)
     verdict(OK)
 
 
