@@ -4,7 +4,7 @@ The name of service comes from the web development. A [polyfill](https://en.wiki
 
 The service is written on C language and compiled to WebAssembly platform. It consists of two parts: a static web server which runs the service code in the browser and a TCP-service, where the same code launched using Wasmtime, the standalone JIT-style runtime for WebAssembly.
 
-There are three types of objects: frames, polygons and points. Users can add polygons to the frame, copy them from one frame to another and delete them from the frame. Also it is possible to add, print and del points from the polygon and render the result.
+There are three types of objects: **frames**, **polygons** and **points**. Users can add *polygons* to the *frame*, copy them from one *frame* to another and delete them from the *frame*. Also it is possible to add, print and del *points* from the *polygon* and render the result.
 
 The full commands summary:
 ```
@@ -68,26 +68,24 @@ The example of renders:
                   C                 B                                        
 ```
 
-This is a binary service, where the attacker should attack the heap to steal the flags.
+This is a binary service, where the attacker should attack the heap to steal the flags. The C source is not given.
 
 ## Memory Layout ##
 
 The memory is organized this way:
 
-- a name of the current user (100 bytes)
-- an array of polygon pointers (10 frames * 25 polygons per frame * 4 bytes per pointer = 1000 bytes)
-- first polygon (50 points * 2 coordinates * 1 byte per coordinate = 100 bytes)
-- second polygon (100 bytes)
+- the name of the current user (100 bytes)
+- the array of polygon pointers (10 frames * 25 polygons per frame * 4 bytes per pointer = 1000 bytes)
+- the first polygon (50 points * 2 coordinates * 1 byte per coordinate = 100 bytes)
+- the second polygon (100 bytes)
 - ...
 
-The polygons can be dynamicaly created or deleted. Several frames can use one polygon, when the polygon
+The polygons can be dynamicaly created or deleted. Several frames can use one polygon. When the polygon
 is not used by any frame it is deleted.
 
-To allocate the memory the default Wasmtime allocator, dlmalloc, is used. This is a popular allocator that 
+To allocate the memory the default Wasmtime's allocator, dlmalloc, is used. This is a popular allocator that 
 used in some Android OSes. The glibc's allocator is derived from dlmalloc.
 
-
-<!-- ![web-site](service.png) -->
 
 # Known Vulns
 
@@ -95,7 +93,7 @@ There are two known ways how to cause use after free. Both of them are connected
 
 ## Off-By-One Error While Testing if the Frame is Empty
 
-In the frame_is_empty function the last polygon is not checked:
+In the **frame_is_empty** function the last polygon is not checked:
 ```c
 int frame_is_empty(polyline* f) {
     for(unsigned int i = 0; i < MAXFRAMEPOLYS-1; i += 1) {
@@ -128,7 +126,7 @@ This allows to create a polygon, then create its copy on the last position and d
 
 ## Insufficient Check if the Polygon is not Used
 
-In the del_poly_if_unused function there is a "... more checks. .." part:
+In the **del_poly_if_unused** function there is a *"... more checks ..."* part:
 ```c
 for (unsigned int poly_idx=0; 
      poly_idx < MAXFRAMEPOLYS && frames[frame_idx][poly_idx] != 0; 
@@ -160,7 +158,7 @@ The one way to exploit the use after free is to create four polygons:
 [S | LOGIN] [S | POLYGON_PTRS] [S | POLY0] [S | POLY1] [S | POLY2] [S | POLY3] [P | S | FREE_SPACE]
 ```
 
-Then free POLY1, in such way that allows to access its memory (Vuln 1 or Vuln 2):
+Then free *POLY1*, in such way that allows to access its memory (*Vuln 1* or *Vuln 2*):
 
 ```
 [S | LOGIN] [S | POLYGON_PTRS] [S | POLY0] [P | S | FD | BK | FREE] [S | POLY2] [S | POLY3] [P | S | FREE_SPACE]
@@ -169,17 +167,17 @@ FD - pointer to the next chunk of free memory of such size. The free chunks of s
 BK - pointer to the previous chunk of free memory of such size
 ```
 
-The FD should be overwritten to point to the second half of its chunk. That will allow to gain the memory that overlaps with POLY2 chunk. This is needed because we are not able to rewrite P or S of the current chunk since they are behind the accessable memory.
+The **FD** should be overwritten to point to the second half of its chunk. That will allow to gain the memory that overlaps with **POLY2** chunk. This is needed because we are not able to rewrite **P** or **S** of the current chunk since they are behind the accessable memory.
 
-The BK should be also overwritten to point back to the previous chunk to pass consistency checks of dlmalloc.
+The **BK** should be also overwritten to point back to the previous chunk to pass consistency checks of dlmalloc.
 
-After adding one fake free chunk, the P1 should be allocate again (it will be put on its previous place), and then P5 should be allocated, which will be placed on the fake free chunk:
+After adding one fake free chunk, the **P1** should be allocated again (it will be put on the same place), and then P5 should be allocated, which will be placed on the fake free chunk:
 
 ```
 [S | LOGIN] [S | POLYGON_PTRS] [S | POLY0] [S | POLY1] [S | POLY2] [S | POLY3] [P | S | FREE_SPACE]
                                                 [ S | POLY5]
 ```
-How the POLY5 can be used to overwrite the headers of POLY2. They can be overwritten to mark it a free chunk of some big size, e.g. 300 bytes. The big chunks are organized as trees, keyed by size, where the node has pointers to parent node and two child nodes:
+How the POLY5 can be used to overwrite the headers of **POLY2**. They can be overwritten to mark it a free chunk of some big size, e.g. 300 bytes. The big chunks are organized as trees, keyed by size, where the node has pointers to parent node and two child nodes:
 
 ```
 [S | LOGIN] [S | POLYGON_PTRS] [S | POLY0] [S | POLY1] [P | S | FD | BK | PP | C1 | C2 | IDX ] [S | POLY3] [P | S | FREE_SPACE]
@@ -191,19 +189,19 @@ C2 - pointer to the second child node
 IDX - tree index. There are 31 trees for various allocation sizes
 ```
 
-When dlmalloc frees some memory area, if the previous or the next chunk is free, they are merged. So the dlmalloc keeps the invariant that there is no two adjacent free chunks. 
+When the *dlmalloc* frees some memory area, if the previous or the next chunk is free, they are merged. So the dlmalloc keeps the invariant that there is no two adjacent free chunks. 
 
-Now delete POLY1, causing merging the just freed space with the another fake free chunk we created:
+Now delete **POLY1**, causing merging the just freed space with the another fake free chunk we created:
 ```
 [S | LOGIN] [S | POLYGON_PTRS] [S | POLY0] [SOME_HEADERS | MERGED_FREE_SPACE ] [S | POLY3] [P | S | FREE_SPACE]
                                                    [ S | POLY5]
 ```
 
-To merge the chunks, if the one chunk is a part of the free chunks tree, the allocator should delete the node from this tree, by reparenting C1 and C2 to PP. 
+To merge the chunks, if the one chunk is a part of the free chunks tree, the allocator should delete the node from this tree, by reparenting **C1** and **C2** to **PP**. 
 
-The PP is a pointer which is controlled by attacker, so during reparenting the C1 and C2 will be written by this pointer. This gives the memory write primitive. This primitive can be used to modify some value in POLYGON_PTRS array, making it pointing to the LOGIN chunk.
+The **PP** is a pointer which is controlled by attacker, so during reparenting the **C1** and **C2** will be written by this pointer. This gives the memory write primitive. This primitive can be used to modify some value in **POLYGON_PTRS** array, making it pointing to the LOGIN chunk.
 
-Now by creating a polygon points, the login of the current user can be overwritten by victims login and the attacker is able to see flags of other users.
+Now by creating a polygon points, the login of the current user can be overwritten by victims login and *the attacker is able to see flags of other users*.
 
 The sploit can be found at [/exploits/polyfill/polyfill_sploit.py](../exploits/polyfill/polyfill_sploit.py).
 
