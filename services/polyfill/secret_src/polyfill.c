@@ -56,7 +56,7 @@ void print_prompt() {
 int char_is_good(char c) {
     if (c >= 'a' && c <= 'z') {
         return 1;
-    } else if (c >= 'A' && c <= 'A') {
+    } else if (c >= 'A' && c <= 'Z') {
         return 1;
     } else if (c >= '0' && c <= '9') {
         return 1;
@@ -139,7 +139,7 @@ char* authenticate() {
 
     if (!get_good_word(stdin, login)) {
         printf("bad login\n");
-        return 0;        
+        return 0;
     }
 
     if (flags_dir_fd >= 0) {
@@ -207,13 +207,13 @@ void handle_new_poly(frame *frames, unsigned int frame_idx) {
     #pragma clang loop unroll(disable)
     for(unsigned int idx = 0; idx < MAXFRAMEPOLYS; idx += 1) {
         if(frames[frame_idx][idx] == 0) {
-            frames[frame_idx][idx] = malloc(BUFLEN);
-            polys_allocated += 1;
-
             if(polys_allocated >= MAXPOLYSALLOCATED) {
                 printf("err, too much polys\n");
                 return;
             } 
+
+            frames[frame_idx][idx] = malloc(BUFLEN);
+            polys_allocated += 1;
 
             printf("ok, idx=%d\n", idx);
             return;
@@ -425,7 +425,7 @@ void draw_line_low(unsigned char *d, unsigned char x1, unsigned char y1, unsigne
     int y = y1;
     #pragma clang loop unroll(disable)
     for(int x = x1; x <= x2; x += 1) {
-        if(y != 0 && y<LINES-1 && x != 0 && x < POINTS_IN_LINE - 1) {
+        if(y >= 0 && y<LINES && x >= 0 && x < POINTS_IN_LINE) {
             d[y*POINTS_IN_LINE + x] = 1;
         }
         if(D > 0) {
@@ -444,7 +444,7 @@ void draw_line_high(unsigned char *d, unsigned char x1, unsigned char y1, unsign
     int x = x1;
     #pragma clang loop unroll(disable)
     for(int y = y1; y <= y2; y += 1) {
-        if(y != 0 && y<LINES-1 && x != 0 && x < POINTS_IN_LINE - 1) {
+        if(y >= 0 && y<LINES && x >= 0 && x < POINTS_IN_LINE) {
             d[y*POINTS_IN_LINE + x] = 1;
         }
         if(D > 0) {
