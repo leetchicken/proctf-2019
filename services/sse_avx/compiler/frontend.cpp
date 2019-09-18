@@ -63,6 +63,12 @@ void FrontEnd::enterV_cmp_eq_f32(VectorAssemblerParser::V_cmp_eq_f32Context* ctx
 }
 
 
+void FrontEnd::enterV_cmp_gt_f32(VectorAssemblerParser::V_cmp_gt_f32Context* ctx) 
+{
+    Add2OpInstruction(kVectorCmpGt_f32, ctx);
+}
+
+
 void FrontEnd::enterV_add_u32(VectorAssemblerParser::V_add_u32Context* ctx)
 {
     Add3OpInstruction(kVectorAdd_u32, ctx);
@@ -276,6 +282,7 @@ Instruction::Operand FrontEnd::ParseOperand(antlr4::Token* token)
         op.type = kOperandImmediate;
         auto str = token->getText();
         float f = strtof(str.c_str(), nullptr);
+        op.imm = 0;
         memcpy(&op.imm, &f, sizeof(float));
     }
 

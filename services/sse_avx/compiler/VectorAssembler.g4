@@ -21,6 +21,7 @@ instruction: v_mov
     |   v_mul_f32
     |   v_div_f32
     |   v_cmp_eq_f32
+    |   v_cmp_gt_f32
     |   v_add_u32
     |   v_sub_u32
     |   v_mul_u32
@@ -54,6 +55,9 @@ v_div_f32: V_DIV_F32 op0=VREGISTER ',' op1=VREGISTER ',' op2=(VREGISTER|DECIMAL|
 v_cmp_eq_f32: V_CMP_EQ_F32 op0=VREGISTER ',' op1=VREGISTER
     ;
 
+v_cmp_gt_f32: V_CMP_GT_F32 op0=VREGISTER ',' op1=VREGISTER
+    ;
+
 v_add_u32: V_ADD_U32 op0=VREGISTER ',' op1=VREGISTER ',' op2=(VREGISTER|DECIMAL|HEXADECIMAL)
     ;
 
@@ -66,10 +70,10 @@ v_mul_u32: V_MUL_U32 op0=VREGISTER ',' op1=VREGISTER ',' op2=(VREGISTER|DECIMAL|
 v_cmp_eq_u32: V_CMP_EQ_U32 op0=VREGISTER ',' op1=VREGISTER
     ;
 
-v_load: V_LOAD op0=(VREGISTER|VREGISTER_RANGE) ',' op1=VREGISTER ',' op2=SREGISTER64
+v_load: V_LOAD op0=(VREGISTER|VREGISTER_RANGE) ',' op1=(VREGISTER|SREGISTER|DECIMAL|HEXADECIMAL) ',' op2=SREGISTER64
     ;
 
-v_store: V_STORE op0=(VREGISTER|VREGISTER_RANGE) ',' op1=VREGISTER ',' op2=SREGISTER64
+v_store: V_STORE op0=(VREGISTER|VREGISTER_RANGE) ',' op1=(VREGISTER|SREGISTER|DECIMAL|HEXADECIMAL) ',' op2=SREGISTER64
     ;
 
 s_mov:  S_MOV op0=SREGISTER ',' op1=(SREGISTER|EXEC|VCC|SCC|DECIMAL|HEXADECIMAL|FLOAT)
@@ -103,6 +107,7 @@ V_SUB_F32: 'v_sub_f32';
 V_MUL_F32: 'v_mul_f32';
 V_DIV_F32: 'v_div_f32';
 V_CMP_EQ_F32: 'v_cmp_eq_f32';
+V_CMP_GT_F32: 'v_cmp_gt_f32';
 V_ADD_U32: 'v_add_u32';
 V_SUB_U32: 'v_sub_u32';
 V_MUL_U32: 'v_mul_u32';

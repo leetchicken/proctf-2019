@@ -259,15 +259,11 @@ void EmitStoreLoad(std::string& asmbl)
 {
     const char* storeLoad = "\n\
 store_load_avx:\n\
+    and ecx, 0xff\n\
     mov eax, edx\n\
     xor eax, ecx\n\
     jz save_exec_avx\n\
 \n\
-    mov edx, ecx\n\
-    not edx\n\
-    and edx, eax\n\
-    jz maskload_avx\n\
-    ; unpack and store\n\
     vmovd xmm15, edx\n\
     vshufps ymm15, ymm15, ymm15, 0\n\
     vperm2f128 ymm15, ymm15, ymm15, 0\n\
@@ -288,32 +284,21 @@ store_load_avx:\n\
     vmaskmovps [rsp+384], ymm15, ymm12\n\
     vmaskmovps [rsp+416], ymm15, ymm13\n\
     vmaskmovps [rsp+448], ymm15, ymm14\n\
-\n\
-maskload_avx:\n\
-    mov edx, ecx\n\
-    and edx, eax\n\
-    jz save_exec_avx\n\
-    ; unpack and load\n\
-    vmovd xmm15, edx\n\
-    vshufps ymm15, ymm15, ymm15, 0\n\
-    vperm2f128 ymm15, ymm15, ymm15, 0\n\
-    vpand ymm15, ymm15, [rdi]\n\
-    vpcmpeqd ymm15, ymm15, [rdi]\n\
-    vmaskmovps ymm0, ymm15, [rsp]\n\
-    vmaskmovps ymm1, ymm15, [rsp+32]\n\
-    vmaskmovps ymm2, ymm15, [rsp+64]\n\
-    vmaskmovps ymm3, ymm15, [rsp+96]\n\
-    vmaskmovps ymm4, ymm15, [rsp+128]\n\
-    vmaskmovps ymm5, ymm15, [rsp+160]\n\
-    vmaskmovps ymm6, ymm15, [rsp+192]\n\
-    vmaskmovps ymm7, ymm15, [rsp+224]\n\
-    vmaskmovps ymm8, ymm15, [rsp+256]\n\
-    vmaskmovps ymm9, ymm15, [rsp+288]\n\
-    vmaskmovps ymm10, ymm15, [rsp+320]\n\
-    vmaskmovps ymm11, ymm15, [rsp+352]\n\
-    vmaskmovps ymm12, ymm15, [rsp+384]\n\
-    vmaskmovps ymm13, ymm15, [rsp+416]\n\
-    vmaskmovps ymm14, ymm15, [rsp+448]\n\
+    vmovaps ymm0, [rsp]\n\
+    vmovaps ymm1, [rsp+32]\n\
+    vmovaps ymm2, [rsp+64]\n\
+    vmovaps ymm3, [rsp+96]\n\
+    vmovaps ymm4, [rsp+128]\n\
+    vmovaps ymm5, [rsp+160]\n\
+    vmovaps ymm6, [rsp+192]\n\
+    vmovaps ymm7, [rsp+224]\n\
+    vmovaps ymm8, [rsp+256]\n\
+    vmovaps ymm9, [rsp+288]\n\
+    vmovaps ymm10, [rsp+320]\n\
+    vmovaps ymm11, [rsp+352]\n\
+    vmovaps ymm12, [rsp+384]\n\
+    vmovaps ymm13, [rsp+416]\n\
+    vmovaps ymm14, [rsp+448]\n\
 \n\
 save_exec_avx:\n\
     mov edx, ecx\n\
@@ -460,11 +445,14 @@ void GenerateCode(std::string& asmbl, const ParsedCode& parsedCode)
             }
 
             case kVectorCmpEq_f32:
+            case kVectorCmpGt_f32:
             case kVectorCmpEq_u32:
             {
                 const char* mnemonic = nullptr;
                 if(inst.opCode == kVectorCmpEq_f32)
                     mnemonic = type == kAVX ? "vcmpeqps" : "cmpeqps";
+                else if(inst.opCode == kVectorCmpGt_f32)
+                    mnemonic = type == kAVX ? "vcmpgtps" : "cmpnleps";
                 else if(inst.opCode == kVectorCmpEq_u32)
                     mnemonic = type == kAVX ? "vpcmpeqd" : "pcmpeqd";
 
@@ -487,42 +475,61 @@ void GenerateCode(std::string& asmbl, const ParsedCode& parsedCode)
             case kVectorLoad:
             {
                 auto dstReg = inst.operands[0].reg;
-                auto& offsetReg = inst.operands[1].reg;
+                auto& offsetOp = inst.operands[1];
                 auto& srcReg = inst.operands[2].reg;
 
-                for(uint32_t v = 0; v <= dstReg.rangeLen; v++, dstReg.idx++)
+                if(offsetOp.type == kOperandRegister && offsetOp.reg.type == Register::kVector)
                 {
-                    /*const uint32_t kHalfsNum = type == kAVX ? 2 : 1;
-                    for(uint32_t halfIdx = 0; halfIdx < kHalfsNum; halfIdx++)
+                    auto& offsetReg = inst.operands[1].reg;
+                    for(uint32_t v = 0; v <= dstReg.rangeLen; v++, dstReg.idx++)
                     {
-                        AddLine<kAVX>(asmbl, "vextractf128", "xmm15", offsetReg, halfIdx);
-                        for(uint32_t i = 0; i < 4; i++)
+                        /*const uint32_t kHalfsNum = type == kAVX ? 2 : 1;
+                        for(uint32_t halfIdx = 0; halfIdx < kHalfsNum; halfIdx++)
                         {
-                            AddLine<kAVX>(asmbl, "vpextrd", "eax", "xmm15", i);
-                            AddLine<type>(asmbl, "shl", "eax", 2);
-                            AddLine<type>(asmbl, "add", "rax", srcReg);
-                            AddLine<type>(asmbl, "mov eax, [rax]");
-                            AddLine(asmbl, "    mov [rsp + 512 + %u * 4], eax", i);
+                            AddLine<kAVX>(asmbl, "vextractf128", "xmm15", offsetReg, halfIdx);
+                            for(uint32_t i = 0; i < 4; i++)
+                            {
+                                AddLine<kAVX>(asmbl, "vpextrd", "eax", "xmm15", i);
+                                AddLine<type>(asmbl, "shl", "eax", 2);
+                                AddLine<type>(asmbl, "add", "rax", srcReg);
+                                AddLine<type>(asmbl, "mov eax, [rax]");
+                                AddLine(asmbl, "    mov [rsp + 512 + %u * 4], eax", i);
+                            }
                         }
+                        AddLine<kAVX>(asmbl, "vmovaps", dstReg, "[rsp + 512]");*/
+                        Register temp(Register::kVector, 15);
+                        AddLine<type>(asmbl, "vmovd", XMM(temp), "ecx");
+                        AddLine<type>(asmbl, "vshufps", temp, temp, temp, "0");
+                        if(type == kAVX)
+                            AddLine<type>(asmbl, "vperm2f128", temp, temp, temp, "0");
+                        AddLine<type>(asmbl, "vpand", temp, temp, "[rdi]");
+                        AddLine<type>(asmbl, "vpcmpeqd", temp, temp, "[rdi]");
+                        
+                        asmbl.append("    vpgatherdd ");
+                        operator<<<type>(asmbl, dstReg);
+                        asmbl.append(", [");
+                        operator<<<type>(asmbl, offsetReg);
+                        asmbl.append(" * 4 + ");
+                        operator<<<type>(asmbl, srcReg);
+                        Fmt(asmbl, " + %u * 4], ", v);
+                        operator<<<type>(asmbl, temp);
+                        asmbl.append("\n");
                     }
-                    AddLine<kAVX>(asmbl, "vmovaps", dstReg, "[rsp + 512]");*/
-                    Register temp(Register::kVector, 15);
-                    AddLine<type>(asmbl, "vmovd", XMM(temp), "ecx");
-                    AddLine<type>(asmbl, "vshufps", temp, temp, temp, "0");
-                    if(type == kAVX)
-                        AddLine<type>(asmbl, "vperm2f128", temp, temp, temp, "0");
-                    AddLine<type>(asmbl, "vpand", temp, temp, "[rdi]");
-                    AddLine<type>(asmbl, "vpcmpeqd", temp, temp, "[rdi]");
-                    
-                    asmbl.append("    vpgatherdd ");
-                    operator<<<type>(asmbl, dstReg);
-                    asmbl.append(", [");
-                    operator<<<type>(asmbl, offsetReg);
-                    asmbl.append(" * 4 + ");
-                    operator<<<type>(asmbl, srcReg);
-                    Fmt(asmbl, " + %u * 4], ", v);
-                    operator<<<type>(asmbl, temp);
-                    asmbl.append("\n");
+                }
+                else
+                {
+                    for(uint32_t v = 0; v <= dstReg.rangeLen; v++, dstReg.idx++)
+                    {
+                        char buf[128], buf1[32];
+                        asmbl.append("    ");
+                        asmbl.append(type == kAVX ? "vmovaps " : "movaps ");
+                        asmbl.append(EmitRegister<type>(buf1, dstReg));
+                        uint32_t offset = v * 32;
+                        if(offsetOp.type == kOperandImmediate)
+                            offset += offsetOp.imm * 4;
+                        sprintf(buf, ", [%s + %u]\n", EmitRegister<type>(buf1, srcReg), offset);
+                        asmbl.append(buf);
+                    }
                 }
                 break;
             }
@@ -530,44 +537,64 @@ void GenerateCode(std::string& asmbl, const ParsedCode& parsedCode)
             case kVectorStore:
             {
                 auto srcReg = inst.operands[0].reg;
-                auto& offsetReg = inst.operands[1].reg;
+                auto& offsetOp = inst.operands[1];
                 auto& dstReg = inst.operands[2].reg;
 
-                for(uint32_t v = 0; v <= srcReg.rangeLen; v++, srcReg.idx++)
+                if(offsetOp.type == kOperandRegister && offsetOp.reg.type == Register::kVector)
                 {
-                    const uint32_t kHalfsNum = type == kAVX ? 2 : 1;
-                    for(uint32_t halfIdx = 0; halfIdx < kHalfsNum; halfIdx++)
+                    auto& offsetReg = inst.operands[1].reg;
+                    for(uint32_t v = 0; v <= srcReg.rangeLen; v++, srcReg.idx++)
                     {
-                        for(uint32_t i = 0; i < 4; i++)
+                        const uint32_t kHalfsNum = type == kAVX ? 2 : 1;
+                        for(uint32_t halfIdx = 0; halfIdx < kHalfsNum; halfIdx++)
                         {
-                            uint32_t laneIdx = halfIdx * 4 + i;
-                            if(type == kAVX)
+                            for(uint32_t i = 0; i < 4; i++)
                             {
-                                AddLine<kAVX>(asmbl, "vextractf128", "xmm15", offsetReg, halfIdx);
-                                AddLine<kAVX>(asmbl, "vpextrd", "rbp", "xmm15", i);
+                                uint32_t laneIdx = halfIdx * 4 + i;
+                                if(type == kAVX)
+                                {
+                                    AddLine<kAVX>(asmbl, "vextractf128", "xmm15", offsetReg, halfIdx);
+                                    AddLine<kAVX>(asmbl, "vpextrd", "rbp", "xmm15", i);
+                                }
+                                else
+                                    AddLine<kSSE>(asmbl, "pextrd", "ebp", offsetReg, i);
+                                
+                                AddLine<type>(asmbl, "shl", "ebp", 2);
+                                AddLine<type>(asmbl, "add", "rbp", dstReg);
+                                if(v != 0)
+                                    AddLine(asmbl, "    add rbp, %u", v * 4);
+                                AddLine(asmbl, "    mov eax, %u", 1 << laneIdx);
+                                AddLine(asmbl, "    and eax, ecx");
+                                AddLine(asmbl, "    cmovz rbp, rsi");
+                                
+                                if(type == kAVX)
+                                {
+                                    AddLine<kAVX>(asmbl, "vextractf128", "xmm15", srcReg, halfIdx);
+                                    AddLine<kAVX>(asmbl, "vextractps", "[rbp]", "xmm15", i);
+                                }
+                                else
+                                {
+                                    AddLine<kSSE>(asmbl, "extractps", "[rbp]", srcReg, i);
+                                }
+                                
                             }
-                            else
-                                AddLine<kSSE>(asmbl, "pextrd", "ebp", offsetReg, i);
-                            
-                            AddLine<type>(asmbl, "shl", "ebp", 2);
-                            AddLine<type>(asmbl, "add", "rbp", dstReg);
-                            if(v != 0)
-                                AddLine(asmbl, "    add rbp, %u", v * 4);
-                            AddLine(asmbl, "    mov eax, %u", 1 << laneIdx);
-                            AddLine(asmbl, "    and eax, ecx");
-                            AddLine(asmbl, "    cmovz rbp, rsi");
-                            
-                            if(type == kAVX)
-                            {
-                                AddLine<kAVX>(asmbl, "vextractf128", "xmm15", srcReg, halfIdx);
-                                AddLine<kAVX>(asmbl, "vextractps", "[rbp]", "xmm15", i);
-                            }
-                            else
-                            {
-                                AddLine<kSSE>(asmbl, "extractps", "[rbp]", srcReg, i);
-                            }
-                            
                         }
+                    }
+                }
+                else
+                {
+                    for(uint32_t v = 0; v <= srcReg.rangeLen; v++, srcReg.idx++)
+                    {
+                        char buf[128], buf1[32];
+                        asmbl.append("    ");
+                        asmbl.append(type == kAVX ? "vmovaps " : "movaps ");
+                        uint32_t offset = v * 32;
+                        if(offsetOp.type == kOperandImmediate)
+                            offset += offsetOp.imm * 4;
+                        sprintf(buf, "[%s + %u], ", EmitRegister<type>(buf1, dstReg), offset);
+                        asmbl.append(buf);
+                        asmbl.append(EmitRegister<type>(buf1, srcReg));
+                        asmbl.append("\n");
                     }
                 }
                 break;
@@ -756,7 +783,6 @@ int main(int argc, const char* argv[])
 
     std::string asmbl = kAsmStart;    
 
-    std::vector<uint32_t> usedSgprRegisters;
     uint32_t usedSgprRegistersMask = 0;
     for(uint32_t i = 0; i < parsedCode.instructions.size(); i++)
     {
@@ -771,21 +797,23 @@ int main(int argc, const char* argv[])
             if(op.reg.type != Register::kScalar && op.reg.type != Register::kScalar64)
                 continue;
 
-            uint32_t x86RegIdx = 8 + op.reg.idx;
-            if(x86RegIdx < 12)
-                continue;
-
-            usedSgprRegistersMask |= 1 << x86RegIdx;
+            usedSgprRegistersMask |= 1 << op.reg.idx;
         }
     }
-    while(usedSgprRegistersMask)
+
+    std::vector<uint32_t> regsToPop;
+    uint32_t tmpMask = usedSgprRegistersMask;
+    while(tmpMask)
     {
-        uint32_t idx = __builtin_ctz(usedSgprRegistersMask);
-        usedSgprRegisters.push_back(idx);
-        usedSgprRegistersMask &= ~(1 << idx);
+        uint32_t idx = __builtin_ctz(tmpMask);
+        tmpMask &= ~(1 << idx);
+        uint32_t x86RegIdx = 8 + idx;
+        if(x86RegIdx >= 12)
+        {
+            AddLine(asmbl, "    push r%u", x86RegIdx);
+            regsToPop.push_back(x86RegIdx);
+        }
     }
-    for(auto& reg : usedSgprRegisters)
-        AddLine(asmbl, "    push r%u", reg);
 
     AddLine(asmbl, "    mov eax, ecx");
     AddLine(asmbl, "    and eax, 0xf0");
@@ -796,7 +824,7 @@ int main(int argc, const char* argv[])
     GenerateCode<kSSE>(asmbl, parsedCode);
 
     AddLine(asmbl, "exit:");
-    for(auto iter = usedSgprRegisters.rbegin(); iter != usedSgprRegisters.rend(); ++iter)
+    for(auto iter = regsToPop.rbegin(); iter != regsToPop.rend(); ++iter)
         AddLine(asmbl, "    pop r%u", *iter);
     asmbl.append(kAsmEnd);
     EmitStoreLoad(asmbl);

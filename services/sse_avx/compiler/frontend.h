@@ -23,6 +23,7 @@ enum InstructionType
     USER_DEFINE(kVectorMul_f32,         "v_mul_f32",        3, kInstructionTypeVector)\
     USER_DEFINE(kVectorDiv_f32,         "v_div_f32",        3, kInstructionTypeVector)\
     USER_DEFINE(kVectorCmpEq_f32,       "v_cmp_eq_f32",     2, kInstructionTypeVector)\
+    USER_DEFINE(kVectorCmpGt_f32,       "v_cmp_gt_f32",     2, kInstructionTypeVector)\
     USER_DEFINE(kVectorAdd_u32,         "v_add_u32",        3, kInstructionTypeVector)\
     USER_DEFINE(kVectorSub_u32,         "v_sub_u32",        3, kInstructionTypeVector)\
     USER_DEFINE(kVectorMul_u32,         "v_mul_u32",        3, kInstructionTypeVector)\
@@ -160,6 +161,7 @@ public:
     void enterV_mul_f32(VectorAssemblerParser::V_mul_f32Context* ctx) override;
     void enterV_div_f32(VectorAssemblerParser::V_div_f32Context* ctx) override;
     void enterV_cmp_eq_f32(VectorAssemblerParser::V_cmp_eq_f32Context* ctx) override;
+    void enterV_cmp_gt_f32(VectorAssemblerParser::V_cmp_gt_f32Context* ctx) override;
     void enterV_add_u32(VectorAssemblerParser::V_add_u32Context* ctx) override;
     void enterV_sub_u32(VectorAssemblerParser::V_sub_u32Context* ctx) override;
     void enterV_mul_u32(VectorAssemblerParser::V_mul_u32Context* ctx) override;
