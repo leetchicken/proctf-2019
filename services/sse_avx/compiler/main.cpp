@@ -8,34 +8,6 @@
 // padding, TMP
 //#define TMP_LOCATION "[rsp + 608]"
 
-static const char *kAsmStart = "\
-[SECTION .text]\n\
-global _start\n\
-_start:\n\
-    push rbp\n\
-    push rbx\n\
-    mov rbp, rsp\n\
-    and rsp, 0xffffffffffffffe0\n\
-    sub rsp, 32\n\
-    mov [rsp], rbp\n\
-    sub rsp, 1024\n\
-    mov ebx, 0x0\n\
-    mov r8, rdx\n\
-    mov ecx, esi\n\
-    mov edx, esi\n\
-    mov rsi, rsp\n\
-    add rsi, 576\n\
-";
-
-static const char* kAsmEnd = "\
-    add rsp, 1024\n\
-    mov rbp, [rsp]\n\
-    mov rsp, rbp\n\
-    pop rbx\n\
-    pop rbp\n\
-    ret\n\
-";
-
 
 enum EVecType
 {
@@ -255,56 +227,36 @@ void AddLine(std::string& str, const char* formatString, Args... args)
 };
 
 
-void EmitStoreLoad(std::string& asmbl)
+void EmitStoreLoad(std::string& asmbl, uint32_t usedVgprRegistersMask)
 {
-    const char* storeLoad = "\n\
-store_load_avx:\n\
-    and ecx, 0xff\n\
-    mov eax, edx\n\
-    xor eax, ecx\n\
-    jz save_exec_avx\n\
-\n\
-    vmovd xmm15, edx\n\
-    vshufps ymm15, ymm15, ymm15, 0\n\
-    vperm2f128 ymm15, ymm15, ymm15, 0\n\
-    vpand ymm15, ymm15, [rdi]\n\
-    vpcmpeqd ymm15, ymm15, [rdi]\n\
-    vmaskmovps [rsp], ymm15, ymm0\n\
-    vmaskmovps [rsp+32], ymm15, ymm1\n\
-    vmaskmovps [rsp+64], ymm15, ymm2\n\
-    vmaskmovps [rsp+96], ymm15, ymm3\n\
-    vmaskmovps [rsp+128], ymm15, ymm4\n\
-    vmaskmovps [rsp+160], ymm15, ymm5\n\
-    vmaskmovps [rsp+192], ymm15, ymm6\n\
-    vmaskmovps [rsp+224], ymm15, ymm7\n\
-    vmaskmovps [rsp+256], ymm15, ymm8\n\
-    vmaskmovps [rsp+288], ymm15, ymm9\n\
-    vmaskmovps [rsp+320], ymm15, ymm10\n\
-    vmaskmovps [rsp+352], ymm15, ymm11\n\
-    vmaskmovps [rsp+384], ymm15, ymm12\n\
-    vmaskmovps [rsp+416], ymm15, ymm13\n\
-    vmaskmovps [rsp+448], ymm15, ymm14\n\
-    vmovaps ymm0, [rsp]\n\
-    vmovaps ymm1, [rsp+32]\n\
-    vmovaps ymm2, [rsp+64]\n\
-    vmovaps ymm3, [rsp+96]\n\
-    vmovaps ymm4, [rsp+128]\n\
-    vmovaps ymm5, [rsp+160]\n\
-    vmovaps ymm6, [rsp+192]\n\
-    vmovaps ymm7, [rsp+224]\n\
-    vmovaps ymm8, [rsp+256]\n\
-    vmovaps ymm9, [rsp+288]\n\
-    vmovaps ymm10, [rsp+320]\n\
-    vmovaps ymm11, [rsp+352]\n\
-    vmovaps ymm12, [rsp+384]\n\
-    vmovaps ymm13, [rsp+416]\n\
-    vmovaps ymm14, [rsp+448]\n\
-\n\
-save_exec_avx:\n\
-    mov edx, ecx\n\
-    jmp rbp\n";
+    AddLine(asmbl, "store_load_avx:");
+    if(usedVgprRegistersMask)
+    {
+        AddLine(asmbl, "    and ecx, 0xff");
+        AddLine(asmbl, "    mov eax, edx");
+        AddLine(asmbl, "    xor eax, ecx");
+        AddLine(asmbl, "    jz save_exec_avx");
+        AddLine(asmbl, "    vmovd xmm15, edx");
+        AddLine(asmbl, "    vshufps ymm15, ymm15, ymm15, 0");
+        AddLine(asmbl, "    vperm2f128 ymm15, ymm15, ymm15, 0");
+        AddLine(asmbl, "    vpand ymm15, ymm15, [rdi]");
+        AddLine(asmbl, "    vpcmpeqd ymm15, ymm15, [rdi]");
+        uint32_t tmpMask = usedVgprRegistersMask;
+        while(tmpMask)
+        {
+            uint32_t idx = __builtin_ctz(tmpMask);
+            tmpMask &= ~(1 << idx);
+            char buf[128];
+            sprintf(buf, "    vmaskmovps [rsp + %u], ymm15, ymm%u\n", idx * 32, idx);
+            asmbl.append(buf);
+            sprintf(buf, "    vmovaps ymm%u, [rsp + %u]\n", idx, idx * 32);
+            asmbl.append(buf);
+        }
+        AddLine(asmbl, "save_exec_avx:");
+    }
 
-    asmbl.append(storeLoad);
+    AddLine(asmbl, "    mov edx, ecx");
+    AddLine(asmbl, "    jmp rbp");
 }
 
 
@@ -583,17 +535,23 @@ void GenerateCode(std::string& asmbl, const ParsedCode& parsedCode)
                 }
                 else
                 {
+                    AddLine(asmbl, "    vmovd xmm15, ecx");
+                    AddLine(asmbl, "    vshufps ymm15, ymm15, ymm15, 0");
+                    AddLine(asmbl, "    vperm2f128 ymm15, ymm15, ymm15, 0");
+                    AddLine(asmbl, "    vpand ymm15, ymm15, [rdi]");
+                    AddLine(asmbl, "    vpcmpeqd ymm15, ymm15, [rdi]");
+
                     for(uint32_t v = 0; v <= srcReg.rangeLen; v++, srcReg.idx++)
                     {
                         char buf[128], buf1[32];
                         asmbl.append("    ");
-                        asmbl.append(type == kAVX ? "vmovaps " : "movaps ");
+                        asmbl.append("vmaskmovps ");
                         uint32_t offset = v * 32;
                         if(offsetOp.type == kOperandImmediate)
                             offset += offsetOp.imm * 4;
-                        sprintf(buf, "[%s + %u], ", EmitRegister<type>(buf1, dstReg), offset);
+                        sprintf(buf, "[%s + %u], ymm15, ", EmitRegister<type>(buf1, dstReg), offset);
                         asmbl.append(buf);
-                        asmbl.append(EmitRegister<type>(buf1, srcReg));
+                        asmbl.append(EmitRegister<kAVX>(buf1, srcReg));
                         asmbl.append("\n");
                     }
                 }
@@ -758,6 +716,29 @@ bool Compile(const std::string& asmbl, uint32_t groupDimX, uint32_t groupDimY, c
 }
 
 
+void GetUsedRegistersMask(const ParsedCode& parsedCode, uint32_t& usedSgprRegistersMask, uint32_t& usedVgprRegistersMask)
+{
+    usedSgprRegistersMask = 0;
+    usedVgprRegistersMask = 0;
+    for(uint32_t i = 0; i < parsedCode.instructions.size(); i++)
+    {
+        auto& inst = parsedCode.instructions[i];
+        uint32_t opsNum = kOpOperandsNum[inst.opCode];
+        for(uint32_t j = 0; j < opsNum; j++)
+        {
+            auto& op = inst.operands[j];
+            if(op.type != kOperandRegister)
+                continue;
+            
+            if(op.reg.type == Register::kScalar || op.reg.type == Register::kScalar64)
+                usedSgprRegistersMask |= 1 << op.reg.idx;
+            else if(op.reg.type == Register::kVector)
+                usedVgprRegistersMask |= 1 << op.reg.idx;
+        }
+    }
+}
+
+
 int main(int argc, const char* argv[]) 
 {
     if(argc != 3)
@@ -781,27 +762,10 @@ int main(int argc, const char* argv[])
         return -1;
     }
 
-    std::string asmbl = kAsmStart;    
+    uint32_t usedSgprRegistersMask = 0, usedVgprRegistersMask = 0;
+    GetUsedRegistersMask(parsedCode, usedSgprRegistersMask, usedVgprRegistersMask);
 
-    uint32_t usedSgprRegistersMask = 0;
-    for(uint32_t i = 0; i < parsedCode.instructions.size(); i++)
-    {
-        auto& inst = parsedCode.instructions[i];
-        uint32_t opsNum = kOpOperandsNum[inst.opCode];
-        for(uint32_t j = 0; j < opsNum; j++)
-        {
-            auto& op = inst.operands[j];
-            if(op.type != kOperandRegister)
-                continue;
-            
-            if(op.reg.type != Register::kScalar && op.reg.type != Register::kScalar64)
-                continue;
-
-            usedSgprRegistersMask |= 1 << op.reg.idx;
-        }
-    }
-
-    std::vector<uint32_t> regsToPop;
+    std::vector<uint32_t> regsToSave;
     uint32_t tmpMask = usedSgprRegistersMask;
     while(tmpMask)
     {
@@ -809,12 +773,28 @@ int main(int argc, const char* argv[])
         tmpMask &= ~(1 << idx);
         uint32_t x86RegIdx = 8 + idx;
         if(x86RegIdx >= 12)
-        {
-            AddLine(asmbl, "    push r%u", x86RegIdx);
-            regsToPop.push_back(x86RegIdx);
-        }
+            regsToSave.push_back(x86RegIdx);
     }
 
+    std::string asmbl;    
+    AddLine(asmbl, "[SECTION .text]");
+    AddLine(asmbl, "global _start");
+    AddLine(asmbl, "_start:");
+    AddLine(asmbl, "    push rbp");
+    AddLine(asmbl, "    push rbx");
+    for(auto iter = regsToSave.begin(); iter != regsToSave.end(); ++iter)
+        AddLine(asmbl, "    push r%u", *iter);
+    AddLine(asmbl, "    mov rbp, rsp");
+    AddLine(asmbl, "    and rsp, 0xffffffffffffffe0");
+    AddLine(asmbl, "    sub rsp, 32");
+    AddLine(asmbl, "    mov [rsp], rbp");
+    AddLine(asmbl, "    sub rsp, 1024");
+    AddLine(asmbl, "    mov ebx, 0x0");
+    AddLine(asmbl, "    mov r8, rdx");
+    AddLine(asmbl, "    mov ecx, esi");
+    AddLine(asmbl, "    mov edx, esi");
+    AddLine(asmbl, "    mov rsi, rsp");
+    AddLine(asmbl, "    add rsi, 576");
     AddLine(asmbl, "    mov eax, ecx");
     AddLine(asmbl, "    and eax, 0xf0");
     AddLine(asmbl, "    jz start_sse");
@@ -824,10 +804,15 @@ int main(int argc, const char* argv[])
     GenerateCode<kSSE>(asmbl, parsedCode);
 
     AddLine(asmbl, "exit:");
-    for(auto iter = regsToPop.rbegin(); iter != regsToPop.rend(); ++iter)
+    AddLine(asmbl, "    add rsp, 1024");
+    AddLine(asmbl, "    mov rbp, [rsp]");
+    AddLine(asmbl, "    mov rsp, rbp");
+    for(auto iter = regsToSave.rbegin(); iter != regsToSave.rend(); ++iter)
         AddLine(asmbl, "    pop r%u", *iter);
-    asmbl.append(kAsmEnd);
-    EmitStoreLoad(asmbl);
+    AddLine(asmbl, "    pop rbx");
+    AddLine(asmbl, "    pop rbp");
+    AddLine(asmbl, "    ret");
+    EmitStoreLoad(asmbl, usedVgprRegistersMask);
 
     printf("%s", asmbl.c_str());
 
