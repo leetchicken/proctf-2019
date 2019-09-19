@@ -1,9 +1,10 @@
 package handlers
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
+	"html/template"
+	"log"
 	"net/http"
 
 	"github.com/gorilla/schema"
@@ -13,13 +14,21 @@ import (
 	"handy/server/util"
 )
 
-type taskHandler struct {
-	ts *backends.TaskStorage
+type taskHandlerTemplateData struct {
+	LocalUserInfo *data.LocalUserInfo
+	TasksFrom     []*data.TaskInfo
+	TasksTo       []*data.TaskInfo
 }
 
-func NewTaskHandler(ts *backends.TaskStorage) *taskHandler {
+type taskHandler struct {
+	ts *backends.TaskStorage
+	t  *template.Template
+}
+
+func NewTaskHandler(ts *backends.TaskStorage, t *template.Template) *taskHandler {
 	return &taskHandler{
 		ts: ts,
+		t:  t,
 	}
 }
 
@@ -33,7 +42,6 @@ func (h *taskHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// TODO: should return html
 func (h *taskHandler) handleGet(w http.ResponseWriter, r *http.Request) {
 	id, lui, err := util.RetrieveUserInfo(r)
 	if err == util.UserNotPresentError {
@@ -44,29 +52,30 @@ func (h *taskHandler) handleGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	result := map[string][]*data.TaskInfo{}
-	tasksFrom, err := h.ts.RetrieveTasksFromUser(id)
+	td := &taskHandlerTemplateData{
+		LocalUserInfo: lui,
+		TasksFrom:     []*data.TaskInfo{},
+		TasksTo:       []*data.TaskInfo{},
+	}
+
+	td.TasksFrom, err = h.ts.RetrieveTasksFromUser(id)
 	if err != nil {
 		HandleError(w, fmt.Errorf("failed to retrieve tasks from user: %s", err), http.StatusInternalServerError)
 		return
 	}
-	result["tasks_from"] = tasksFrom
+
 	if lui.IsMaster {
-		tasksTo, err := h.ts.RetrieveTasksToUser(id)
+		td.TasksTo, err = h.ts.RetrieveTasksToUser(id)
 		if err != nil {
 			HandleError(w, fmt.Errorf("failed to retrieve tasks to user: %s", err), http.StatusInternalServerError)
 			return
 		}
-		result["tasks_to"] = tasksTo
 	}
 
-	resultJSON, err := json.Marshal(result)
+	err = h.t.ExecuteTemplate(w, "tasks", td)
 	if err != nil {
-		HandleError(w, fmt.Errorf("failed to marshal response: %s", err), http.StatusInternalServerError)
-		return
+		log.Printf("Template error: %s", err)
 	}
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(resultJSON)
 }
 
 func (h *taskHandler) handlePost(w http.ResponseWriter, r *http.Request) {

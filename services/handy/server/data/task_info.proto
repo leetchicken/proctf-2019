@@ -9,5 +9,7 @@ message TaskInfo {
 
   string master_id = 2;
 
-  string description = 3;
+  string title = 3;
+
+  string description = 4;
 }

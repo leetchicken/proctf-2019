@@ -8,6 +8,13 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 
 	"handy/server/data"
+	"handy/server/util"
+)
+
+const (
+	maxDescriptionLength = 100 * 1024
+	maxTitleLength       = 1024
+	uuidLength           = 36
 )
 
 type TaskStorage struct {
@@ -23,8 +30,20 @@ func NewTaskStorage(db *mongo.Database) (*TaskStorage, error) {
 }
 
 func (s *TaskStorage) CreateTask(ti *data.TaskInfo) error {
-	if len(ti.MasterId) == 0 || len(ti.RequesterId) == 0 || len(ti.Description) == 0 {
-		return fmt.Errorf("task information contains empty fields: %v", ti)
+	if err := util.CheckFieldLength(ti.MasterId, uuidLength, uuidLength); err != nil {
+		return fmt.Errorf("invalid MasterID field: %s", err)
+	}
+	if err := util.CheckFieldLength(ti.RequesterId, uuidLength, uuidLength); err != nil {
+		return fmt.Errorf("invalid RequesterId field: %s", err)
+	}
+	if err := util.CheckFieldLength(ti.Title, 1, maxTitleLength); err != nil {
+		return fmt.Errorf("invalid Title field: %s", err)
+	}
+	if err := util.CheckFieldLength(ti.Description, 1, maxDescriptionLength); err != nil {
+		return fmt.Errorf("invalid Description field: %s", err)
+	}
+	if ti.MasterId == ti.RequesterId {
+		return fmt.Errorf("user and master cannot be the same")
 	}
 
 	filter := &bson.D{{"isMaster", true}, {"id", ti.MasterId}}
@@ -47,11 +66,19 @@ func (s *TaskStorage) CreateTask(ti *data.TaskInfo) error {
 }
 
 func (s *TaskStorage) RetrieveTasksFromUser(id string) ([]*data.TaskInfo, error) {
+	if err := util.CheckFieldLength(id, uuidLength, uuidLength); err != nil {
+		return nil, fmt.Errorf("invalid ID field: %s", err)
+	}
+
 	filter := &bson.D{{"requesterId", id}}
 	return s.retrieveTasks(filter)
 }
 
 func (s *TaskStorage) RetrieveTasksToUser(id string) ([]*data.TaskInfo, error) {
+	if err := util.CheckFieldLength(id, uuidLength, uuidLength); err != nil {
+		return nil, fmt.Errorf("invalid ID field: %s", err)
+	}
+
 	filter := &bson.D{{"masterId", id}}
 	return s.retrieveTasks(filter)
 }

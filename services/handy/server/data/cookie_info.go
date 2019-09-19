@@ -8,8 +8,6 @@ import (
 	"github.com/golang/protobuf/proto"
 )
 
-// TODO: add hashing
-
 type CookieInfo struct {
 	serializedInfo []byte
 	deserialized   bool

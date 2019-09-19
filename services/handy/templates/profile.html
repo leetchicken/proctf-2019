@@ -1,0 +1,79 @@
+{{ define "profile" }}
+
+<!DOCTYPE html>
+<html lang="en">
+{{ template "header" }}
+
+<body>
+  {{ template "navbar" .LocalUserInfo }}
+
+  <main role="main" class="container">
+
+    <div class="content">
+
+      <h1 id='username'>{{ .User.Username }}</h1>
+      <img src="/profile/picture?size=256&id={{ .User.Id }}" />
+
+
+      {{ if .User.IsMaster }}
+
+      <h3 class="mt-5">Create Task For This Master</h3>
+
+      <div id="create-task-success-info" class="alert alert-success d-none" role="alert">
+        Sucess!
+      </div>
+
+      <div id="create-task-failure-info" class="alert alert-danger d-none" role="alert">
+        Failed to create task
+      </div>
+
+      <form id="create-task-form">
+        <div class="form-group">
+          <label for="title">Title</label>
+          <input name="Title" minlength=1 type="text" class="form-control" id="title" placeholder="Enter title">
+        </div>
+        <div class="form-group">
+          <label for="description">Description</label>
+          <textarea name="Description" minlength=1 class="form-control" id="description" placeholder="Enter description"></textarea>
+        </div>
+        <div class="form-group">
+          <input name="MasterId" type="text" class="form-control d-none" id="master-id" value="{{ .User.Id }}">
+        </div>
+        <button type="submit" class="btn btn-primary">Create Task</button>
+      </form>
+
+
+      {{ end }}
+
+    </div>
+
+  </main><!-- /.container -->
+
+  {{ template "footer" }}
+
+  <script>
+    $(function() {
+      $("#create-task-form").submit(function(event) {
+        event.preventDefault();
+        $.ajax({
+          type: "POST",
+          url: "/tasks",
+          data: $("form").serialize(),
+          success: function(msg) {
+            $("#create-task-failure-info").addClass("d-none");
+            $("#create-task-success-info").removeClass("d-none");
+            $("#create-task-form")[0].reset();
+          },
+          error: function() {
+            $("#create-task-success-info").addClass("d-none");
+            $("#create-task-failure-info").removeClass("d-none");
+          }
+        });
+      });
+    });
+  </script>
+
+</body>
+
+</html>
+{{ end }}

@@ -1,0 +1,89 @@
+{{ define "tasks" }}
+
+<!DOCTYPE html>
+<html lang="en">
+{{ template "header" }}
+
+<body>
+  {{ template "navbar" .LocalUserInfo }}
+
+  <main role="main" class="container">
+
+    {{ if and (eq 0 (len .TasksFrom)) (eq 0 (len .TasksTo)) }}
+
+    <div class="content">
+      <h1>No tasks yet!</h1>
+    </div>
+
+    {{ else }}
+
+    <div class="content">
+
+      {{ if ne 0 (len .TasksFrom) }}
+
+      <h1>Tasks From You</h1>
+
+      <table class="table tasks-from-table">
+        <thead>
+          <tr>
+            <th scope="col">Title</th>
+            <th scope="col">Master</th>
+            <th scope="col">Description</th>
+          </tr>
+        </thead>
+        <tbody>
+
+          {{ range .TasksFrom }}
+
+          <tr>
+            <td>{{ .Title }}</td>
+            <td><a href="/profile?id={{ .MasterId }}">Profile</a></td>
+            <td>{{ .Description }}</td>
+          </tr>
+
+          {{ end }}
+        </tbody>
+      </table>
+
+      {{ end }}
+
+      {{ if ne 0 (len .TasksTo) }}
+
+      <h1>Tasks To You</h1>
+
+      <table class="table tasks-to-table">
+        <thead>
+          <tr>
+            <th scope="col">Title</th>
+            <th scope="col">User</th>
+            <th scope="col">Description</th>
+          </tr>
+        </thead>
+        <tbody>
+
+          {{ range .TasksTo }}
+
+          <tr>
+            <td>{{ .Title }}</td>
+            <td><a href="/profile?id={{ .RequesterId }}">Profile</a></td>
+            <td>{{ .Description }}</td>
+          </tr>
+
+          {{ end }}
+        </tbody>
+      </table>
+
+      {{ end }}
+
+    </div>
+
+    {{ end }}
+
+  </main><!-- /.container -->
+
+  {{ template "footer" }}
+
+</body>
+
+</html>
+{{ end }}

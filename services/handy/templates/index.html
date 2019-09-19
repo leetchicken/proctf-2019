@@ -1,0 +1,39 @@
+{{ define "root" }}
+
+<!DOCTYPE html>
+<html lang="en">
+{{ template "header" }}
+
+<body>
+  {{ template "navbar" .LocalUserInfo }}
+
+  <main role="main" class="container">
+
+    {{ if not .LocalUserInfo }}
+
+    <div class="content">
+      <h1>Hello there!</h1>
+
+      <a class="btn btn-primary" href="/login" role="button">Login</a>
+      <a class="btn btn-primary" href="/register" role="button">Register</a>
+    </div>
+
+    {{ else }}
+
+    <div class="content">
+      <h1>Hello {{ .LocalUserInfo.Username }}!</h1>
+
+      <a class="btn btn-primary" href="/masters" role="button">Masters</a>
+      <a class="btn btn-primary" href="/tasks" role="button">My Tasks</a>
+    </div>
+
+    {{ end }}
+
+  </main><!-- /.container -->
+
+  {{ template "footer" }}
+
+</body>
+
+</html>
+{{ end }}
