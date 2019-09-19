@@ -421,6 +421,7 @@ void GenerateCode(std::string& asmbl, const ParsedCode& parsedCode)
                     AddLine<type>(asmbl, mnemonic, "xmm15", reg1);
                     AddLine<type>(asmbl, "movmskps ebx, xmm15");
                 }
+                AddLine<type>(asmbl, "and ebx, ecx");
                 break;
             }
 
@@ -562,23 +563,30 @@ void GenerateCode(std::string& asmbl, const ParsedCode& parsedCode)
                 AddLine<type>(asmbl, "mov", inst.operands[0], inst.operands[1]);
                 break;
 
+            case kScalarAddu:
             case kScalarAnd:
             {
+                const char* mnemonic = nullptr;
+                if(inst.opCode == kScalarAddu)
+                    mnemonic = "add";
+                else if(inst.opCode == kScalarAnd)
+                    mnemonic = "and";
+
                 auto& dst = inst.operands[0];
                 auto& src0 = inst.operands[1];
                 auto& src1 = inst.operands[2];
                 if(src1.type == kOperandRegister && dst.reg == src1.reg)
                 {
-                    AddLine<type>(asmbl, "and", dst, src0);
+                    AddLine<type>(asmbl, mnemonic, dst, src0);
                 }
                 else if(src0.type == kOperandRegister && dst.reg == src0.reg)
                 {
-                    AddLine<type>(asmbl, "and", dst, src1);
+                    AddLine<type>(asmbl, mnemonic, dst, src1);
                 }
                 else
                 {
                     AddLine<type>(asmbl, "mov", dst, src0);
-                    AddLine<type>(asmbl, "and", dst, src1);
+                    AddLine<type>(asmbl, mnemonic, dst, src1);
                 }
                 break;
             }

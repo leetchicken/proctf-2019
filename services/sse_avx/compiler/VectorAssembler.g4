@@ -29,6 +29,7 @@ instruction: v_mov
     |   v_load
     |   v_store
     |   s_mov
+    |   s_addu
     |   s_and
     |   s_andn2
     |   s_branch_vccz
@@ -81,6 +82,10 @@ s_mov:  S_MOV op0=SREGISTER ',' op1=(SREGISTER|EXEC|VCC|SCC|DECIMAL|HEXADECIMAL|
     |   S_MOV op0=SREGISTER64 ',' op1=(SREGISTER64|DECIMAL|HEXADECIMAL)
     ;
 
+s_addu: S_ADDU op0=(SREGISTER|EXEC) ',' op1=(SREGISTER|EXEC|VCC|SCC|DECIMAL|HEXADECIMAL) ',' op2=(SREGISTER|EXEC|VCC|SCC|DECIMAL|HEXADECIMAL)
+    |   S_ADDU op0=SREGISTER64 ',' op1=(SREGISTER64|DECIMAL|HEXADECIMAL) ',' op2=(SREGISTER64|DECIMAL|HEXADECIMAL)
+    ;
+
 s_and:  S_AND op0=(SREGISTER|EXEC) ',' op1=(SREGISTER|EXEC|VCC|SCC|DECIMAL|HEXADECIMAL) ',' op2=(SREGISTER|EXEC|VCC|SCC|DECIMAL|HEXADECIMAL)
     |   S_AND op0=SREGISTER64 ',' op1=(SREGISTER64|DECIMAL|HEXADECIMAL) ',' op2=(SREGISTER64|DECIMAL|HEXADECIMAL)
     ;
@@ -115,6 +120,7 @@ V_CMP_EQ_U32: 'v_cmp_eq_u32';
 V_LOAD: 'v_load';
 V_STORE: 'v_store';
 S_MOV: 's_mov';
+S_ADDU: 's_addu';
 S_AND: 's_and';
 S_ANDN2: 's_andn2';
 S_BRANCH_VCCZ: 's_branch_vccz';

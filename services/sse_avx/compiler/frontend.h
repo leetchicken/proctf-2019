@@ -31,6 +31,7 @@ enum InstructionType
     USER_DEFINE(kVectorLoad,            "v_load",           3, kInstructionTypeVector)\
     USER_DEFINE(kVectorStore,           "v_store",          3, kInstructionTypeVector)\
     USER_DEFINE(kScalarMov,             "s_mov",            2, kInstructionTypeScalar)\
+    USER_DEFINE(kScalarAddu,            "s_addu",           3, kInstructionTypeScalar)\
     USER_DEFINE(kScalarAnd,             "s_and",            3, kInstructionTypeScalar)\
     USER_DEFINE(kScalarAndN2,           "s_andn2",          3, kInstructionTypeScalar)\
     USER_DEFINE(kScalarBranchVCCZ,      "s_branch_vccz",    1, kInstructionTypeScalar)\
@@ -169,6 +170,7 @@ public:
     void enterV_load(VectorAssemblerParser::V_loadContext* ctx) override;
     void enterV_store(VectorAssemblerParser::V_storeContext* ctx) override;
     void enterS_mov(VectorAssemblerParser::S_movContext* ctx) override;
+    void enterS_addu(VectorAssemblerParser::S_adduContext* ctx) override;
     void enterS_and(VectorAssemblerParser::S_andContext *ctx) override;
     void enterS_andn2(VectorAssemblerParser::S_andn2Context* ctx) override;
     void enterS_branch_vccz(VectorAssemblerParser::S_branch_vcczContext* ctx) override;

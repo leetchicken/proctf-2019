@@ -1,20 +1,29 @@
 [8,1]
-v_mov v0, 0
-v_load v1, 0, s0q # 1, -1
-v_mov v2, -1.0
+v_mov v10, 0.0
+# 1, -1
+v_load v11, 0, s0q
+v_mov v12, -1.0
 
-v_mul_f32 v1, v1, v2 # -1, 1
-v_cmp_gt_f32 v1, v0
+# -1, 1
+v_mul_f32 v11, v11, v12 
+v_cmp_gt_f32 v11, v10
 s_mov exec, vcc #0x0f
 
-v_add_f32 v1, v1, v1 # -1, 2
+# -1, 2
+v_add_f32 v11, v11, v11
 s_mov exec, 0xff 
 
-v_mul_f32 v1, v1, v2 # 1, -2
-v_cmp_gt_f32 v1, v0
+# 1, -2
+v_mul_f32 v11, v11, v12
+v_cmp_gt_f32 v11, v10
 s_mov exec, vcc #0xf0
 
-v_add_f32 v1, v1, v1 # 2, -2
+# 2, -2
+v_add_f32 v11, v11, v11
 
 s_mov exec, 0xff
+v_mul_u32 v1, v1, 8
+v_add_u32 v1, v1, v0
+s_addu s4q, s0q, 32
+v_store v11, v1, s4q
 

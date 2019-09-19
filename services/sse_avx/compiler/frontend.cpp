@@ -111,6 +111,12 @@ void FrontEnd::enterS_mov(VectorAssemblerParser::S_movContext* ctx)
 }
 
 
+void FrontEnd::enterS_addu(VectorAssemblerParser::S_adduContext* ctx)
+{
+    Add3OpInstruction(kScalarAddu, ctx);
+}
+
+
 void FrontEnd::enterS_and(VectorAssemblerParser::S_andContext *ctx)
 {
     Add3OpInstruction(kScalarAnd, ctx);
