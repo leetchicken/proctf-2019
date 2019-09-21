@@ -665,60 +665,17 @@ bool Compile(const std::string& asmbl, uint32_t groupDimX, uint32_t groupDimY, c
     const char* nasmInputFile = "/tmp/nasm_input";
     if(!WriteFile(nasmInputFile, asmbl.c_str(), asmbl.length()))
     {
-        printf("Failed to write file %s\n", nasmInputFile);
+        fprintf(stderr, "Failed to write file %s\n", nasmInputFile);
         return false;
     }
 
-    const char* nasmOutputFile = "/tmp/nasm_output";
     char cmd[512];
-    sprintf(cmd, "nasm -f elf64 %s -o %s", nasmInputFile, nasmOutputFile);
+    sprintf(cmd, "nasm -f elf64 %s -o %s", nasmInputFile, outputFile);
     if(system(cmd) != 0)
     {
-        printf("nasm failed\n");
+        perror("nasm failed\n");
         return false;
     }
-
-    const char* ldOutputFile = "/tmp/ld_output";
-    sprintf(cmd, "ld %s -N -Ttext 0 -o %s", nasmOutputFile, ldOutputFile);
-    if(system(cmd) != 0)
-    {
-        printf("ld failed\n");
-        return false;
-    }
-
-    const char* objcopyOutputFile = "/tmp/objcopy_output";
-    sprintf(cmd, "objcopy -O binary %s %s", ldOutputFile, objcopyOutputFile);
-    if(system(cmd) != 0)
-    {
-        printf("objcopy failed\n");
-        return false;
-    }
-
-    uint32_t binarySize = 0;
-    void* binary = ReadFile(objcopyOutputFile, binarySize);
-    if(!binary)
-    {
-        printf("Failed to read file %s\n", objcopyOutputFile);
-        return false;
-    }
-
-    uint32_t patchedBinarySize = binarySize + 2 * sizeof(uint32_t);
-    void* patchedBinary = malloc(patchedBinarySize);
-    uint8_t* ptr = (uint8_t*)patchedBinary;
-    memcpy(ptr, &groupDimX, sizeof(uint32_t));
-    ptr += sizeof(uint32_t);
-    memcpy(ptr, &groupDimY, sizeof(uint32_t));
-    ptr += sizeof(uint32_t);
-    memcpy(ptr, binary, binarySize);
-
-    if(!WriteFile(outputFile, patchedBinary, patchedBinarySize))
-    {
-        printf("Failed to write file %s\n", outputFile);
-        return false;
-    }
-
-    free(binary);
-    free(patchedBinary);
 
     return true;
 }
@@ -766,7 +723,7 @@ int main(int argc, const char* argv[])
     if(parsedCode.groupDimX == 0 || parsedCode.groupDimX > kMaxGroupDim || 
        parsedCode.groupDimY == 0 || parsedCode.groupDimY > kMaxGroupDim)
     {
-        printf("Invalid group dimension\n");
+        fprintf(stderr, "Invalid group dimension\n");
         return -1;
     }
 
@@ -786,8 +743,8 @@ int main(int argc, const char* argv[])
 
     std::string asmbl;    
     AddLine(asmbl, "[SECTION .text]");
-    AddLine(asmbl, "global _start");
-    AddLine(asmbl, "_start:");
+    AddLine(asmbl, "global _Z6KernelPvjmjj");
+    AddLine(asmbl, "_Z6KernelPvjmjj:");
     AddLine(asmbl, "    push rbp");
     AddLine(asmbl, "    push rbx");
     for(auto iter = regsToSave.begin(); iter != regsToSave.end(); ++iter)
@@ -797,6 +754,17 @@ int main(int argc, const char* argv[])
     AddLine(asmbl, "    sub rsp, 32");
     AddLine(asmbl, "    mov [rsp], rbp");
     AddLine(asmbl, "    sub rsp, 1024");
+    // threadIdXInGroup
+    AddLine(asmbl, "    shl ecx, 3");
+    AddLine(asmbl, "    vmovd xmm0, ecx");
+    AddLine(asmbl, "    vshufps ymm0, ymm0, ymm0, 0");
+    AddLine(asmbl, "    vperm2f128 ymm0, ymm0, ymm0, 0");
+    AddLine(asmbl, "    vpaddd ymm0, ymm0, [rdi + 32]");
+    // threadIdYInGroup
+    AddLine(asmbl, "    vmovd xmm1, r8d");
+    AddLine(asmbl, "    vshufps ymm1, ymm1, ymm1, 0");
+    AddLine(asmbl, "    vperm2f128 ymm1, ymm1, ymm1, 0");
+    //
     AddLine(asmbl, "    mov ebx, 0x0");
     AddLine(asmbl, "    mov r8, rdx");
     AddLine(asmbl, "    mov ecx, esi");
