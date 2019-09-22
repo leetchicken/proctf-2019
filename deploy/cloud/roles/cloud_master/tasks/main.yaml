@@ -1,13 +1,10 @@
 - name: install apache2 and mod_wsgi
-  apt: name={{item}} state=latest
-  with_items:
-    - apache2
-    - libapache2-mod-wsgi-py3
+  apt:
+    name: ['apache2', 'libapache2-mod-wsgi-py3']
+    state: latest
 
 - name: install python requests
-  apt: name={{item}} state=latest
-  with_items:
-    - python3-requests
+  apt: name=python3-requests state=latest
 
 - name: create users
   user: name=cloud shell=/bin/bash

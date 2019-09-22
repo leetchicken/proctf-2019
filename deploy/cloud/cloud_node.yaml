@@ -1,7 +1,10 @@
-- hosts: cloud-node
+- hosts: cloud_node
   pre_tasks:
    - name: 'Add dns'
      raw: echo 'nameserver 8.8.8.8' > /etc/resolv.conf
+     changed_when: False
+   - name: 'Apt update'
+     raw: apt update
      changed_when: False
    - name: 'Install python2'
      raw: apt -y install python-simplejson
