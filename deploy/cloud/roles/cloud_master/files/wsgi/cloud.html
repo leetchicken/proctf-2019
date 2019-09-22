@@ -34,6 +34,10 @@
             color: black;
         }
 
+        #filler {
+            font-size: xx-small;
+        }
+
         [contenteditable]:focus {
             outline: 0px solid transparent;
         }
@@ -41,7 +45,7 @@
 
 </head>
 <body>
-<pre id="console"><span id="cursor"> </span></pre>
+<pre id="console"><span id="cursor"> </span><div id="filler">&nbsp;</div></pre>
 
 <script>
 var token = ""
@@ -187,6 +191,7 @@ function autocomplete(s) {
                 return first.substring(s.length, i)
             }
         }
+        return first.substring(s.length)
     }
     return ""
 }
@@ -451,7 +456,7 @@ document.onkeydown = function(e) {
         }
 
         cmd = cmd.slice(2)
-        if (cmd.length == 0 || cmd.search(" ") != -1) {
+        if (cmd.length == 0) {
             return false
         }
 
