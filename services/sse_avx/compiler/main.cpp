@@ -1,13 +1,6 @@
 #include <string.h>
 #include "frontend.h"
 
-// V0, V1, ..., V15
-#define V0_LOCATION "[rsp + 0]"
-// TMP
-#define TMP_LOCATION "[rsp + 512]"
-// padding, TMP
-//#define TMP_LOCATION "[rsp + 608]"
-
 
 enum EVecType
 {
@@ -285,7 +278,14 @@ void PostScalarInstruction(std::string& asmbl, const Instruction& i)
         AddLine(asmbl, "    jz post_scalar_sse_%u_2", postScalarCounter);
     else
         AddLine(asmbl, "    jnz post_scalar_avx_%u_2", postScalarCounter);
+    AddLine(asmbl, "    jmp post_scalar_%s_%u_3", postfix, postScalarCounter);
     AddLine(asmbl, "post_scalar_%s_%u_2:", postfix, postScalarCounter);
+    AddLine(asmbl, "    mov rbp, rdx");
+    AddLine(asmbl, "    mov eax, 0xffffffff");
+    AddLine(asmbl, "    mov edx, 0xffffffff");
+    AddLine(asmbl, "    xsave [rsp + 1024]");
+    AddLine(asmbl, "    mov rdx, rbp");
+    AddLine(asmbl, "post_scalar_%s_%u_3:", postfix, postScalarCounter);
 
     postScalarCounter++;
 }
@@ -436,20 +436,6 @@ void GenerateCode(std::string& asmbl, const ParsedCode& parsedCode)
                     auto& offsetReg = inst.operands[1].reg;
                     for(uint32_t v = 0; v <= dstReg.rangeLen; v++, dstReg.idx++)
                     {
-                        /*const uint32_t kHalfsNum = type == kAVX ? 2 : 1;
-                        for(uint32_t halfIdx = 0; halfIdx < kHalfsNum; halfIdx++)
-                        {
-                            AddLine<kAVX>(asmbl, "vextractf128", "xmm15", offsetReg, halfIdx);
-                            for(uint32_t i = 0; i < 4; i++)
-                            {
-                                AddLine<kAVX>(asmbl, "vpextrd", "eax", "xmm15", i);
-                                AddLine<type>(asmbl, "shl", "eax", 2);
-                                AddLine<type>(asmbl, "add", "rax", srcReg);
-                                AddLine<type>(asmbl, "mov eax, [rax]");
-                                AddLine(asmbl, "    mov [rsp + 512 + %u * 4], eax", i);
-                            }
-                        }
-                        AddLine<kAVX>(asmbl, "vmovaps", dstReg, "[rsp + 512]");*/
                         Register temp(Register::kVector, 15);
                         AddLine<type>(asmbl, "vmovd", XMM(temp), "ecx");
                         AddLine<type>(asmbl, "vshufps", temp, temp, temp, "0");
@@ -743,28 +729,17 @@ int main(int argc, const char* argv[])
 
     std::string asmbl;    
     AddLine(asmbl, "[SECTION .text]");
-    AddLine(asmbl, "global _Z6KernelPvjmjj");
-    AddLine(asmbl, "_Z6KernelPvjmjj:");
+    AddLine(asmbl, "global _Z6KernelPvjmDv4_xS0_");
+    AddLine(asmbl, "_Z6KernelPvjmDv4_xS0_:");
     AddLine(asmbl, "    push rbp");
     AddLine(asmbl, "    push rbx");
     for(auto iter = regsToSave.begin(); iter != regsToSave.end(); ++iter)
         AddLine(asmbl, "    push r%u", *iter);
     AddLine(asmbl, "    mov rbp, rsp");
-    AddLine(asmbl, "    and rsp, 0xffffffffffffffe0");
-    AddLine(asmbl, "    sub rsp, 32");
+    AddLine(asmbl, "    and rsp, 0xffffffffffffffc0");
+    AddLine(asmbl, "    sub rsp, 64");
     AddLine(asmbl, "    mov [rsp], rbp");
-    AddLine(asmbl, "    sub rsp, 1024");
-    // threadIdXInGroup
-    AddLine(asmbl, "    shl ecx, 3");
-    AddLine(asmbl, "    vmovd xmm0, ecx");
-    AddLine(asmbl, "    vshufps ymm0, ymm0, ymm0, 0");
-    AddLine(asmbl, "    vperm2f128 ymm0, ymm0, ymm0, 0");
-    AddLine(asmbl, "    vpaddd ymm0, ymm0, [rdi + 32]");
-    // threadIdYInGroup
-    AddLine(asmbl, "    vmovd xmm1, r8d");
-    AddLine(asmbl, "    vshufps ymm1, ymm1, ymm1, 0");
-    AddLine(asmbl, "    vperm2f128 ymm1, ymm1, ymm1, 0");
-    //
+    AddLine(asmbl, "    sub rsp, 2048");
     AddLine(asmbl, "    mov ebx, 0x0");
     AddLine(asmbl, "    mov r8, rdx");
     AddLine(asmbl, "    mov ecx, esi");
@@ -780,7 +755,7 @@ int main(int argc, const char* argv[])
     GenerateCode<kSSE>(asmbl, parsedCode);
 
     AddLine(asmbl, "exit:");
-    AddLine(asmbl, "    add rsp, 1024");
+    AddLine(asmbl, "    add rsp, 2048");
     AddLine(asmbl, "    mov rbp, [rsp]");
     AddLine(asmbl, "    mov rsp, rbp");
     for(auto iter = regsToSave.rbegin(); iter != regsToSave.rend(); ++iter)
