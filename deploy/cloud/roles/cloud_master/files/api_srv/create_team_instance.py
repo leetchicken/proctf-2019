@@ -9,10 +9,11 @@ import time
 import os
 import traceback
 
-from cloud_common import (get_cloud_ip, log_progress,
-                          call_unitl_zero_exit, SSH_CLOUD_OPTS)
+from cloud_common import (get_cloud_ip, log_progress, call_unitl_zero_exit,
+                          SSH_CLOUD_OPTS, get_vm_name_by_num)
 
 TEAM = int(sys.argv[1])
+VMNUM = int(sys.argv[2])
 
 
 def log_stderr(*params):
@@ -25,31 +26,34 @@ def main():
         print("msg: ERR, no vm slots precreated")
         return 1
 
-    image_state = open("db/team%d/image_deploy_state" % TEAM).read().strip()
+    vmname = get_vm_name_by_num(VMNUM)
+
+    if not vmname:
+        log_stderr("vm not found")
+        return 1
+
+    image_state = open("db/team%d/serv%d_image_deploy_state" % (TEAM, VMNUM)).read().strip()
 
     log_progress("5%")
 
     if image_state == "NOT_STARTED":
-        file_from = "db/team%d/root_passwd_hash.txt" % TEAM
-        file_to = "%s:/home/cloud/root_passwd_hash_team%d.txt" % (cloud_ip,
-                                                                  TEAM)
-        ret = call_unitl_zero_exit(["scp"] + SSH_CLOUD_OPTS +
-                                   [file_from, file_to])
+        file_from = "db/team%d/serv%d_root_passwd_hash.txt" % (TEAM, VMNUM)
+        file_to = "%s:/home/cloud/serv%d_root_passwd_hash_team%d.txt" % (cloud_ip, VMNUM, TEAM)
+        ret = call_unitl_zero_exit(["scp"] + SSH_CLOUD_OPTS + [file_from, file_to])
         if not ret:
             log_stderr("scp to CLOUD failed")
             return 1
 
         log_progress("25%")
 
-        cmd = ["sudo", "/cloud/scripts/launch_vm.sh", str(TEAM)]
-        ret = call_unitl_zero_exit(["ssh"] + SSH_CLOUD_OPTS +
-                                   [cloud_ip] + cmd)
+        cmd = ["sudo", "/cloud/scripts/launch_vm.sh", str(TEAM), str(VMNUM), str(vmname)]
+        ret = call_unitl_zero_exit(["ssh"] + SSH_CLOUD_OPTS + [cloud_ip] + cmd)
         if not ret:
             log_stderr("launch team vm")
             return 1
 
         image_state = "RUNNING"
-        open("db/team%d/image_deploy_state" % TEAM, "w").write(image_state)
+        open("db/team%d/serv%d_image_deploy_state" % (TEAM, VMNUM), "w").write(image_state)
     
     log_progress("100%")
     return 0
@@ -63,7 +67,7 @@ if __name__ == "__main__":
         os.chdir(os.path.dirname(os.path.realpath(__file__)))
         exitcode = main()
 
-        image_state = open("db/team%d/image_deploy_state" % TEAM).read().strip()
+        image_state = open("db/team%d/serv%d_image_deploy_state" % (TEAM, VMNUM)).read().strip()
 
         log_stderr("IMAGE_STATE:", image_state)
 

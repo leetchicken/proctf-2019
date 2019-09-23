@@ -12,9 +12,10 @@ import os
 import traceback
 
 from cloud_common import (get_cloud_ip, log_progress, call_unitl_zero_exit,
-                          SSH_CLOUD_OPTS)
+                          SSH_CLOUD_OPTS, get_vm_name_by_num)
 
 TEAM = int(sys.argv[1])
+VMNUM = int(sys.argv[2])
 
 
 def log_stderr(*params):
@@ -22,7 +23,13 @@ def log_stderr(*params):
 
 
 def main():
-    image_state = open("db/team%d/image_deploy_state" % TEAM).read().strip()
+    vmname = get_vm_name_by_num(VMNUM)
+
+    if not vmname:
+        log_stderr("vm not found")
+        return 1
+
+    image_state = open("db/team%d/serv%d_image_deploy_state" % (TEAM, VMNUM)).read().strip()
 
     if image_state == "RUNNING":
         cloud_ip = get_cloud_ip(TEAM)
@@ -30,13 +37,13 @@ def main():
             log_stderr("no cloud_ip ip, exiting")
             return 1
 
-        cmd = ["sudo", "/cloud/scripts/remove_vm.sh", str(TEAM)]
+        cmd = ["sudo", "/cloud/scripts/remove_vm.sh", str(TEAM), str(VMNUM), str(vmname)]
         ret = call_unitl_zero_exit(["ssh"] + SSH_CLOUD_OPTS + [cloud_ip] + cmd)
         if not ret:
             log_stderr("failed to remove team vm")
             return 1
         image_state = "NOT_STARTED"
-        open("db/team%d/image_deploy_state" % TEAM, "w").write(image_state)
+        open("db/team%d/serv%d_image_deploy_state" % (TEAM, VMNUM), "w").write(image_state)
 
     if image_state == "NOT_STARTED":
         return 0
