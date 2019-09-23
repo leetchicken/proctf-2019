@@ -1,9 +1,11 @@
 #!/bin/bash -e
 
-TEAM=${1?Syntax: ./remove_snapshot.sh <team_id> <name>}
-NAME=${2?Syntax: ./remove_snapshot.sh <team_id> <name>}
+TEAM=${1?Syntax: ./remove_snapshot.sh <team_id> <vm_num> <vm_name> <name>}
+VMNUM=${2?Syntax: ./remove_snapshot.sh <team_id> <vm_num> <vm_name> <name>}
+VMNAME=${3?Syntax: ./remove_snapshot.sh <team_id> <vm_num> <vm_name> <name>}
+NAME=${4?Syntax: ./remove_snapshot.sh <team_id> <vm_num> <vm_name> <name>}
 
-QUOTA=250
+QUOTA=200
 WARN_FROM=100
 
 if ! [[ $TEAM =~ ^[0-9]+$ ]]; then
@@ -11,7 +13,17 @@ if ! [[ $TEAM =~ ^[0-9]+$ ]]; then
   exit 1
 fi
 
-vm="test_team${TEAM}"
+if ! [[ $VMNUM =~ ^[0-9]+$ ]]; then
+  echo "vm number validation error"
+  exit 1
+fi
+
+if ! [[ $VMNAME =~ ^[0-9a-zA-Z_]+$ ]]; then
+  echo "vm name validation error"
+  exit 1
+fi
+
+vm="${VMNUM}_${VMNAME}_team${TEAM}"
 
 VBoxManage snapshot "$vm" delete "$NAME"
 
