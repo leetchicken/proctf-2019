@@ -18,7 +18,7 @@ SSH_OPTS = [
     "-o", "NoHostAuthenticationForLocalhost=yes",
     "-o", "BatchMode=yes",
     "-o", "LogLevel=ERROR",
-    "-o", "UserKnownHostsFile=cloud_hosts",
+    "-o", "UserKnownHostsFile=known_hosts",
     "-o", "ConnectTimeout=10"
 ]
 
@@ -28,6 +28,7 @@ SSH_CLOUD_OPTS = SSH_OPTS + [
     "-o", "IdentityFile=proctf2019_cloud_deploy"
 ]
 
+DB_PATH = "/cloud/backend/db"
 
 def get_cloud_ip(team):
     try:
@@ -54,3 +55,23 @@ def call_unitl_zero_exit(params, redirect_out_to_err=True, attempts=30, timeout=
         return True
 
     return None
+
+
+def get_available_vms():
+    try:
+        ret = {}
+        for line in open("%s/vms.txt" % DB_PATH):
+            vm, vm_number = line.rsplit(maxsplit=1)
+            ret[vm] = int(vm_number)
+        return ret
+    except (OSError, ValueError):
+        return {}
+
+def get_vm_name_by_num(num):
+    if list(get_available_vms().values()).count(num) != 1:
+        return ""
+
+    for k, v in get_available_vms().items():
+        if v == num:
+            return k
+    return ""
