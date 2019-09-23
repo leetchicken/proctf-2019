@@ -10,10 +10,11 @@ import traceback
 import re
 
 from cloud_common import (get_cloud_ip, log_progress, call_unitl_zero_exit,
-                          SSH_CLOUD_OPTS)
+                          get_vm_name_by_num, SSH_CLOUD_OPTS)
 
 TEAM = int(sys.argv[1])
-NAME = sys.argv[2]
+VMNUM = int(sys.argv[2])
+NAME = sys.argv[3]
 
 
 def log_stderr(*params):
@@ -25,7 +26,13 @@ def main():
         print("msg: ERR, name validation error")
         return 1
 
-    image_state = open("db/team%d/image_deploy_state" % TEAM).read().strip()
+    vmname = get_vm_name_by_num(VMNUM)
+
+    if not vmname:
+        log_stderr("vm not found")
+        return 1
+
+    image_state = open("db/team%d/serv%d_image_deploy_state" % (TEAM, VMNUM)).read().strip()
 
     if image_state == "NOT_STARTED":
         print("msg: ERR, vm is not started")
@@ -37,10 +44,9 @@ def main():
             log_stderr("no cloud ip, exiting")
             return 1
 
-        cmd = ["sudo", "/cloud/scripts/take_snapshot.sh", str(TEAM), NAME]
+        cmd = ["sudo", "/cloud/scripts/take_snapshot.sh", str(TEAM), str(VMNUM), str(vmname), NAME]
         ret = call_unitl_zero_exit(["ssh"] + SSH_CLOUD_OPTS +
-                                   [cloud_ip] + cmd, redirect_out_to_err=False, 
-                                   attempts=1)
+                                   [cloud_ip] + cmd, redirect_out_to_err=False, attempts=1)
         if not ret:
             log_stderr("take shapshot failed")
             return 1

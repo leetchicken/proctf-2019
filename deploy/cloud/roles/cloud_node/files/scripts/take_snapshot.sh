@@ -1,9 +1,11 @@
 #!/bin/bash -e
 
-TEAM=${1?Syntax: ./take_snapshot.sh <team_id> <name>}
-NAME=${2?Syntax: ./take_snapshot.sh <team_id> <name>}
+TEAM=${1?Syntax: ./take_snapshot.sh <team_id> <vm_num> <vm_name> <name>}
+VMNUM=${2?Syntax: ./take_snapshot.sh <team_id> <vm_num> <vm_name> <name>}
+VMNAME=${3?Syntax: ./take_snapshot.sh <team_id> <vm_num> <vm_name> <name>}
+NAME=${4?Syntax: ./take_snapshot.sh <team_id> <vm_num> <vm_name> <name>}
 
-QUOTA=250
+QUOTA=200
 WARN_FROM=100
 
 if ! [[ $TEAM =~ ^[0-9]+$ ]]; then
@@ -11,9 +13,19 @@ if ! [[ $TEAM =~ ^[0-9]+$ ]]; then
   exit 1
 fi
 
-vm="test_team${TEAM}"
+if ! [[ $VMNUM =~ ^[0-9]+$ ]]; then
+  echo "vm number validation error"
+  exit 1
+fi
 
-used=$(du -s "/home/vbox_drives/${vm}" | cut -f 1)
+if ! [[ $VMNAME =~ ^[0-9a-zA-Z_]+$ ]]; then
+  echo "vm name validation error"
+  exit 1
+fi
+
+vm="${VMNUM}_${VMNAME}_team${TEAM}"
+
+used=$(du -s "/home/vbox_drives/" | cut -f 1)
 remain=$((QUOTA - used/1000/1000))
 
 if (( remain < 0 )); then
@@ -23,7 +35,7 @@ fi
 
 VBoxManage snapshot "$vm" take "$NAME" --live --uniquename Number
 
-used=$(du -s "/home/vbox_drives/${vm}" | cut -f 1)
+used=$(du -s "/home/vbox_drives/" | cut -f 1)
 remain=$(( QUOTA - used/1000/1000))
 
 if (( remain < WARN_FROM )); then
