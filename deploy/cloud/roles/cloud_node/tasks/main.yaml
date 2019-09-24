@@ -1,3 +1,7 @@
+- name: copy profile
+  copy: src=profile dest=/root/.profile
+  notify: restart sshd
+
 - name: copy host key
   copy: src=ssh_host_keys/cloud_{{inventory_hostname}}_key dest=/etc/ssh/cloud_key mode=0600
   notify: restart sshd
@@ -64,6 +68,12 @@
 - name: apt update
   apt:
     update_cache: yes
+
+- name: install xterm
+  apt: name=xterm state=latest
+
+- name: install x2goserver
+  apt: name=x2goserver state=latest
 
 - name: install virtualbox
   apt: name=virtualbox-6.0 state=latest
