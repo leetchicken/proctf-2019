@@ -27,5 +27,13 @@ services/fraud_detector/./data/rules
 services/fraud_detector/./data/users/
 EOF
     ;;
+    "polyfill")
+    cat <<EOF
+services/polyfill/./polyfill.wasm
+services/polyfill/./docker-compose.yaml
+services/polyfill/./polyfill_tcp/
+services/polyfill/./polyfill_http/
+EOF
+    ;;
     *) echo "No such service" >&2; exit 1;;
 esac
