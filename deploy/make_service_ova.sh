@@ -23,7 +23,7 @@ if VBoxManage showvminfo "proctf_$SERVICE" --machinereadable &> /dev/null; then
  VBoxManage unregistervm "proctf_$SERVICE" --delete
 fi
 
-VBoxManage import oracle_master_v1.ova --vsys 0 --vmname "proctf_$SERVICE"
+VBoxManage import centos8_master_v1.ova --vsys 0 --vmname "proctf_$SERVICE"
 
 PORT="$((RANDOM+10000))"
 VBoxManage modifyvm "proctf_$SERVICE" --natpf1 "deploy,tcp,127.0.0.2,$PORT,,22"
@@ -31,19 +31,19 @@ VBoxManage startvm "proctf_$SERVICE" --type separate
 
 echo "Waiting SSH up"
 
-while ! nc 127.0.0.2 "$PORT" -zw 1; do
+SSH_OPTS="-o StrictHostKeyChecking=no -o CheckHostIP=no -o NoHostAuthenticationForLocalhost=yes"
+SSH_OPTS="$SSH_OPTS -o BatchMode=yes -o LogLevel=ERROR -o UserKnownHostsFile=/dev/null"
+SSH_OPTS="$SSH_OPTS -o ConnectTimeout=5 -o User=root"
+SSH="ssh $SSH_OPTS -p $PORT "
+
+while ! $SSH 127.0.0.2 echo "SSH CONNECTED"; do
     echo "Still waiting"
     sleep 1
 done
 
-SSH_OPTS="-o StrictHostKeyChecking=no -o CheckHostIP=no -o NoHostAuthenticationForLocalhost=yes"
-SSH_OPTS="$SSH_OPTS -o BatchMode=yes -o LogLevel=ERROR -o UserKnownHostsFile=/dev/null"
-SSH_OPTS="$SSH_OPTS -o ConnectTimeout=20 -o User=root"
-
-SSH="ssh $SSH_OPTS -p $PORT "
 REMOTE_HOSTNAME="$(echo "$SERVICE" | tr _ -)"
 $SSH 127.0.0.2 "echo $REMOTE_HOSTNAME > /etc/hostname"
-$SSH 127.0.0.2 echo "SSH CONNECTED"
+$SSH 127.0.0.2 /usr/sbin/xfs_growfs -d /
 
 echo "==========================================="
 echo "Please pay attention on these copied files:"
