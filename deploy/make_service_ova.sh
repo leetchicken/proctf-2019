@@ -23,7 +23,7 @@ if VBoxManage showvminfo "proctf_$SERVICE" --machinereadable &> /dev/null; then
  VBoxManage unregistervm "proctf_$SERVICE" --delete
 fi
 
-VBoxManage import rhel8_master_v1.ova --vsys 0 --vmname "proctf_$SERVICE"
+VBoxManage import oracle_master_v1.ova --vsys 0 --vmname "proctf_$SERVICE"
 
 PORT="$((RANDOM+10000))"
 VBoxManage modifyvm "proctf_$SERVICE" --natpf1 "deploy,tcp,127.0.0.2,$PORT,,22"
@@ -41,11 +41,15 @@ SSH_OPTS="$SSH_OPTS -o BatchMode=yes -o LogLevel=ERROR -o UserKnownHostsFile=/de
 SSH_OPTS="$SSH_OPTS -o ConnectTimeout=20 -o User=root"
 
 SSH="ssh $SSH_OPTS -p $PORT "
-$SSH 127.0.0.2 hostname
+REMOTE_HOSTNAME="$(echo "$SERVICE" | tr _ -)"
+$SSH 127.0.0.2 "echo $REMOTE_HOSTNAME > /etc/hostname"
+$SSH 127.0.0.2 echo "SSH CONNECTED"
 
+echo "==========================================="
 echo "Please pay attention on these copied files:"
+echo "==========================================="
 pushd ..
-rsync -lptgodRv -e "$SSH" -- $SERVICE_FILES "127.0.0.2:/service/$SERVICE/"
+rsync -lptgodRv --cvs-exclude -e "$SSH" -- $SERVICE_FILES "127.0.0.2:/service/$SERVICE/"
 popd
 
 $SSH 127.0.0.2 "cd /service/$SERVICE; docker-compose up -d"
