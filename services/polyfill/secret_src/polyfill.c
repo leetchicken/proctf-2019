@@ -169,7 +169,6 @@ char* authenticate() {
 
 int frame_is_empty(polyline* f) {
     for(unsigned int i = 0; i < MAXFRAMEPOLYS-1; i += 1) {
-        // printf("f[i] = %p\n", f[i]);
         if(f[i] != 0) {
             return 0;
         }

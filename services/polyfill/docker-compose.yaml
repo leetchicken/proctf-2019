@@ -3,8 +3,8 @@ services:
   polyfill_tcp:
     build: polyfill_tcp
     ports:
-      # - "0.0.0.0:10001:10001"
-     - "127.0.0.1:10001:10001"
+     - "0.0.0.0:10001:10001"
+     # - "127.0.0.1:10001:10001"
     volumes:
       - ./polyfill.wasm:/home/polyfill/polyfill.wasm
       - ./polyfill_tcp/start.sh:/home/polyfill/start.sh
@@ -16,7 +16,7 @@ services:
   polyfill_http:
     build: polyfill_http
     ports:
-     - "127.0.0.1:80:8080"
+     - "0.0.0.0:80:8080"
     volumes:
       - ./polyfill.wasm:/home/polyfill/polyfill.wasm
       - ./polyfill_http/polyfill_http.py:/home/polyfill/polyfill_http.py
