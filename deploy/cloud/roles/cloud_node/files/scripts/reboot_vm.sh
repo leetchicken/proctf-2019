@@ -1,5 +1,10 @@
 #!/bin/bash -e
 
+# go to script dir
+MY_NAME="`readlink -f "$0"`"
+MY_DIR="`dirname "$MY_NAME"`"
+cd "${MY_DIR}"
+
 TEAM=${1?Syntax: ./reboot_vm.sh <vm_num> <vm_name> <team_id>}
 VMNUM=${2?Syntax: /reboot_vm.sh <vm_num> <vm_name> <team_id>}
 VMNAME=${3?Syntax: /reboot_vm.sh <vm_num> <vm_name> <team_id>}
@@ -22,14 +27,9 @@ fi
 vm="${VMNUM}_${VMNAME}_team${TEAM}"
 
 if ! VBoxManage list runningvms | grep -qP "\W${vm}\W"; then
-  echo 'msg: ERR, not running'
-  exit 1
+  ./launch_vm.sh "$TEAM" "$VMNUM" "$VMNAME"
+  exit 0
 fi
-
-# go to script dir
-MY_NAME="`readlink -f "$0"`"
-MY_DIR="`dirname "$MY_NAME"`"
-cd "${MY_DIR}"
 
 # hack around unstable VirtualBox work
 timeout 20 VBoxManage controlvm "$vm" reset || [ $? -ne 124 ] || (pkill -9 -f "VBoxHeadless --comment ${vm} --startvm"; echo "That's why nobody uses VirtualBox in clouds"; sleep 5; ./launch_vm.sh "$TEAM" "$VMNUM" "$VMNAME")
