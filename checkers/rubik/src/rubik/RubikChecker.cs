@@ -50,7 +50,7 @@ namespace checker.rubik
 
 			result = await client.DoRequestAsync(HttpMethod.Post, ApiSolve + query, null, NetworkOpTimeout, MaxHttpBodySize).ConfigureAwait(false);
 			if(result.StatusCode != (HttpStatusCode)418)
-				throw new CheckerException(result.StatusCode == HttpStatusCode.OK ? ExitCode.MUMBLE : result.StatusCode.ToExitCode(), $"post {ApiSolve} failed");
+				throw new CheckerException(result.StatusCode == HttpStatusCode.OK ? ExitCode.MUMBLE : result.StatusCode.ToExitCode(), $"invalid {ApiSolve} response");
 
 			await RndUtil.RndDelay(MaxDelay).ConfigureAwait(false);
 
@@ -60,7 +60,7 @@ namespace checker.rubik
 
 			var user = DoIt.TryOrDefault(() => JsonSerializer.Deserialize<User>(result.BodyAsString));
 			if(user == default || user.Login != login || user.Bio != flag)
-				throw new CheckerException(ExitCode.MUMBLE, "invalid {ApiAuth} response");
+				throw new CheckerException(ExitCode.MUMBLE, $"invalid {ApiAuth} response");
 		}
 
 		public async Task<string> Put(string host, string id, string flag, int vuln)
@@ -85,7 +85,7 @@ namespace checker.rubik
 			catch(RubikSolveException e)
 			{
 				await Console.Error.WriteLineAsync(e.Message).ConfigureAwait(false);
-				throw new CheckerException(ExitCode.MUMBLE, $"invalid {ApiGenerate} response");
+				throw new CheckerException(ExitCode.MUMBLE, $"invalid {ApiGenerate} response: unsolvable puzzle");
 			}
 
 			await Console.Error.WriteLineAsync($"solution '{solution}'").ConfigureAwait(false);
@@ -105,13 +105,13 @@ namespace checker.rubik
 
 			var sln = DoIt.TryOrDefault(() => JsonSerializer.Deserialize<Solution>(result.BodyAsString));
 			if(sln == default || sln.Login != login || sln.MovesCount != solution.Length)
-				throw new CheckerException(ExitCode.MUMBLE, $"invalid {ApiGenerate} response");
+				throw new CheckerException(ExitCode.MUMBLE, $"invalid {ApiSolve} response");
 
 			await Console.Error.WriteLineAsync($"solution '{solution}'").ConfigureAwait(false);
 
 			var cookie = DoIt.TryOrDefault(() => WebUtility.UrlDecode(client.Cookies?.GetCookies(GetBaseUri(host))[AuthCookieName]?.Value));
-			if(string.IsNullOrEmpty(cookie) || cookie.Length > 1024)
-				throw new CheckerException(result.StatusCode.ToExitCode(), $"invalid {ApiSolve} response");
+			if(string.IsNullOrEmpty(cookie) || cookie.Length > 256)
+				throw new CheckerException(result.StatusCode.ToExitCode(), $"invalid {ApiSolve} response: {AuthCookieName} cookie");
 
 			return $"{login}:{pass}:{Convert.ToBase64String(Encoding.UTF8.GetBytes(cookie))}";
 		}
@@ -134,7 +134,7 @@ namespace checker.rubik
 
 			var solutions = DoIt.TryOrDefault(() => JsonSerializer.Deserialize<List<Solution>>(result.BodyAsString));
 			if(solutions == default || solutions.Count == 0 || solutions.All(sln => sln.Login != login))
-				throw new CheckerException(ExitCode.MUMBLE, $"invalid {ApiGenerate} response");
+				throw new CheckerException(ExitCode.MUMBLE, $"invalid {ApiScoreboard} response");
 
 			await RndUtil.RndDelay(MaxDelay).ConfigureAwait(false);
 
@@ -163,7 +163,7 @@ namespace checker.rubik
 		private const int MinRandomFieldLength = 10;
 		private const int MaxRandomFieldLength = 32;
 
-		private static Uri GetBaseUri(string host) => new Uri($"https://{host}:{Port}/");
+		private static Uri GetBaseUri(string host) => new Uri($"http://{host}:{Port}/");
 
 		private const string ApiScoreboard = "/api/scoreboard";
 		private const string ApiGenerate = "/api/generate";

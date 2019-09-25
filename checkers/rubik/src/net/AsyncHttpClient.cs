@@ -113,12 +113,12 @@ namespace checker.net
 		public HttpResponseHeaders Headers;
 
 		public MemoryStream Body;
-		public string BodyAsString => Encoding.UTF8.GetString(Body.GetBuffer(), 0, (int)Body.Length);
+		public string BodyAsString => Body == null ? null : Encoding.UTF8.GetString(Body.GetBuffer(), 0, (int)Body.Length);
 		public TimeSpan Elapsed;
 
 		public Exception Exception;
 
-		public static readonly HttpResult Timeout = new HttpResult {StatusCode = (HttpStatusCode)499};
-		public static readonly HttpResult Unknown = new HttpResult();
+		public static HttpResult Timeout => new HttpResult {StatusCode = (HttpStatusCode)499};
+		public static HttpResult Unknown => new HttpResult();
 	}
 }
