@@ -43,7 +43,9 @@ cs_checkers_hostname_cb: |
   sub { my ($team, $service) = @_; $service->{host_suffix} ? "$team->{host_prefix}$service->{host_suffix}" : "$team->{host}" }
 
 teams: |
-  {name => 'team1', network => '10.60.2.0/24', host => '10.60.2.1', host_prefix => '10.60.2.', token => '5682601f-f424-4148-ab45-9b6bea3ec94d'},
+  {name => 'team1',    network => '10.60.2.0/24', host => '10.60.2.1', host_prefix => '10.60.2.', token => '5682601f-f424-4148-ab45-9b6bea3ec94d'},
+  {name => 'vbteam10', network => '10.60.10.0/24', host => '10.60.10.1', host_prefix => '10.60.10.', token => '324978e8-b2f8-487b-8f75-9772e516f7ea'},
+  {name => 'vbteam11', network => '10.60.11.0/24', host => '10.60.11.1', host_prefix => '10.60.11.', token => 'adf4d8f7-3967-4a57-9765-bb1398aa4b00'},
   {name => 'bot1', network => '10.60.3.0/24', host => '10.60.3.1', host_prefix => '10.60.3.', token => '334c7b3f-f709-46b0-ada6-228d86a552ee', bot => [{sla => 0.95, attack => 0.5, defense => 0.3}, {sla => 0.97, attack => 0.6, defense => 0.6}, {sla => 0.9, attack => 0.4, defense => 0.4}]},
   {name => 'bot2', network => '10.60.4.0/24', host => '10.60.4.1', host_prefix => '10.60.4.', token => '5656f9f5-4c6f-4892-9137-3c37bad75902', bot => [{sla => 0.85, attack => 0.75, defense => 0.7}, {sla => 0.92, attack => 0.3, defense => 0.3}, {sla => 0.88, attack => 0.5, defense => 0.8}]},
   {name => 'bot3', network => '10.60.5.0/24', host => '10.60.5.1', host_prefix => '10.60.5.', token => '787bb101-09f4-468b-8697-32c27436140f', bot => [{sla => 0.65, attack => 0.95, defense => 0.9}, {sla => 0.73, attack => 0.9, defense => 0.9}, {sla => 0.6, attack => 0.8, defense => 0.8}]},
