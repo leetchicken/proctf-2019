@@ -58,9 +58,6 @@ RC="/etc/rc.d/rc.local"
 $SSH 127.0.0.2 "chmod +x $RC"
 $SSH 127.0.0.2 "echo 'cd /service/$SERVICE && docker-compose up -d && sed -i /docker-compose/d $RC' >> $RC"
 
-echo "Giving the service some time to warm up"
-sleep 5
-
 VBoxManage controlvm "proctf_$SERVICE" acpipowerbutton
 
 while VBoxManage list runningvms | grep -q "proctf_$SERVICE"; do

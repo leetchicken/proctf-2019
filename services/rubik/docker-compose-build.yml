@@ -1,6 +1,6 @@
 version: '3'
 services:
-  rubik:
+  rubik_build:
     image: proctf/rubik-build
     container_name: rubik-build
     build:
