@@ -2,12 +2,12 @@
 from flask import Flask,logging
 
 from flask import Flask,request,render_template,make_response,send_from_directory,session,redirect,logging,jsonify,abort
-import dataset,threading,datetime,string,random,os,stat
+import threading,datetime,string,random,os,stat
 from functools import wraps, update_wrapper
 from logging.handlers import RotatingFileHandler
 import subprocess as sp
 from stat import S_ISREG, ST_CTIME, ST_MODE
-import os, sys, time, re
+import os.path, sys, time, re
 from flask_session import Session
 import hashlib,datetime,threading
 from struct import *
@@ -20,6 +20,9 @@ app.config['SESSION_FILE_THRESHOLD'] = 10000
 sess = Session()
 sess.init_app(app)
 MAX_UPLOADED_COUNT = 1000
+if not os.path.exists("messages"):
+    os.mkdir("messages")
+
 def CleanOld():
     dirpath="messages"
     entries = (os.path.join(dirpath, fn) for fn in os.listdir(dirpath))
