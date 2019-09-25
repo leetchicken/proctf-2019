@@ -35,5 +35,16 @@ services/polyfill/./polyfill_tcp/
 services/polyfill/./polyfill_http/
 EOF
     ;;
+    "rubik")
+    cat <<EOF
+services/rubik/./docker-compose.yml
+services/rubik/./Dockerfile
+services/rubik/./settings.ini
+services/rubik/./start.sh
+services/rubik/./rubik.sln
+services/rubik/./wwwroot/
+services/rubik/./out/
+EOF
+    ;;
     *) echo "No such service" >&2; exit 1;;
 esac
