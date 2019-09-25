@@ -48,11 +48,15 @@ $SSH 127.0.0.2 /usr/sbin/xfs_growfs -d /
 echo "==========================================="
 echo "Please pay attention on these copied files:"
 echo "==========================================="
-pushd ..
+pushd .. > /dev/null
 rsync -lptgodRv --cvs-exclude -e "$SSH" -- $SERVICE_FILES "127.0.0.2:/service/$SERVICE/"
-popd
+popd > /dev/null
 
-$SSH 127.0.0.2 "cd /service/$SERVICE; docker-compose up -d"
+$SSH 127.0.0.2 "cd /service/$SERVICE; docker-compose up --no-start"
+
+RC="/etc/rc.d/rc.local"
+$SSH 127.0.0.2 "chmod +x $RC"
+$SSH 127.0.0.2 "echo 'cd /service/$SERVICE && docker-compose up -d && sed -i /docker-compose/d $RC' >> $RC"
 
 echo "Giving the service some time to warm up"
 sleep 5

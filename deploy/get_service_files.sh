@@ -43,7 +43,18 @@ services/rubik/./settings.ini
 services/rubik/./start.sh
 services/rubik/./rubik.sln
 services/rubik/./wwwroot/
+services/rubik/./wwwroot/fonts/
 services/rubik/./out/
+EOF
+    ;;
+    "binder")
+    cat <<EOF
+services/Binder/./docker-compose.yml
+services/Binder/./Dockerfile
+services/Binder/./service/
+services/Binder/./service/seccomp_test/
+services/Binder/./service/static/
+services/Binder/./service/templates/
 EOF
     ;;
     *) echo "No such service" >&2; exit 1;;
