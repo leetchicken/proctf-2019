@@ -57,5 +57,33 @@ services/Binder/./service/static/
 services/Binder/./service/templates/
 EOF
     ;;
+    "deer")
+    cat <<EOF
+services/deer/./docker-compose.yml
+services/deer/./run-docker-compose.sh
+EOF
+    ;;
+    "bb")
+    cat <<EOF
+services/bb/./docker-compose.yml
+services/bb/./init.sh
+services/bb/./b_b.conf
+services/bb/./Dockerfile
+services/bb/./lib/
+services/bb/./lib/BB/
+services/bb/./lib/BB/Controller/
+services/bb/./lib/BB/Model/
+services/bb/./public/
+services/bb/./public/css/
+services/bb/./public/js/
+services/bb/./script/
+services/bb/./sql/
+services/bb/./ssl/
+services/bb/./t/
+services/bb/./templates/
+services/bb/./templates/layouts/
+services/bb/./templates/main/
+EOF
+    ;;
     *) echo "No such service" >&2; exit 1;;
 esac

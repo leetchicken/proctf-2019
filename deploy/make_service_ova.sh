@@ -23,7 +23,7 @@ if VBoxManage showvminfo "proctf_$SERVICE" --machinereadable &> /dev/null; then
  VBoxManage unregistervm "proctf_$SERVICE" --delete
 fi
 
-VBoxManage import centos8_master_v1.ova --vsys 0 --vmname "proctf_$SERVICE"
+VBoxManage import centos8_master_v2.ova --vsys 0 --vmname "proctf_$SERVICE"
 
 PORT="$((RANDOM+10000))"
 VBoxManage modifyvm "proctf_$SERVICE" --natpf1 "deploy,tcp,127.0.0.2,$PORT,,22"
@@ -52,11 +52,24 @@ pushd .. > /dev/null
 rsync -lptgodRv --cvs-exclude -e "$SSH" -- $SERVICE_FILES "127.0.0.2:/service/$SERVICE/"
 popd > /dev/null
 
+if [ $SERVICE == "deer" ]; then
+    echo "import docker images"
+    docker save proctf/deer-elasticsearch | $SSH 127.0.0.2 docker import - proctf/deer-elasticsearch
+    docker save proctf/deer-rabbitmq | $SSH 127.0.0.2 docker import - proctf/deer-rabbitmq
+    docker save proctf/deer | $SSH 127.0.0.2 docker import - proctf/deer
+fi
+
 $SSH 127.0.0.2 "cd /service/$SERVICE; docker-compose up --no-start"
 
+
 RC="/etc/rc.d/rc.local"
+FIRST_RUN_CMD="cd /service/$SERVICE && docker-compose up -d && sed -i /docker-compose/d $RC"
+if [ -f "../services/$SERVICE/init.sh" ]; then
+    echo "Found init.sh, scheduling it on the next run"
+    FIRST_RUN_CMD="cd /service/$SERVICE && bash ./init.sh && docker-compose up -d && sed -i /docker-compose/d $RC"
+fi
 $SSH 127.0.0.2 "chmod +x $RC"
-$SSH 127.0.0.2 "echo 'cd /service/$SERVICE && docker-compose up -d && sed -i /docker-compose/d $RC' >> $RC"
+$SSH 127.0.0.2 "echo '$FIRST_RUN_CMD' >> $RC"
 
 VBoxManage controlvm "proctf_$SERVICE" acpipowerbutton
 
