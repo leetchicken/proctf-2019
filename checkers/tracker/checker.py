@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 import logging
 import os
+import random
+import string
 
 import msgpack
 import secrets
@@ -68,7 +70,7 @@ class Client:
                               Response.to_str(expect))
                 raise AssertionError()
             response = response[1:]
-        return status if len(response) == 1 else response
+        return response[0] if len(response) == 1 else response
 
     def query_raw(self, obj):
         self.sock.send(msgpack.packb(obj))
@@ -88,23 +90,30 @@ def _exit(code):
     sys.exit(code)
 
 
+def create_login(length=16):
+    letters = string.ascii_lowercase
+    return "".join(random.choice(letters) for _ in range(length))
+
+
 def check(ip):
     password = secrets.token_urlsafe(16)
 
     try:
         client = Client(ip)
 
-        logging.info("Register user with password %r ...", password)
-        user_id = client.query(Request.USER_REGISTER, password, expect=Response.OK)
-        logging.info("Register success, user_id: %r", user_id)
+        login = create_login()
 
-        logging.info("Log in user %r with password %r ...", user_id, password)
-        secret = client.query(Request.USER_LOGIN, user_id, password + " ", expect=Response.OK)
-        logging.info("Log in success, secret: %r", secret)
+        logging.info("Register user %r with password %r ...", login, password)
+        client.query(Request.USER_REGISTER, login, password, expect=Response.OK)
+        logging.info("Register succeeded")
+
+        logging.info("Log in user %r with password %r ...", login, password)
+        secret = client.query(Request.USER_LOGIN, login, password, expect=Response.OK)
+        logging.info("Log in succeeded, secret: %r", secret)
 
         logging.info("Delete user with secret %r ...", secret)
         client.query(Request.USER_DELETE, secret, expect=Response.OK)
-        logging.info("Delete success")
+        logging.info("Delete succeeded")
     except AssertionError as e:
         logging.exception(e)
         _exit(ExitCode.MUMBLE)

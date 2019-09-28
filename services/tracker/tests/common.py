@@ -52,10 +52,9 @@ async def cleanup():
         await db.close()
 
 
-def create_secret(client):
-    password = "1234567890"
-    user_id = client.query(Request.USER_REGISTER, password, expect=Response.OK)
-    return client.query(Request.USER_LOGIN, user_id, password, expect=Response.OK)
+def create_secret(client, login="test", password="1234567890"):
+    client.query(Request.USER_REGISTER, login, password, expect=Response.OK)
+    return client.query(Request.USER_LOGIN, login, password, expect=Response.OK)
 
 
 @pytest.fixture

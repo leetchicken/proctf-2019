@@ -2,41 +2,46 @@ import logging
 import time
 import uuid
 
-from app.common import hash_password, is_uuid, generate_secret, handler, auth
+from app.common import hash_password, generate_secret, handler, auth
 from app.enums import Response, Request
 
 MIN_PASSWORD_LEN = 8
 MAX_PASSWORD_LEN = 64
+MAX_LOGIN_LEN = 16
 MAX_ACTIVE_SESSIONS = 3
 
 log = logging.getLogger()
 
 
 @handler(Request.USER_REGISTER)
-async def register(db, password):
+async def user_register(db, login, password):
     if len(password) < MIN_PASSWORD_LEN:
         return Response.BAD_REQUEST, "Password is too short."
     if len(password) > MAX_PASSWORD_LEN:
         return Response.BAD_REQUEST, "Password is too long."
+    if len(login) > MAX_LOGIN_LEN:
+        return Response.BAD_REQUEST, "Login is too long."
+
+    user = await db.fetchrow('SELECT id FROM "user" WHERE login=$1', login)
+    if user is not None:
+        return Response.FORBIDDEN, "Such login already exists."
 
     # FIXME: check proof of work
 
     user_id = uuid.uuid4()
-    await db.execute('INSERT INTO "user"(id, hash, timestamp) VALUES($1, $2, $3)',
-                     user_id, hash_password(password), time.time())
+    await db.execute('INSERT INTO "user"(id, login, hash, timestamp) VALUES($1, $2, $3, $4)',
+                     user_id, login, hash_password(password), time.time())
 
-    return Response.OK, str(user_id)
+    return Response.OK
 
 
 @handler(Request.USER_LOGIN)
-async def login(db, user_id, password):
-    if not is_uuid(user_id):
-        return Response.BAD_REQUEST
-
-    user = await db.fetchrow('SELECT * FROM "user" WHERE id=$1 AND hash=$2',
-                             user_id, hash_password(password))
+async def user_login(db, login, password):
+    user = await db.fetchrow('SELECT id FROM "user" WHERE login=$1 AND hash=$2',
+                             login, hash_password(password))
     if user is None:
         return Response.FORBIDDEN
+    user_id = user["id"]
 
     secrets = await db.fetch("SELECT * FROM secret WHERE user_id=$1", user_id)
     if len(secrets) >= MAX_ACTIVE_SESSIONS:
@@ -54,13 +59,13 @@ async def login(db, user_id, password):
 
 
 @handler(Request.USER_LOGOUT)
-async def logout(db, secret):
+async def user_logout(db, secret):
     res = await db.execute('DELETE FROM secret WHERE value=$1', secret)
     return Response.OK if res == "DELETE 1" else Response.NOT_FOUND
 
 
 @handler(Request.USER_DELETE)
-async def delete(db, secret):
+async def user_delete(db, secret):
     user_id = await auth(db, secret)
     if user_id is None:
         return Response.FORBIDDEN

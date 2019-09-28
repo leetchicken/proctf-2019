@@ -61,7 +61,7 @@ def test__track_get(client, secret, token):
 def test__track_request_share__make_public(client, secret, token):
     track_id = point_add(client, token)
 
-    other_secret = create_secret(client)
+    other_secret = create_secret(client, login="test2")
     track_get(client, other_secret, track_id, expect=Response.FORBIDDEN)
 
     client.query(Request.TRACK_REQUEST_SHARE, other_secret, track_id)
@@ -74,7 +74,7 @@ def test__track_request_share__make_public(client, secret, token):
 def test__track_request_share__vulnerability(client, secret, token):
     track_id = point_add(client, token)
 
-    other_secret = create_secret(client)
+    other_secret = create_secret(client, login="test2")
     track_get(client, other_secret, track_id, expect=Response.FORBIDDEN)
 
     client.query(Request.TRACK_REQUEST_SHARE, other_secret, track_id)

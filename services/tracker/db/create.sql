@@ -1,8 +1,10 @@
 CREATE TABLE "user" (
     id          UUID PRIMARY KEY,
+    login       VARCHAR(16) NOT NULL,
     hash        VARCHAR NOT NULL,
     timestamp   INTEGER NOT NULL
 );
+CREATE INDEX ix_user_login ON "user" USING btree (login);
 
 CREATE TABLE secret (
     value       character varying(34) PRIMARY KEY,
@@ -10,7 +12,7 @@ CREATE TABLE secret (
     timestamp   integer NOT NULL,
     "order"     serial NOT NULL
 );
-CREATE INDEX ix_secret_user_id ON secret USING btree (timestamp);
+CREATE INDEX ix_secret_user_id ON secret USING btree (user_id);
 
 CREATE TABLE tracker (
     id          serial PRIMARY KEY,
