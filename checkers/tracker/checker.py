@@ -7,7 +7,7 @@ import random
 import string
 
 import msgpack
-import secrets
+import base64
 import socket
 import sys
 
@@ -100,7 +100,8 @@ def create_login(length=16):
 
 
 def create_password(login):
-    return hmac.new(HMAC_PASS_KEY.encode(), msg=login.encode(), digestmod=hashlib.sha256).hexdigest()
+    pass_bytes = hmac.new(HMAC_PASS_KEY.encode(), msg=login.encode(), digestmod=hashlib.sha384).digest()
+    return base64.b64encode(pass_bytes).decode()
 
 
 def check(ip):
