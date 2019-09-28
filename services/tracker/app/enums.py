@@ -2,6 +2,7 @@ class Request:
     USER_REGISTER = 0x00
     USER_LOGIN = 0x01
     USER_LOGOUT = 0x02
+    USER_DELETE = 0x03
     TRACKER_LIST = 0x10
     TRACKER_ADD = 0x11
     TRACKER_DELETE = 0x12

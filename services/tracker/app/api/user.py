@@ -2,7 +2,7 @@ import logging
 import time
 import uuid
 
-from app.common import hash_password, is_uuid, generate_secret, connect_db, handler
+from app.common import hash_password, is_uuid, generate_secret, handler, auth
 from app.enums import Response, Request
 
 MIN_PASSWORD_LEN = 8
@@ -57,3 +57,15 @@ async def login(db, user_id, password):
 async def logout(db, secret):
     res = await db.execute('DELETE FROM secret WHERE value=$1', secret)
     return Response.OK if res == "DELETE 1" else Response.NOT_FOUND
+
+
+@handler(Request.USER_DELETE)
+async def delete(db, secret):
+    user_id = await auth(db, secret)
+    if user_id is None:
+        return Response.FORBIDDEN
+    await db.execute('DELETE FROM track WHERE user_id=$1', user_id)
+    await db.execute('DELETE FROM tracker WHERE user_id=$1', user_id)
+    await db.execute('DELETE FROM "user" WHERE id=$1', user_id)
+    await db.execute('DELETE FROM secret WHERE user_id=$1', user_id)
+    return Response.OK

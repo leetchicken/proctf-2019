@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
+import logging
+import os
+
 import msgpack
 import secrets
 import socket
 import sys
 
+LOGS_DIR = "logs"
 PORT = 9090
 BUFFER_SIZE = 1024
 
@@ -17,6 +21,7 @@ class Request:
     USER_REGISTER = 0x00
     USER_LOGIN = 0x01
     USER_LOGOUT = 0x02
+    USER_DELETE = 0x03
     TRACKER_LIST = 0x10
     TRACKER_ADD = 0x11
     TRACKER_DELETE = 0x12
@@ -34,6 +39,15 @@ class Response:
     FORBIDDEN = 0x02
     NOT_FOUND = 0x03
     INTERNAL_ERROR = 0x04
+    @staticmethod
+    def to_str(value):
+        return {
+            Response.OK: "OK",
+            Response.BAD_REQUEST: "BAD_REQUEST",
+            Response.FORBIDDEN: "FORBIDDEN",
+            Response.NOT_FOUND: "NOT_FOUND",
+            Response.INTERNAL_ERROR: "INTERNAL_ERROR"
+        }.get(value, str(value))
 
 
 class Client:
@@ -46,10 +60,15 @@ class Client:
 
     def query(self, *args, expect=None):
         response = self.query_raw(args)
+        status = response[0]
         if expect is not None:
-            assert response[0] == expect
+            if status != expect:
+                logging.error("Bad response status: %r, expected: %r.",
+                              Response.to_str(response[0]),
+                              Response.to_str(expect))
+                raise AssertionError()
             response = response[1:]
-        return response[0] if len(response) == 1 else response
+        return status if len(response) == 1 else response
 
     def query_raw(self, obj):
         self.sock.send(msgpack.packb(obj))
@@ -64,21 +83,36 @@ class ExitCode:
     INTERNAL_ERROR = 110
 
 
+def _exit(code):
+    logging.info("Exiting with code %d", code)
+    sys.exit(code)
+
+
 def check(ip):
     password = secrets.token_urlsafe(16)
 
     try:
         client = Client(ip)
 
+        logging.info("Register user with password %r ...", password)
         user_id = client.query(Request.USER_REGISTER, password, expect=Response.OK)
-        secret = client.query(Request.USER_LOGIN, user_id, password, expect=Response.OK)
-        client.query(Request.USER_LOGOUT, secret, expect=Response.OK)
-    except AssertionError:
-        sys.exit(ExitCode.MUMBLE)
-    except ConnectionError:
-        sys.exit(ExitCode.FAIL)
+        logging.info("Register success, user_id: %r", user_id)
 
-    sys.exit(ExitCode.OK)
+        logging.info("Log in user %r with password %r ...", user_id, password)
+        secret = client.query(Request.USER_LOGIN, user_id, password + " ", expect=Response.OK)
+        logging.info("Log in success, secret: %r", secret)
+
+        logging.info("Delete user with secret %r ...", secret)
+        client.query(Request.USER_DELETE, secret, expect=Response.OK)
+        logging.info("Delete success")
+    except AssertionError as e:
+        logging.exception(e)
+        _exit(ExitCode.MUMBLE)
+    except ConnectionError as e:
+        logging.exception(e)
+        _exit(ExitCode.FAIL)
+
+    _exit(ExitCode.OK)
 
 
 def put(id, flag):
@@ -89,13 +123,25 @@ def get(id, flag):
     pass
 
 
+def configure_logging(ip):
+    os.makedirs(LOGS_DIR, exist_ok=True)
+    log_filename = os.path.join(LOGS_DIR, "{}.log".format(ip))
+    logging.basicConfig(level=logging.DEBUG,
+                        filename=log_filename,
+                        format="%(asctime)s %(levelname)-8s %(message)s")
+
+
 def main():
     if len(sys.argv) < 3:
-        print("Usage: {} MODE IP".format(sys.argv[0]))
-        sys.exit(ExitCode.INTERNAL_ERROR)
+        print("Usage: {} (check|put|get) IP".format(sys.argv[0]))
+        _exit(ExitCode.INTERNAL_ERROR)
 
     mode = sys.argv[1]
     args = sys.argv[2:]
+
+    configure_logging(ip=sys.argv[2])
+    logging.info("Started with arguments: %r", sys.argv)
+
     if mode == "check":
         check(*args)
     elif mode == "put":
@@ -103,8 +149,8 @@ def main():
     elif mode == "get":
         put(*args)
     else:
-        print("Error: unknown MODE.")
-        sys.exit(ExitCode.INTERNAL_ERROR)
+        logging.error("Unknown MODE.")
+        _exit(ExitCode.INTERNAL_ERROR)
 
 
 if __name__ == "__main__":

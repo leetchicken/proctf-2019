@@ -61,3 +61,11 @@ def test__user_register_login__old_sessions_are_closed(client):
     for i in range(4):
         expected_response = Response.NOT_FOUND if i == 0 else Response.OK
         client.query(Request.USER_LOGOUT, secrets[i], expect=expected_response)
+
+
+def test__user_register_login_delete__success(client):
+    user_id = client.query(Request.USER_REGISTER, PASSWORD, expect=Response.OK)
+    secret = client.query(Request.USER_LOGIN, user_id, PASSWORD, expect=Response.OK)
+    client.query(Request.USER_DELETE, secret, expect=Response.OK)
+    client.query(Request.USER_DELETE, secret, expect=Response.FORBIDDEN)
+    client.query(Request.USER_LOGIN, user_id, PASSWORD, expect=Response.FORBIDDEN)

@@ -51,3 +51,10 @@ def handler(request_id: int):
         func.request_id = request_id
         return func
     return wrapper
+
+
+async def auth(db, secret):
+    row = await db.fetchrow("SELECT user_id FROM secret WHERE value=$1", secret)
+    if row is None:
+        return None
+    return row["user_id"]

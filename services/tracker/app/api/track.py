@@ -1,17 +1,9 @@
 import logging
 
-from app.common import handler
+from app.common import handler, auth
 from app.enums import Response, Request, TrackAccess
 
 log = logging.getLogger()
-
-
-# FIXME: copy-paste?
-async def auth(db, secret):
-    row = await db.fetchrow("SELECT * FROM secret WHERE value=$1", secret)
-    if row is None:
-        return None
-    return row["user_id"]
 
 
 @handler(Request.TRACK_LIST)
