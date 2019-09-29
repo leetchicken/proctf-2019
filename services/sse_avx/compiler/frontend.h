@@ -22,18 +22,30 @@ enum InstructionType
     USER_DEFINE(kVectorSub_f32,         "v_sub_f32",        3, kInstructionTypeVector)\
     USER_DEFINE(kVectorMul_f32,         "v_mul_f32",        3, kInstructionTypeVector)\
     USER_DEFINE(kVectorDiv_f32,         "v_div_f32",        3, kInstructionTypeVector)\
+    USER_DEFINE(kVectorCmpLt_f32,       "v_cmp_lt_f32",     2, kInstructionTypeVector)\
+    USER_DEFINE(kVectorCmpLe_f32,       "v_cmp_le_f32",     2, kInstructionTypeVector)\
     USER_DEFINE(kVectorCmpEq_f32,       "v_cmp_eq_f32",     2, kInstructionTypeVector)\
     USER_DEFINE(kVectorCmpGt_f32,       "v_cmp_gt_f32",     2, kInstructionTypeVector)\
+    USER_DEFINE(kVectorCmpGe_f32,       "v_cmp_ge_f32",     2, kInstructionTypeVector)\
+    USER_DEFINE(kVectorCmpNe_f32,       "v_cmp_ne_f32",     2, kInstructionTypeVector)\
     USER_DEFINE(kVectorAdd_u32,         "v_add_u32",        3, kInstructionTypeVector)\
     USER_DEFINE(kVectorSub_u32,         "v_sub_u32",        3, kInstructionTypeVector)\
     USER_DEFINE(kVectorMul_u32,         "v_mul_u32",        3, kInstructionTypeVector)\
     USER_DEFINE(kVectorCmpEq_u32,       "v_cmp_eq_u32",     2, kInstructionTypeVector)\
+    USER_DEFINE(kVectorCmpGt_u32,       "v_cmp_gt_u32",     2, kInstructionTypeVector)\
+    USER_DEFINE(kVectorCvtU32_F32,      "v_cvt_u32_f32",    2, kInstructionTypeVector)\
+    USER_DEFINE(kVectorCvtF32_U32,      "v_cvt_f32_u32",    2, kInstructionTypeVector)\
     USER_DEFINE(kVectorLoad,            "v_load",           3, kInstructionTypeVector)\
     USER_DEFINE(kVectorStore,           "v_store",          3, kInstructionTypeVector)\
     USER_DEFINE(kScalarMov,             "s_mov",            2, kInstructionTypeScalar)\
     USER_DEFINE(kScalarAddu,            "s_addu",           3, kInstructionTypeScalar)\
     USER_DEFINE(kScalarAnd,             "s_and",            3, kInstructionTypeScalar)\
     USER_DEFINE(kScalarAndN2,           "s_andn2",          3, kInstructionTypeScalar)\
+    USER_DEFINE(kScalarOr,              "s_or",             3, kInstructionTypeScalar)\
+    USER_DEFINE(kScalarShl,             "s_shl",            3, kInstructionTypeScalar)\
+    USER_DEFINE(kScalarShr,             "s_shr",            3, kInstructionTypeScalar)\
+    USER_DEFINE(kScalarLoad,            "s_load",           3, kInstructionTypeScalar)\
+    USER_DEFINE(kScalarStore,           "s_store",          3, kInstructionTypeScalar)\
     USER_DEFINE(kScalarBranchVCCZ,      "s_branch_vccz",    1, kInstructionTypeScalar)\
     USER_DEFINE(kScalarBranchVCCNZ,     "s_branch_vccnz",   1, kInstructionTypeScalar)\
     USER_DEFINE(kScalarBranchEXECZ,     "s_branch_execz",   1, kInstructionTypeScalar)\
@@ -161,18 +173,30 @@ public:
     void enterV_sub_f32(VectorAssemblerParser::V_sub_f32Context* ctx) override;
     void enterV_mul_f32(VectorAssemblerParser::V_mul_f32Context* ctx) override;
     void enterV_div_f32(VectorAssemblerParser::V_div_f32Context* ctx) override;
+    void enterV_cmp_lt_f32(VectorAssemblerParser::V_cmp_lt_f32Context* ctx) override;
+    void enterV_cmp_le_f32(VectorAssemblerParser::V_cmp_le_f32Context* ctx) override;
     void enterV_cmp_eq_f32(VectorAssemblerParser::V_cmp_eq_f32Context* ctx) override;
     void enterV_cmp_gt_f32(VectorAssemblerParser::V_cmp_gt_f32Context* ctx) override;
+    void enterV_cmp_ge_f32(VectorAssemblerParser::V_cmp_ge_f32Context* ctx) override;
+    void enterV_cmp_ne_f32(VectorAssemblerParser::V_cmp_ne_f32Context* ctx) override;
     void enterV_add_u32(VectorAssemblerParser::V_add_u32Context* ctx) override;
     void enterV_sub_u32(VectorAssemblerParser::V_sub_u32Context* ctx) override;
     void enterV_mul_u32(VectorAssemblerParser::V_mul_u32Context* ctx) override;
     void enterV_cmp_eq_u32(VectorAssemblerParser::V_cmp_eq_u32Context* ctx) override;
+    void enterV_cmp_gt_u32(VectorAssemblerParser::V_cmp_gt_u32Context* ctx) override;
+    void enterV_cvt_u32_f32(VectorAssemblerParser::V_cvt_u32_f32Context* ctx) override;
+    void enterV_cvt_f32_u32(VectorAssemblerParser::V_cvt_f32_u32Context* ctx) override;
     void enterV_load(VectorAssemblerParser::V_loadContext* ctx) override;
     void enterV_store(VectorAssemblerParser::V_storeContext* ctx) override;
     void enterS_mov(VectorAssemblerParser::S_movContext* ctx) override;
     void enterS_addu(VectorAssemblerParser::S_adduContext* ctx) override;
     void enterS_and(VectorAssemblerParser::S_andContext *ctx) override;
     void enterS_andn2(VectorAssemblerParser::S_andn2Context* ctx) override;
+    void enterS_or(VectorAssemblerParser::S_orContext* ctx) override;
+    void enterS_shl(VectorAssemblerParser::S_shlContext* ctx) override;
+    void enterS_shr(VectorAssemblerParser::S_shrContext* ctx) override;
+    void enterS_load(VectorAssemblerParser::S_loadContext* ctx) override;
+    void enterS_store(VectorAssemblerParser::S_storeContext* ctx) override;
     void enterS_branch_vccz(VectorAssemblerParser::S_branch_vcczContext* ctx) override;
     void enterS_branch_vccnz(VectorAssemblerParser::S_branch_vccnzContext* ctx) override;
     void enterS_branch_execz(VectorAssemblerParser::S_branch_execzContext* ctx) override;

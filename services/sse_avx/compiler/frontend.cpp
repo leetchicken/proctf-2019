@@ -57,6 +57,18 @@ void FrontEnd::enterV_div_f32(VectorAssemblerParser::V_div_f32Context* ctx)
 }
 
 
+void FrontEnd::enterV_cmp_lt_f32(VectorAssemblerParser::V_cmp_lt_f32Context* ctx)
+{
+    Add2OpInstruction(kVectorCmpLt_f32, ctx);
+}
+
+
+void FrontEnd::enterV_cmp_le_f32(VectorAssemblerParser::V_cmp_le_f32Context* ctx)
+{
+    Add2OpInstruction(kVectorCmpLe_f32, ctx);
+}
+
+
 void FrontEnd::enterV_cmp_eq_f32(VectorAssemblerParser::V_cmp_eq_f32Context* ctx) 
 {
     Add2OpInstruction(kVectorCmpEq_f32, ctx);
@@ -66,6 +78,18 @@ void FrontEnd::enterV_cmp_eq_f32(VectorAssemblerParser::V_cmp_eq_f32Context* ctx
 void FrontEnd::enterV_cmp_gt_f32(VectorAssemblerParser::V_cmp_gt_f32Context* ctx) 
 {
     Add2OpInstruction(kVectorCmpGt_f32, ctx);
+}
+
+
+void FrontEnd::enterV_cmp_ge_f32(VectorAssemblerParser::V_cmp_ge_f32Context* ctx)
+{
+    Add2OpInstruction(kVectorCmpGe_f32, ctx);
+}
+
+
+void FrontEnd::enterV_cmp_ne_f32(VectorAssemblerParser::V_cmp_ne_f32Context* ctx)
+{
+    Add2OpInstruction(kVectorCmpNe_f32, ctx);
 }
 
 
@@ -90,6 +114,24 @@ void FrontEnd::enterV_mul_u32(VectorAssemblerParser::V_mul_u32Context* ctx)
 void FrontEnd::enterV_cmp_eq_u32(VectorAssemblerParser::V_cmp_eq_u32Context* ctx) 
 {
     Add2OpInstruction(kVectorCmpEq_u32, ctx);
+}
+
+
+void FrontEnd::enterV_cmp_gt_u32(VectorAssemblerParser::V_cmp_gt_u32Context* ctx)
+{
+    Add2OpInstruction(kVectorCmpGt_u32, ctx);
+}
+
+
+void FrontEnd::enterV_cvt_u32_f32(VectorAssemblerParser::V_cvt_u32_f32Context* ctx)
+{
+    Add2OpInstruction(kVectorCvtU32_F32, ctx);
+}
+
+
+void FrontEnd::enterV_cvt_f32_u32(VectorAssemblerParser::V_cvt_f32_u32Context* ctx)
+{
+    Add2OpInstruction(kVectorCvtF32_U32, ctx);
 }
 
 
@@ -126,6 +168,36 @@ void FrontEnd::enterS_and(VectorAssemblerParser::S_andContext *ctx)
 void FrontEnd::enterS_andn2(VectorAssemblerParser::S_andn2Context* ctx)
 {
     Add3OpInstruction(kScalarAndN2, ctx);
+}
+
+
+void FrontEnd::enterS_or(VectorAssemblerParser::S_orContext* ctx)
+{
+    Add3OpInstruction(kScalarOr, ctx);
+}
+
+
+void FrontEnd::enterS_shl(VectorAssemblerParser::S_shlContext* ctx)
+{
+    Add3OpInstruction(kScalarShl, ctx);
+}
+
+
+void FrontEnd::enterS_shr(VectorAssemblerParser::S_shrContext* ctx)
+{
+    Add3OpInstruction(kScalarShr, ctx);
+}
+
+
+void FrontEnd::enterS_load(VectorAssemblerParser::S_loadContext* ctx)
+{
+    Add3OpInstruction(kScalarLoad, ctx);
+}
+
+
+void FrontEnd::enterS_store(VectorAssemblerParser::S_storeContext* ctx)
+{
+    Add3OpInstruction(kScalarStore, ctx);
 }
 
 

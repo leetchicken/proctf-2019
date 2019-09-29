@@ -36,7 +36,7 @@ void EmitComment(std::string& str, const Instruction& instr)
     auto emitOperand = [&](Instruction::Operand op)
     {
         if(op.type == kOperandImmediate)
-            sprintf(buf, "0x%llx", op.imm);
+            sprintf(buf, "0x%lx", op.imm);
         else if(op.type == kOperandRegister && op.reg.type == Register::kVector)
         {
             if(op.reg.rangeLen == 0)
@@ -95,7 +95,7 @@ void Fmt(std::string& str, const char* formatString, Args... args)
 
 const char* EmitImmediate(char* buf, uint64_t imm)
 {
-    sprintf(buf, "0x%llx", imm);
+    sprintf(buf, "0x%lx", imm);
     return buf;
 }
 
@@ -396,17 +396,32 @@ void GenerateCode(std::string& asmbl, const ParsedCode& parsedCode)
                 break;
             }
 
+            case kVectorCmpLt_f32:
+            case kVectorCmpLe_f32:
             case kVectorCmpEq_f32:
             case kVectorCmpGt_f32:
+            case kVectorCmpGe_f32:
+            case kVectorCmpNe_f32:
             case kVectorCmpEq_u32:
+            case kVectorCmpGt_u32:
             {
                 const char* mnemonic = nullptr;
-                if(inst.opCode == kVectorCmpEq_f32)
+                if(inst.opCode == kVectorCmpLt_f32)
+                    mnemonic = type == kAVX ? "vcmpltps" : "cmpltps";
+                else if(inst.opCode == kVectorCmpLe_f32)
+                    mnemonic = type == kAVX ? "vcmpleps" : "cmpleps";
+                else if(inst.opCode == kVectorCmpEq_f32)
                     mnemonic = type == kAVX ? "vcmpeqps" : "cmpeqps";
                 else if(inst.opCode == kVectorCmpGt_f32)
                     mnemonic = type == kAVX ? "vcmpgtps" : "cmpnleps";
+                else if(inst.opCode == kVectorCmpGe_f32)
+                    mnemonic = type == kAVX ? "vcmpgeps" : "cmpnltps";
+                else if(inst.opCode == kVectorCmpNe_f32)
+                    mnemonic = type == kAVX ? "vcmpneqps" : "cmpneqps";
                 else if(inst.opCode == kVectorCmpEq_u32)
                     mnemonic = type == kAVX ? "vpcmpeqd" : "pcmpeqd";
+                else if(inst.opCode == kVectorCmpGt_u32)
+                    mnemonic = type == kAVX ? "vpcmpgtd" : "pcmpgtd";
 
                 auto& reg0 = inst.operands[0].reg;
                 auto& reg1 = inst.operands[1].reg;
@@ -422,6 +437,20 @@ void GenerateCode(std::string& asmbl, const ParsedCode& parsedCode)
                     AddLine<type>(asmbl, "movmskps ebx, xmm15");
                 }
                 AddLine<type>(asmbl, "and ebx, ecx");
+                break;
+            }
+
+            case kVectorCvtU32_F32:
+            case kVectorCvtF32_U32:
+            {
+                const char* mnemonic = nullptr;
+                if(inst.opCode == kVectorCvtU32_F32)
+                    mnemonic = type == kAVX ? "vcvtdq2ps" : "cvtdq2ps";
+                else if(inst.opCode == kVectorCvtF32_U32)
+                    mnemonic = type == kAVX ? "vcvtps2dq" : "cvtps2dq";
+
+                AddLine<type>(asmbl, mnemonic, inst.operands[0], inst.operands[1]);
+
                 break;
             }
 
@@ -551,12 +580,21 @@ void GenerateCode(std::string& asmbl, const ParsedCode& parsedCode)
 
             case kScalarAddu:
             case kScalarAnd:
+            case kScalarOr:
+            case kScalarShl:
+            case kScalarShr:
             {
                 const char* mnemonic = nullptr;
                 if(inst.opCode == kScalarAddu)
                     mnemonic = "add";
                 else if(inst.opCode == kScalarAnd)
                     mnemonic = "and";
+                else if(inst.opCode == kScalarOr)
+                    mnemonic = "or";
+                else if(inst.opCode == kScalarShl)
+                    mnemonic = "shl";
+                else if(inst.opCode == kScalarShr)
+                    mnemonic = "shr";
 
                 auto& dst = inst.operands[0];
                 auto& src0 = inst.operands[1];
@@ -601,6 +639,34 @@ void GenerateCode(std::string& asmbl, const ParsedCode& parsedCode)
                     AddLine<type>(asmbl, "mov", dst, src0);
                     AddLine<type>(asmbl, "and", dst, tmpReg);
                 }
+                break;
+            }
+
+            case kScalarLoad:
+            {
+                auto& dst = inst.operands[0];
+                auto& offset = inst.operands[1];
+                auto& addr = inst.operands[2];
+                char buf[128], buf1[128], buf2[128], buf3[128];
+                if(offset.type == kOperandRegister)
+                    sprintf(buf, "    mov %s, [%s + %s]\n", EmitRegister<type>(buf1, dst.reg), EmitRegister<type>(buf2, addr.reg), EmitRegister<type>(buf3, offset.reg));
+                else
+                    sprintf(buf, "    mov %s, [%s + %lu]\n", EmitRegister<type>(buf1, dst.reg), EmitRegister<type>(buf2, addr.reg), offset.imm);
+                asmbl.append(buf);
+                break;
+            }
+
+            case kScalarStore:
+            {
+                auto& dst = inst.operands[0];
+                auto& offset = inst.operands[1];
+                auto& addr = inst.operands[2];
+                char buf[128], buf1[128], buf2[128], buf3[128];
+                if(offset.type == kOperandRegister)
+                    sprintf(buf, "    mov [%s + %s], %s\n", EmitRegister<type>(buf2, addr.reg), EmitRegister<type>(buf3, offset.reg), EmitRegister<type>(buf1, dst.reg));
+                else
+                    sprintf(buf, "    mov [%s + %lu], %s\n", EmitRegister<type>(buf2, addr.reg), offset.imm, EmitRegister<type>(buf1, dst.reg));
+                asmbl.append(buf);
                 break;
             }
             
