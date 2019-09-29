@@ -89,11 +89,6 @@ class ExitCode:
     INTERNAL_ERROR = 110
 
 
-def _exit(code):
-    logging.info("Exiting with code %d", code)
-    sys.exit(code)
-
-
 def create_login(length=16):
     letters = string.ascii_lowercase
     return "".join(random.choice(letters) for _ in range(length))
@@ -124,12 +119,12 @@ def check(ip):
         logging.info("Delete succeeded")
     except AssertionError as e:
         logging.exception(e)
-        _exit(ExitCode.MUMBLE)
+        return ExitCode.MUMBLE
     except ConnectionError as e:
         logging.exception(e)
-        _exit(ExitCode.FAIL)
+        return ExitCode.FAIL
 
-    _exit(ExitCode.OK)
+    return ExitCode.OK
 
 
 def put(ip, id, flag):
@@ -160,12 +155,12 @@ def put(ip, id, flag):
 
     except AssertionError as e:
         logging.exception(e)
-        _exit(ExitCode.MUMBLE)
+        return ExitCode.MUMBLE
     except ConnectionError as e:
         logging.exception(e)
-        _exit(ExitCode.FAIL)
+        return ExitCode.FAIL
 
-    _exit(ExitCode.OK)
+    return ExitCode.OK
 
 
 def get(ip, id, flag):
@@ -199,14 +194,14 @@ def get(ip, id, flag):
                 flag_found = True
                 break
 
-        _exit(ExitCode.OK if flag_found else ExitCode.CORRUPT)
+        return ExitCode.OK if flag_found else ExitCode.CORRUPT
 
     except AssertionError as e:
         logging.exception(e)
-        _exit(ExitCode.MUMBLE)
+        return ExitCode.MUMBLE
     except ConnectionError as e:
         logging.exception(e)
-        _exit(ExitCode.FAIL)
+        return ExitCode.FAIL
 
 
 def configure_logging(ip):
@@ -220,7 +215,7 @@ def configure_logging(ip):
 def main():
     if len(sys.argv) < 3:
         print("Usage: {} (check|put|get) IP".format(sys.argv[0]))
-        _exit(ExitCode.INTERNAL_ERROR)
+        sys.exit(ExitCode.INTERNAL_ERROR)
 
     mode = sys.argv[1]
     args = sys.argv[2:]
@@ -229,14 +224,17 @@ def main():
     logging.info("Started with arguments: %r", sys.argv)
 
     if mode == "check":
-        check(*args)
+        exit_code = check(*args)
     elif mode == "put":
-        put(*args)
+        exit_code = put(*args)
     elif mode == "get":
-        get(*args)
+        exit_code = get(*args)
     else:
-        logging.error("Unknown MODE.")
-        _exit(ExitCode.INTERNAL_ERROR)
+        exit_code = ExitCode.INTERNAL_ERROR
+        logging.error("Unknown mode.")
+
+    logging.info("Exiting with code %d", exit_code)
+    sys.exit(exit_code)
 
 
 if __name__ == "__main__":
