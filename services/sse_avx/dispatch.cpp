@@ -6,6 +6,7 @@
 #include <x86intrin.h>
 #include <immintrin.h>
 #include <algorithm>
+#include <time.h>
 #include "dispatch.h"
 
 
@@ -28,10 +29,20 @@ void InitHelpMask()
 }
 
 
-void Dispatch(uint32_t groupCountX, uint32_t groupCountY, uint64_t s0qInitialValue)
+uint64_t GetTime()
 {
-	unsigned junk;
-	unsigned long long time1 = __rdtscp(&junk);
+    timespec tp;
+    memset(&tp, 0, sizeof(tp));
+    clock_gettime(CLOCK_MONOTONIC, &tp);
+    return tp.tv_sec + tp.tv_nsec;
+}
+
+
+uint64_t Dispatch(uint32_t groupCountX, uint32_t groupCountY, uint64_t s0qInitialValue)
+{
+	/*unsigned junk;
+	unsigned long long time1 = __rdtscp(&junk);*/
+	uint64_t time1 = GetTime();
 
     InitHelpMask();
 
@@ -53,6 +64,9 @@ void Dispatch(uint32_t groupCountX, uint32_t groupCountY, uint64_t s0qInitialVal
 		}
 	}
 
-	unsigned long long time2 = __rdtscp(&junk);
-	printf("%llu\n", time2 - time1);
+	/*unsigned long long time2 = __rdtscp(&junk);
+	printf("%llu\n", time2 - time1);*/
+	uint64_t time2 = GetTime();
+	//printf("%llu\n", time2 - time1);
+	return time2 - time1;
 }
