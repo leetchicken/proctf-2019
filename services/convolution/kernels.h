@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 
+static const uint32_t kConvolutionKernelIdMaxSize = 32;
 static const uint32_t kConvolutionKernelSize = 32;
 
 enum EKernelsError

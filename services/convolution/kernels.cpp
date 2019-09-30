@@ -73,7 +73,7 @@ void InitKernels()
 
 EKernelsError AddConvolutionKernel(const char* id, const char* kernel)
 {
-    if(strlen(id) == 0)
+    if(strlen(id) == 0 || strlen(id) > kConvolutionKernelIdMaxSize)
         return kKernelInvalidId;
 
     if(strlen(kernel) != kConvolutionKernelSize)

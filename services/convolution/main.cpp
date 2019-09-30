@@ -11,6 +11,9 @@
 #include <x86intrin.h>
 
 
+const uint32_t kChannelsNum = 4;
+
+
 class RequestHandler : public HttpRequestHandler
 {
 public:
@@ -22,16 +25,16 @@ public:
 
 private:
 	HttpResponse GetKernelsList(HttpRequest request);
-    HttpResponse PostImage(HttpRequest request, HttpPostProcessor** postProcessor);
+    HttpResponse PostProcess(HttpRequest request, HttpPostProcessor** postProcessor);
 	HttpResponse PostConvolutionKernel(HttpRequest request, HttpPostProcessor** postProcessor);
 };
 
 
-class PostImageProcessor : public HttpPostProcessor
+class PostProcessProcessor : public HttpPostProcessor
 {
 public:
-    PostImageProcessor(const HttpRequest& request, uint32_t contentLength, const std::string& kernel);
-    virtual ~PostImageProcessor();
+    PostProcessProcessor(const HttpRequest& request, uint32_t contentLength, const std::string& kernel);
+    virtual ~PostProcessProcessor();
 
     int IteratePostData(MHD_ValueKind kind, const char *key, const char *filename, const char *contentType, const char *transferEncoding, const char *data, uint64_t offset, size_t size);
 	void IteratePostData(const char* uploadData, size_t uploadDataSize);
@@ -64,8 +67,8 @@ HttpResponse RequestHandler::HandleGet(HttpRequest request)
 
 HttpResponse RequestHandler::HandlePost(HttpRequest request, HttpPostProcessor** postProcessor)
 {
-    if (ParseUrl(request.url, 1, "image"))
-        return PostImage(request, postProcessor);
+    if (ParseUrl(request.url, 1, "process"))
+        return PostProcess(request, postProcessor);
 	else if (ParseUrl(request.url, 1, "kernel"))
         return PostConvolutionKernel(request, postProcessor);	
 
@@ -98,7 +101,7 @@ HttpResponse RequestHandler::GetKernelsList(HttpRequest request)
 }
 
 
-HttpResponse RequestHandler::PostImage(HttpRequest request, HttpPostProcessor** postProcessor)
+HttpResponse RequestHandler::PostProcess(HttpRequest request, HttpPostProcessor** postProcessor)
 {
 	uint32_t contentLength = 0;
 	std::string kernelId;
@@ -122,7 +125,7 @@ HttpResponse RequestHandler::PostImage(HttpRequest request, HttpPostProcessor** 
 	Log("  id: %s\n", kernelId.c_str());
 	Log("  content length: %u\n", contentLength);
 
-	*postProcessor = new PostImageProcessor(request, contentLength, kernel);
+	*postProcessor = new PostProcessProcessor(request, contentLength, kernel);
     return HttpResponse();
 }
 
@@ -170,7 +173,7 @@ HttpResponse RequestHandler::PostConvolutionKernel(HttpRequest request, HttpPost
 }
 
 
-PostImageProcessor::PostImageProcessor(const HttpRequest& request, uint32_t contentLength, const std::string& kernel)
+PostProcessProcessor::PostProcessProcessor(const HttpRequest& request, uint32_t contentLength, const std::string& kernel)
     : HttpPostProcessor(request), m_contentLength(contentLength), m_kernel(kernel)
 {
     if(m_contentLength)
@@ -181,7 +184,7 @@ PostImageProcessor::PostImageProcessor(const HttpRequest& request, uint32_t cont
 }
 
 
-PostImageProcessor::~PostImageProcessor() 
+PostProcessProcessor::~PostProcessProcessor() 
 {
     if(m_content)
         free(m_content);
@@ -197,7 +200,7 @@ void png_to_mem(void *context, void *data, int size)
 }
 
 
-void PostImageProcessor::FinalizeRequest() 
+void PostProcessProcessor::FinalizeRequest() 
 {
     if(!m_contentLength)
     {
@@ -206,7 +209,7 @@ void PostImageProcessor::FinalizeRequest()
         return;
     }
 
-	const uint32_t kChannelsNum = 4;
+	uint64_t totalStartTime = GetTime();
 
 	std::string output = "{ ";
 	uint32_t counter = 0;
@@ -214,6 +217,7 @@ void PostImageProcessor::FinalizeRequest()
 	for(auto& iter : m_inputImages)
 	{
 		Log("  Process image '%s'\n", iter.first.c_str());
+		uint64_t startTime = GetTime();
 
 		Image srcImage;
 		if(!read_png_from_memory(iter.second.data, iter.second.size, srcImage))
@@ -294,6 +298,8 @@ void PostImageProcessor::FinalizeRequest()
 		if(counter < m_inputImages.size() - 1)
 			output.append(", ");
 		counter++;
+
+		Log("  Process time: %lu ns\n", GetTime() - startTime);
 	}
 	output.append("}");
 
@@ -305,11 +311,13 @@ void PostImageProcessor::FinalizeRequest()
 	memcpy(response.content, output.c_str(), output.length());
 	response.contentLength = output.length();
 
+	Log("  Total process time: %lu ns\n", GetTime() - totalStartTime);
+
 	Complete(response);
 }
 
 
-int PostImageProcessor::IteratePostData(MHD_ValueKind kind, const char *key, const char *filename, const char *contentType,
+int PostProcessProcessor::IteratePostData(MHD_ValueKind kind, const char *key, const char *filename, const char *contentType,
                                             const char *transferEncoding, const char *data, uint64_t offset, size_t size) 
 {
 	if(m_inputImages.find(key) == m_inputImages.end())
@@ -334,37 +342,15 @@ int PostImageProcessor::IteratePostData(MHD_ValueKind kind, const char *key, con
 }
 
 
-void PostImageProcessor::IteratePostData(const char* uploadData, size_t uploadDataSize)
+void PostProcessProcessor::IteratePostData(const char* uploadData, size_t uploadDataSize)
 {
 }
 
 
 void Test(const char* flag, Image& srcImage, uint64_t timings[4])
 {
-	/*char flag[33];
-	for(uint32_t i = 0; i < 32; i++)
-		flag[i] = (rand() % 42) + 40;
-	flag[32] = 0;*/
-
-	//printf("%s\n", flag);
-
-	/*Image srcImage(24 * 512, 3, 4);
-	memset(srcImage.pixels, 0, srcImage.width * srcImage.height * 4);
-	for(uint32_t y = 0; y < srcImage.height; y++)
-	{
-		for(uint32_t x = 0; x < srcImage.width; x++)
-		{
-			uint32_t p = rand() % 256;
-			p |= (rand() % 256) << 8;
-			p |= (rand() % 256) << 16;
-			p |= (rand() % 256) << 24;
-			ABGR& dst = srcImage.Pixel(x, y);
-			dst.abgr = p;
-		}
-	}*/
-
-	Image srcImages[4], dstImages[4];
-	for(uint32_t i = 0; i < 4; i++)
+	Image srcImages[kChannelsNum], dstImages[kChannelsNum];
+	for(uint32_t i = 0; i < kChannelsNum; i++)
 	{
 		srcImages[i].width = ((srcImage.width + 23) / 24) * 24;
 		srcImages[i].height = ((srcImage.height + 2) / 3) * 3;
@@ -386,14 +372,14 @@ void Test(const char* flag, Image& srcImage, uint64_t timings[4])
 		memset(dstImages[i].pixels, 0, dstImages[i].GetSize());
 	}
 
-	for(uint32_t i = 0; i < 4; i++)
+	for(uint32_t i = 0; i < kChannelsNum; i++)
 	{
 		struct UserData
 		{
 			uint64_t srcImage;
 			uint32_t srcImageWidth;
 			uint32_t srcImageHeight;
-			uint64_t flag;
+			uint64_t kernel;
 			uint64_t dstImage;
 			uint32_t dstImageWidth;
 			uint32_t dstImageHeight;
@@ -402,7 +388,7 @@ void Test(const char* flag, Image& srcImage, uint64_t timings[4])
 		userData.srcImage = (uint64_t)srcImages[i].pixels;
 		userData.srcImageWidth = srcImages[i].width;
 		userData.srcImageHeight = srcImages[i].height;
-		userData.flag = (uint64_t)(flag + i * 8);
+		userData.kernel = (uint64_t)(flag + i * 8);
 		userData.dstImage = (uint64_t)dstImages[i].pixels;
 		userData.dstImageWidth = dstImages[i].width;
 		userData.dstImageHeight = dstImages[i].height;
@@ -410,7 +396,7 @@ void Test(const char* flag, Image& srcImage, uint64_t timings[4])
 	}
 
 	Image finalImage(dstImages[0].width, dstImages[0].height);
-	for(uint32_t i = 0; i < 4; i++)
+	for(uint32_t i = 0; i < kChannelsNum; i++)
 	{
 		for(uint32_t y = 0; y < finalImage.height; y++)
 		{
@@ -480,11 +466,12 @@ int main(int argc, char* argv[])
 {
 	srand(time(nullptr));
 
-	/*struct BytePos
+#if 0
+	struct BytePos
 	{
 		uint32_t x;
 		uint32_t y;
-		uint32_t c;
+		uint32_t component;
 	};
 
 	BytePos poses[32] ={{0,0,0}, 
@@ -523,49 +510,68 @@ int main(int argc, char* argv[])
 						{1,2,3},
 						{2,2,3}};
 
+	const char kAlphabet[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '=', 'A', 'B', 'C', 
+                              'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 
+                              'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'};
+
 	const char* flag = "ABCDEFGHIJKLMNOPQRSTUVWXYZ012345";
 
-	for(uint32_t b = 0; b < 32; b++)
+	uint32_t width = 384;
+	uint32_t height = 384;
+
+	Image image(width, height);
+	memset(image.pixels, 0xff, image.GetSize());
+	uint64_t timings[4];
+	Test(flag, image, timings);
+	for(uint32_t c = 0; c < kChannelsNum; c++)
+		printf("%8lu ", timings[c]);
+	printf("\n");
+
+	for(uint32_t byteIdx = 0; byteIdx < 32; byteIdx++)
 	{
-		auto p = poses[b];
-		printf("Byte %u %c:\n", b, flag[b]);
-		for(uint32_t c = 48; c <= 90; c++)
-			printf("   %c    ", (char)c);
+		auto bytePos = poses[byteIdx];
+		printf("Byte %u %c:\n", byteIdx, flag[byteIdx]);
+		for(uint32_t symbolIdx = 0; symbolIdx < sizeof(kAlphabet); symbolIdx++)
+			printf("   %c    ", kAlphabet[symbolIdx]);
 		printf("\n");
 
-		for(uint32_t c = 48; c <= 90; c++)
+		for(uint32_t symbolIdx = 0; symbolIdx < sizeof(kAlphabet); symbolIdx++)
 		{
-			Image srcImage(24 * 512, 3);
-			memset(srcImage.pixels, 0, srcImage.width * srcImage.height * 4);
-			for(uint32_t y = 0; y < srcImage.height / 3; y++)
+			char symbol = kAlphabet[symbolIdx];
+
+			Image image(width, height);
+			memset(image.pixels, 0xff, image.GetSize());
+
+			for(uint32_t y = 0; y < image.height / 3; y++)
 			{
-				uint32_t bc = 0;
-				for(uint32_t x = 0; x < srcImage.width / 3; x++)
+				uint32_t blockIdx = 0;
+				for(uint32_t x = 0; x < image.width / 3; x++)
 				{
 					uint32_t x0 = x * 3;
 					uint32_t y0 = y * 3;
 
 					for(uint32_t yi = 0; yi < 3; yi++)
 						for(uint32_t xi = 0; xi < 3; xi++)
-							srcImage.Pixel(x0 + xi, y0 + yi).abgr = 0xffffffff;
+							image.Pixel(x0 + xi, y0 + yi).abgr = 0xffffffff;
 
-					uint32_t mask = 0xff << (p.c * 8);
-					uint32_t& t = srcImage.Pixel(x0 + p.x, y0 + p.y).abgr;
-					t = t & ~mask;
-					if(bc == 4)
-						t |= c << (p.c * 8);
+					uint32_t& pixel = image.Pixel(x0 + bytePos.x, y0 + bytePos.y).abgr;
+                    uint32_t mask = 0xff << (bytePos.component * 8);
+					pixel = pixel & ~mask;
+					if(blockIdx == 4)
+						pixel |= symbol << (bytePos.component * 8);
 
-					bc = (bc + 1) % 8;
+					blockIdx = (blockIdx + 1) % 8;
 				}
 			}
 
 			uint64_t timings[4];
-			Test(flag, srcImage, timings);
-			printf("%8lu", timings[p.c]);
+			Test(flag, image, timings);
+			printf("%8lu", timings[bytePos.component]);
 		}
 		printf("\n");
 	}
-	return 0;*/
+	return 0;
+#endif
 
 	InitKernels();
     RequestHandler handler;
