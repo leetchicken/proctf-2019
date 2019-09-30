@@ -31,7 +31,7 @@ struct Image
 
     }
 
-    Image(uint32_t w, uint32_t h, uint32_t c)
+    Image(uint32_t w, uint32_t h)
 		: pixels(nullptr), width(w), height(h)
     {
 		uint32_t size = w * h * sizeof(ABGR);

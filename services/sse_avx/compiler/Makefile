@@ -5,7 +5,7 @@ LDARGS=-g
 LIBS=antlr4-runtime/lib/libantlr4-runtime.a
 CC=g++
 GRAMMAR=VectorAssembler
-ANTLR4=java -jar /usr/local/lib/antlr-4.7.2-complete.jar
+ANTLR4=antlr4
 
 ANTLRGEN=BaseListener Lexer Listener Parser 
 OBJS=$(addsuffix .o,$(addprefix $(OUTPUT)/$(GRAMMAR),$(ANTLRGEN)))

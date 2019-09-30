@@ -34,15 +34,13 @@ uint64_t GetTime()
     timespec tp;
     memset(&tp, 0, sizeof(tp));
     clock_gettime(CLOCK_MONOTONIC, &tp);
-    return tp.tv_sec + tp.tv_nsec;
+    return tp.tv_sec * 1000000000llu + tp.tv_nsec;
 }
 
 
 uint64_t Dispatch(uint32_t groupCountX, uint32_t groupCountY, uint64_t s0qInitialValue)
 {
-	/*unsigned junk;
-	unsigned long long time1 = __rdtscp(&junk);*/
-	uint64_t time1 = GetTime();
+	uint64_t startTime = GetTime();
 
     InitHelpMask();
 
@@ -64,9 +62,5 @@ uint64_t Dispatch(uint32_t groupCountX, uint32_t groupCountY, uint64_t s0qInitia
 		}
 	}
 
-	/*unsigned long long time2 = __rdtscp(&junk);
-	printf("%llu\n", time2 - time1);*/
-	uint64_t time2 = GetTime();
-	//printf("%llu\n", time2 - time1);
-	return time2 - time1;
+	return GetTime() - startTime;
 }
