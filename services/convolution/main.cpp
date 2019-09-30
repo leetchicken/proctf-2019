@@ -222,6 +222,7 @@ void PostImageProcessor::FinalizeRequest()
 			Complete(HttpResponse(MHD_HTTP_BAD_REQUEST));
 			return;
 		}
+		Log("  Size: %ux%u\n", srcImage.width, srcImage.height);
 
 		Image srcImages[kChannelsNum], dstImages[kChannelsNum];
 		for(uint32_t i = 0; i < kChannelsNum; i++)
@@ -288,7 +289,7 @@ void PostImageProcessor::FinalizeRequest()
 		output.append(iter.first);
 		output.append("\": ");
 		char buf[512];
-		snprintf(buf, sizeof(buf), "{ \"Red channel processing time\" : %lu, \"Blue channel processing time\" : %lu, \"Green channel processing time\" : %lu, \"Alpha channel processing time\" : %lu }", timings[0], timings[1], timings[2], timings[3]);
+		snprintf(buf, sizeof(buf), "{ \"red_channel\" : %lu, \"green_channel\" : %lu, \"blue_channel\" : %lu, \"alpha_channel\" : %lu }", timings[0], timings[1], timings[2], timings[3]);
 		output.append(buf);
 		if(counter < m_inputImages.size() - 1)
 			output.append(", ");
@@ -320,9 +321,14 @@ int PostImageProcessor::IteratePostData(MHD_ValueKind kind, const char *key, con
 	}
 
 	auto& img = m_inputImages.find(key)->second;
-    memcpy(img.data + offset, data, size);
-	img.size += size;
-	m_curContentPtr += size;
+	char* ptr = img.data + offset;
+	char* endPtr = m_content + m_contentLength;
+	if(ptr < endPtr)
+	{
+		memcpy(ptr, data, size);
+		img.size += size;
+		m_curContentPtr += size;
+	}
 
     return MHD_YES;
 }
