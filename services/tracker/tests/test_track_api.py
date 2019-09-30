@@ -58,6 +58,21 @@ def test__track_get(client, secret, token):
     assert (points[2][1], points[2][2], points[2][3]) == (9.0, 1.2, "o")
 
 
+def test__track_get__batch_add(client, secret, token):
+    points = [
+        (1.2, 3.4, "f"),
+        (5.6, 7.8, "o"),
+        (9.0, 1.2, "o"),
+    ]
+    track_id = client.query(Request.POINT_ADD_BATCH, token, points, expect=Response.OK)
+    points = track_get(client, secret, track_id)
+    assert len(points) == 3
+
+    assert (points[0][1], points[0][2], points[0][3]) == (1.2, 3.4, "f")
+    assert (points[1][1], points[1][2], points[1][3]) == (5.6, 7.8, "o")
+    assert (points[2][1], points[2][2], points[2][3]) == (9.0, 1.2, "o")
+
+
 def test__track_request_share__make_public(client, secret, token):
     track_id = point_add(client, token)
 

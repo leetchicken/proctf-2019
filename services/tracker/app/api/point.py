@@ -17,20 +17,7 @@ async def auth(db, token):
     return row["id"], row["user_id"]
 
 
-@handler(Request.POINT_ADD)
-async def add(db, token, latitude, longitude, meta):
-    try:
-        latitude = float(latitude)
-        longitude = float(longitude)
-    except ValueError:
-        return Response.BAD_REQUEST
-
-    tracker_id, user_id = await auth(db, token)
-    if tracker_id is None:
-        return Response.FORBIDDEN
-
-    now = time.time()
-
+async def get_or_create_track_id(db, user_id, tracker_id, now):
     prev = await db.fetchrow("SELECT track_id FROM point WHERE tracker_id=$1 AND timestamp >= $2 "
                              "ORDER BY timestamp DESC LIMIT 1", tracker_id, now - NEW_TRACK_GAP_SECONDS)
     if prev is None:
@@ -42,9 +29,45 @@ async def add(db, token, latitude, longitude, meta):
         track_id = prev["track_id"]
         log.debug("Using old track: %d.", track_id)
 
+    return track_id
+
+
+@handler(Request.POINT_ADD)
+async def point_add(db, token, latitude, longitude, meta):
+    try:
+        latitude = float(latitude)
+        longitude = float(longitude)
+    except ValueError:
+        return Response.BAD_REQUEST
+
+    tracker_id, user_id = await auth(db, token)
+    if tracker_id is None:
+        return Response.FORBIDDEN
+
+    now = time.time()
+    track_id = await get_or_create_track_id(db, user_id, tracker_id, now)
+
     await db.execute("INSERT INTO point(latitude, longitude, tracker_id, track_id, meta, timestamp) "
                      "VALUES($1, $2, $3, $4, $5, $6)",
                      latitude, longitude, tracker_id, track_id, meta, time.time())
     log.debug("Added new point.")
+
+    return Response.OK, track_id
+
+
+@handler(Request.POINT_ADD_BATCH)
+async def point_add_batch(db, token, points):
+    tracker_id, user_id = await auth(db, token)
+    if tracker_id is None:
+        return Response.FORBIDDEN
+
+    now = time.time()
+    track_id = await get_or_create_track_id(db, user_id, tracker_id, now)
+
+    for idx, (latitude, longitude, meta) in enumerate(points, 1):
+        await db.execute("INSERT INTO point(latitude, longitude, tracker_id, track_id, meta, timestamp) "
+                         "VALUES($1, $2, $3, $4, $5, $6)",
+                         latitude, longitude, tracker_id, track_id, meta, time.time())
+        log.debug("Added new point (%d of %d).", idx, len(points))
 
     return Response.OK, track_id

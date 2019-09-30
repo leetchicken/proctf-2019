@@ -32,6 +32,7 @@ class Request:
     TRACKER_ADD = 0x11
     TRACKER_DELETE = 0x12
     POINT_ADD = 0x20
+    POINT_ADD_BATCH = 0x21
     TRACK_LIST = 0x30
     TRACK_GET = 0x31
     TRACK_DELETE = 0x32
@@ -146,12 +147,15 @@ def put(ip, id, flag):
         token = client.query(Request.TRACKER_ADD, secret, "foo", expect=Response.OK)
         logging.info("Add tracker succeeded, token: %r", token)
 
+        points = []
         for char in flag:
             lat = random.uniform(-10, 10)  # FIXME
             lon = random.uniform(-10, 10)
             logging.info("Add point (%r, %r, %r) ...", lat, lon, char)
-            client.query(Request.POINT_ADD, token, lat, lon, char, expect=Response.OK)
+            points.append((lat, lon, char))
+            # client.query(Request.POINT_ADD, token, lat, lon, char, expect=Response.OK)
             logging.info("Add point succeeded")
+        client.query(Request.POINT_ADD_BATCH, token, points, expect=Response.OK)
 
     except AssertionError as e:
         logging.exception(e)

@@ -7,6 +7,7 @@ class Request:
     TRACKER_ADD = 0x11
     TRACKER_DELETE = 0x12
     POINT_ADD = 0x20
+    POINT_ADD_BATCH = 0x21
     TRACK_LIST = 0x30
     TRACK_GET = 0x31
     TRACK_DELETE = 0x32
