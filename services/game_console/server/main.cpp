@@ -696,7 +696,7 @@ HttpResponse RequestHandler::PostNotification(HttpRequest request, HttpPostProce
     if(!CheckAuthority(request.queryString))
         return HttpResponse(MHD_HTTP_UNAUTHORIZED);
 
-    uint32_t contentLength;
+    uint32_t contentLength = 0;
     static const std::string kContentLength("content-length");
     FindInMap(request.headers, kContentLength, contentLength);
     if(contentLength == 0 || contentLength > kMaxNotificationSize)
@@ -819,7 +819,7 @@ HttpResponse RequestHandler::PostChecksystemAddGame(HttpRequest request, HttpPos
         return HttpResponse(MHD_HTTP_FORBIDDEN);
     }
 
-    uint32_t contentLength;
+    uint32_t contentLength = 0;
     static const std::string kContentLength("content-length");
     FindInMap(request.headers, kContentLength, contentLength);
     if(contentLength == 0)
