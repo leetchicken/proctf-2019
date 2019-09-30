@@ -30,6 +30,7 @@ public:
 private:
     HttpResponse GetMainPage(HttpRequest request);
     HttpResponse GetSDKZip(HttpRequest request);
+    HttpResponse GetTeamName(HttpRequest request);
     HttpResponse GetRegister(HttpRequest request);
     HttpResponse GetAuth(HttpRequest request);
     HttpResponse GetGamesList(HttpRequest request);
@@ -138,6 +139,8 @@ HttpResponse RequestHandler::HandleGet(HttpRequest request)
         return GetMainPage(request);
     else if (ParseUrl(request.url, 1, "SDK.zip"))
         return GetSDKZip(request);
+    else if (ParseUrl(request.url, 1, "teamname"))
+        return GetTeamName(request);
     else if (ParseUrl(request.url, 1, "register"))
         return GetRegister(request);
     else if (ParseUrl(request.url, 1, "auth"))
@@ -230,6 +233,23 @@ HttpResponse RequestHandler::GetSDKZip(HttpRequest request)
     response.content = fileData;
     response.contentLength = fileSize;
     return response;
+}
+
+
+HttpResponse RequestHandler::GetTeamName(HttpRequest request)
+{
+    auto team = FindTeam(request.clientIp);
+    if(!team)
+    {
+        Log(" ERROR: Forbidden\n");
+        return HttpResponse(MHD_HTTP_FORBIDDEN);
+    }
+
+    Log("  team name: %s\n", team->name.c_str());
+
+    char* name = (char*)malloc(team->name.length() + 1);
+    strcpy(name, team->name.c_str());
+    return HttpResponse(MHD_HTTP_OK, name, strlen(name), Headers());
 }
 
 
@@ -676,7 +696,7 @@ HttpResponse RequestHandler::PostNotification(HttpRequest request, HttpPostProce
     if(!CheckAuthority(request.queryString))
         return HttpResponse(MHD_HTTP_UNAUTHORIZED);
 
-    uint32_t contentLength;
+    uint32_t contentLength = 0;
     static const std::string kContentLength("content-length");
     FindInMap(request.headers, kContentLength, contentLength);
     if(contentLength == 0 || contentLength > kMaxNotificationSize)
@@ -799,7 +819,7 @@ HttpResponse RequestHandler::PostChecksystemAddGame(HttpRequest request, HttpPos
         return HttpResponse(MHD_HTTP_FORBIDDEN);
     }
 
-    uint32_t contentLength;
+    uint32_t contentLength = 0;
     static const std::string kContentLength("content-length");
     FindInMap(request.headers, kContentLength, contentLength);
     if(contentLength == 0)

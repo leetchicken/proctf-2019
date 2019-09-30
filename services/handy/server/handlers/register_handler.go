@@ -1,23 +1,40 @@
 package handlers
 
 import (
-	"errors"
 	"fmt"
+	"html/template"
 	"log"
 	"net/http"
 
 	"github.com/gorilla/schema"
 
 	"handy/server/backends"
+	"handy/server/util"
 )
+
+type registerHandlerTemplateData struct {
+	Token string
+}
+
+type registerHandlerForm struct {
+	Username    string
+	Password    string
+	IsMaster    bool
+	Token       string
+	SignedToken string
+}
 
 type registerHandler struct {
 	us *backends.UserStorage
+	tc *backends.TokenChecker
+	t  *template.Template
 }
 
-func NewRegisterHandler(us *backends.UserStorage) *registerHandler {
+func NewRegisterHandler(us *backends.UserStorage, tc *backends.TokenChecker, t *template.Template) *registerHandler {
 	return &registerHandler{
 		us: us,
+		tc: tc,
+		t:  t,
 	}
 }
 
@@ -32,7 +49,20 @@ func (h *registerHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *registerHandler) handleGet(w http.ResponseWriter, r *http.Request) {
-	HandleError(w, errors.New("not implemented"), http.StatusNotImplemented)
+	_, _, err := util.RetrieveUserInfo(r)
+	if err == util.UserNotPresentError {
+		err = h.t.ExecuteTemplate(w, "register", &registerHandlerTemplateData{
+			Token: h.tc.IssueToken(),
+		})
+		if err != nil {
+			log.Printf("Template error: %s", err)
+		}
+		return
+	} else if err != nil {
+		HandleError(w, fmt.Errorf("failed to extract user: %s", err), http.StatusBadRequest)
+		return
+	}
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
 func (h *registerHandler) handlePost(w http.ResponseWriter, r *http.Request) {
@@ -42,27 +72,30 @@ func (h *registerHandler) handlePost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	decoder := schema.NewDecoder()
-	ri := &backends.UserStorageRegistrationInfo{}
-	if err := decoder.Decode(ri, r.PostForm); err != nil {
+	form := &registerHandlerForm{}
+	if err := decoder.Decode(form, r.PostForm); err != nil {
 		HandleError(w, fmt.Errorf("failed to parse form: %s", err), http.StatusBadRequest)
 		return
 	}
-	if len(ri.Username) == 0 || len(ri.Password) == 0 {
-		HandleError(w, fmt.Errorf("invalid form, username/password cannot be empty"), http.StatusBadRequest)
-		return
+
+	if form.IsMaster {
+		if err := h.tc.CheckToken(form.Token, form.SignedToken); err != nil {
+			HandleError(w, fmt.Errorf("failed to check token: %s", err), http.StatusBadRequest)
+			return
+		}
 	}
 
-	// TODO: add PoW
-
-	_, err := h.us.Register(ri)
+	_, err := h.us.Register(&backends.UserStorageRegistrationInfo{
+		Username: form.Username,
+		Password: form.Password,
+		IsMaster: form.IsMaster,
+	})
 	if err == backends.UserStorageUserExistsError {
-		HandleError(w, fmt.Errorf("user '%s' already exists", ri.Username), http.StatusConflict)
+		HandleError(w, fmt.Errorf("user '%s' already exists", form.Username), http.StatusConflict)
 		return
 	} else if err != nil {
 		HandleError(w, fmt.Errorf("failed to register: %s", err), http.StatusBadRequest)
 		return
 	}
-	log.Printf("Successfully registered a user '%s'", ri.Username)
-
-	// TODO: redirect to login page
+	log.Printf("Successfully registered a user '%s'", form.Username)
 }

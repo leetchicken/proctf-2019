@@ -1,0 +1,9 @@
+# createuser --interactive --pwprompt tracker
+# createdb -O tracker tracker
+# \c tracker
+# \dt
+# \d users
+
+host: 0.0.0.0
+port: 9090
+database_uri: "postgresql://tracker:b118dfbc7e1c@localhost:5432/tracker"

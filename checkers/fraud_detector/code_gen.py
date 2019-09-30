@@ -279,6 +279,19 @@ for {4} in {1}[::len(user["{3}"]) % 4 + 2]:
     return gen_check(var_name, payload)
 
 
+def gen_vuln3_check(flag):
+    var_name = gen_name()
+    tmp_name = gen_name()
+    tmp_name2 = gen_name()
+    payload = """{1}="{2}"
+for {4} in {1}[::len(user["{3}"]) % 4 + 2]:
+    <GARBAGE>
+    {0}{5}ord({4})
+    <GARBAGE>""".format(var_name, tmp_name, flag, choice(STR_FIELDS), tmp_name2,
+                        choice(["+=", "-="]))
+    return gen_check(var_name, payload)
+
+
 if __name__ == "__main__":
     users = random.sample(json.load(open("users.json")), 3)
     n = 100

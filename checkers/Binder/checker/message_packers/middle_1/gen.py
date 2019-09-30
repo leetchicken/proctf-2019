@@ -1,5 +1,5 @@
-
-import os,string,random,time,shutil,sys
+#!/usr/bin/env python3
+import os,string,random,time,shutil,sys,tempfile
 from struct import *
 import subprocess as sp
 from .pack_arith import *
@@ -13,8 +13,9 @@ class Generator:
         cur_dir = os.getcwd()
         if mod_dir != "":
             os.chdir(mod_dir)
-        tmp_dir_name = str(time.time())
-        os.makedirs(tmp_dir_name)
+        tmp_dir=tempfile.TemporaryDirectory()
+        tmp_dir_name = tmp_dir.name
+
         shutil.copyfile("build.sh",os.path.join(tmp_dir_name,"build.sh"))
         shutil.copyfile("template_arith.S",os.path.join(tmp_dir_name,"template_arith.S"))
         shutil.copyfile("template_arith_main.S",os.path.join(tmp_dir_name,"template_arith_main.S"))
@@ -38,16 +39,13 @@ class Generator:
         os.chdir(cur_dir)
         shutil.copyfile(os.path.join(mod_dir,tmp_dir_name,"prog"),out_path)
         os.chmod(out_path,0o755)
-        shutil.rmtree(os.path.join(mod_dir,tmp_dir_name))
         return True
 
     def verify(self,password,message,file,debug=False):
         password = password
         proc = sp.Popen(['timeout','-s',"KILL","7","./seccomp_test/wrapper",file,password],stdout=sp.PIPE)
         out = proc.communicate()
-        if not message in out[0].decode():
-            return False
-        return True
+        return message in out[0].decode()
 if __name__ == "__main__":
     g=Generator()
     g.Generate("qweasdzxc",'sdlkasdlkfasdf\n',"mes2",True)

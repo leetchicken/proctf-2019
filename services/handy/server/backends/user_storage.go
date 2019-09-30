@@ -18,6 +18,9 @@ import (
 
 const (
 	userStorageSaltSize = 32
+
+	maxUsernameLength = 256
+	maxPasswordLength = 256
 )
 
 var (
@@ -64,6 +67,13 @@ func NewUserStorage(db *mongo.Database) (*UserStorage, error) {
 }
 
 func (s *UserStorage) Register(ri *UserStorageRegistrationInfo) (*data.UserInfo, error) {
+	if err := util.CheckFieldLength(ri.Username, 1, maxUsernameLength); err != nil {
+		return nil, fmt.Errorf("invalid Username field: %s", err)
+	}
+	if err := util.CheckFieldLength(ri.Password, 1, maxPasswordLength); err != nil {
+		return nil, fmt.Errorf("invalid Password field: %s", err)
+	}
+
 	cnt, err := s.users.CountDocuments(context.Background(), bson.D{{"username", ri.Username}})
 	if err != nil {
 		return nil, fmt.Errorf("failed to search for a user: %s", err)
@@ -91,6 +101,13 @@ func (s *UserStorage) Register(ri *UserStorageRegistrationInfo) (*data.UserInfo,
 }
 
 func (s *UserStorage) Login(li *UserStorageLoginInfo) (*data.UserInfo, error) {
+	if err := util.CheckFieldLength(li.Username, 1, maxUsernameLength); err != nil {
+		return nil, fmt.Errorf("invalid Username field: %s", err)
+	}
+	if err := util.CheckFieldLength(li.Password, 1, maxPasswordLength); err != nil {
+		return nil, fmt.Errorf("invalid Password field: %s", err)
+	}
+
 	filter := bson.D{{"username", li.Username}, {"passwordHash", s.hashPassword(li.Password)}}
 
 	cnt, err := s.users.CountDocuments(context.Background(), filter)

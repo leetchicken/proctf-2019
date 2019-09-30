@@ -1,0 +1,55 @@
+buildscript {
+    repositories {
+        jcenter()
+    }
+    
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    }
+}
+
+apply plugin: 'kotlin'
+apply plugin: 'application'
+
+group 'ae.hitb.proctf.drone_racing'
+version '0.0.1'
+mainClassName = "io.ktor.server.netty.EngineMain"
+
+sourceSets {
+    main.kotlin.srcDirs = main.java.srcDirs = ['src']
+    test.kotlin.srcDirs = test.java.srcDirs = ['test']
+    main.resources.srcDirs = ['resources']
+    test.resources.srcDirs = ['testresources']
+}
+
+repositories {
+    mavenLocal()
+    jcenter()
+    maven { url 'https://kotlin.bintray.com/ktor' }
+    maven { url 'https://kotlin.bintray.com/kotlin-js-wrappers' }
+    maven { url 'https://jitpack.io' }
+    maven { url 'https://dl.bintray.com/hotkeytlt/maven' }
+}
+
+dependencies {
+    compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
+    compile "io.ktor:ktor-server-netty:$ktor_version"
+    compile "ch.qos.logback:logback-classic:$logback_version"
+    compile "io.ktor:ktor-server-core:$ktor_version"
+    compile "io.ktor:ktor-html-builder:$ktor_version"
+    compile "org.jetbrains:kotlin-css-jvm:1.0.0-pre.31-kotlin-1.2.41"
+    compile "io.ktor:ktor-freemarker:$ktor_version"
+    compile "io.ktor:ktor-server-host-common:$ktor_version"
+    compile "io.ktor:ktor-server-sessions:$ktor_version"
+    compile "io.ktor:ktor-gson:$ktor_version"
+    compile "org.jetbrains.exposed:exposed:$exposed_version"
+    compile "com.zaxxer:HikariCP:$hikari_version"
+    compile("com.h2database:h2")
+    compile "org.flywaydb:flyway-core:$flyway_version"
+    compile "org.springframework.security:spring-security-core:5.1.6.RELEASE"
+    compile "com.github.h0tk3y.betterParse:better-parse-jvm:0.4.0-alpha-3"
+    compile "org.ow2.asm:asm:7.1"
+
+    implementation "com.github.rnett:exposedgson:$exposedgson_version"
+    testCompile "io.ktor:ktor-server-tests:$ktor_version"
+}

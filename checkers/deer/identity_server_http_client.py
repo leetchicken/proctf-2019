@@ -2,6 +2,7 @@
   
 import sys
 import requests
+requests.packages.urllib3.disable_warnings() 
 import lxml.html as lh
 
 OK, CORRUPT, MUMBLE, DOWN, CHECKER_ERROR = 101, 102, 103, 104, 110
@@ -14,12 +15,12 @@ def trace(public="", private=""):
 
 class IdentityServerHttpClient:
     def __init__(self, host):
-        self._base_url = 'http://%s:5000/' % host
+        self._base_url = 'https://%s:5000/' % host
 
     def create_new_user(self, username, password):
         try:
             data = {'username': username, 'password': password}
-            r = requests.post('%sAccount/SignUp' % self._base_url, data=data, allow_redirects=True, timeout=15)
+            r = requests.post('%sAccount/SignUp' % self._base_url, data=data, allow_redirects=True, timeout=15, verify=False)
 
             if r.status_code != 200:
                 trace("Bad HTTP status code", "Bad HTTP status code: %d at IdentityServerHttpClient.create_new_user()" % r.status_code)

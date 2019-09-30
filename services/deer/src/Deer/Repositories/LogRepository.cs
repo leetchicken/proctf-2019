@@ -1,4 +1,5 @@
 using System;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using Deer.Messages;
 using Elasticsearch.Net;
@@ -16,10 +17,11 @@ namespace Deer.Repositories
             var user = userInfo[0];
             var password = userInfo[1];
 
+            var rootCaCert = new X509Certificate2("root-ca.pem");
+
             var nestSettings = new ConnectionSettings(elasticSearchUri)
                 .BasicAuthentication(user, password)
-                // TODO change to AuthorityIsRoot
-                .ServerCertificateValidationCallback(CertificateValidations.AllowAll);
+                .ServerCertificateValidationCallback(CertificateValidations.AuthorityIsRoot(rootCaCert));
             
             _elasticClient = new ElasticClient(nestSettings);
         }

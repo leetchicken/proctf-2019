@@ -27,5 +27,63 @@ services/fraud_detector/./data/rules
 services/fraud_detector/./data/users/
 EOF
     ;;
+    "polyfill")
+    cat <<EOF
+services/polyfill/./polyfill.wasm
+services/polyfill/./docker-compose.yaml
+services/polyfill/./polyfill_tcp/
+services/polyfill/./polyfill_http/
+EOF
+    ;;
+    "rubik")
+    cat <<EOF
+services/rubik/./docker-compose.yml
+services/rubik/./Dockerfile
+services/rubik/./settings.ini
+services/rubik/./start.sh
+services/rubik/./rubik.sln
+services/rubik/./wwwroot/
+services/rubik/./wwwroot/fonts/
+services/rubik/./out/
+EOF
+    ;;
+    "binder")
+    cat <<EOF
+services/Binder/./docker-compose.yml
+services/Binder/./Dockerfile
+services/Binder/./service/
+services/Binder/./service/seccomp_test/
+services/Binder/./service/static/
+services/Binder/./service/templates/
+EOF
+    ;;
+    "deer")
+    cat <<EOF
+services/deer/./docker-compose.yml
+services/deer/./run-docker-compose.sh
+EOF
+    ;;
+    "bb")
+    cat <<EOF
+services/bb/./docker-compose.yml
+services/bb/./init.sh
+services/bb/./b_b.conf
+services/bb/./Dockerfile
+services/bb/./lib/
+services/bb/./lib/BB/
+services/bb/./lib/BB/Controller/
+services/bb/./lib/BB/Model/
+services/bb/./public/
+services/bb/./public/css/
+services/bb/./public/js/
+services/bb/./script/
+services/bb/./sql/
+services/bb/./ssl/
+services/bb/./t/
+services/bb/./templates/
+services/bb/./templates/layouts/
+services/bb/./templates/main/
+EOF
+    ;;
     *) echo "No such service" >&2; exit 1;;
 esac

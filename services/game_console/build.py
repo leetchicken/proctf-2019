@@ -77,27 +77,6 @@ if os.system("cd main_screen; sudo ./make_fs.sh") != 0:
 os.system("cp main_screen/fs.bin BUILD/")
 print("")
 
-teamsXml = ET.ElementTree(file="server/data/teams.xml").getroot()
-teamsData = open("hw/teams_data.h", "w")
-teamsData.write("struct TeamData { uint32_t net; const char* name; };\n\n")
-teamsData.write("static const TeamData GTeamsData[] = {\n")
-teamsNum = 0
-for team in teamsXml:
-	net = team.get("net")
-	name = team.get("name")
-
-	netRaw = socket.inet_aton(net)
-	netHex = hex(struct.unpack('I', netRaw)[0])
-
-	teamsData.write("\t{%s, \"%s\"},\n" % (netHex, name))
-
-	teamsNum += 1
-
-teamsData.write("};\n")
-teamsData.write("static const uint32_t kTeamsNum = %d;\n" % teamsNum)
-teamsData.flush()
-teamsData.close()
-
 print("Build firmware")
 if os.system("cd hw; ./compile.sh --profile release") != 0:
 	exit(1)

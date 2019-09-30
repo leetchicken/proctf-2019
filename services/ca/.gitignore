@@ -1,0 +1,3 @@
+ssl/*.pem
+ssl/*.srl
+data/ca.db*

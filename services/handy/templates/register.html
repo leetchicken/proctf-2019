@@ -1,0 +1,89 @@
+{{ define "register" }}
+
+<!DOCTYPE html>
+<html lang="en">
+{{ template "header" }}
+
+<body>
+  {{ template "navbar" }}
+
+  <main role="main" class="container">
+
+    <div class="content">
+      <h1>Register</h1>
+
+      <div id="register-success-info" class="alert alert-success d-none" role="alert">
+        Sucess! You will be redirected to a login page
+      </div>
+
+      <div id="register-failure-info" class="alert alert-danger d-none" role="alert">
+        Failed to register, try again
+      </div>
+
+      <form id="register-form">
+        <div class="form-group">
+          <label for="username">Username</label>
+          <input name="Username" type="text" class="form-control" id="username" placeholder="Enter username">
+        </div>
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input name="Password" type="password" class="form-control" id="password" placeholder="Password">
+        </div>
+        <div class="form-check">
+          <input name="IsMaster" type="checkbox" class="form-check-input" id="is-master-check">
+          <label class="form-check-label" for="is-master-check">I'm a master</label>
+        </div>
+        <div class="form-group d-none master-input">
+          <label for="token">Token</label>
+          <input name="Token" type="text" class="form-control" id="token" value="{{ .Token }}">
+        </div>
+        <div class="form-group d-none master-input">
+          <label for="signed-token">Signed Token</label>
+          <input name="SignedToken" type="text" class="form-control" id="signed-token">
+        </div>
+        <button type="submit" class="btn btn-primary">Submit</button>
+      </form>
+
+    </div>
+
+  </main><!-- /.container -->
+
+  {{ template "footer" }}
+
+
+  <script>
+    $(function() {
+      $("#register-form").submit(function(event) {
+        event.preventDefault();
+        $.ajax({
+          type: "POST",
+          url: "/register",
+          data: $("form").serialize(),
+          success: function(msg) {
+            $("#register-failure-info").addClass("d-none");
+            $("#register-success-info").removeClass("d-none");
+            window.setTimeout(function() {
+              location.href = "/login"
+            }, 3 * 1000)
+          },
+          error: function() {
+            $("#register-success-info").addClass("d-none");
+            $("#register-failure-info").removeClass("d-none");
+          }
+        });
+      });
+
+      $("#is-master-check").change(function() {
+        if (this.checked) {
+          $(".master-input").removeClass("d-none");
+        } else {
+          $(".master-input").addClass("d-none");
+        }
+      });
+    });
+  </script>
+
+</body>
+
+</html>
+{{ end }}

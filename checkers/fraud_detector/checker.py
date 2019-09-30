@@ -96,7 +96,7 @@ def verdict(exit_code, public="", private=""):
 
 
 def info():
-    verdict(OK, "vulns: 2:2")
+    verdict(OK, "vulns: 1:1:2")
 
 
 def check(host):
@@ -142,8 +142,10 @@ def put(host, flag_id, flag, vuln):
     rule_name = gen_rule_name()
     if int(vuln) == 1:
         rule = code_gen.gen_vuln1_check(flag)
-    else:
+    elif int(vuln) == 2:
         rule = code_gen.gen_vuln2_check(flag)
+    else:
+        rule = code_gen.gen_vuln3_check(flag)
 
     ans = call_add_rule_api(s, host, name=rule_name, code=rule)
     if ans is None or not ans.startswith("ok:"):

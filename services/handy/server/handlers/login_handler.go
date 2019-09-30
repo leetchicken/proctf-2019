@@ -1,8 +1,9 @@
 package handlers
 
 import (
-	"errors"
 	"fmt"
+	"html/template"
+	"log"
 	"net/http"
 
 	"github.com/gorilla/schema"
@@ -10,17 +11,20 @@ import (
 	"handy/server/backends"
 	"handy/server/constants"
 	"handy/server/data"
+	"handy/server/util"
 )
 
 type loginHandler struct {
 	cs *backends.CookieStorage
 	us *backends.UserStorage
+	t  *template.Template
 }
 
-func NewLoginHandler(cs *backends.CookieStorage, us *backends.UserStorage) *loginHandler {
+func NewLoginHandler(cs *backends.CookieStorage, us *backends.UserStorage, t *template.Template) *loginHandler {
 	return &loginHandler{
 		cs: cs,
 		us: us,
+		t:  t,
 	}
 }
 
@@ -35,7 +39,18 @@ func (h *loginHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *loginHandler) handleGet(w http.ResponseWriter, r *http.Request) {
-	HandleError(w, errors.New("not implemented"), http.StatusNotImplemented)
+	_, _, err := util.RetrieveUserInfo(r)
+	if err == util.UserNotPresentError {
+		err = h.t.ExecuteTemplate(w, "login", nil)
+		if err != nil {
+			log.Printf("Template error: %s", err)
+		}
+		return
+	} else if err != nil {
+		HandleError(w, fmt.Errorf("failed to extract user: %s", err), http.StatusBadRequest)
+		return
+	}
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
 func (h *loginHandler) handlePost(w http.ResponseWriter, r *http.Request) {
@@ -66,6 +81,4 @@ func (h *loginHandler) handlePost(w http.ResponseWriter, r *http.Request) {
 		Name:  constants.SessionCookieName,
 		Value: cookie,
 	})
-
-	// TODO: redirect
 }

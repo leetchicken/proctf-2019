@@ -9,6 +9,7 @@ import json
 import re
 import uuid
 import time
+import ssl
 from random import randint
 from elasticsearch.exceptions import ConnectionError, AuthenticationException, AuthorizationException
 from elasticsearch import Elasticsearch, RequestsHttpConnection
@@ -127,9 +128,11 @@ def check(args):
     msg_json = json.dumps(msg)
 
     credentials = pika.PlainCredentials(username, password)
+    cxt = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
+    ssl_options = pika.SSLOptions(context=cxt)
 
     try:
-        connection = pika.BlockingConnection(pika.ConnectionParameters(host, credentials=credentials))
+        connection = pika.BlockingConnection(pika.ConnectionParameters(host=host, port=5672, credentials=credentials, ssl_options=ssl_options))
         channel = connection.channel()
 
         logs_exchange = 'logs.' + username
@@ -200,18 +203,27 @@ def put(args):
         msg_json = build_log_message(get_random_log(flag_data))
 
         credentials = pika.PlainCredentials(username, password)
+        cxt = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
+        ssl_options = pika.SSLOptions(context=cxt)
 
         try:
-            connection = pika.BlockingConnection(pika.ConnectionParameters(host, credentials=credentials))
+            connection = pika.BlockingConnection(pika.ConnectionParameters(host=host, port=5672, credentials=credentials, ssl_options=ssl_options))
             channel = connection.channel()
 
             logs_exchange = 'logs.' + username
             channel.basic_publish(logs_exchange, '', msg_json, pika.BasicProperties(type='Deer.Messages.LogData,Deer'))
 
-            # TODO check for errors
-            time.sleep(3)
-
+            count = 0
+            while count < 3:
+                method_frame, header_frame, body = channel.basic_get(queue = feedback_queue, auto_ack=True)
+                if method_frame:
+                    break
+                count += 1
+                time.sleep(1)
             connection.close()
+
+            if method_frame:
+                verdict(MUMBLE, "Got an error message")
         except pika.exceptions.AMQPConnectionError as e:
             if str(e):
                 trace_msg = "Connection error: %s" % e
@@ -239,9 +251,11 @@ def get(args):
         username = flag_data.rstrip('=').lower()
 
         credentials = pika.PlainCredentials(username, password)
+        cxt = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
+        ssl_options = pika.SSLOptions(context=cxt)
 
         try:
-            connection = pika.BlockingConnection(pika.ConnectionParameters(host, credentials=credentials))
+            connection = pika.BlockingConnection(pika.ConnectionParameters(host=host, port=5672, credentials=credentials, ssl_options=ssl_options))
             connection.close()
         except pika.exceptions.AMQPConnectionError as e:
             if str(e):
@@ -258,8 +272,7 @@ def get(args):
 
     if vuln == "2":
         username = get_username_from_db(flag_id)
-        # TODO check certificate
-        es = Elasticsearch(['https://%s:9200' % host], http_auth=(username, password), verify_certs=False, connection_class=RequestsHttpConnection)
+        es = Elasticsearch(['https://%s:9200' % host], http_auth=(username, password), verify_certs=False, ssl_show_warn=False, connection_class=RequestsHttpConnection)
 
         try:
             res = es.search(index=username, body={"query": { "match": { "content": { "query": "flag" } } }})

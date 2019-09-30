@@ -23,7 +23,7 @@ if VBoxManage showvminfo "proctf_$SERVICE" --machinereadable &> /dev/null; then
  VBoxManage unregistervm "proctf_$SERVICE" --delete
 fi
 
-VBoxManage import rhel8_master_v1.ova --vsys 0 --vmname "proctf_$SERVICE"
+VBoxManage import centos8_master_v2.ova --vsys 0 --vmname "proctf_$SERVICE"
 
 PORT="$((RANDOM+10000))"
 VBoxManage modifyvm "proctf_$SERVICE" --natpf1 "deploy,tcp,127.0.0.2,$PORT,,22"
@@ -31,27 +31,45 @@ VBoxManage startvm "proctf_$SERVICE" --type separate
 
 echo "Waiting SSH up"
 
-while ! nc 127.0.0.2 "$PORT" -zw 1; do
+SSH_OPTS="-o StrictHostKeyChecking=no -o CheckHostIP=no -o NoHostAuthenticationForLocalhost=yes"
+SSH_OPTS="$SSH_OPTS -o BatchMode=yes -o LogLevel=ERROR -o UserKnownHostsFile=/dev/null"
+SSH_OPTS="$SSH_OPTS -o ConnectTimeout=5 -o User=root"
+SSH="ssh $SSH_OPTS -p $PORT "
+
+while ! $SSH 127.0.0.2 echo "SSH CONNECTED"; do
     echo "Still waiting"
     sleep 1
 done
 
-SSH_OPTS="-o StrictHostKeyChecking=no -o CheckHostIP=no -o NoHostAuthenticationForLocalhost=yes"
-SSH_OPTS="$SSH_OPTS -o BatchMode=yes -o LogLevel=ERROR -o UserKnownHostsFile=/dev/null"
-SSH_OPTS="$SSH_OPTS -o ConnectTimeout=20 -o User=root"
+REMOTE_HOSTNAME="$(echo "$SERVICE" | tr _ -)"
+$SSH 127.0.0.2 "echo $REMOTE_HOSTNAME > /etc/hostname"
+$SSH 127.0.0.2 /usr/sbin/xfs_growfs -d /
 
-SSH="ssh $SSH_OPTS -p $PORT "
-$SSH 127.0.0.2 hostname
-
+echo "==========================================="
 echo "Please pay attention on these copied files:"
-pushd ..
-rsync -lptgodRv -e "$SSH" -- $SERVICE_FILES "127.0.0.2:/service/$SERVICE/"
-popd
+echo "==========================================="
+pushd .. > /dev/null
+rsync -lptgodRv --cvs-exclude -e "$SSH" -- $SERVICE_FILES "127.0.0.2:/service/$SERVICE/"
+popd > /dev/null
 
-$SSH 127.0.0.2 "cd /service/$SERVICE; docker-compose up -d"
+if [ $SERVICE == "deer" ]; then
+    echo "import docker images"
+    docker save proctf/deer-elasticsearch | $SSH 127.0.0.2 docker import - proctf/deer-elasticsearch
+    docker save proctf/deer-rabbitmq | $SSH 127.0.0.2 docker import - proctf/deer-rabbitmq
+    docker save proctf/deer | $SSH 127.0.0.2 docker import - proctf/deer
+fi
 
-echo "Giving the service some time to warm up"
-sleep 5
+$SSH 127.0.0.2 "cd /service/$SERVICE; docker-compose up --no-start"
+
+
+RC="/etc/rc.d/rc.local"
+FIRST_RUN_CMD="cd /service/$SERVICE && docker-compose up -d && sed -i /docker-compose/d $RC"
+if [ -f "../services/$SERVICE/init.sh" ]; then
+    echo "Found init.sh, scheduling it on the next run"
+    FIRST_RUN_CMD="cd /service/$SERVICE && bash ./init.sh && docker-compose up -d && sed -i /docker-compose/d $RC"
+fi
+$SSH 127.0.0.2 "chmod +x $RC"
+$SSH 127.0.0.2 "echo '$FIRST_RUN_CMD' >> $RC"
 
 VBoxManage controlvm "proctf_$SERVICE" acpipowerbutton
 

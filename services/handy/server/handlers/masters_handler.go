@@ -1,22 +1,31 @@
 package handlers
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
+	"html/template"
+	"log"
 	"net/http"
 
 	"handy/server/backends"
+	"handy/server/data"
 	"handy/server/util"
 )
 
-type masterHandler struct {
-	us *backends.UserStorage
+type masterHandlerTemplateData struct {
+	LocalUserInfo *data.LocalUserInfo
+	Masters       []*data.ProfileUserInfo
 }
 
-func NewMasterHandler(us *backends.UserStorage) *masterHandler {
+type masterHandler struct {
+	us *backends.UserStorage
+	t  *template.Template
+}
+
+func NewMasterHandler(us *backends.UserStorage, t *template.Template) *masterHandler {
 	return &masterHandler{
 		us: us,
+		t:  t,
 	}
 }
 
@@ -28,9 +37,8 @@ func (h *masterHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// TODO: should return html
 func (h *masterHandler) handleGet(w http.ResponseWriter, r *http.Request) {
-	_, _, err := util.RetrieveUserInfo(r)
+	_, lui, err := util.RetrieveUserInfo(r)
 	if err == util.UserNotPresentError {
 		HandleError(w, errors.New("user not authenticated"), http.StatusUnauthorized)
 		return
@@ -39,17 +47,18 @@ func (h *masterHandler) handleGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	masters, err := h.us.GetMasters()
+	td := &masterHandlerTemplateData{
+		LocalUserInfo: lui,
+	}
+
+	td.Masters, err = h.us.GetMasters()
 	if err != nil {
 		HandleError(w, fmt.Errorf("failed to retrieve masters: %s", err), http.StatusInternalServerError)
 		return
 	}
 
-	resultJSON, err := json.Marshal(masters)
+	err = h.t.ExecuteTemplate(w, "masters", td)
 	if err != nil {
-		HandleError(w, fmt.Errorf("failed to marshal response: %s", err), http.StatusInternalServerError)
-		return
+		log.Printf("Template error: %s", err)
 	}
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(resultJSON)
 }

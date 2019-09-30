@@ -1,0 +1,19 @@
+version: '2'
+services:
+
+  # SQL database
+  postgres:
+    image: "postgres:latest"
+    restart: "always"
+    volumes:
+      - "drone-racing-data:/var/lib/postgresql/data"
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: "user"
+      POSTGRES_PASSWORD: "password"
+      POSTGRES_DB: "drone-racing"
+    mem_limit: "8g"
+
+volumes:
+  drone-racing-data:

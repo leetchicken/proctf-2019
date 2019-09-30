@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using Deer.EasyNetQ;
 using Deer.Hangfire;
 using Deer.Models.MongoDb;
@@ -33,15 +34,30 @@ namespace Deer
 
             services.AddSingleton(sp => new ConnectionStringParser().Parse(sp.GetRequiredService<IConfiguration>().GetConnectionString("RabbitMq")));
             
-            services.AddSingleton(sp => RabbitHutch.CreateBus(sp.GetRequiredService<IConfiguration>().GetConnectionString("RabbitMq"),
-                sr =>
+            services.AddSingleton(sp =>
+            {
+                var rootCaCert = new X509Certificate2("root-ca.pem");
+                var connectionString = sp.GetRequiredService<IConfiguration>().GetConnectionString("RabbitMq");
+                var config = new ConnectionStringParser().Parse(connectionString);
+                config.Ssl.Enabled = true;
+                config.Ssl.CertificateValidationCallback = (message, cert, chain, errors) =>
                 {
-                    sr.Register<IConsumerErrorStrategy>(srr =>
-                        new ConsumerErrorStrategy(sp.GetRequiredService<IUserRepository>(),
-                            srr.Resolve<IConnectionFactory>(),
-                            srr.Resolve<ITypeNameSerializer>(),
-                            sp.GetRequiredService<ILogger<ConsumerErrorStrategy>>()));
-                }));
+                    chain.ChainPolicy.RevocationMode = X509RevocationMode.NoCheck;
+                    chain.ChainPolicy.ExtraStore.Add(rootCaCert);
+                    chain.ChainPolicy.VerificationFlags = X509VerificationFlags.AllowUnknownCertificateAuthority;
+                    return chain.Build(new X509Certificate2(cert));
+                };
+                
+                return RabbitHutch.CreateBus(config,
+                    sr =>
+                    {
+                        sr.Register<IConsumerErrorStrategy>(srr =>
+                            new ConsumerErrorStrategy(sp.GetRequiredService<IUserRepository>(),
+                                srr.Resolve<IConnectionFactory>(),
+                                srr.Resolve<ITypeNameSerializer>(),
+                                sp.GetRequiredService<ILogger<ConsumerErrorStrategy>>()));
+                    });
+            });
 
             services.AddSingleton<IManagementClient>(sp =>
             {
