@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
+#include <map>
 #include "log.h"
 #include "httpserver.h"
 #include "png.h"
@@ -35,8 +36,16 @@ public:
     int IteratePostData(MHD_ValueKind kind, const char *key, const char *filename, const char *contentType, const char *transferEncoding, const char *data, uint64_t offset, size_t size);
 	void IteratePostData(const char* uploadData, size_t uploadDataSize);
 
+	struct InputImage
+	{
+		char* data;
+		uint32_t size;
+	};
+
     uint32_t m_contentLength = 0;
     char* m_content = nullptr;
+	char* m_curContentPtr = nullptr;
+	std::map<std::string, InputImage> m_inputImages;
 	std::string m_kernel;
 
 protected:
@@ -96,7 +105,7 @@ HttpResponse RequestHandler::PostImage(HttpRequest request, HttpPostProcessor** 
     static const std::string kContentLength("content-length");
 	static const std::string kKernelId("kernel-id");
     FindInMap(request.headers, kContentLength, contentLength);
-	FindInMap(request.headers, kKernelId, kernelId);
+	FindInMap(request.queryString, kKernelId, kernelId);
     if(contentLength == 0)
 	{
 		Log("  Bad request: empty content\n");
@@ -106,9 +115,12 @@ HttpResponse RequestHandler::PostImage(HttpRequest request, HttpPostProcessor** 
 	std::string kernel;
 	if(GetConvolutionKernel(kernelId, kernel) != kKernelOk)
 	{
-		Log("  Unknown kernel id: %s\n", kKernelId.c_str());
+		Log("  Unknown kernel id: %s\n", kernelId.c_str());
         return HttpResponse(MHD_HTTP_BAD_REQUEST);
 	}
+
+	Log("  id: %s\n", kernelId.c_str());
+	Log("  content length: %u\n", contentLength);
 
 	*postProcessor = new PostImageProcessor(request, contentLength, kernel);
     return HttpResponse();
@@ -162,7 +174,10 @@ PostImageProcessor::PostImageProcessor(const HttpRequest& request, uint32_t cont
     : HttpPostProcessor(request), m_contentLength(contentLength), m_kernel(kernel)
 {
     if(m_contentLength)
+	{
         m_content = (char*)malloc(m_contentLength);
+		m_curContentPtr = m_content;
+	}
 }
 
 
@@ -193,83 +208,101 @@ void PostImageProcessor::FinalizeRequest()
 
 	const uint32_t kChannelsNum = 4;
 
-    Image srcImage;
-	if(!read_png_from_memory(m_content, m_contentLength, srcImage))
-	{
-		Log("  Bad png\n");
-		Complete(HttpResponse(MHD_HTTP_BAD_REQUEST));
-		return;
-	}
+	std::string output = "{ ";
+	uint32_t counter = 0;
 
-	Image srcImages[kChannelsNum], dstImages[kChannelsNum];
-	for(uint32_t i = 0; i < kChannelsNum; i++)
+	for(auto& iter : m_inputImages)
 	{
-		srcImages[i].width = ((srcImage.width + 23) / 24) * 24;
-		srcImages[i].height = ((srcImage.height + 2) / 3) * 3;
-		srcImages[i].pixels = (ABGR*)aligned_alloc(16, srcImages[i].GetSize());
-		memset(srcImages[i].pixels, 0, srcImages[i].GetSize());
-		for(uint32_t y = 0; y < srcImage.height; y++)
+		Log("  Process image '%s'\n", iter.first.c_str());
+
+		Image srcImage;
+		if(!read_png_from_memory(iter.second.data, iter.second.size, srcImage))
 		{
-			for(uint32_t x = 0; x < srcImage.width; x++)
+			Log("  Bad png\n");
+			Complete(HttpResponse(MHD_HTTP_BAD_REQUEST));
+			return;
+		}
+
+		Image srcImages[kChannelsNum], dstImages[kChannelsNum];
+		for(uint32_t i = 0; i < kChannelsNum; i++)
+		{
+			srcImages[i].width = ((srcImage.width + 23) / 24) * 24;
+			srcImages[i].height = ((srcImage.height + 2) / 3) * 3;
+			srcImages[i].pixels = (ABGR*)aligned_alloc(16, srcImages[i].GetSize());
+			memset(srcImages[i].pixels, 0, srcImages[i].GetSize());
+			for(uint32_t y = 0; y < srcImage.height; y++)
 			{
-				ABGR& src = srcImage.Pixel(x, y);
-				ABGR& dst = srcImages[i].Pixel(x, y);
-				dst.abgr = (src.abgr >> (i * 8)) & 0xFF;
+				for(uint32_t x = 0; x < srcImage.width; x++)
+				{
+					ABGR& src = srcImage.Pixel(x, y);
+					ABGR& dst = srcImages[i].Pixel(x, y);
+					dst.abgr = (src.abgr >> (i * 8)) & 0xFF;
+				}
+			}
+
+			dstImages[i].width = srcImages[i].width / 3;
+			dstImages[i].height = srcImages[i].height / 3;
+			dstImages[i].pixels = (ABGR*)aligned_alloc(16, dstImages[i].GetSize());
+			memset(dstImages[i].pixels, 0, dstImages[i].GetSize());
+		}
+
+		uint64_t timings[kChannelsNum];
+		for(uint32_t i = 0; i < kChannelsNum; i++)
+		{
+			struct UserData
+			{
+				uint64_t srcImage;
+				uint32_t srcImageWidth;
+				uint32_t srcImageHeight;
+				uint64_t kernel;
+				uint64_t dstImage;
+				uint32_t dstImageWidth;
+				uint32_t dstImageHeight;
+			};
+			UserData userData;
+			userData.srcImage = (uint64_t)srcImages[i].pixels;
+			userData.srcImageWidth = srcImages[i].width;
+			userData.srcImageHeight = srcImages[i].height;
+			userData.kernel = (uint64_t)(m_kernel.c_str() + i * 8);
+			userData.dstImage = (uint64_t)dstImages[i].pixels;
+			userData.dstImageWidth = dstImages[i].width;
+			userData.dstImageHeight = dstImages[i].height;
+			timings[i] = Dispatch(srcImages[i].width / 24, srcImages[i].height / 3, (uint64_t)&userData);
+		}
+
+		Image finalImage(dstImages[0].width, dstImages[0].height);
+		for(uint32_t i = 0; i < kChannelsNum; i++)
+		{
+			for(uint32_t y = 0; y < finalImage.height; y++)
+			{
+				for(uint32_t x = 0; x < finalImage.width; x++)
+				{
+					uint32_t p = dstImages[i].Pixel(x,y).abgr;
+					p = p << (i * 8);
+					finalImage.Pixel(x,y).abgr |= p;
+				}
 			}
 		}
 
-		dstImages[i].width = srcImages[i].width / 3;
-		dstImages[i].height = srcImages[i].height / 3;
-		dstImages[i].pixels = (ABGR*)aligned_alloc(16, dstImages[i].GetSize());
-		memset(dstImages[i].pixels, 0, dstImages[i].GetSize());
+		output.append("\"");
+		output.append(iter.first);
+		output.append("\": ");
+		char buf[512];
+		snprintf(buf, sizeof(buf), "{ \"Red channel processing time\" : %lu, \"Blue channel processing time\" : %lu, \"Green channel processing time\" : %lu, \"Alpha channel processing time\" : %lu }", timings[0], timings[1], timings[2], timings[3]);
+		output.append(buf);
+		if(counter < m_inputImages.size() - 1)
+			output.append(", ");
+		counter++;
 	}
-
-	uint64_t timings[kChannelsNum];
-	for(uint32_t i = 0; i < kChannelsNum; i++)
-	{
-		struct UserData
-		{
-			uint64_t srcImage;
-			uint32_t srcImageWidth;
-			uint32_t srcImageHeight;
-			uint64_t kernel;
-			uint64_t dstImage;
-			uint32_t dstImageWidth;
-			uint32_t dstImageHeight;
-		};
-		UserData userData;
-		userData.srcImage = (uint64_t)srcImages[i].pixels;
-		userData.srcImageWidth = srcImages[i].width;
-		userData.srcImageHeight = srcImages[i].height;
-		userData.kernel = (uint64_t)(m_kernel.c_str() + i * 8);
-		userData.dstImage = (uint64_t)dstImages[i].pixels;
-		userData.dstImageWidth = dstImages[i].width;
-		userData.dstImageHeight = dstImages[i].height;
-		timings[i] = Dispatch(srcImages[i].width / 24, srcImages[i].height / 3, (uint64_t)&userData);
-	}
-
-	Image finalImage(dstImages[0].width, dstImages[0].height);
-	for(uint32_t i = 0; i < kChannelsNum; i++)
-	{
-		for(uint32_t y = 0; y < finalImage.height; y++)
-		{
-			for(uint32_t x = 0; x < finalImage.width; x++)
-			{
-				uint32_t p = dstImages[i].Pixel(x,y).abgr;
-				p = p << (i * 8);
-				finalImage.Pixel(x,y).abgr |= p;
-			}
-		}
-	}
+	output.append("}");
 
 	HttpResponse response;
 	response.code = MHD_HTTP_OK;
 	response.headers.insert({"Content-Type", "application/json"});
-	char buf[512];
-	snprintf(buf, sizeof(buf), "{ \"Red channel processing time\" : %lu, \"Blue channel processing time\" : %lu, \"Green channel processing time\" : %lu, \"Alpha channel processing time\" : %lu }", timings[0], timings[1], timings[2], timings[3]);
-	response.content = (char*)malloc(strlen(buf) + 1);
-	strcpy(response.content, buf);
-	response.contentLength = strlen(buf);
+	
+	response.content = (char*)malloc(output.length());
+	memcpy(response.content, output.c_str(), output.length());
+	response.contentLength = output.length();
 
 	Complete(response);
 }
@@ -278,8 +311,19 @@ void PostImageProcessor::FinalizeRequest()
 int PostImageProcessor::IteratePostData(MHD_ValueKind kind, const char *key, const char *filename, const char *contentType,
                                             const char *transferEncoding, const char *data, uint64_t offset, size_t size) 
 {
-    if(m_content)
-        memcpy(m_content + offset, data, size);
+	if(m_inputImages.find(key) == m_inputImages.end())
+	{
+		InputImage img;
+		img.data = m_curContentPtr;
+		img.size = 0;
+		m_inputImages[key] = img;
+	}
+
+	auto& img = m_inputImages.find(key)->second;
+    memcpy(img.data + offset, data, size);
+	img.size += size;
+	m_curContentPtr += size;
+
     return MHD_YES;
 }
 
