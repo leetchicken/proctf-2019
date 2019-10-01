@@ -7,3 +7,4 @@
 host: 0.0.0.0
 port: 9090
 database_uri: "postgresql://tracker:b118dfbc7e1c@localhost:5432/tracker"
+debug: False

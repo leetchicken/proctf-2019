@@ -10,7 +10,7 @@ class Config(Model):
     host = StringType(required=True)
     port = IntType(required=True)
     database_uri = StringType(required=True)
-    debug = BooleanType(default=True)
+    debug = BooleanType(required=True)
 
     
 def get_config() -> Config:

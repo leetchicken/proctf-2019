@@ -14,10 +14,11 @@ async def run_server():
         loop.create_task(handle_client(client_sock, loop))
 
 
-configure_logging()
+config = get_config()
+
+configure_logging(config.debug)
 register_handlers()
 
-config = get_config()
 server = create_server_socket(config.host, config.port)
 
 loop = asyncio.get_event_loop()
