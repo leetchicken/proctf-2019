@@ -7,7 +7,7 @@ import struct
 import socket
 import time
 
-SERVER_ADDR = "10.60.3.2"
+SERVER_ADDR = "10.10.10.101"
 # value of 'sp' register at the very beginning of NotificationCtx::Update(),
 # before 'push {r4, r5, r6, r7, pc}' instruction,
 # ie start address of stack frame of NotificationCtx::Update()

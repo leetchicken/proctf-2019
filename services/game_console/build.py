@@ -78,9 +78,9 @@ os.system("cp main_screen/fs.bin BUILD/")
 print("")
 
 print("Build firmware")
-if os.system("cd hw; ./compile.sh --profile release") != 0:
+if os.system("cd hw; ./compile_release.sh") != 0:
 	exit(1)
-os.system("cp hw/BUILD/DISCO_F746NG/GCC_ARM/hw.bin BUILD/")
-os.system("cp hw/BUILD/DISCO_F746NG/GCC_ARM/hw.elf BUILD/")
+os.system("cp hw/BUILD/DISCO_F746NG/GCC_ARM-RELEASE/hw.bin BUILD/")
+os.system("cp hw/BUILD/DISCO_F746NG/GCC_ARM-RELEASE/hw.elf BUILD/")
 print("")
 
