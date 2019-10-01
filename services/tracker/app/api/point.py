@@ -42,7 +42,7 @@ async def point_add(db, token, latitude, longitude, meta):
     await db.execute("INSERT INTO point(latitude, longitude, tracker_id, track_id, meta, timestamp) "
                      "VALUES($1, $2, $3, $4, $5, $6)",
                      latitude, longitude, tracker_id, track_id, meta, time.time())
-    log.debug("Added new point.")
+    log.debug("Added new point to track %d.", track_id)
 
     return Response.OK, track_id
 
@@ -56,10 +56,11 @@ async def point_add_batch(db, token, points):
     now = time.time()
     track_id = await get_or_create_track_id(db, user_id, tracker_id, now)
 
-    for idx, (latitude, longitude, meta) in enumerate(points, 1):
-        await db.execute("INSERT INTO point(latitude, longitude, tracker_id, track_id, meta, timestamp) "
-                         "VALUES($1, $2, $3, $4, $5, $6)",
-                         latitude, longitude, tracker_id, track_id, meta, time.time())
-        log.debug("Added new point (%d of %d).", idx, len(points))
+    columns = ["latitude", "longitude", "tracker_id", "track_id", "meta", "timestamp"]
+    records = [(lat, lon, tracker_id, track_id, meta, now) for lat, lon, meta in points]
+
+    await db.copy_records_to_table("point", columns=columns, records=records)
+
+    log.debug("Added %d point(s) to track %s.", len(points), track_id)
 
     return Response.OK, track_id
