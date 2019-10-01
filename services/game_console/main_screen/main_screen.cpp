@@ -769,10 +769,10 @@ bool Context::Update()
         {
             char buf[64];
             m_api->memset(buf, 0, 64);
-            m_api->sprintf(buf, "Start game '%s'", m_games[m_curGame].name);
+            m_api->sprintf(buf, "Is now playing '%s'", m_games[m_curGame].name);
             m_notificationsCtx.Post(m_userName, buf);
             
-            m_api->printf("Start game '%s'\n", m_games[m_curGame].name);
+            m_api->printf("Is now playing '%s'\n", m_games[m_curGame].name);
 
             uint8_t* ptr = m_gameCodeMem;
 
