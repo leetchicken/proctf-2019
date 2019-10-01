@@ -46,7 +46,7 @@ class Client:
             # Probably client disconnected
             return None
         if len(raw_request) >= MESSAGE_SIZE:
-            log.debug(" <=  [Too big: %d bytes]", len(raw_request))
+            log.warning(" <=  [Too big: %d bytes]", len(raw_request))
             await self.send((Response.BAD_REQUEST, "Too big request."))
             return None
 

@@ -1,20 +1,12 @@
 import logging
 import time
 
-from app.common import handler
+from app.common import handler, auth_tracker
 from app.enums import Response, Request, TrackAccess
 
 log = logging.getLogger()
 
 NEW_TRACK_GAP_SECONDS = 2
-
-
-# FIXME: copy-paste?
-async def auth(db, token):
-    row = await db.fetchrow("SELECT id, user_id FROM tracker WHERE token=$1", token)
-    if row is None:
-        return None, None
-    return row["id"], row["user_id"]
 
 
 async def get_or_create_track_id(db, user_id, tracker_id, now):
@@ -40,7 +32,7 @@ async def point_add(db, token, latitude, longitude, meta):
     except ValueError:
         return Response.BAD_REQUEST
 
-    tracker_id, user_id = await auth(db, token)
+    tracker_id, user_id = await auth_tracker(db, token)
     if tracker_id is None:
         return Response.FORBIDDEN
 
@@ -57,7 +49,7 @@ async def point_add(db, token, latitude, longitude, meta):
 
 @handler(Request.POINT_ADD_BATCH)
 async def point_add_batch(db, token, points):
-    tracker_id, user_id = await auth(db, token)
+    tracker_id, user_id = await auth_tracker(db, token)
     if tracker_id is None:
         return Response.FORBIDDEN
 

@@ -2,7 +2,7 @@ import logging
 import time
 import uuid
 
-from app.common import hash_password, generate_secret, handler, auth
+from app.common import hash_password, generate_secret, handler, auth_user
 from app.enums import Response, Request
 
 MIN_PASSWORD_LEN = 8
@@ -66,7 +66,7 @@ async def user_logout(db, secret):
 
 @handler(Request.USER_DELETE)
 async def user_delete(db, secret):
-    user_id = await auth(db, secret)
+    user_id = await auth_user(db, secret)
     if user_id is None:
         return Response.FORBIDDEN
     await db.execute('DELETE FROM track WHERE user_id=$1', user_id)

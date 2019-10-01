@@ -36,9 +36,9 @@ def is_uuid(value):
     return True
 
 
-def configure_logging():
-    logging.basicConfig(format="%(asctime)s %(levelname)8s %(message)s",
-                        level=logging.DEBUG)
+def configure_logging(debug: bool):
+    log_level = logging.DEBUG if debug else logging.WARNING
+    logging.basicConfig(format="%(asctime)s %(levelname)8s %(message)s", level=log_level)
 
 
 async def connect_db():
@@ -53,8 +53,15 @@ def handler(request_id: int):
     return wrapper
 
 
-async def auth(db, secret):
+async def auth_user(db, secret):
     row = await db.fetchrow("SELECT user_id FROM secret WHERE value=$1", secret)
     if row is None:
         return None
     return row["user_id"]
+
+
+async def auth_tracker(db, token):
+    row = await db.fetchrow("SELECT id, user_id FROM tracker WHERE token=$1", token)
+    if row is None:
+        return None, None
+    return row["id"], row["user_id"]

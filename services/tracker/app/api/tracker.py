@@ -1,6 +1,6 @@
 import logging
 
-from app.common import handler, generate_token
+from app.common import handler, generate_token, auth_user
 from app.enums import Response, Request
 
 MAX_TRACKERS = 8
@@ -8,17 +8,9 @@ MAX_TRACKERS = 8
 log = logging.getLogger()
 
 
-# FIXME: copy-paste?
-async def auth(db, secret):
-    row = await db.fetchrow("SELECT * FROM secret WHERE value=$1", secret)
-    if row is None:
-        return None
-    return row["user_id"]
-
-
 @handler(Request.TRACKER_LIST)
 async def list(db, secret):
-    user_id = await auth(db, secret)
+    user_id = await auth_user(db, secret)
     if user_id is None:
         return Response.FORBIDDEN
 
@@ -28,7 +20,7 @@ async def list(db, secret):
 
 @handler(Request.TRACKER_ADD)
 async def add(db, secret, name):
-    user_id = await auth(db, secret)
+    user_id = await auth_user(db, secret)
     if user_id is None:
         return Response.FORBIDDEN
 
@@ -46,7 +38,7 @@ async def add(db, secret, name):
 
 @handler(Request.TRACKER_DELETE)
 async def delete(db, secret, id):
-    user_id = await auth(db, secret)
+    user_id = await auth_user(db, secret)
     if user_id is None:
         return Response.FORBIDDEN
 

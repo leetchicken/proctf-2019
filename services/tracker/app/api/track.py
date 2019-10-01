@@ -1,6 +1,6 @@
 import logging
 
-from app.common import handler, auth
+from app.common import handler, auth_user
 from app.enums import Response, Request, TrackAccess
 
 log = logging.getLogger()
@@ -8,7 +8,7 @@ log = logging.getLogger()
 
 @handler(Request.TRACK_LIST)
 async def track_list(db, secret):
-    user_id = await auth(db, secret)
+    user_id = await auth_user(db, secret)
     if user_id is None:
         return Response.FORBIDDEN
 
@@ -20,7 +20,7 @@ async def track_list(db, secret):
 
 @handler(Request.TRACK_GET)
 async def track_get(db, secret, track_id):
-    user_id = await auth(db, secret)
+    user_id = await auth_user(db, secret)
     if user_id is None:
         return Response.FORBIDDEN
 
@@ -46,7 +46,7 @@ async def track_get(db, secret, track_id):
 
 @handler(Request.TRACK_DELETE)
 async def track_delete(db, secret, track_id):
-    user_id = await auth(db, secret)
+    user_id = await auth_user(db, secret)
     if user_id is None:
         return Response.FORBIDDEN
 
@@ -62,7 +62,7 @@ async def track_delete(db, secret, track_id):
 
 @handler(Request.TRACK_REQUEST_SHARE)
 async def track_request_share(db, secret, track_id):
-    user_id = await auth(db, secret)
+    user_id = await auth_user(db, secret)
     if user_id is None:
         return Response.FORBIDDEN
 
@@ -79,7 +79,7 @@ async def track_request_share(db, secret, track_id):
 
 @handler(Request.TRACK_SHARE)
 async def track_share(db, secret, track_id):
-    user_id = await auth(db, secret)
+    user_id = await auth_user(db, secret)
     if user_id is None:
         return Response.FORBIDDEN
 
