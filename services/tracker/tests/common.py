@@ -6,8 +6,6 @@ import pytest
 from app.common import connect_db
 from app.enums import Response, Request
 
-HOST = "127.0.0.1"
-PORT = 9090
 BUFFER_SIZE = 1024
 
 SOCK_DCCP = 6
@@ -17,12 +15,13 @@ DCCP_SOCKOPT_SERVICE = 2
 
 
 class Client:
-    def __init__(self):
+    def __init__(self, host="127.0.0.1", port=9090):
         sock = socket.socket(socket.AF_INET, SOCK_DCCP, IPROTO_DCCP)
         sock.setsockopt(SOL_DCCP, DCCP_SOCKOPT_SERVICE, True)
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        sock.connect((HOST, PORT))
+        sock.connect((host, port))
         self.sock = sock
+        self.key = self.receive_key()
 
     def query(self, *args, expect=None):
         response = self.query_raw(args)
@@ -31,8 +30,16 @@ class Client:
             response = response[1:]
         return response[0] if len(response) == 1 else response
 
+    def receive_key(self):
+        key_raw = self.sock.recv(BUFFER_SIZE)
+        if len(key_raw) != 1:
+            raise Exception("Unexpected key size")
+        return key_raw[0]
+
     def query_raw(self, obj):
-        self.sock.send(msgpack.packb(obj))
+        raw_bytes = msgpack.packb(obj)
+        raw_bytes = bytes(b ^ ((self.key + i) & 0xFF) for i, b in enumerate(raw_bytes))
+        self.sock.send(raw_bytes)
         return msgpack.unpackb(self.sock.recv(BUFFER_SIZE), raw=False)
 
 
