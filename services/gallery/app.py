@@ -5,6 +5,8 @@ import PIL.Image
 import gallery
 import uuid
 from cgi import parse_qs
+from io import BytesIO
+import cv2
 
 STATIC_DIR = pathlib.Path("static")
 PAINTINGS_DIR = pathlib.Path("data/paintings/")
@@ -35,64 +37,78 @@ def gen_json_ans(obj):
     return "200 OK", JSON_HEADERS, json.dumps(obj)
 
 
-def parse_png(body):
+def parse_png_bytes(body):
     try:
-        painting = PIL.Image.fromarray(body)
-    except:
-        raise ValueError(gen_json_ans({"error": "can't parse image bytes"}))
-    
+        painting = PIL.Image.open(BytesIO(body))
+    except Exception as e:
+        raise Exception("can't parse image bytes", e)
+
     if painting.format != "PNG" or painting.width != 128 or painting.height != 128:
-        raise ValueError(gen_json_ans({"error": "image should be in .png format and be 128x128px"}))
+        raise Exception("image should be in .png format and be 128x128px")
 
     return painting
 
 def post_replica(query, body):
     try:
-        replica = parse_png(body)
-    except ValueError as e:
-        return str(e)    
-    try:
-        painting_id = str(uuid.UUID(query["id"]))
-    except:
-        return gen_json_ans({"error": "painting 'id' param not specified"})
+        painting_id = str(uuid.UUID(query["id"][0]))
+    except Exception as e:
+        print("painting 'id' param not specified or is invalid:", e)
+        return gen_json_ans({"error": "painting 'id' param not specified or is invalid"})
 
     try:
-        painting = PIL.Image.fromarray((PAINTINGS_DIR / painting_id+".png").read_bytes())
-    except:
-        return gen_json_ans({"error": "painting 'id' param not specified"})
+        replica = parse_png_bytes(body)
+    except Exception as e:
+        print("can't parse replica image:", e)
+        return gen_json_ans({"error": str(e)})
+
+    try:
+        painting = parse_png_bytes((PAINTINGS_DIR / (painting_id+".png")).read_bytes())
+    except Exception as e:
+        print("can't read and parse painting image:", e)
+        return gen_json_ans({"error": "can't read painting"})
 
     dist = gallery.calc_dist(painting, replica)
-    if dist > 0.05:
+    if dist >= 0.05:
         return gen_json_ans({"dist": dist})
     else:
         return "HERE IS YOUR FLAG"
 
 def put_painting(query, body):
     try:
-        painting = parse_png(body)
-    except ValueError as e:
-        return str(e)
+        painting = parse_png_bytes(body)
+    except Exception as e:
+        print("can't parse painting image:", e)
+        return gen_json_ans({"error": str(e)})
 
     painting_id = str(uuid.uuid4())
+    file_name = painting_id + ".png"
     try:
-        with open(PAINTINGS_DIR / painting_id, "x") as file:
+        with open(PAINTINGS_DIR / file_name, "xb") as file:
             file.write(body)
-    except OSError:
+    except Exception as e:
+        print("can't save painting:", e)
         return gen_json_ans({"error": "can't save painting"})
+
+    preview = painting.resize((16, 16), resample=PIL.Image.BICUBIC)
+    try:
+        preview.save(PREVIEWS_DIR / file_name)
+    except Exception as e:
+        print("can't save preview:", e)
+        return gen_json_ans({"error": "can't save preview"})
 
     return gen_json_ans({"id": painting_id})
 
 
 def get_paintings(query, body):
-    paintings_list = []
+    paintings_ids = []
 
-    for x in PAINTINGS_DIR.iterdir():
-        if(len(paintings_list) >= 10_000):
+    for x in PREVIEWS_DIR.iterdir():
+        if(len(paintings_ids) >= 10_000):
             break
         if x.is_file() and x.suffix == '.png':
-            paintings_list.append(x.stem)
+            paintings_ids.append(x.stem)
 
-    return gen_json_ans(paintings_list)
+    return gen_json_ans(paintings_ids)
 
 
 URLS = {
