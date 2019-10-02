@@ -1,4 +1,6 @@
 import logging
+import random
+
 import msgpack
 
 import app.api
@@ -30,6 +32,7 @@ class Client:
     def __init__(self, client_sock, loop):
         self.client_sock = client_sock
         self.loop = loop
+        self.key = random.randint(0, 255)
 
     def __enter__(self):
         self.host_port = self.client_sock.getpeername()
@@ -50,9 +53,13 @@ class Client:
             await self.send((Response.BAD_REQUEST, "Too big request."))
             return None
 
+        raw_request = bytes(b ^ ((self.key + i) & 0xFF) for i, b in enumerate(raw_request))
         request = msgpack.unpackb(raw_request, raw=False)
         log.debug(" <=  %s", request)
         return request
+
+    async def send_key(self):
+        await self.loop.sock_sendall(self.client_sock, bytes([self.key]))
 
     async def send(self, response):
         log.debug(" =>  %s", response)
@@ -83,6 +90,7 @@ async def handle_request(request):
 
 async def handle_client(client_sock, loop):
     with Client(client_sock, loop) as client:
+        await client.send_key()
         while True:
             try:
                 request = await client.recv()

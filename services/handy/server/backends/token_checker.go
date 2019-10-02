@@ -25,7 +25,7 @@ const (
 var (
 	tokenCheckerPublicKeyPath = flag.String(
 		"token-checker-public-key-path",
-		"/etc/handy/token_checker_public_key",
+		"token_checker_public_key.pem",
 		"Path to the public key used for token validation.")
 )
 

@@ -50,7 +50,7 @@ def parse_args():
 
 
 def main():
-    configure_logging()
+    configure_logging(debug=True)
     args = parse_args()
     command = COMMANDS[args.command]
     asyncio.get_event_loop().run_until_complete(do(command))

@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"html/template"
 	"log"
 	"net/http"
@@ -15,9 +16,12 @@ import (
 )
 
 var (
-	listenHost      = flag.String("listen-host", "0.0.0.0:8080", "Host/port to listen to.")
+	listenHost      = flag.String("listen-host", "0.0.0.0", "Host to listen to.")
+	listenPort      = flag.String("listen-port", "8080", "Port to listen to.")
 	templatesGlob   = flag.String("templates-glob", "./templates/*.html", "Glob for the HTML templates.")
 	staticDirectory = flag.String("static-directory", "./static/", "Directory for static files.")
+	certPath        = flag.String("server-cert-path", "/etc/handy/cert.pem", "Path to the TLS certificate.")
+	keyPath         = flag.String("server-key-path", "/etc/handy/key.pem", "Path to the TLS private key.")
 )
 
 func main() {
@@ -53,6 +57,9 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to load templates: %s", err)
 	}
+	if err = util.CheckTLSConfig(*certPath, *keyPath, *listenHost); err != nil {
+		log.Fatalf("Failed to check TLS config: %s", err)
+	}
 
 	hwf := handlers.NewHandlerWrapperFactory(auditWriter, cookieStorage)
 	http.Handle("/login", hwf.Wrap(handlers.NewLoginHandler(cookieStorage, userStorage, t)))
@@ -64,5 +71,6 @@ func main() {
 	http.Handle("/masters", hwf.Wrap(handlers.NewMasterHandler(userStorage, t)))
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir(*staticDirectory))))
 	http.Handle("/", hwf.Wrap(handlers.NewRootHandler(t)))
-	log.Fatal(http.ListenAndServe(*listenHost, gorilla_handlers.LoggingHandler(os.Stdout, http.DefaultServeMux)))
+	defaultHandler := gorilla_handlers.LoggingHandler(os.Stdout, http.DefaultServeMux)
+	log.Fatal(http.ListenAndServeTLS(fmt.Sprintf("%s:%s", *listenHost, *listenPort), *certPath, *keyPath, defaultHandler))
 }

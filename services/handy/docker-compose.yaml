@@ -1,0 +1,24 @@
+version: "3.7"
+services:
+  handy:
+    image: handy
+    ports:
+      - "0.0.0.0:443:8080"
+    restart: unless-stopped
+    volumes:
+      - handy-config-volume:/etc/handy
+    depends_on:
+      - mongo
+    entrypoint:
+      - /app/handy
+      - '--mongo-connect-string=mongodb://mongo:27017'
+  mongo:
+    image: mongo:4.2.0
+    ports:
+      - 27017
+    volumes:
+      - mongo-data-volume:/data/db
+    restart: unless-stopped
+volumes:
+  mongo-data-volume:
+  handy-config-volume:
