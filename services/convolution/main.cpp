@@ -8,6 +8,7 @@
 #include "png.h"
 #include "dispatch.h"
 #include "kernels.h"
+#include "signature_verifier.h"
 #include <x86intrin.h>
 
 
@@ -25,6 +26,7 @@ public:
 
 private:
 	HttpResponse GetKernelsList(HttpRequest request);
+	HttpResponse GetKernel(HttpRequest request);
     HttpResponse PostProcess(HttpRequest request, HttpPostProcessor** postProcessor);
 	HttpResponse PostConvolutionKernel(HttpRequest request, HttpPostProcessor** postProcessor);
 };
@@ -60,6 +62,8 @@ HttpResponse RequestHandler::HandleGet(HttpRequest request)
 {
     if (ParseUrl(request.url, 1, "list"))
         return GetKernelsList(request);
+	else if (ParseUrl(request.url, 1, "get-kernel"))
+        return GetKernel(request);
 
     return HttpResponse(MHD_HTTP_NOT_FOUND);
 }
@@ -69,8 +73,8 @@ HttpResponse RequestHandler::HandlePost(HttpRequest request, HttpPostProcessor**
 {
     if (ParseUrl(request.url, 1, "process"))
         return PostProcess(request, postProcessor);
-	else if (ParseUrl(request.url, 1, "kernel"))
-        return PostConvolutionKernel(request, postProcessor);	
+	else if (ParseUrl(request.url, 1, "add-kernel"))
+        return PostConvolutionKernel(request, postProcessor);
 
     return HttpResponse(MHD_HTTP_NOT_FOUND);
 }
@@ -97,7 +101,39 @@ HttpResponse RequestHandler::GetKernelsList(HttpRequest request)
 		ptr += id.length();
 		*ptr++ = '\n';
 	}
+
+	Log("  ok\n");
+
     return response; 
+}
+
+
+HttpResponse RequestHandler::GetKernel(HttpRequest request)
+{
+	static const std::string kKernelId("kernel-id");
+	std::string kernelId;
+	FindInMap(request.queryString, kKernelId, kernelId);
+
+	Log("  id: %s\n", kernelId.c_str());
+
+	std::string kernel;
+	if(GetConvolutionKernel(kernelId, kernel) != kKernelOk)
+	{
+		Log("  does not exists\n");
+		return HttpResponse(MHD_HTTP_BAD_REQUEST);
+	}
+
+	HttpResponse response;
+	response.code = MHD_HTTP_OK;
+	response.headers.insert({"Content-Type", "text/html"});
+	
+	response.content = (char*)malloc(kConvolutionKernelSize);
+	memcpy(response.content, kernel.c_str(), kConvolutionKernelSize);
+	response.contentLength = kConvolutionKernelSize;
+
+	Log("  ok\n");
+
+	return response;
 }
 
 
@@ -134,6 +170,7 @@ HttpResponse RequestHandler::PostConvolutionKernel(HttpRequest request, HttpPost
 {
 	static const std::string kKernelId("kernel-id");
 	static const std::string kKernel("kernel");
+	static const std::string kSignature("signature");
 
 	const char* id = FindInMap(request.queryString, kKernelId);
 	if(!id)
@@ -149,8 +186,21 @@ HttpResponse RequestHandler::PostConvolutionKernel(HttpRequest request, HttpPost
 		return HttpResponse(MHD_HTTP_BAD_REQUEST);
 	}
 
+	const char* signatureBase64 = FindInMap(request.headers, kSignature);
+	if(!signatureBase64)
+	{
+		Log("  Missing 'signature' parameter\n");
+		return HttpResponse(MHD_HTTP_BAD_REQUEST);
+	}
+
 	Log("  id: %s\n", id);
 	Log("  kernel: %s\n", kernel);
+
+	if(!VerifySignature(kernel, signatureBase64))
+	{
+		Log("  Authentication failed\n");
+		return HttpResponse(MHD_HTTP_FORBIDDEN);
+	}
 
 	auto errCode = AddConvolutionKernel(id, kernel);
 	if(errCode != kKernelOk)
@@ -167,7 +217,7 @@ HttpResponse RequestHandler::PostConvolutionKernel(HttpRequest request, HttpPost
 		return HttpResponse(MHD_HTTP_BAD_REQUEST);
 	}
 
-	Log("  success\n", id, kernel);
+	Log("  ok\n", id, kernel);
 
 	return HttpResponse(MHD_HTTP_OK);
 }
@@ -574,6 +624,7 @@ int main(int argc, char* argv[])
 #endif
 
 	InitKernels();
+	InitSignatureVerifier();
     RequestHandler handler;
     HttpServer server(&handler);
 
@@ -583,6 +634,7 @@ int main(int argc, char* argv[])
         sleep(1);
 
     server.Stop();
+	ShutdownSignatureVerifier();
 
     return 0;
 }

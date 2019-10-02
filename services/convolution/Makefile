@@ -2,7 +2,7 @@
 
 all:
 	compiler/compiler convolution.asm convolution_kernel.o
-	g++ -O3 -g -std=c++11 -mavx2 main.cpp dispatch.cpp kernels.cpp httpserver.cpp log.cpp png.cpp convolution_kernel.o -lmicrohttpd -o convolution
+	g++ -O3 -g -std=c++11 -mavx2 main.cpp dispatch.cpp kernels.cpp httpserver.cpp log.cpp png.cpp signature_verifier.cpp misc.cpp convolution_kernel.o -lmicrohttpd -lssl -lcrypto -o convolution
 
 debug: all
 

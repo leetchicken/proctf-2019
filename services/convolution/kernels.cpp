@@ -24,6 +24,7 @@ static void LoadDatabase()
 		fseek(GDatabase, 0, SEEK_SET); 
 
         char* data = (char*)malloc(fileSize);
+        char* ptrToFree = data;
         if(fread(data, 1, fileSize, GDatabase) != fileSize)
         {
             error = true;
@@ -47,6 +48,8 @@ static void LoadDatabase()
             GDatabaseOffset = fileSize;
             Log("Kernels database has been read succefully\n"); 
         }
+
+        free(ptrToFree);
     }
     else
     {
@@ -56,6 +59,8 @@ static void LoadDatabase()
 
     if(error)
 	{
+        if(GDatabase)
+            fclose(GDatabase);
 		FILE* c = fopen(kFilename, "w");
 		fclose(c);
 		GDatabase = fopen(kFilename, "r+");
