@@ -2,12 +2,11 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
-#include <sys/mman.h>
 #include <x86intrin.h>
 #include <immintrin.h>
 #include <algorithm>
-#include <time.h>
 #include "dispatch.h"
+#include "misc.h"
 
 
 void Kernel(void* helpMask, uint32_t execInitialValue, uint64_t s0qInitialValue, __m256i groupThreadIdX, __m256i groupThreadIdY);
@@ -26,15 +25,6 @@ void InitHelpMask()
 	helpMask[1] = 0x0000000800000004;
 	helpMask[2] = 0x0000002000000010;
 	helpMask[3] = 0x0000008000000040;
-}
-
-
-uint64_t GetTime()
-{
-    timespec tp;
-    memset(&tp, 0, sizeof(tp));
-    clock_gettime(CLOCK_MONOTONIC, &tp);
-    return tp.tv_sec * 1000000000llu + tp.tv_nsec;
 }
 
 

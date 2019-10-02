@@ -6,6 +6,7 @@
 #include "log.h"
 #include "httpserver.h"
 #include "png.h"
+#include "misc.h"
 #include "dispatch.h"
 #include "kernels.h"
 #include "signature_verifier.h"
@@ -82,6 +83,8 @@ HttpResponse RequestHandler::HandlePost(HttpRequest request, HttpPostProcessor**
 
 HttpResponse RequestHandler::GetKernelsList(HttpRequest request)
 {
+	Timer timer;
+
 	std::vector<std::string> ids;
 	GetConvolutionKernelsIdList(ids);
 	uint32_t size = 0;
@@ -103,6 +106,7 @@ HttpResponse RequestHandler::GetKernelsList(HttpRequest request)
 	}
 
 	Log("  ok\n");
+	Log("  Timer: %fms\n", timer.GetDurationMillisec());
 
     return response; 
 }
@@ -110,11 +114,35 @@ HttpResponse RequestHandler::GetKernelsList(HttpRequest request)
 
 HttpResponse RequestHandler::GetKernel(HttpRequest request)
 {
+	Timer timer;
+
 	static const std::string kKernelId("kernel-id");
+	static const std::string kSignature("signature");
+	static const std::string kCipher("cipher");
 	std::string kernelId;
 	FindInMap(request.queryString, kKernelId, kernelId);
 
 	Log("  id: %s\n", kernelId.c_str());
+
+	const char* signatureBase64 = FindInMap(request.headers, kSignature);
+	if(!signatureBase64)
+	{
+		Log("  Missing 'signature' parameter\n");
+		return HttpResponse(MHD_HTTP_BAD_REQUEST);
+	}
+
+	const char* cipher = FindInMap(request.headers, kCipher);
+	if(!signatureBase64)
+	{
+		Log("  Missing 'cipher' parameter\n");
+		return HttpResponse(MHD_HTTP_BAD_REQUEST);
+	}
+
+	if(!VerifySignature(cipher, signatureBase64))
+	{
+		Log("  Authentication failed\n");
+		return HttpResponse(MHD_HTTP_FORBIDDEN);
+	}
 
 	std::string kernel;
 	if(GetConvolutionKernel(kernelId, kernel) != kKernelOk)
@@ -132,6 +160,7 @@ HttpResponse RequestHandler::GetKernel(HttpRequest request)
 	response.contentLength = kConvolutionKernelSize;
 
 	Log("  ok\n");
+	Log("  Timer: %fms\n", timer.GetDurationMillisec());
 
 	return response;
 }
@@ -168,6 +197,8 @@ HttpResponse RequestHandler::PostProcess(HttpRequest request, HttpPostProcessor*
 
 HttpResponse RequestHandler::PostConvolutionKernel(HttpRequest request, HttpPostProcessor** postProcessor)
 {
+	Timer timer;
+
 	static const std::string kKernelId("kernel-id");
 	static const std::string kKernel("kernel");
 	static const std::string kSignature("signature");
@@ -218,6 +249,7 @@ HttpResponse RequestHandler::PostConvolutionKernel(HttpRequest request, HttpPost
 	}
 
 	Log("  ok\n", id, kernel);
+	Log("  Timer: %fms\n", timer.GetDurationMillisec());
 
 	return HttpResponse(MHD_HTTP_OK);
 }
@@ -259,7 +291,7 @@ void PostProcessProcessor::FinalizeRequest()
         return;
     }
 
-	uint64_t totalStartTime = GetTime();
+	Timer totalTimer;
 
 	std::string output = "{ ";
 	uint32_t counter = 0;
@@ -267,7 +299,7 @@ void PostProcessProcessor::FinalizeRequest()
 	for(auto& iter : m_inputImages)
 	{
 		Log("  Process image '%s'\n", iter.first.c_str());
-		uint64_t startTime = GetTime();
+		Timer timer;
 
 		Image srcImage;
 		if(!read_png_from_memory(iter.second.data, iter.second.size, srcImage))
@@ -349,7 +381,7 @@ void PostProcessProcessor::FinalizeRequest()
 			output.append(", ");
 		counter++;
 
-		Log("  Process time: %lu ns\n", GetTime() - startTime);
+		Log("  Process time: %fms\n", timer.GetDurationMillisec());
 	}
 	output.append("}");
 
@@ -361,7 +393,7 @@ void PostProcessProcessor::FinalizeRequest()
 	memcpy(response.content, output.c_str(), output.length());
 	response.contentLength = output.length();
 
-	Log("  Total process time: %lu ns\n", GetTime() - totalStartTime);
+	Log("  Total process time: %fms\n", totalTimer.GetDurationMillisec());
 
 	Complete(response);
 }

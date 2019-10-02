@@ -91,6 +91,7 @@ int HttpServer::HandleRequest(void* param,
 
 	if (!strcmp(method, "GET"))
 	{
+		MHD_get_connection_values(connection, MHD_HEADER_KIND, IterateHeadersBase, &headers);
 		MHD_get_connection_values(connection, MHD_GET_ARGUMENT_KIND, IterateQueryString, &queryString);
 		SendResponse(connection,
 		             self->requestHandler->HandleGet(HttpRequest(url, method, headers, queryString, connection)));
