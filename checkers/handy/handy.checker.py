@@ -2,12 +2,12 @@
 
 import sys
 import os
-import requests
 import random
 import string
 import io
 import json
 import lxml.html
+import requests
 
 from urllib.parse import urlencode
 from traceback import print_exc
@@ -17,8 +17,7 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import padding
 from base64 import b64encode, b64decode
-
-import requests
+from requests.packages.urllib3.exceptions import InsecureRequestWarning
 
 SERVICE_NAME = 'handy'
 OK, CORRUPT, MUMBLE, DOWN, CHECKER_ERROR = 101, 102, 103, 104, 110
@@ -175,12 +174,12 @@ class HandyApi:
         return result
 
     def _LoadUrl(self, relative_url, data=None):
-        url = 'http://%s/%s' % (self.addr, relative_url)
+        url = 'https://%s/%s' % (self.addr, relative_url)
         try:
             if data is None:
-                res = self.session.get(url)
+                res = self.session.get(url, verify=False)
             else:
-                res = self.session.post(url, data=data)
+                res = self.session.post(url, data=data, verify=False)
             return res.text, res.status_code
         except requests.ConnectionError as e:
             close(DOWN, private='Failed to communicate: %s' % e)
@@ -310,6 +309,7 @@ COMMANDS = {'check': check, 'put': put, 'get': get, 'info': info}
 
 
 if __name__ == '__main__':
+    requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
     try:
         PRIVATE_KEY = LoadPrivateKey(PRIVATE_KEY_PATH)
         COMMANDS.get(sys.argv[1], not_found)(*sys.argv[2:])
