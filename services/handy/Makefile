@@ -6,7 +6,7 @@ GOGET=$(GOCMD) get
 BINARY_NAME=build/handy
 DOCKER_TAG=handy
 
-all: run
+all: build
 
 build: build-in-container build-files/Dockerfile
 	docker build -f build-files/Dockerfile -t $(DOCKER_TAG) .
@@ -20,6 +20,3 @@ build-without-container:
 clean:
 	$(GOCLEAN)
 	rm -f $(BINARY_NAME)
-
-run: build
-	docker run --rm -it $(DOCKER_TAG)
