@@ -2,14 +2,20 @@ import sys
 import pathlib
 import json
 import PIL.Image
-import gallery
 import uuid
+import dnn
+import numpy as np
+import pickle
+
 from cgi import parse_qs
 from io import BytesIO
 
 STATIC_DIR = pathlib.Path("static")
 PAINTINGS_DIR = pathlib.Path("data/paintings/")
+EMBEDDINGS_DIR = pathlib.Path("data/embeddings/")
 PREVIEWS_DIR = pathlib.Path("data/previews/")
+
+MODEL_PATH = "models/model_big_30_30_predict.h5"
 
 DYNAMIC_HEADERS = [
     ("Content-Type", "application/json; charset=utf8"),
@@ -31,6 +37,15 @@ IMG_HEADERS = [
     ("Cache-Control", "max-age=86400"),
 ]
 
+#MODEL_PATH = "models/model.h5"
+#MODEL_PATH = "model_big_30_30.h5"
+
+# train_model = dnn.create_and_train_model()
+# model = dnn.create_model(train_model)
+# model.save(MODEL_PATH)
+
+
+model = dnn.load(MODEL_PATH)
 
 def gen_json_ans(obj):
     return "200 OK", JSON_HEADERS, json.dumps(obj)
@@ -63,13 +78,17 @@ def post_replica(query, body):
         print("can't parse replica image:", e)
         return gen_json_ans({"error": str(e)})
 
+    embedding_file_name = painting_id + ".emb"
     try:
-        painting = parse_png_bytes((PAINTINGS_DIR / (painting_id+".png")).read_bytes())
+        with open(EMBEDDINGS_DIR / embedding_file_name, "rb") as file:
+            painting_emb = pickle.load(file)
     except Exception as e:
-        print("can't read and parse painting image:", e)
-        return gen_json_ans({"error": "can't read painting"})
+        print("can't remember painting:", e)
+        return gen_json_ans({"error": "can't remember painting"})
 
-    dist = gallery.calc_dist(painting, replica)
+    replica_emb = model.predict(np.array([np.array(replica)]))
+    dist = np.linalg.norm(painting_emb - replica_emb)
+
     if dist >= 0.05:
         return gen_json_ans({"dist": dist})
     else:
@@ -83,9 +102,19 @@ def put_painting(query, body):
         return gen_json_ans({"error": str(e)})
 
     painting_id = str(uuid.uuid4())
-    file_name = painting_id + ".png"
+
+    embedding_file_name = painting_id + ".emb"
     try:
-        with open(PAINTINGS_DIR / file_name, "xb") as file:
+        emb = model.predict(np.array([np.array(painting)]))
+        with open(EMBEDDINGS_DIR / embedding_file_name, "xb") as file:
+            pickle.dump(emb, file)
+    except Exception as e:
+        print("can't memorize painting:", e)
+        return gen_json_ans({"error": "can't memorize painting"})
+
+    image_file_name = painting_id + ".png"
+    try:
+        with open(PAINTINGS_DIR / image_file_name, "xb") as file:
             file.write(body)
     except Exception as e:
         print("can't save painting:", e)
@@ -93,7 +122,7 @@ def put_painting(query, body):
 
     preview = painting.resize((16, 16), resample=PIL.Image.BICUBIC)
     try:
-        preview.save(PREVIEWS_DIR / file_name)
+        preview.save(PREVIEWS_DIR / image_file_name)
     except Exception as e:
         print("can't save preview:", e)
         return gen_json_ans({"error": "can't save preview"})
