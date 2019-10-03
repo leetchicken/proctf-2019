@@ -1,0 +1,6 @@
+*.o
+*.pro
+*.pro.user
+*.dat
+convolution*
+data/
