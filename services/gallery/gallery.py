@@ -12,7 +12,7 @@ MODEL_PATH = "models/model_big_30_30_predict.h5"
 model = dnn.load(MODEL_PATH)
 
 def calc_dist(painting, replica):
-	painting_emb = model.predict(np.array(list(painting)))
-	replica_emb = model.predict(np.array(list(replica)))
+	painting_emb = model.predict(np.array([np.array(painting)]))
+	replica_emb = model.predict(np.array([np.array(replica)]))
 	dist = np.linalg.norm(painting_emb - replica_emb)
 	return dist

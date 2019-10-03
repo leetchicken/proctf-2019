@@ -2,11 +2,10 @@ import sys
 import pathlib
 import json
 import PIL.Image
-#import gallery
+import gallery
 import uuid
 from cgi import parse_qs
 from io import BytesIO
-import cv2
 
 STATIC_DIR = pathlib.Path("static")
 PAINTINGS_DIR = pathlib.Path("data/paintings/")
@@ -46,8 +45,8 @@ def parse_png_bytes(body):
     except Exception as e:
         raise Exception("can't parse image bytes", e)
 
-    if painting.format != "PNG" or painting.width != 128 or painting.height != 128:
-        raise Exception("image should be in .png format and be 128x128px")
+    if painting.format != "PNG" or painting.mode != "RGB" or painting.width != 128 or painting.height != 128:
+        raise Exception(f"image should be in .png format in RGB mode and be 128x128px, but is {painting.format} {painting.mode} {painting.width} {painting.height}")
 
     return painting
 
@@ -70,12 +69,11 @@ def post_replica(query, body):
         print("can't read and parse painting image:", e)
         return gen_json_ans({"error": "can't read painting"})
 
-    #dist = gallery.calc_dist(painting, replica)
-    dist = 0.99
+    dist = gallery.calc_dist(painting, replica)
     if dist >= 0.05:
         return gen_json_ans({"dist": dist})
     else:
-        return "HERE IS YOUR FLAG"
+        return gen_json_ans("HERE IS YOUR FLAG")
 
 def put_painting(query, body):
     try:
@@ -163,11 +161,6 @@ def application(environ, start_response):
     url = environ["PATH_INFO"]
     query = parse_qs(environ["QUERY_STRING"])
 
-    # start_response("200 OK", JSON_HEADERS)
-    # return ["something".encode()]
-
-    print("Processing request", url)
-
     if (method, url) not in URLS:
         start_response("404 NOT FOUND", HTML_HEADERS)
         return [b"404"]
@@ -182,8 +175,6 @@ def application(environ, start_response):
 
     status, headers, data = handler(get_request_query(environ), get_request_body(environ))
     start_response(status, headers)
-
-    print("Ready to send response")
 
     if isinstance(data, str):
         return [data.encode()]
