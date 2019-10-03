@@ -113,7 +113,7 @@ services/convolution/./compiler/antlr4-runtime/include/misc/
 services/convolution/./compiler/antlr4-runtime/include/support/
 services/convolution/./compiler/antlr4-runtime/include/tree/
 services/convolution/./compiler/antlr4-runtime/include/tree/pattern/
-services/convolution/./compiler/antlr4-runtime/include/tree/xpath
+services/convolution/./compiler/antlr4-runtime/include/tree/xpath/
 services/convolution/./compiler/antlr4-runtime/lib/
 EOF
     ;;
