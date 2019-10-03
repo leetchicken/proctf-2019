@@ -3,7 +3,7 @@ import numpy as np
 
 #MODEL_PATH = "models/model.h5"
 #MODEL_PATH = "model_big_30_30.h5"
-MODEL_PATH = "models/model30+15+15+40_predict.h5"
+MODEL_PATH = "models/model_big_30_30_predict.h5"
 
 # train_model = dnn.create_and_train_model()
 # model = dnn.create_model(train_model)

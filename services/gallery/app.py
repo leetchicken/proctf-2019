@@ -2,7 +2,7 @@ import sys
 import pathlib
 import json
 import PIL.Image
-import gallery
+#import gallery
 import uuid
 from cgi import parse_qs
 from io import BytesIO
@@ -36,6 +36,9 @@ IMG_HEADERS = [
 def gen_json_ans(obj):
     return "200 OK", JSON_HEADERS, json.dumps(obj)
 
+def gen_png_ans(obj):
+    return "200 OK", IMG_HEADERS, obj
+
 
 def parse_png_bytes(body):
     try:
@@ -67,7 +70,8 @@ def post_replica(query, body):
         print("can't read and parse painting image:", e)
         return gen_json_ans({"error": "can't read painting"})
 
-    dist = gallery.calc_dist(painting, replica)
+    #dist = gallery.calc_dist(painting, replica)
+    dist = 0.99
     if dist >= 0.05:
         return gen_json_ans({"dist": dist})
     else:
@@ -110,6 +114,19 @@ def get_paintings(query, body):
 
     return gen_json_ans(paintings_ids)
 
+def get_preview(query, body):
+    try:
+        file_name = str(uuid.UUID(query["id"][0])) + ".png"
+    except Exception as e:
+        print("painting 'id' param not specified or is invalid:", e)
+        return gen_json_ans({"error": "preview 'id' param not specified or is invalid"})
+
+    try:
+        with open(PREVIEWS_DIR / file_name, "rb") as file:
+            return gen_png_ans(file.read())
+    except Exception as e:
+        print("can't read preview:", e)
+        return gen_json_ans({"error": "can't read preview"})
 
 URLS = {
     ("GET", "/"): "index.html",
@@ -117,6 +134,7 @@ URLS = {
     ("GET", "/favicon.ico"): "favicon.ico",
     ("PUT", "/painting"): put_painting,
     ("GET", "/paintings"): get_paintings,
+    ("GET", "/preview"): get_preview,
     ("POST", "/replica"): post_replica,
 }
 
@@ -145,6 +163,11 @@ def application(environ, start_response):
     url = environ["PATH_INFO"]
     query = parse_qs(environ["QUERY_STRING"])
 
+    # start_response("200 OK", JSON_HEADERS)
+    # return ["something".encode()]
+
+    print("Processing request", url)
+
     if (method, url) not in URLS:
         start_response("404 NOT FOUND", HTML_HEADERS)
         return [b"404"]
@@ -159,4 +182,10 @@ def application(environ, start_response):
 
     status, headers, data = handler(get_request_query(environ), get_request_body(environ))
     start_response(status, headers)
-    return [data.encode()]
+
+    print("Ready to send response")
+
+    if isinstance(data, str):
+        return [data.encode()]
+    else:
+        return [data]
