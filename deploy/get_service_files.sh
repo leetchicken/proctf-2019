@@ -101,5 +101,21 @@ EOF
 services/handy/./docker-compose.yaml
 EOF
     ;;
+    "convolution")
+    cat <<EOF
+services/convolution/./
+services/convolution/./compiler/
+services/convolution/./compiler/antlr4-runtime/
+services/convolution/./compiler/antlr4-runtime/include/
+services/convolution/./compiler/antlr4-runtime/include/atn/
+services/convolution/./compiler/antlr4-runtime/include/dfa/
+services/convolution/./compiler/antlr4-runtime/include/misc/
+services/convolution/./compiler/antlr4-runtime/include/support/
+services/convolution/./compiler/antlr4-runtime/include/tree/
+services/convolution/./compiler/antlr4-runtime/include/tree/pattern/
+services/convolution/./compiler/antlr4-runtime/include/tree/xpath
+services/convolution/./compiler/antlr4-runtime/lib/
+EOF
+    ;;
     *) echo "No such service" >&2; exit 1;;
 esac
