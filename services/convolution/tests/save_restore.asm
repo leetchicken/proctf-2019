@@ -1,4 +1,3 @@
-[8,1]
 v_mov v2, 0
 
 s_mov exec, 0x01

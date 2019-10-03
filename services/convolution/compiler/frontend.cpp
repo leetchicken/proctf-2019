@@ -3,15 +3,6 @@
 #include <string.h>
 
 
-void FrontEnd::enterNumthreads(VectorAssemblerParser::NumthreadsContext* ctx)
-{
-    const char* xStr = ctx->x->getText().c_str();
-    m_parsedCode.groupDimX = strtoul(xStr, nullptr, 10);
-    const char* yStr = ctx->y->getText().c_str();
-    m_parsedCode.groupDimY = strtoul(yStr, nullptr, 10);
-}
-
-
 void FrontEnd::enterLabel(VectorAssemblerParser::LabelContext* ctx) 
 {
     m_curLabel = ctx->id->getText();

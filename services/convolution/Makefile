@@ -1,17 +1,25 @@
-.PHONY: debug release clean
+CXXFLAGS = -c -g -std=c++17 -mavx2
+SOURCES = main.cpp dispatch.cpp kernels.cpp httpserver.cpp log.cpp png.cpp signature_verifier.cpp misc.cpp
+LDFLAGS = -lmicrohttpd -lssl -lcrypto
+OBJS = $(SOURCES:.cpp=.o)
 
-all:
-	compiler/compiler convolution.asm convolution_kernel.o
-	g++ -O3 -g -std=c++11 -mavx2 main.cpp dispatch.cpp kernels.cpp httpserver.cpp log.cpp png.cpp signature_verifier.cpp misc.cpp convolution_kernel.o -lmicrohttpd -lssl -lcrypto -o convolution
+all: release
 
-debug: all
+debug: CXXFLAGS += -O0 -DDEBUG=1
+debug: OUTPUT = convolution-dbg
+debug: convolution
 
-tests:
-	compiler/compiler test/transition.asm transition_kernel.o
-	g++ -O3 -g -std=c++11 -mavx2 transition.cpp dispatch.cpp transition_kernel.o -o transition
-	#
-	compiler/compiler test/mat_mul.asm mat_mul_kernel.o
-	g++ -O3 -g -std=c++11 -mavx2 matrix_test.cpp dispatch.cpp mat_mul_kernel.o -o matrix_test
-	#
-	compiler/compiler test/save_restore.asm save_restore_kernel.o
-	g++ -O3 -g -std=c++11 -mavx2 save_restore_test.cpp dispatch.cpp save_restore_kernel.o -o save_restore
+release: CXXFLAGS += -O2
+release: OUTPUT = convolution
+release: convolution
+
+convolution: $(OBJS) convolution.asm
+	compiler/compiler convolution.asm -elf convolution_kernel.o
+	g++ $(OBJS) convolution_kernel.o $(LDFLAGS) -o $(OUTPUT)
+
+.cpp.o:
+	g++ $(CXXFLAGS) $< -o $@
+
+.PHONY: clean
+clean:
+	rm -f *.o convolution convolution-dbg

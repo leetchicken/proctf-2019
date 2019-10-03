@@ -158,15 +158,12 @@ struct Instruction
 struct ParsedCode
 {
     std::vector<Instruction> instructions;
-    uint32_t groupDimX = 0;
-    uint32_t groupDimY = 0;
 };
 
 
 class FrontEnd : public VectorAssemblerBaseListener 
 {
 public:
-    void enterNumthreads(VectorAssemblerParser::NumthreadsContext*) override;
     void enterLabel(VectorAssemblerParser::LabelContext* ctx) override;
     void enterV_mov(VectorAssemblerParser::V_movContext* ctx) override;
     void enterV_add_f32(VectorAssemblerParser::V_add_f32Context* ctx) override;

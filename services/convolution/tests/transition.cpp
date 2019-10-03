@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
-#include "dispatch.h"
+#include "../dispatch.h"
 
 
 void TransitionTest(uint32_t groupCountY)

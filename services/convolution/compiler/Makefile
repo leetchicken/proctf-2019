@@ -1,6 +1,6 @@
 OUTPUT=output
 GENERATED=generated
-CCARGS=-c -g -O0 -Wall -I antlr4-runtime/include -I $(GENERATED) -std=c++11	
+CCARGS=-c -g -O2 -Wall -I antlr4-runtime/include -I $(GENERATED) -std=c++11	
 LDARGS=-g
 LIBS=antlr4-runtime/lib/libantlr4-runtime.a
 CC=g++
@@ -15,7 +15,7 @@ GSOURCES=$(addsuffix .cpp,$(addprefix $(GENERATED)/$(GRAMMAR),$(ANTLRGEN)))
 
 all: compiler
 
-compiler: dirs antlr4 main.cpp $(OBJS)
+compiler: dirs antlr4 main.cpp frontend.cpp $(OBJS)
 	$(CC) $(CCARGS) frontend.cpp -o $(OUTPUT)/frontend.o 
 	$(CC) $(CCARGS) main.cpp  -o $(OUTPUT)/main.o 
 	$(CC) $(LDARGS) $(OUTPUT)/frontend.o $(OUTPUT)/main.o $(OBJS) $(LIBS) -o compiler

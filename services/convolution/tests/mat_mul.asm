@@ -1,4 +1,3 @@
-[8,1] 
 v_mul_u32 v0, v0, 12
 v_load v[2:5], v0, s0q
 v_add_u32 v0, v0, 4

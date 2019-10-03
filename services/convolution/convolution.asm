@@ -1,5 +1,3 @@
-[8,1]
-
 # source image
 s_load s1q, 0, s0q
 # width

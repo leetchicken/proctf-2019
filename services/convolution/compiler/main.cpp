@@ -712,7 +712,7 @@ bool WriteFile(const char* fileName, const void* data, uint32_t size)
 }
 
 
-bool Compile(const std::string& asmbl, uint32_t groupDimX, uint32_t groupDimY, const char* outputFile)
+bool Compile(const std::string& asmbl, const char* outputFile)
 {
     const char* nasmInputFile = "/tmp/nasm_input";
     if(!WriteFile(nasmInputFile, asmbl.c_str(), asmbl.length()))
@@ -756,28 +756,52 @@ void GetUsedRegistersMask(const ParsedCode& parsedCode, uint32_t& usedSgprRegist
 }
 
 
+void PrintHelp()
+{
+    printf("compiler <input> -elf <output>\n");
+    printf("compiler <input> -asm\n");
+}
+
+
 int main(int argc, const char* argv[]) 
 {
-    if(argc != 3)
+    if(argc != 3 && argc != 4)
     {
-        printf("compiler <input> <output>\n");
+        PrintHelp();
         return -1;
     }
 
     const char* inputFile = argv[1];
-    const char* outputFile = argv[2];
+    bool genElf = false;
+    if(strcmp(argv[2], "-elf") == 0)
+    {
+        if(argc != 4)
+        {
+            PrintHelp();
+            return -1;
+        }
+        genElf = true;
+    }
+    else if(strcmp(argv[2], "-asm") == 0)
+    {
+        if(argc != 3)
+        {
+            PrintHelp();
+            return -1;
+        }
+        genElf = false;
+    }
+    else
+    {
+        printf("Unknown parameter '%s'\n", argv[2]);
+        PrintHelp();
+        return -1;
+    }
+    const char* outputFile = argv[3];
 
     ParsedCode parsedCode;
     if(!Parse(inputFile, parsedCode))
         return -1;
-
-    const uint32_t kMaxGroupDim = 16;
-    if(parsedCode.groupDimX == 0 || parsedCode.groupDimX > kMaxGroupDim || 
-       parsedCode.groupDimY == 0 || parsedCode.groupDimY > kMaxGroupDim)
-    {
-        fprintf(stderr, "Invalid group dimension\n");
-        return -1;
-    }
 
     uint32_t usedSgprRegistersMask = 0, usedVgprRegistersMask = 0;
     GetUsedRegistersMask(parsedCode, usedSgprRegistersMask, usedVgprRegistersMask);
@@ -831,10 +855,15 @@ int main(int argc, const char* argv[])
     AddLine(asmbl, "    ret");
     EmitStoreLoad(asmbl, usedVgprRegistersMask);
 
-    printf("%s", asmbl.c_str());
-
-    if(!Compile(asmbl, parsedCode.groupDimX, parsedCode.groupDimY, outputFile))
-        return -1;
+    if(genElf)
+    {
+        if(!Compile(asmbl, outputFile))
+            return -1;
+    }
+    else
+    {
+        printf("%s", asmbl.c_str());
+    }
 
     return 0;
 }
