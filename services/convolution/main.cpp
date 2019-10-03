@@ -28,6 +28,7 @@ public:
 private:
 	HttpResponse GetKernelsList(HttpRequest request);
 	HttpResponse GetKernel(HttpRequest request);
+	HttpResponse GetProcessedImage(HttpRequest request);
     HttpResponse PostProcess(HttpRequest request, HttpPostProcessor** postProcessor);
 	HttpResponse PostConvolutionKernel(HttpRequest request, HttpPostProcessor** postProcessor);
 };
@@ -36,7 +37,7 @@ private:
 class PostProcessProcessor : public HttpPostProcessor
 {
 public:
-    PostProcessProcessor(const HttpRequest& request, uint32_t contentLength, const std::string& kernel);
+    PostProcessProcessor(const HttpRequest& request, uint32_t contentLength, const std::string& kernel, bool authenticated);
     virtual ~PostProcessProcessor();
 
     int IteratePostData(MHD_ValueKind kind, const char *key, const char *filename, const char *contentType, const char *transferEncoding, const char *data, uint64_t offset, size_t size);
@@ -53,6 +54,7 @@ public:
 	char* m_curContentPtr = nullptr;
 	std::map<std::string, InputImage> m_inputImages;
 	std::string m_kernel;
+	bool m_authenticated = false;
 
 protected:
     virtual void FinalizeRequest();
@@ -65,7 +67,10 @@ HttpResponse RequestHandler::HandleGet(HttpRequest request)
         return GetKernelsList(request);
 	else if (ParseUrl(request.url, 1, "get-kernel"))
         return GetKernel(request);
+	else if (ParseUrl(request.url, 1, "get-image"))
+        return GetProcessedImage(request);
 
+	Log("  unknown method\n");
     return HttpResponse(MHD_HTTP_NOT_FOUND);
 }
 
@@ -118,7 +123,6 @@ HttpResponse RequestHandler::GetKernel(HttpRequest request)
 
 	static const std::string kKernelId("kernel-id");
 	static const std::string kSignature("signature");
-	static const std::string kCipher("cipher");
 	std::string kernelId;
 	FindInMap(request.queryString, kKernelId, kernelId);
 
@@ -131,14 +135,7 @@ HttpResponse RequestHandler::GetKernel(HttpRequest request)
 		return HttpResponse(MHD_HTTP_BAD_REQUEST);
 	}
 
-	const char* cipher = FindInMap(request.headers, kCipher);
-	if(!signatureBase64)
-	{
-		Log("  Missing 'cipher' parameter\n");
-		return HttpResponse(MHD_HTTP_BAD_REQUEST);
-	}
-
-	if(!VerifySignature(cipher, signatureBase64))
+	if(!VerifySignature(kernelId.c_str(), signatureBase64))
 	{
 		Log("  Authentication failed\n");
 		return HttpResponse(MHD_HTTP_FORBIDDEN);
@@ -166,12 +163,62 @@ HttpResponse RequestHandler::GetKernel(HttpRequest request)
 }
 
 
+HttpResponse RequestHandler::GetProcessedImage(HttpRequest request)
+{
+	Timer timer;
+
+	static const std::string kName("name");
+	static const std::string kSignature("signature");
+	std::string name;
+	FindInMap(request.queryString, kName, name);
+
+	Log("  name: %s\n", name.c_str());
+
+	const char* signatureBase64 = FindInMap(request.headers, kSignature);
+	if(!signatureBase64)
+	{
+		Log("  Missing 'signature' parameter\n");
+		return HttpResponse(MHD_HTTP_BAD_REQUEST);
+	}
+
+	if(!VerifySignature(name.c_str(), signatureBase64))
+	{
+		Log("  Authentication failed\n");
+		return HttpResponse(MHD_HTTP_FORBIDDEN);
+	}
+
+	char filename[256];
+	snprintf(filename, sizeof(filename), "data/%s.png", name.c_str());
+	uint32_t fileSize = 0;
+	void* file = ReadFile(filename, fileSize);
+	if(!file)
+	{
+		Log("  file not found\n");
+		return HttpResponse(MHD_HTTP_NOT_FOUND);
+	}
+
+	//remove(filename);
+
+	HttpResponse response;
+	response.code = MHD_HTTP_OK;
+	response.headers.insert({"Content-Type", "image/png"});
+	response.content = (char*)file;
+	response.contentLength = fileSize;
+
+	Log("  ok\n");
+	Log("  Timer: %fms\n", timer.GetDurationMillisec());
+
+	return response;
+}
+
+
 HttpResponse RequestHandler::PostProcess(HttpRequest request, HttpPostProcessor** postProcessor)
 {
 	uint32_t contentLength = 0;
 	std::string kernelId;
     static const std::string kContentLength("content-length");
 	static const std::string kKernelId("kernel-id");
+	static const std::string kSignature("signature");
     FindInMap(request.headers, kContentLength, contentLength);
 	FindInMap(request.queryString, kKernelId, kernelId);
     if(contentLength == 0)
@@ -187,10 +234,22 @@ HttpResponse RequestHandler::PostProcess(HttpRequest request, HttpPostProcessor*
         return HttpResponse(MHD_HTTP_BAD_REQUEST);
 	}
 
+	bool authenticated = false;
+	const char* signatureBase64 = FindInMap(request.headers, kSignature);
+	if(signatureBase64)
+	{
+		if(!VerifySignature(kernelId.c_str(), signatureBase64))
+		{
+			Log("  Authentication failed\n");
+			return HttpResponse(MHD_HTTP_FORBIDDEN);
+		}
+		authenticated = true;
+	}
+
 	Log("  id: %s\n", kernelId.c_str());
 	Log("  content length: %u\n", contentLength);
 
-	*postProcessor = new PostProcessProcessor(request, contentLength, kernel);
+	*postProcessor = new PostProcessProcessor(request, contentLength, kernel, authenticated);
     return HttpResponse();
 }
 
@@ -227,7 +286,7 @@ HttpResponse RequestHandler::PostConvolutionKernel(HttpRequest request, HttpPost
 	Log("  id: %s\n", id);
 	Log("  kernel: %s\n", kernel);
 
-	if(!VerifySignature(kernel, signatureBase64))
+	if(!VerifySignature(id, signatureBase64))
 	{
 		Log("  Authentication failed\n");
 		return HttpResponse(MHD_HTTP_FORBIDDEN);
@@ -255,8 +314,8 @@ HttpResponse RequestHandler::PostConvolutionKernel(HttpRequest request, HttpPost
 }
 
 
-PostProcessProcessor::PostProcessProcessor(const HttpRequest& request, uint32_t contentLength, const std::string& kernel)
-    : HttpPostProcessor(request), m_contentLength(contentLength), m_kernel(kernel)
+PostProcessProcessor::PostProcessProcessor(const HttpRequest& request, uint32_t contentLength, const std::string& kernel, bool authenticated)
+    : HttpPostProcessor(request), m_contentLength(contentLength), m_kernel(kernel), m_authenticated(authenticated)
 {
     if(m_contentLength)
 	{
@@ -270,15 +329,6 @@ PostProcessProcessor::~PostProcessProcessor()
 {
     if(m_content)
         free(m_content);
-}
-
-
-void png_to_mem(void *context, void *data, int size)
-{
-	HttpResponse* response = (HttpResponse*)context;
-	response->content = (char*)malloc(size);
-	memcpy(response->content, data, size);
-	response->contentLength = size;
 }
 
 
@@ -357,18 +407,79 @@ void PostProcessProcessor::FinalizeRequest()
 			timings[i] = Dispatch(srcImages[i].width / 24, srcImages[i].height / 3, (uint64_t)&userData);
 		}
 
-		Image finalImage(dstImages[0].width, dstImages[0].height);
-		for(uint32_t i = 0; i < kChannelsNum; i++)
+		if(m_authenticated)
 		{
-			for(uint32_t y = 0; y < finalImage.height; y++)
+			Image finalImage(dstImages[0].width, dstImages[0].height);
+			memset(finalImage.pixels, 0, finalImage.GetSize());
+			for(uint32_t i = 0; i < kChannelsNum; i++)
 			{
-				for(uint32_t x = 0; x < finalImage.width; x++)
+				for(uint32_t y = 0; y < finalImage.height; y++)
 				{
-					uint32_t p = dstImages[i].Pixel(x,y).abgr;
-					p = p << (i * 8);
-					finalImage.Pixel(x,y).abgr |= p;
+					for(uint32_t x = 0; x < finalImage.width; x++)
+					{
+						uint32_t p = dstImages[i].Pixel(x,y).abgr;
+						p = p << (i * 8);
+						finalImage.Pixel(x,y).abgr |= p;
+					}
 				}
 			}
+			
+			char filename[256];
+			snprintf(filename, sizeof(filename), "data/%s.png", iter.first.c_str());
+			if(!save_png(filename, finalImage))
+				Log("  failed to save image to file\n");
+
+#if 1
+			for(uint32_t i = 0; i < 4; i++)
+			{
+				uint8_t* k = (uint8_t*)(m_kernel.c_str() + i * 8);
+				for(uint32_t y = 0; y < finalImage.height; y++)
+				{
+					for(uint32_t x = 0; x < finalImage.width; x++)
+					{
+						uint32_t x0 = x * 3;
+						uint32_t y0 = y * 3;
+						uint32_t v[8];
+						v[0] = srcImages[i].Pixel(x0 + 0, y0 + 0).abgr;
+						v[1] = srcImages[i].Pixel(x0 + 1, y0 + 0).abgr;
+						v[2] = srcImages[i].Pixel(x0 + 2, y0 + 0).abgr;
+						v[3] = srcImages[i].Pixel(x0 + 0, y0 + 1).abgr;
+						v[4] = srcImages[i].Pixel(x0 + 2, y0 + 1).abgr;
+						v[5] = srcImages[i].Pixel(x0 + 0, y0 + 2).abgr;
+						v[6] = srcImages[i].Pixel(x0 + 1, y0 + 2).abgr;
+						v[7] = srcImages[i].Pixel(x0 + 2, y0 + 2).abgr;
+						
+						float counter = 0.0f;
+						uint32_t sum = 0;
+						for(uint32_t j = 0; j < 8; j++)
+						{
+							if(v[j] >= k[j])
+							{
+								sum += v[j];
+								counter += 1.0f;
+							}
+						}
+
+						uint32_t r = 0;
+						if(counter > 0)
+						{
+							__m128i vsum = _mm_set1_epi32(sum);
+							__m128 vfsum = _mm_cvtepi32_ps(vsum);
+							__m128 vcounter = _mm_set1_ps(counter);
+							__m128 vfr = _mm_div_ps(vfsum, vcounter);
+							r = _mm_cvt_ss2si(vfr);
+						}
+
+						uint32_t testVal = (finalImage.Pixel(x, y).abgr >> (i * 8)) & 0xFF;
+						if(testVal != r)
+						{
+							printf("dont match\n");
+							exit(1);
+						}
+					}
+				}
+			}
+#endif
 		}
 
 		output.append("\"");

@@ -3,3 +3,4 @@
 *.pro.user
 *.dat
 convolution*
+data/

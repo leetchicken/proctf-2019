@@ -14,7 +14,7 @@ static uint32_t GDatabaseOffset = 0;
 
 static void LoadDatabase()
 {
-    const char* kFilename = "kernels.dat";
+    const char* kFilename = "data/kernels.dat";
     bool error = false;
     GDatabase = fopen(kFilename, "r+");
 	if(GDatabase)

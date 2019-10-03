@@ -18,6 +18,16 @@ SERVICE_NAME = "convolution"
 OK, CORRUPT, MUMBLE, DOWN, CHECKER_ERROR = 101, 102, 103, 104, 110
 
 
+def gen_signature(msg):
+	key = M2Crypto.EVP.load_key('privkey.pem')
+	key.reset_context(md='sha256')
+	key.sign_init()
+	key.sign_update(msg.encode('utf-8'))
+	signature = key.sign_final()
+	signatureBase64 = base64.b64encode(signature)
+	return signatureBase64
+
+
 def close(code, public="", private=""):
 	if public:
 		print(public)
@@ -46,11 +56,12 @@ def check(*args):
 
 	# choose random id
 	lines = r.text.split('\n')
-	id = lines[random.randint(0, len(lines) - 2)]
+	kernel_id = lines[random.randint(0, len(lines) - 2)]
 
 	# generate images
 	imgStreams = {}
-	for i in range(3):
+	images = {}
+	for i in range(random.randint(1, 16)):
 		width = random.randint(32, 384)
 		height = random.randint(32, 384)
 		img = Image.new('RGBA', (width, height))
@@ -68,11 +79,18 @@ def check(*args):
 		stream = io.BytesIO()
 		img.save(stream, format="png")
 		imgStreams.update({name : stream.getvalue()})
+		images.update({name : img})
 
 	# ask service to process generated images
-	url = 'http://%s:8081/process?kernel-id=%s' % (addr, id)
+	sign = (random.randint(0, 256) % 8) == 0
+	url = 'http://%s:8081/process?kernel-id=%s' % (addr, kernel_id)
 	try:
-		r = requests.post(url, headers={'User-Agent' : UserAgents.get()}, files=imgStreams)
+		headers={'User-Agent' : UserAgents.get()}
+		if sign:
+			signatureBase64 = gen_signature(kernel_id)
+			headers.update({'signature': signatureBase64})
+		
+		r = requests.post(url, headers=headers, files=imgStreams)
 		if r.status_code == 404:
 			close(DOWN, "Service is down, status code=%u" % r.status_code)
 		if r.status_code != 200:
@@ -113,6 +131,87 @@ def check(*args):
 			close(CORRUPT, "Wrong timings format %s" % timings)
 		if not type(timings['alpha_channel']) is int:
 			close(CORRUPT, "Wrong timings format %s" % timings)
+
+	if sign:
+		signatureBase64 = gen_signature(kernel_id)
+		url = 'http://%s:8081/get-kernel?kernel-id=%s' % (addr, kernel_id)
+		try:
+			r = requests.get(url, headers={'signature': signatureBase64, 'User-Agent' : UserAgents.get()})
+			if r.status_code == 404:
+				close(DOWN, "Service is down, status code=%u" % r.status_code)
+			if r.status_code != 200:
+				close(CORRUPT, "Service is corrupted, status code=%u" % r.status_code)
+		except Exception as e:
+			close(DOWN, "HTTP Error", "HTTP error: %s" % e)
+
+		kernel = r.text
+		if len(kernel) != 32:
+			close(CORRUPT, "Wrong kernel returned", "Len: %u" % len(kernel))
+
+		# verify that convolution works well
+		for name, sourceImage in images.items():
+			signatureBase64 = gen_signature(name)
+			url = 'http://%s:8081/get-image?name=%s' % (addr, name)
+			try:
+				r = requests.get(url, headers={'User-Agent' : UserAgents.get(), 'signature' : signatureBase64})
+			except Exception as e:
+				close(DOWN, "HTTP Error", "HTTP error: %s" % e)
+
+			if r.status_code == 404:
+				close(DOWN, "Service is down, status code=%u" % r.status_code)
+			if r.status_code != 200:
+				close(CORRUPT, "Status code=%u" % r.status_code)
+
+			try:
+				processedImage = Image.open(io.BytesIO(r.content))
+			except Exception as e:
+				close(DOWN, "Non PNG image returned", "%s" % e)
+
+			expectedWidth = ((sourceImage.width + 23) // 24) * 8
+			expectedHeight = (sourceImage.height + 2) // 3
+			if expectedWidth != processedImage.width or expectedHeight != processedImage.height:
+				close(CORRUPT, "Wrong image returned", "Expected %ux%u but %ux%u" % (expectedWidth, expectedHeight, processedImage.width, processedImage.height))
+
+			srcPixels = sourceImage.load()
+			processedPixels = processedImage.load()
+			# perform convolution and compare with processed by service image
+			for i in range(0, 4):
+				for y in range(0, processedImage.height):
+					for x in range(0, processedImage.width):
+						x0 = x * 3
+						y0 = y * 3
+						v = [0, 0, 0, 0, 0, 0, 0, 0]
+						if x0 + 0 < sourceImage.width and y0 + 0 < sourceImage.height:
+							v[0] = srcPixels[x0 + 0, y0 + 0][i]
+						if x0 + 1 < sourceImage.width and y0 + 0 < sourceImage.height:
+							v[1] = srcPixels[x0 + 1, y0 + 0][i]
+						if x0 + 2 < sourceImage.width and y0 + 0 < sourceImage.height:
+							v[2] = srcPixels[x0 + 2, y0 + 0][i]
+						if x0 + 0 < sourceImage.width and y0 + 1 < sourceImage.height:
+							v[3] = srcPixels[x0 + 0, y0 + 1][i]
+						if x0 + 2 < sourceImage.width and y0 + 1 < sourceImage.height:
+							v[4] = srcPixels[x0 + 2, y0 + 1][i]
+						if x0 + 0 < sourceImage.width and y0 + 2 < sourceImage.height:
+							v[5] = srcPixels[x0 + 0, y0 + 2][i]
+						if x0 + 1 < sourceImage.width and y0 + 2 < sourceImage.height:
+							v[6] = srcPixels[x0 + 1, y0 + 2][i]
+						if x0 + 2 < sourceImage.width and y0 + 2 < sourceImage.height:
+							v[7] = srcPixels[x0 + 2, y0 + 2][i]
+						
+						counter = 0.0
+						sum = 0
+						for j in range(0, 8):
+							if v[j] >= ord(kernel[i * 8 + j]):
+								sum += v[j]
+								counter += 1.0
+
+						r = 0
+						if counter > 0:
+							r = int(round(sum / counter))
+
+						testVal = processedPixels[x, y][i]
+						if testVal != r:
+							close(CORRUPT, "Wrong image returned", "Expected %u but %u at %ux%u[%u]" % (r, testVal, x, y, i))
 	
 	close(OK)
 
@@ -122,13 +221,7 @@ def put(*args):
 	flag_id = args[1]
 	flag = args[2]
 
-	key = M2Crypto.EVP.load_key('privkey.pem')
-	key.reset_context(md='sha256')
-	key.sign_init()
-	key.sign_update(flag.encode('utf-8'))
-	signature = key.sign_final()
-	signatureBase64 = base64.b64encode(signature)
-
+	signatureBase64 = gen_signature(flag_id)
 	url = 'http://%s:8081/add-kernel?kernel-id=%s&kernel=%s' % (addr, flag_id, flag)
 	try:
 		r = requests.post(url, headers={'signature': signatureBase64, 'User-Agent' : UserAgents.get()})
@@ -162,17 +255,10 @@ def get(*args):
 	if r.text.find(flag_id) == -1:
 		close(CORRUPT, "There is no kernel with id '%s'" % flag_id)
 
-	key = M2Crypto.EVP.load_key('privkey.pem')
-	key.reset_context(md='sha256')
-	key.sign_init()
-	cipher = ''.join(random.choice(string.ascii_uppercase + string.digits) for i in range(32))
-	key.sign_update(cipher.encode('utf-8'))
-	signature = key.sign_final()
-	signatureBase64 = base64.b64encode(signature)
-
+	signatureBase64 = gen_signature(flag_id)
 	url = 'http://%s:8081/get-kernel?kernel-id=%s' % (addr, flag_id)
 	try:
-		r = requests.get(url, headers={'signature': signatureBase64, 'cipher' : cipher, 'User-Agent' : UserAgents.get()})
+		r = requests.get(url, headers={'signature': signatureBase64, 'User-Agent' : UserAgents.get()})
 		if r.status_code == 404:
 			close(DOWN, "Service is down, status code=%u" % r.status_code)
 		if r.status_code != 200:
