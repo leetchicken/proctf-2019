@@ -49,7 +49,7 @@ echo "==========================================="
 echo "Please pay attention on these copied files:"
 echo "==========================================="
 pushd .. > /dev/null
-rsync -lptgodRv --cvs-exclude -e "$SSH" -- $SERVICE_FILES "127.0.0.2:/service/$SERVICE/"
+rsync -lptgodRv --exclude=".gitignore" -e "$SSH" -- $SERVICE_FILES "127.0.0.2:/service/$SERVICE/"
 popd > /dev/null
 
 if [ $SERVICE == "deer" ]; then
@@ -57,6 +57,12 @@ if [ $SERVICE == "deer" ]; then
     docker save proctf/deer-elasticsearch | $SSH 127.0.0.2 docker import - proctf/deer-elasticsearch
     docker save proctf/deer-rabbitmq | $SSH 127.0.0.2 docker import - proctf/deer-rabbitmq
     docker save proctf/deer | $SSH 127.0.0.2 docker import - proctf/deer
+fi
+
+if [ $SERVICE == "handy" ]; then
+    echo "import docker images"
+    docker save mongo:4 | $SSH 127.0.0.2 docker import - mongo:4.2.0
+    docker save handy | $SSH 127.0.0.2 docker import - handy
 fi
 
 $SSH 127.0.0.2 "cd /service/$SERVICE; docker-compose up --no-start"
