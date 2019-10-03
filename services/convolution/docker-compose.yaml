@@ -1,0 +1,10 @@
+version: '2.0'
+services:
+  convolution:
+    build: .
+    ports:
+      - "0.0.0.0:8081:8081"
+    volumes:
+      - ./data:/home/convolution/data
+    restart: unless-stopped
+    mem_limit: 2000m
