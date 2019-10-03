@@ -85,5 +85,21 @@ services/bb/./templates/layouts/
 services/bb/./templates/main/
 EOF
     ;;
+    "septon")
+    cat <<EOF
+services/SePtoN/./docker-compose.yml
+services/SePtoN/./Dockerfile
+services/SePtoN/./README.md
+services/SePtoN/./start.sh
+services/SePtoN/./Package.swift
+services/SePtoN/./Sources/
+services/SePtoN/./Sources/SePtoN/
+EOF
+    ;;
+    "handy")
+    cat <<EOF
+services/handy/./docker-compose.yaml
+EOF
+    ;;
     *) echo "No such service" >&2; exit 1;;
 esac
