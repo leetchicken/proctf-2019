@@ -113,7 +113,7 @@ def put_painting(query, body):
         painting = parse_png_bytes(body)
     except Exception as e:
         print("can't parse painting image:", e)
-        return gen_json_ans({"error": str(e)})
+        return gen_json_ans({"error": "can't parse painting image"})
 
     painting_id = str(uuid.uuid4())
 
@@ -181,8 +181,8 @@ URLS = {
     ("GET", "/"): "index.html",
     ("GET", "/index.html"): "index.html",
     ("GET", "/favicon.ico"): "favicon.ico",
-    ("PUT", "/painting"): put_painting,
     ("GET", "/paintings"): get_paintings,
+    ("PUT", "/painting"): put_painting,    
     ("GET", "/preview"): get_preview,
     ("POST", "/replica"): post_replica,
 }
