@@ -61,6 +61,8 @@
       name:
         - python3-pip
         - libgdiplus
+        - libssl-dev
+        - swig
 
   - name: python deps
     pip:
@@ -70,6 +72,8 @@
         - lxml
         - elasticsearch
         - pika
+        - m2crypto
+        - pillow
 
   - name: build binder
     command: ./build.sh
