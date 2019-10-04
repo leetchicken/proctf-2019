@@ -1,15 +1,16 @@
 package ae.hitb.proctf.drone_racing
 
-class Maze(val width: Int, val height: Int, private val mapString: String) {
+import ae.hitb.proctf.drone_racing.dao.getMapSizeFromString
+
+class Maze(private val mapString: String) {
     val map = mutableListOf<List<Boolean>>()
+    val size = getMapSizeFromString(mapString)
 
     init {
-        check(mapString.length == width * height) { "Invalid size of map" }
-
         val row = mutableListOf<Boolean>()
         mapString.forEach { c ->
             row.add(c == '*')
-            if (row.size == width) {
+            if (row.size == size) {
                 map.add(row.toList())
                 row.clear()
             }

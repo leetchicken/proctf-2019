@@ -78,6 +78,9 @@ end
 
 print_number(1)
 print_number(get_double(100))
+
+goUp()
+goRight()
 """)
         compileAndRunProgram(program)
     }

@@ -1,9 +1,12 @@
 package ae.hitb.proctf.drone_racing
 
-class StaticMazeWalker {
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.ConcurrentMap
+
+open class StaticSharedMazeWalker {
     companion object {
         // TODO: удалять старые
-        private val states: MutableMap<Thread, MazeWalker> = mutableMapOf()
+        private val states: ConcurrentMap<Thread, MazeWalker> = ConcurrentHashMap<Thread, MazeWalker>()
 
         @JvmStatic
         fun goRight() = states[Thread.currentThread()]!!.goRight()
@@ -18,8 +21,10 @@ class StaticMazeWalker {
         fun goDown() = states[Thread.currentThread()]!!.goDown()
 
         @JvmStatic
+        fun isOnTopRightCell() = states[Thread.currentThread()]!!.isOnTopRightCell()
+
+        @JvmStatic
         fun setMaze(mazeString: String) {
-            // TODO сделать лабиринты только квадартными, чтобы можно было звать без дополнительных аргументов
             states[Thread.currentThread()] = MazeWalker(Maze(mazeString))
         }
 
@@ -30,7 +35,7 @@ class StaticMazeWalker {
 
 class MazeWalker(private val maze: Maze, var x: Int = 0, var y: Int = 0, var movesCount: Int = 0) {
     fun goUp() {
-        if (y == maze.height - 1)
+        if (y == maze.size - 1)
             throw BadMove("Can't go up!")
         if (maze.map[x][y + 1])
             throw BadMove("Can't go up: it's wall there!")
@@ -57,13 +62,15 @@ class MazeWalker(private val maze: Maze, var x: Int = 0, var y: Int = 0, var mov
     }
 
     fun goRight() {
-        if (x == maze.width - 1)
+        if (x == maze.size - 1)
             throw BadMove("Can't go right!")
         if (maze.map[x + 1][y])
             throw BadMove("Can't go right: it's wall there!")
         x += 1
         movesCount += 1
     }
+
+    fun isOnTopRightCell() = (x == maze.size - 1) && (y == maze.size - 1)
 }
 
 class BadMove(message: String) : Throwable(message)

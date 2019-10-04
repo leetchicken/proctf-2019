@@ -5,30 +5,22 @@ import ae.hitb.proctf.drone_racing.dao.*
 import freemarker.cache.ClassTemplateLoader
 import io.ktor.application.*
 import io.ktor.features.*
-import io.ktor.freemarker.FreeMarker
-import io.ktor.freemarker.FreeMarkerContent
+import io.ktor.freemarker.*
 import io.ktor.gson.gson
 import io.ktor.html.respondHtml
 import io.ktor.http.*
-import io.ktor.http.content.CachingOptions
-import io.ktor.http.content.resources
-import io.ktor.http.content.static
+import io.ktor.http.content.*
 import io.ktor.request.*
 import io.ktor.response.*
-import io.ktor.routing.get
-import io.ktor.routing.post
-import io.ktor.routing.route
-import io.ktor.routing.routing
+import io.ktor.routing.*
 import io.ktor.sessions.*
 import io.ktor.util.KtorExperimentalAPI
 import io.ktor.util.date.GMTDate
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import kotlinx.css.*
 import kotlinx.html.*
-import org.jetbrains.exposed.sql.transactions.transaction
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
-import java.nio.file.*
+import java.nio.file.Files
+import java.nio.file.Paths
 import java.text.DateFormat
 import kotlin.collections.*
 import kotlin.random.Random
@@ -260,8 +252,6 @@ fun Application.module(testing: Boolean = false) {
                     try {
                         request = call.receive()
                         checkNotNull(request.title) { "Please specify the title" }
-                        checkNotNull(request.height) { "Please specify the height" }
-                        checkNotNull(request.width) { "Please specify the width" }
                         checkNotNull(request.map) { "Please specify the map" }
                     } catch (e: Throwable) {
                         e.printStackTrace()
@@ -272,11 +262,11 @@ fun Application.module(testing: Boolean = false) {
                     val level: Level
                     try {
                         with (request) {
-                            check(width in 1..LEVEL_MAX_SIZE) { "Width should be more than 0 and less than $LEVEL_MAX_SIZE"}
-                            check(height in 1..LEVEL_MAX_SIZE) { "Height should be more than 0 and less than $LEVEL_MAX_SIZE"}
-                            check(map.length == width * height) { "Map should have size width * height "}
+                            val size = getMapSizeFromString(request.map)
+                            check(map.length == size * size) { "Map length should be a square "}
+                            check(size in 1..LEVEL_MAX_SIZE) { "Map's size should be more than 0 and less than $LEVEL_MAX_SIZE"}
                             check(map.all { it in ".*" }) { "Map should contain only '.' and '*' chars "}
-                            level = levelService.createLevel(authenticatedUser!!, title, height, width, map)
+                            level = levelService.createLevel(authenticatedUser!!, title, map)
                         }
                     } catch (e: Throwable) {
                         e.printStackTrace()

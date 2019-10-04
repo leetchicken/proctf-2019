@@ -6,6 +6,6 @@ class CodeRunnerTests {
     @Test
     fun testRunningCode() {
         val codeRunner = CodeRunner()
-        codeRunner.runCode("test.class", emptyMap())
+        println(codeRunner.runCode("test.class", emptyMap(), "........."))
     }
 }

@@ -11,36 +11,22 @@ import ae.hitb.proctf.drone_racing.programming.language.*
 import java.io.BufferedReader
 
 
+const val BASE_CLASS_NAME = "ae/hitb/proctf/drone_racing/StaticSharedMazeWalker"
+
 class StackToJvmCompiler : Compiler<StackProgram, ByteArray> {
     private val brDescriptor = getDescriptor(BufferedReader::class.java)
 
     override fun compile(programName: String, source: StackProgram): ByteArray {
         val cw = ClassWriter(ClassWriter.COMPUTE_FRAMES)
-        cw.visit(V1_8, ACC_PUBLIC + ACC_SUPER, programName, null, "java/lang/Object", emptyArray())
+        cw.visit(V1_8, ACC_PUBLIC + ACC_SUPER, programName, null, BASE_CLASS_NAME, emptyArray())
 
         cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null).apply {
             visitVarInsn(ALOAD, 0)
-            visitMethodInsn(INVOKESPECIAL, "java/lang/Object", "<init>", "()V", false)
+            visitMethodInsn(INVOKESPECIAL, BASE_CLASS_NAME, "<init>", "()V", false)
             visitInsn(RETURN)
             visitMaxs(-1, -1)
             visitEnd()
         }
-
-        /*
-        cw.visitMethod(ACC_PUBLIC + ACC_STATIC, "<clinit>", "()V", null, null).apply {
-            visitTypeInsn(NEW, "java/io/BufferedReader")
-            visitInsn(DUP)
-            visitTypeInsn(NEW, "java/io/InputStreamReader")
-            visitInsn(DUP)
-            visitFieldInsn(GETSTATIC, "java/lang/System", "in", getDescriptor(InputStream::class.java))
-            visitMethodInsn(INVOKESPECIAL, "java/io/InputStreamReader", "<init>", "(Ljava/io/InputStream;)V", false)
-            visitMethodInsn(INVOKESPECIAL, "java/io/BufferedReader", "<init>", "(Ljava/io/Reader;)V", false)
-            visitFieldInsn(PUTSTATIC, "Program", "input", brDescriptor)
-            visitInsn(RETURN)
-            visitMaxs(-1, -1)
-            visitEnd()
-        }
-        */
 
         source.functions.forEach { (declaration, code) -> compileFunction(declaration, code, cw, declaration == source.entryPoint, source.literalPool) }
 

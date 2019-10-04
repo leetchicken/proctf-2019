@@ -12,12 +12,10 @@ class LevelService {
         Level.findById(id)
     }
 
-    suspend fun createLevel(author: User, title: String, height: Int, width: Int, map: String) = dbQuery {
+    suspend fun createLevel(author: User, title: String, map: String) = dbQuery {
         Level.new {
             this.author = author
             this.title = title
-            this.height = height
-            this.width = width
             this.map = map
         }
     }

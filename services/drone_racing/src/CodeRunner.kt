@@ -1,25 +1,41 @@
 package ae.hitb.proctf.drone_racing
 
 import ae.hitb.proctf.drone_racing.dao.PROGRAMS_PATH
+import java.lang.reflect.InvocationTargetException
 import java.nio.file.*
 import kotlin.concurrent.thread
 
 const val TIME_LIMIT_MILLISECONDS = 100
 
 class CodeRunner {
-    fun runCode(classFilename: String, params: Map<String, String>, maze: String) {
+    fun runCode(classFilename: String, params: Map<String, String>, maze: String): RunResult {
         val classBytes = Files.readAllBytes(Paths.get(PROGRAMS_PATH, classFilename))
         val classLoader = ByteArrayClassLoader(mapOf("Code" to classBytes))
+        var movesCount= Int.MAX_VALUE
+        var success = false
+        var exception: Throwable? = null
 
         setParams(params);
         try {
             val codeThread = thread(start = false, isDaemon = true) {
-                val klass = classLoader.loadClass("Code")
-                // TODO
-                // call klass.setMaze(maze)
-                // call klass.main()
-                val main = klass.getMethod("main", Array<String>::class.java)
-                main.invoke(null, emptyArray<String>())
+                try {
+                    val klass = classLoader.loadClass("Code")
+
+                    val setMaze = klass.getMethod("setMaze", String::class.java)
+                    setMaze.invoke(null, maze)
+
+                    val main = klass.getMethod("main")
+                    main.invoke(null)
+
+                    val getMovesCount = klass.getMethod("getMovesCount")
+                    movesCount = getMovesCount.invoke(null) as Int
+
+                    val isOnTopRightCell = klass.getMethod("isOnTopRightCell")
+                    success = isOnTopRightCell.invoke(null) as Boolean
+                } catch (e: Throwable) {
+                    e.printStackTrace()
+                    exception = e
+                }
             }
             try {
                 codeThread.start()
@@ -43,11 +59,38 @@ class CodeRunner {
                 } catch (e: Throwable) {
                     e.printStackTrace()
                 }
+                return RunResult(
+                    success = false,
+                    error = true,
+                    errorMessage = "Your code has been interrupted because it needs more than $TIME_LIMIT_MILLISECONDS milliseconds"
+                )
             }
 
             println("Finish")
         } finally {
             clearParams(params)
+        }
+
+        if (exception != null)
+            return RunResult(
+                success = false,
+                error = true,
+                errorMessage = getErrorMessage(exception)
+            )
+
+        return RunResult(
+            success = success,
+            score = movesCount
+        )
+    }
+
+    private fun getErrorMessage(exception: Throwable?): String {
+        val defaultErrorMessage = "Exception occurred"
+        if (exception == null)
+            return defaultErrorMessage
+        return when (exception) {
+            is InvocationTargetException -> exception.cause?.message ?: exception.message ?: defaultErrorMessage
+            else -> exception.message ?: defaultErrorMessage
         }
     }
 
@@ -62,7 +105,7 @@ class CodeRunner {
     }
 }
 
-data class RunResult(val success: Boolean, val error: Boolean, val errorMessage: String)
+data class RunResult(val success: Boolean, val score: Int = 0, val error: Boolean = false, val errorMessage: String = "")
 
 
 class ByteArrayClassLoader(private val classBytes: Map<String, ByteArray>): ClassLoader() {
