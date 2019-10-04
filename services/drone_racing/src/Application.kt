@@ -327,6 +327,51 @@ fun Application.module(testing: Boolean = false) {
                     call.respond(OkResponse(ProgramsResponse(programs)))
                 }
             }
+
+            route("runs") {
+                val levelService = LevelService()
+                val programService = ProgramService()
+                val runService = RunService()
+
+                get {
+                    val level: Level
+                    try {
+                        val levelId = call.parameters["levelId"]?.toInt() ?: throw IllegalStateException("invalid level id")
+                        level = levelService.findLevelById(levelId) ?: throw IllegalStateException("unknown level id")
+                    } catch (e: Throwable) {
+                        e.printStackTrace()
+                        call.respond(HttpStatusCode.BadRequest, ErrorResponse("Invalid request: ${e.message}"))
+                        return@get
+                    }
+
+                    val runs = runService.findRunsOnLevel(level)
+                    call.respond(OkResponse(RunsResponse(runs)))
+                }
+
+                post {
+                    val request: CreateRunRequest
+                    val program: Program?
+                    try {
+                        request = call.receive()
+                        checkNotNull(request.programId) { "please specify the program id" }
+                        checkNotNull(request.params) { "please specify the params list" }
+                        program = programService.findProgramById(request.programId)
+                        checkNotNull(program) { "unknown program id" }
+                        check(program.author != authenticatedUser) { "it's not your program, sorry" }
+                    } catch (e: Throwable) {
+                        e.printStackTrace()
+                        call.respond(HttpStatusCode.BadRequest, ErrorResponse("Invalid request: ${e.message}"))
+                        return@post
+                    }
+
+                    val startTime = getUnixTimestamp()
+                    // TODO: run code with params
+                    val finishTime = getUnixTimestamp()
+                    val success = true
+                    val score = 0
+                    runService.createRun(program, startTime, finishTime, success, score)
+                }
+            }
         }
     }
 }
@@ -358,3 +403,5 @@ fun readOrGenerateSessionKey() : ByteArray {
     Files.write(path, sessionKey)
     return sessionKey
 }
+
+fun getUnixTimestamp() = (System.currentTimeMillis() / 1000).toInt();

@@ -6,7 +6,7 @@ class RunService {
     }
 
     suspend fun findRunsOnLevel(level: Level) = dbQuery {
-        Program.find { Programs.level eq level.id }.toList()
+        Run.find { Programs.level eq level.id }.toList()
     }
 
     suspend fun createRun(program: Program, startTime: Int, finishTime: Int?, success: Boolean, score: Int) = dbQuery {

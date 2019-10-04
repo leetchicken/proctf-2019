@@ -96,6 +96,7 @@ openBrowser("yandex.ru")
         compileAndRunProgram(program)
     }
 
+    @ExperimentalUnsignedTypes
     private fun compileAndRunProgram(program: Program) {
         val stackCompiler = StatementToStackCompiler()
         val className = "Program"
