@@ -6,14 +6,21 @@ import uuid
 import dnn
 import numpy as np
 import pickle
+import os
 
 from cgi import parse_qs
 from io import BytesIO
 
 STATIC_DIR = pathlib.Path("static")
 PAINTINGS_DIR = pathlib.Path("data/paintings/")
+REWARDS_DIR = pathlib.Path("data/rewards/")
 EMBEDDINGS_DIR = pathlib.Path("data/embeddings/")
 PREVIEWS_DIR = pathlib.Path("data/previews/")
+os.makedirs(STATIC_DIR, exist_ok=True)
+os.makedirs(PAINTINGS_DIR, exist_ok=True)
+os.makedirs(REWARDS_DIR, exist_ok=True)
+os.makedirs(EMBEDDINGS_DIR, exist_ok=True)
+os.makedirs(PREVIEWS_DIR, exist_ok=True)
 
 MODEL_PATH = "models/model_big_30_30_predict.h5"
 
@@ -43,6 +50,7 @@ IMG_HEADERS = [
 # train_model = dnn.create_and_train_model()
 # model = dnn.create_model(train_model)
 # model.save(MODEL_PATH)
+
 
 
 model = dnn.load(MODEL_PATH)
@@ -92,9 +100,15 @@ def post_replica(query, body):
     if dist >= 0.05:
         return gen_json_ans({"dist": dist})
     else:
-        return gen_json_ans("HERE IS YOUR FLAG")
+        reward_file_name = painting_id + ".txt"
+        with open(REWARDS_DIR / reward_file_name, "r") as file:            
+            reward = file.read()
+        return gen_json_ans(reward)
 
 def put_painting(query, body):
+    reward = query["reward"][0]
+    print("got reward:", reward)
+
     try:
         painting = parse_png_bytes(body)
     except Exception as e:
@@ -119,6 +133,14 @@ def put_painting(query, body):
     except Exception as e:
         print("can't save painting:", e)
         return gen_json_ans({"error": "can't save painting"})
+
+    reward_file_name = painting_id + ".txt"
+    try:
+        with open(REWARDS_DIR / reward_file_name, "xb") as file:
+            file.write(reward.encode())
+    except Exception as e:
+        print("can't save reward:", e)
+        return gen_json_ans({"error": "can't save reward"})
 
     preview = painting.resize((16, 16), resample=PIL.Image.BICUBIC)
     try:
