@@ -1,3 +1,8 @@
+import warnings
+with warnings.catch_warnings():  
+    warnings.filterwarnings("ignore",category=FutureWarning)
+    import tensorflow as tf
+
 from keras.models import load_model
 from keras.layers import Input, Conv2D, Lambda, Dense, Flatten, Dropout, MaxPooling2D, concatenate
 from keras.models import Model, Sequential
@@ -141,4 +146,4 @@ def create_model(train_model):
 
 def load(path):
     custom_objects={'triplet_loss': triplet_loss}
-    return load_model(path, custom_objects=custom_objects)
+    return load_model(path, custom_objects=custom_objects, compile=False)
