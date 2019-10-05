@@ -76,6 +76,11 @@ begin
     return 2 * x
 end
 
+fun set_maze(s: string)
+begin
+  
+end
+
 print_number(1)
 print_number(get_double(100))
 

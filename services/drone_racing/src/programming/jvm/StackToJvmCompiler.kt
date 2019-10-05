@@ -11,6 +11,7 @@ import ae.hitb.proctf.drone_racing.programming.language.*
 import java.io.BufferedReader
 
 
+const val CLASS_NAME = "ae/hitb/proctf/drone_racing/DroneRacingProgram"
 const val BASE_CLASS_NAME = "ae/hitb/proctf/drone_racing/StaticSharedMazeWalker"
 
 class StackToJvmCompiler : Compiler<StackProgram, ByteArray> {
@@ -18,7 +19,7 @@ class StackToJvmCompiler : Compiler<StackProgram, ByteArray> {
 
     override fun compile(source: StackProgram): ByteArray {
         val cw = ClassWriter(ClassWriter.COMPUTE_FRAMES)
-        cw.visit(V1_8, ACC_PUBLIC + ACC_SUPER, "GeneratedClass", null, BASE_CLASS_NAME, emptyArray())
+        cw.visit(V1_8, ACC_PUBLIC + ACC_SUPER, CLASS_NAME, null, BASE_CLASS_NAME, emptyArray())
 
         cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null).apply {
             visitVarInsn(ALOAD, 0)
@@ -123,7 +124,7 @@ class StackToJvmCompiler : Compiler<StackProgram, ByteArray> {
                     is Call -> when (s.function) {
                         is Intrinsic -> when (s.function) {
                             Intrinsic.READ -> {
-                                visitFieldInsn(GETSTATIC, "GeneratedClass", "input", brDescriptor)
+                                visitFieldInsn(GETSTATIC, CLASS_NAME, "input", brDescriptor)
                                 visitMethodInsn(INVOKEVIRTUAL, "java/io/BufferedReader", "readLine", "()Ljava/lang/String;", false)
                                 visitMethodInsn(INVOKESTATIC, "java/lang/Integer", "parseInt", "(Ljava/lang/String;)I", false)
                             }
@@ -157,7 +158,7 @@ class StackToJvmCompiler : Compiler<StackProgram, ByteArray> {
                         }
                         else -> {
                             val descriptor = "(" + s.function.parameterTypes.joinToString { getJavaType(it) } + ")" + getJavaType(s.function.returnType)
-                            visitMethodInsn(INVOKESTATIC, "GeneratedClass", s.function.name, descriptor, false)
+                            visitMethodInsn(INVOKESTATIC, CLASS_NAME, s.function.name, descriptor, false)
                             // TODO Нужно? Ради хакабельности?
 //                            visitLdcInsn(0)
                         }

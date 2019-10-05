@@ -304,8 +304,13 @@ fun Application.module(testing: Boolean = false) {
                         return@post
                     }
 
-                    val program = programService.createProgram(authenticatedUser!!, level, request.title, request.sourceCode)
-                    call.respond(OkResponse(ProgramResponse(program.id.value)))
+                    try {
+                        val program = programService.createProgram(authenticatedUser!!, level, request.title, request.sourceCode)
+                        call.respond(OkResponse(ProgramResponse(program.id.value)))
+                    } catch (e: Throwable) {
+                        e.printStackTrace()
+                        call.respond(HttpStatusCode.BadRequest, ErrorResponse("Invalid request: ${e.message}"))
+                    }
                 }
 
                 get {

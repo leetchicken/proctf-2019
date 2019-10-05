@@ -46,7 +46,7 @@ class ProgramService {
         ensureProgramsDirectoryExists()
 
         val program = readProgram(sourceCode)
-        val bytecode = replaceClassName(compiler.compile(program), "GeneratedClass", title)
+        val bytecode = replaceClassName(compiler.compile(program), "ae/hitb/proctf/drone_racing/DroneRacingProgram", title)
         val filename = generateAlphanumeric(PROGRAM_FILENAME_LENGTH) + ".class"
         val path = Paths.get(PROGRAMS_PATH, filename)
 
@@ -71,25 +71,25 @@ class ProgramService {
             return f.zip(s).all { (b1, b2) -> b1 == b2 }
         }
 
-        fun findPosition(byteArray: ByteArray, subsequence: ByteArray): Pair<Int, Int>? {
+        fun findPosition(byteArray: ByteArray, subsequence: ByteArray): Int? {
             byteArray.indices.forEach { index ->
                 if (isSubsequenceEqual(byteArray, index, subsequence, 0, subsequence.size))
-                    return Pair(index, index + subsequence.size)
+                    return index
             }
             return null
         }
 
-        fun placeBytes(bytes: ByteArray, startIndex: Int, finishIndex: Int, newBytes: ByteArray): ByteArray {
-            return bytes.take(startIndex).toByteArray() + newBytes + bytes.drop(finishIndex)
+        fun placeBytes(bytes: ByteArray, startIndex: Int, newBytes: ByteArray): ByteArray {
+            return bytes.take(startIndex).toByteArray() + newBytes + bytes.drop(startIndex + newBytes.size)
         }
 
         check(newClassName.length in 1..currentClassName.length) { "Title should be not empty and not longer than ${currentClassName.length} chars" }
         var className = newClassName
         while (className.length < currentClassName.length)
-            className += "\u0000"
+            className += " "
 
         val position = findPosition(classBytes, currentClassName.encodeToByteArray()) ?: return classBytes
 
-        return placeBytes(classBytes, position.first, position.second, className.encodeToByteArray())
+        return placeBytes(classBytes, position, className.encodeToByteArray())
     }
 }
