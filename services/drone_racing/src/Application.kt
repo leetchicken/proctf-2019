@@ -2,10 +2,14 @@ package ae.hitb.proctf.drone_racing
 
 import ae.hitb.proctf.drone_racing.api.*
 import ae.hitb.proctf.drone_racing.dao.*
+import com.google.gson.Gson
+import com.google.gson.GsonBuilder
 import freemarker.cache.ClassTemplateLoader
 import io.ktor.application.*
+import io.ktor.content.TextContent
 import io.ktor.features.*
 import io.ktor.freemarker.*
+import io.ktor.gson.GsonConverter
 import io.ktor.gson.gson
 import io.ktor.html.respondHtml
 import io.ktor.http.*
@@ -14,19 +18,25 @@ import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.routing.*
 import io.ktor.sessions.*
+import io.ktor.util.ConversionService
 import io.ktor.util.KtorExperimentalAPI
 import io.ktor.util.date.GMTDate
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.css.*
 import kotlinx.html.*
+import org.jetbrains.exposed.sql.transactions.transaction
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
-import java.nio.file.Files
-import java.nio.file.Paths
+import java.nio.file.*
 import java.text.DateFormat
 import kotlin.collections.*
 import kotlin.random.Random
 
 fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
 
+val gson: Gson = GsonBuilder().setPrettyPrinting().setDateFormat(DateFormat.LONG).create()
+
+@ExperimentalStdlibApi
 @KtorExperimentalAPI
 @Suppress("unused") // Referenced in application.conf
 @kotlin.jvm.JvmOverloads
@@ -82,10 +92,6 @@ fun Application.module(testing: Boolean = false) {
                 else -> null
             }
         }
-    }
-
-    install(DefaultHeaders) {
-        header("X-Engine", "Ktor") // will send this header with each response
     }
 
     install(ContentNegotiation) {
@@ -299,13 +305,13 @@ fun Application.module(testing: Boolean = false) {
                     }
 
                     val program = programService.createProgram(authenticatedUser!!, level, request.title, request.sourceCode)
-                    call.respond(OkResponse(ProgramResponse(program)))
+                    call.respond(OkResponse(ProgramResponse(program.id.value)))
                 }
 
                 get {
                     val level: Level
                     try {
-                        val levelId = call.parameters["levelId"]?.toInt() ?: throw IllegalStateException("invalid level id")
+                        val levelId = call.parameters["level_id"]?.toInt() ?: throw IllegalStateException("invalid level id")
                         level = levelService.findLevelById(levelId) ?: throw IllegalStateException("unknown level id")
                     } catch (e: Throwable) {
                         e.printStackTrace()
@@ -313,12 +319,16 @@ fun Application.module(testing: Boolean = false) {
                         return@get
                     }
 
-                    val programs = programService.findUserPrograms(authenticatedUser!!, level)
-                    call.respond(OkResponse(ProgramsResponse(programs)))
+                    var result: String? = null
+                    dbQuery {
+                        val programs = programService.findUserPrograms(authenticatedUser!!, level)
+                        result = gson.toJson(OkResponse(ProgramsResponse(programs)))
+                    }
+                    call.respond(TextContent(result!!, ContentType.Application.Json))
                 }
             }
 
-            route("runs") {
+            route("/runs") {
                 val levelService = LevelService()
                 val programService = ProgramService()
                 val runService = RunService()
@@ -326,7 +336,7 @@ fun Application.module(testing: Boolean = false) {
                 get {
                     val level: Level
                     try {
-                        val levelId = call.parameters["levelId"]?.toInt() ?: throw IllegalStateException("invalid level id")
+                        val levelId = call.parameters["level_id"]?.toInt() ?: throw IllegalStateException("invalid level id")
                         level = levelService.findLevelById(levelId) ?: throw IllegalStateException("unknown level id")
                     } catch (e: Throwable) {
                         e.printStackTrace()
@@ -334,20 +344,31 @@ fun Application.module(testing: Boolean = false) {
                         return@get
                     }
 
-                    val runs = runService.findRunsOnLevel(level)
-                    call.respond(OkResponse(RunsResponse(runs)))
+                    var result: String? = null
+                    dbQuery {
+                        val runs = runService.findRunsOnLevel(level)
+                        result = gson.toJson(OkResponse(RunsResponse(runs)))
+                    }
+                    call.respond(TextContent(result!!, ContentType.Application.Json))
                 }
 
                 post {
                     val request: CreateRunRequest
                     val program: Program?
+                    var level: Level? = null
                     try {
                         request = call.receive()
                         checkNotNull(request.programId) { "please specify the program id" }
                         checkNotNull(request.params) { "please specify the params list" }
                         program = programService.findProgramById(request.programId)
                         checkNotNull(program) { "unknown program id" }
-                        check(program.author != authenticatedUser) { "it's not your program, sorry" }
+                        dbQuery {
+                            check(program.author != authenticatedUser) { "it's not your program, sorry" }
+                        }
+                        dbQuery {
+                            level = program.level
+                        }
+                        checkNotNull(level) { "Can't find level for your program" }
                     } catch (e: Throwable) {
                         e.printStackTrace()
                         call.respond(HttpStatusCode.BadRequest, ErrorResponse("Invalid request: ${e.message}"))
@@ -355,11 +376,28 @@ fun Application.module(testing: Boolean = false) {
                     }
 
                     val startTime = getUnixTimestamp()
-                    // TODO: run code with params
+
+                    val runResult: RunResult
+                    try {
+                        runResult = CodeRunner().runCode(
+                            Paths.get(PROGRAMS_PATH, program.file).toString(),
+                            request.params,
+                            level!!.map
+                        )
+                    } catch (e: Throwable) {
+                        e.printStackTrace()
+                        call.respond(HttpStatusCode.InternalServerError, ErrorResponse("Can't run your program, sorry"))
+                        return@post
+                    }
+
                     val finishTime = getUnixTimestamp()
-                    val success = true
-                    val score = 0
-                    runService.createRun(program, startTime, finishTime, success, score)
+                    var result: String? = null
+                    dbQuery {
+                        val run = runService.createRun(program, startTime, finishTime, runResult.success, runResult.score)
+                        result = gson.toJson(OkResponse(RunResponse(run, runResult.error, runResult.errorMessage)))
+                    }
+
+                    call.respond(TextContent(result!!, ContentType.Application.Json))
                 }
             }
         }
@@ -394,4 +432,4 @@ fun readOrGenerateSessionKey() : ByteArray {
     return sessionKey
 }
 
-fun getUnixTimestamp() = (System.currentTimeMillis() / 1000).toInt();
+fun getUnixTimestamp() = System.currentTimeMillis()

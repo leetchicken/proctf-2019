@@ -8,8 +8,8 @@ import org.jetbrains.exposed.dao.*
 object Runs : IntIdTable() {
     val program = reference("program_id", Programs)
     val level = reference("level_id", Levels)
-    val startTime = integer("start_time")
-    val finishTime = integer("finish_time").nullable()
+    val startTime = long("start_time")
+    val finishTime = long("finish_time")
     val success = bool("success").default(false)
     val score = integer("score").default(0)
 }
@@ -19,7 +19,6 @@ object Runs : IntIdTable() {
 class Run(id: EntityID<Int>) : IntEntity(id) {
     companion object : IntEntityClass<Run>(Runs)
 
-    @ExposedGSON.Ignore
     var program by Program referencedOn Runs.program
     @ExposedGSON.Ignore
     var level by Level referencedOn Runs.level
@@ -27,8 +26,6 @@ class Run(id: EntityID<Int>) : IntEntity(id) {
     var finishTime by Runs.finishTime
     var success by Runs.success
     var score by Runs.score
-
-    val isFinished get() = finishTime != null;
 
     override fun toString(): String {
         return "Run[$program: $startTime → $finishTime. Success: $success]"

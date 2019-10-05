@@ -42,7 +42,7 @@ class StatementToStackCompiler : Compiler<Program, StackProgram> {
             exitHandlersStack.last { it.hasFinallyBlock || it.hasExceptionTypes.isNotEmpty() }
     }
 
-    override fun compile(programName: String, source: Program): StackProgram {
+    override fun compile(source: Program): StackProgram {
         val exceptions = generateExceptionIds(collectExceptions(source.functionDeclarations.map { it.body }))
         val environment = CompilationEnvironment(exceptions)
         val functionBodies = source.functionDeclarations.associate { it to environment.compileFunction(it) }

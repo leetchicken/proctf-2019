@@ -19,7 +19,6 @@ object Programs : IntIdTable() {
 class Program(id: EntityID<Int>) : IntEntity(id) {
     companion object : IntEntityClass<Program>(Programs)
 
-    @ExposedGSON.Ignore
     var author by User referencedOn Programs.author
     @ExposedGSON.Ignore
     var level by Level referencedOn Programs.level

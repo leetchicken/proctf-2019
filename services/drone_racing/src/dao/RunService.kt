@@ -1,16 +1,23 @@
 package ae.hitb.proctf.drone_racing.dao
 
+import org.jetbrains.exposed.dao.with
+import org.jetbrains.exposed.sql.select
+
 class RunService {
     suspend fun findRunById(id: Int) = dbQuery {
         Run.findById(id)
     }
 
-    suspend fun findRunsOnLevel(level: Level) = dbQuery {
-        Run.find { Programs.level eq level.id }.toList()
+    fun findRunsOnLevel(level: Level): List<Run> {
+        val query = Runs.innerJoin(Programs).select {
+            Programs.level eq level.id
+        }.withDistinct()
+
+        return Run.wrapRows(query).with(Run::program).with(Program::author).toList()
     }
 
-    suspend fun createRun(program: Program, startTime: Int, finishTime: Int?, success: Boolean, score: Int) = dbQuery {
-        Run.new {
+    fun createRun(program: Program, startTime: Long, finishTime: Long, success: Boolean, score: Int): Run {
+        return Run.new {
             this.program = program
             this.level = program.level
             this.startTime = startTime

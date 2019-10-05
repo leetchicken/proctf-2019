@@ -4,13 +4,17 @@ import ae.hitb.proctf.drone_racing.programming.jvm.StatementToJvmCompiler
 import ae.hitb.proctf.drone_racing.programming.parsing.readProgram
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.jetbrains.exposed.dao.with
 import org.jetbrains.exposed.sql.and
 import java.nio.file.*
 
 const val PROGRAMS_PATH = "./programs"
 const val PROGRAM_FILENAME_LENGTH = 20
 
+@ExperimentalStdlibApi
 class ProgramService {
+    private val compiler = StatementToJvmCompiler()
+
     suspend fun findProgramById(id: Int) = dbQuery {
         Program.findById(id)
     }
@@ -19,11 +23,11 @@ class ProgramService {
         Program.find { Programs.author eq user.id }.toList()
     }
 
-    suspend fun findUserPrograms(user: User, level: Level) = dbQuery {
-        Program.find { (Programs.author eq user.id) and (Programs.level eq level.id) }.toList()
+    fun findUserPrograms(user: User, level: Level): List<Program> {
+        return Program.find { (Programs.author eq user.id) and (Programs.level eq level.id) }.with(Program::author).toList()
     }
 
-    private fun ensureDirectoryExists() {
+    private fun ensureProgramsDirectoryExists() {
         val path = Paths.get(PROGRAMS_PATH)
         if (! Files.exists(path))
             Files.createDirectory(path)
@@ -39,10 +43,10 @@ class ProgramService {
     }
 
     suspend fun createProgram(author: User, level: Level, title: String, sourceCode: String): Program {
-        ensureDirectoryExists()
+        ensureProgramsDirectoryExists()
+
         val program = readProgram(sourceCode)
-        val compiler = StatementToJvmCompiler()
-        val bytecode = compiler.compile(title, program)
+        val bytecode = replaceClassName(compiler.compile(program), "GeneratedClass", title)
         val filename = generateAlphanumeric(PROGRAM_FILENAME_LENGTH) + ".class"
         val path = Paths.get(PROGRAMS_PATH, filename)
 
@@ -58,5 +62,34 @@ class ProgramService {
                 this.file = filename
             }
         }
+    }
+
+    private fun replaceClassName(classBytes: ByteArray, currentClassName: String, newClassName: String): ByteArray {
+        fun isSubsequenceEqual(first: ByteArray, firstIndex: Int, second: ByteArray, secondIndex: Int, length: Int): Boolean {
+            val f = first.drop(firstIndex).take(length)
+            val s = second.drop(secondIndex).take(length)
+            return f.zip(s).all { (b1, b2) -> b1 == b2 }
+        }
+
+        fun findPosition(byteArray: ByteArray, subsequence: ByteArray): Pair<Int, Int>? {
+            byteArray.indices.forEach { index ->
+                if (isSubsequenceEqual(byteArray, index, subsequence, 0, subsequence.size))
+                    return Pair(index, index + subsequence.size)
+            }
+            return null
+        }
+
+        fun placeBytes(bytes: ByteArray, startIndex: Int, finishIndex: Int, newBytes: ByteArray): ByteArray {
+            return bytes.take(startIndex).toByteArray() + newBytes + bytes.drop(finishIndex)
+        }
+
+        check(newClassName.length in 1..currentClassName.length) { "Title should be not empty and not longer than ${currentClassName.length} chars" }
+        var className = newClassName
+        while (className.length < currentClassName.length)
+            className += "\u0000"
+
+        val position = findPosition(classBytes, currentClassName.encodeToByteArray()) ?: return classBytes
+
+        return placeBytes(classBytes, position.first, position.second, className.encodeToByteArray())
     }
 }

@@ -5,6 +5,6 @@
 *.iml
 *.ipr
 *.iws
-databas.h2.*
+database.h2.mv.db
 session.key
 Program.class

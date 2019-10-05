@@ -9,7 +9,7 @@ const val TIME_LIMIT_MILLISECONDS = 100
 
 class CodeRunner {
     fun runCode(classFilename: String, params: Map<String, String>, maze: String): RunResult {
-        val classBytes = Files.readAllBytes(Paths.get(PROGRAMS_PATH, classFilename))
+        val classBytes = Files.readAllBytes(Paths.get(classFilename))
         val classLoader = ByteArrayClassLoader(mapOf("Code" to classBytes))
         var movesCount= Int.MAX_VALUE
         var success = false
@@ -46,7 +46,7 @@ class CodeRunner {
             val startTime = System.currentTimeMillis()
             while (System.currentTimeMillis() - startTime < TIME_LIMIT_MILLISECONDS) {
                 if (! codeThread.isAlive) {
-                    println("Thread is dead. Welcome the thread!")
+                    println("Thread is dead. Long live the thread!")
                     break
                 }
                 println("Continue checking")

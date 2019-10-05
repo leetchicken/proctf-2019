@@ -8,8 +8,8 @@ class StatementToJvmCompiler : Compiler<Program, ByteArray> {
     private val statementToStackCompiler = StatementToStackCompiler()
     private val stackToJvmCompiler = StackToJvmCompiler()
 
-    override fun compile(programName: String, source: Program): ByteArray {
-        val stackProgram = statementToStackCompiler.compile(programName, source)
-        return stackToJvmCompiler.compile(programName, stackProgram)
+    override fun compile(source: Program): ByteArray {
+        val stackProgram = statementToStackCompiler.compile(source)
+        return stackToJvmCompiler.compile(stackProgram)
     }
 }

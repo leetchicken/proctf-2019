@@ -28,7 +28,7 @@ write(sum)
 """);
 
         val stackCompiler = StatementToStackCompiler()
-        val stackProgram = stackCompiler.compile("Program", program)
+        val stackProgram = stackCompiler.compile(program)
         val stackInterpreter = NaiveStackInterpreter()
         val state = stackInterpreter.run(stackProgram, listOf())
         println(state.output.joinToString("\n") { it?.toString() ?: ">" })
@@ -85,6 +85,7 @@ goRight()
         compileAndRunProgram(program)
     }
 
+    @ExperimentalUnsignedTypes
     @Test
     fun hackTest() {
         val program = readProgram("""
@@ -102,8 +103,7 @@ openBrowser("yandex.ru")
     @ExperimentalUnsignedTypes
     private fun compileAndRunProgram(program: Program) {
         val stackCompiler = StatementToStackCompiler()
-        val className = "Program"
-        val stackProgram = stackCompiler.compile(className, program)
+        val stackProgram = stackCompiler.compile(program)
 
         stackProgram.functions.forEach {
             println("========= " + it.key.name.toUpperCase() + " ===========")
@@ -111,13 +111,13 @@ openBrowser("yandex.ru")
         }
 
         val jvmCompiler = StackToJvmCompiler()
-        val jvmBytecode = jvmCompiler.compile(className, stackProgram)
+        val jvmBytecode = jvmCompiler.compile(stackProgram)
         println(jvmBytecode.joinToString(separator = " ") { it.toUByte().toString() })
 
         File("Program.class").writeBytes(jvmBytecode)
 
-        val classLoader = ByteArrayClassLoader(mapOf(className to jvmBytecode))
-        val klass = classLoader.loadClass(className)
+        val classLoader = ByteArrayClassLoader(mapOf("Program" to jvmBytecode))
+        val klass = classLoader.loadClass("Program")
         val main = klass.getMethod("main")
         main.invoke(null)
     }
@@ -149,7 +149,7 @@ class ByteArrayClassLoader(private val classBytes: Map<String, ByteArray>): Clas
     override fun findClass(name: String?): Class<*> {
         if (classBytes.containsKey(name)) {
             val thisClassBytes = classBytes[name]!!
-            return defineClass(name, thisClassBytes, 0, thisClassBytes.size)
+            return defineClass(null, thisClassBytes, 0, thisClassBytes.size)
         }
         return super.findClass(name)
     }

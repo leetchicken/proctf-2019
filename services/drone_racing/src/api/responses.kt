@@ -16,7 +16,7 @@ data class LevelsResponse(val levels: List<Level>) : IApiResponse
 data class LevelResponse(val level: Level) : IApiResponse
 
 data class ProgramsResponse(val programs: List<Program>) : IApiResponse
-data class ProgramResponse(val program: Program) : IApiResponse
+data class ProgramResponse(val programId: Int) : IApiResponse
 
 data class RunsResponse(val runs: List<Run>) : IApiResponse
-data class RunResponse(val run: Run) : IApiResponse
+data class RunResponse(val run: Run, val error: Boolean, val errorMessage: String) : IApiResponse
