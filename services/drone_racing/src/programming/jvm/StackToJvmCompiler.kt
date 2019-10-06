@@ -84,6 +84,10 @@ class StackToJvmCompiler : Compiler<StackProgram, ByteArray> {
 
                     is Push -> visitLdcInsn(s.constant.value)
                     is Ld -> visitVarInsn(ILOAD, variablesMap[s.v]!!)
+                    is LdParam -> {
+                        visitLdcInsn(s.p.name)
+                        visitMethodInsn(INVOKESTATIC, "java/lang/System", "getProperty", "(Ljava/lang/String;)Ljava/lang/String;", false)
+                    }
                     is St -> visitVarInsn(ISTORE, variablesMap[s.v]!!)
                     is Unop -> when (s.kind) {
                         Not -> {

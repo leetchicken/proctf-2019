@@ -3,13 +3,13 @@ package ae.hitb.proctf.drone_racing.programming
 import ae.hitb.proctf.drone_racing.programming.jvm.StackToJvmCompiler
 import ae.hitb.proctf.drone_racing.programming.language.Program
 import ae.hitb.proctf.drone_racing.programming.parsing.*
-import ae.hitb.proctf.drone_racing.programming.stack.NaiveStackInterpreter
 import ae.hitb.proctf.drone_racing.programming.stack.StatementToStackCompiler
 import java.io.File
 import java.nio.charset.Charset
 import kotlin.test.*
 
 class ProgrammingTests {
+    @ExperimentalUnsignedTypes
     @Test
     fun parsingTest() {
         val program: Program = readProgram("""
@@ -27,11 +27,7 @@ write(getSum(a))
 write(sum)
 """);
 
-        val stackCompiler = StatementToStackCompiler()
-        val stackProgram = stackCompiler.compile(program)
-        val stackInterpreter = NaiveStackInterpreter()
-        val state = stackInterpreter.run(stackProgram, listOf())
-        println(state.output.joinToString("\n") { it?.toString() ?: ">" })
+        compileAndRunProgram(program)
     }
 
     @ExperimentalUnsignedTypes
@@ -76,16 +72,13 @@ begin
     return 2 * x
 end
 
-fun set_maze(s: string)
+fun set_maze(s: str)
 begin
   
 end
 
 print_number(1)
 print_number(get_double(100))
-
-goUp()
-goRight()
 """)
         compileAndRunProgram(program)
     }
@@ -102,6 +95,14 @@ openBrowser("yandex.ru")
         System.getProperties().forEach {
             println(it)
         }
+        compileAndRunProgram(program)
+    }
+
+    @ExperimentalUnsignedTypes
+    @Test
+    fun paramTest() {
+        val program = readProgram("write_string(\$n)")
+        System.setProperty("n", "HELLO WORLD")
         compileAndRunProgram(program)
     }
 

@@ -80,7 +80,7 @@ class StatementToStackCompiler : Compiler<Program, StackProgram> {
         fun emit(statement: StackStatement, atIndex: Int = program.size) {
             val currentStack = stackContent[atIndex]!!
             val modifiedStack : List<StackStatement> = when (statement) {
-                is Ld, is Push, is PushPooled -> currentStack + statement
+                is Ld, is LdParam, is Push, is PushPooled -> currentStack + statement
                 is St, is Jz, Ret1, Pop -> currentStack.dropLast(1)
                 is Call -> {
                     val cutStack = currentStack.dropLast(statement.function.parameterNames.size)
@@ -150,6 +150,7 @@ class StatementToStackCompiler : Compiler<Program, StackProgram> {
                     emit(Call(Intrinsic.STRDUP))
                 }
                 is Variable -> emit(Ld(expression))
+                is Param -> emit(LdParam(expression))
                 is UnaryOperation -> {
                     compileExpression(expression.operand)
                     emit(Unop(expression.kind))
