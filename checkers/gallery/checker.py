@@ -172,7 +172,6 @@ def get(host, flag_id, flag, vuln):
     	verdict(CORRUPT, "Can't post replica", f"Can't post replica")
 
     reward = ans.get("reward")
-    dist = ans.get("dist")
     if reward != flag:
         verdict(CORRUPT, "Can't get valid reward", f"Can't get reward for replica {file_name}: ans '{ans}'")
 
