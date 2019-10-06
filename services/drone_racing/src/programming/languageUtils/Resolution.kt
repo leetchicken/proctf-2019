@@ -16,6 +16,7 @@ private class Resolution(val program: Program) {
     private fun <T : Expression> resolveCallsIn(expression: Expression): T = when (expression) {
         is IntLiteral -> expression
         is Variable -> expression
+        is Param -> expression
         is FunctionCall -> {
             val resolvedArgs = expression.argumentExpressions.map<Expression, Expression> { resolveCallsIn(it) }
             if (expression.functionDeclaration is UnresolvedFunction) {

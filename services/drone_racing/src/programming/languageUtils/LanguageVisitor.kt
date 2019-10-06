@@ -70,6 +70,7 @@ open class LanguageVisitor {
         is IntLiteral -> visitConst(expression)
         is StringLiteral -> visitStringLiteral(expression)
         is Variable -> visitVariable(expression)
+        is Param -> visitParam(expression)
         is FunctionCall -> visitFunctionCall(expression)
         is UnaryOperation -> visitUnaryOperation(expression)
         is BinaryOperation -> visitBinaryOperation(expression)
@@ -79,6 +80,8 @@ open class LanguageVisitor {
     open fun visitStringLiteral(stringLiteral: StringLiteral): Any = Unit
 
     open fun visitVariable(variable: Variable): Any = Unit
+
+    open fun visitParam(param: Param): Any = Unit
 
     open fun visitConst(const: IntLiteral): Any = Unit
 

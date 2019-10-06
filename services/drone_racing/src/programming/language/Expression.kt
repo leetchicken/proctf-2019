@@ -4,6 +4,8 @@ sealed class Expression
 
 data class Variable(val name: String) : Expression()
 
+data class Param(val name: String): Expression()
+
 data class IntLiteral(val value: Int) : Expression()
 data class StringLiteral(val value: String) : Expression()
 

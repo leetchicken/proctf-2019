@@ -41,6 +41,8 @@ object ProgramGrammar : Grammar<Program>() {
     private val ASSIGN by token("=")
     private val DOTS by token("\\.\\.")
 
+    private val DOLLAR by token("\\$")
+
     private val IF by token("if\\b")
     private val THEN by token("then\\b")
     private val ELIF by token("elif\\b")
@@ -121,13 +123,15 @@ object ProgramGrammar : Grammar<Program>() {
 
     private val variable by ID use { Variable(text) }
 
+    private val param by -DOLLAR * ID use { Param(text) }
+
     private val stringLiteral by STRING_LITERAL use { StringLiteral(text.removeSurrounding("\"", "\"")) }
 
     private val notTerm by (-NOT * parser(this::term)) map { UnaryOperation(it, Not) }
     private val parenTerm by -LPAR * parser(this::expression) * -RPAR
 
     private val nonIndexedTerm: Parser<Expression> by
-        intConst or functionCall or notTerm or variable or parenTerm or stringLiteral or intArrayLiteral or boxedArrayLiteral
+        intConst or functionCall or notTerm or variable or param or parenTerm or stringLiteral or intArrayLiteral or boxedArrayLiteral
 
     private val indexedTerm: Parser<FunctionCall> by
         (nonIndexedTerm * oneOrMore(-LSQ * parser(ProgramGrammar::expression) * -RSQ))
