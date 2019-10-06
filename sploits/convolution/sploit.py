@@ -3,6 +3,15 @@ from __future__ import print_function
 from sys import argv, stderr
 import requests
 import json
+from enum import Enum
+
+class Step(Enum):
+	kLeft = 1
+	kMatch = 2
+	kRight = 3
+	kRepeat = 4
+
+kAlphabet = ['.', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '=', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a']
 
 addr = argv[1]
 
@@ -13,54 +22,20 @@ if r.status_code != 200:
 	print("Status code %d" % r.status_code)
 	exit(1)
 
-someId = r.text.splitlines()[0]
+someId = "123456"#r.text.splitlines()[0]
 print("Got some kernel id: " + someId)
 
-#
-print("Post calibration images to determine average time with and without penalty...")
-url = 'http://%s/process?kernel-id=%s' % (addr, someId)
-files = {'image0' : open("pngs/white.png", 'rb').read(), 'image1' : open("pngs/white.png", 'rb').read(), 'image2' : open("pngs/black0.png", 'rb').read(), 'image3' : open("pngs/black0.png", 'rb').read()}
-r = requests.post(url, files=files)
-if r.status_code != 200:
-	print("Status code %d" % r.status_code)
-	exit(1)
+def measure(byteIdx, symbolIdx):
+	batch = {'image0' : open("pngs/white.png", 'rb').read(), 'image2' : open("pngs/black0.png", 'rb').read()}
 
-print(r.text)
-timings = json.loads(r.text)
-average  = timings['image0']['red_channel']
-average += timings['image0']['green_channel']
-average += timings['image0']['blue_channel']
-average += timings['image0']['alpha_channel']
-average += timings['image1']['red_channel']
-average += timings['image1']['green_channel']
-average += timings['image1']['blue_channel']
-average += timings['image1']['alpha_channel']
-noPenaltyAverage = average / 8.0
-print("Average time without penalty = %f" % noPenaltyAverage)
+	namePrev = "%u_%s" % (byteIdx, kAlphabet[symbolIdx - 1])
+	batch[namePrev] = open("pngs/%s.png" % namePrev, 'rb').read()
 
-average  = timings['image2']['red_channel']
-average += timings['image2']['green_channel']
-average += timings['image2']['blue_channel']
-average += timings['image2']['alpha_channel']
-average += timings['image3']['red_channel']
-average += timings['image3']['green_channel']
-average += timings['image3']['blue_channel']
-average += timings['image3']['alpha_channel']
-penaltyAverage = average / 8.0
-print("Average time with penalty = %f" % penaltyAverage)
+	nameCur = "%u_%s" % (byteIdx, kAlphabet[symbolIdx])
+	batch[nameCur] = open("pngs/%s.png" % nameCur, 'rb').read()
 
-mean = (penaltyAverage - noPenaltyAverage) / 2.0 + noPenaltyAverage
-dispersion = (penaltyAverage - noPenaltyAverage) * 0.1
-print("Mean = %f" % mean)
-print("Dispersion = %f" % dispersion)
-
-#
-kAlphabet = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '=', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']
-flag = ""
-for byteIdx in range(0,4):
-	batch = {}
-	for	s in kAlphabet:
-		batch["%u_%s" % (byteIdx, s)] = open("pngs/%u_%s.png" % (byteIdx, s), 'rb').read()
+	nameNext = "%u_%s" % (byteIdx, kAlphabet[symbolIdx + 1])
+	batch[nameNext] = open("pngs/%s.png" % nameNext, 'rb').read()
 	
 	url = 'http://%s/process?kernel-id=%s' % (addr, someId)
 	r = requests.post(url, files=batch)
@@ -68,9 +43,26 @@ for byteIdx in range(0,4):
 		print("Status code %d" % r.status_code)
 		exit(1)
 
-	j = json.loads(r.text)
+	timings = json.loads(r.text)
 
-	channelIdx = byteIdx / 4
+	average  = timings['image0']['red_channel']
+	average += timings['image0']['green_channel']
+	average += timings['image0']['blue_channel']
+	average += timings['image0']['alpha_channel']
+	noPenaltyAverage = average / 4.0
+	print("Average time without penalty = %f" % noPenaltyAverage)
+
+	average  = timings['image2']['red_channel']
+	average += timings['image2']['green_channel']
+	average += timings['image2']['blue_channel']
+	average += timings['image2']['alpha_channel']
+	penaltyAverage = average / 4.0
+	print("Average time with penalty = %f" % penaltyAverage)
+
+	if noPenaltyAverage > penaltyAverage:
+		return Step.kRepeat, 0
+
+	channelIdx = byteIdx // 8
 	if channelIdx == 0:
 		channelName = 'red_channel'
 	elif channelIdx == 1:
@@ -80,16 +72,72 @@ for byteIdx in range(0,4):
 	elif channelIdx == 3:
 		channelName = 'alpha_channel'
 
-	timings = ""
-	for	s in kAlphabet:
-		name = "%u_%s" % (byteIdx, s)
-		timings += s + " : " + str(j[name][channelName]) + " "
-	print(timings)
+	tPrev = timings[namePrev][channelName]
+	tCur = timings[nameCur][channelName]
+	tNext = timings[nameNext][channelName]
 
-	for	s in kAlphabet:
-		name = "%u_%s" % (byteIdx, s)
-		if abs(j[name][channelName] - mean) < dispersion:
-			flag += s
-			break
+	print(namePrev + ": " + str(tPrev))
+	print(nameCur + ": " + str(tCur))
+	print(nameNext + ": " + str(tNext))
 
-print(flag)
+	d0 = abs(tPrev - penaltyAverage)
+	d1 = abs(tPrev - noPenaltyAverage)
+	prevResult = d0 > d1
+
+	d0 = abs(tCur - penaltyAverage)
+	d1 = abs(tCur - noPenaltyAverage)
+	curResult = d0 > d1
+
+	d0 = abs(tNext - penaltyAverage)
+	d1 = abs(tNext - noPenaltyAverage)
+	nextResult = d0 > d1
+
+	if not prevResult and not curResult and not nextResult:
+		print("Right")
+		return Step.kRight, 0
+	elif prevResult and curResult and nextResult:
+		print("Left")
+		return Step.kLeft, 0
+	elif not prevResult and curResult and nextResult:
+		print("Match")
+		return Step.kMatch, symbolIdx
+	elif not prevResult and not curResult and nextResult:
+		print("Match")
+		return Step.kMatch, symbolIdx + 1
+	else:
+		print("Repeat")
+		return Step.kRepeat, 0
+
+
+def binary_search(byteIdx, l, r):
+	repeatsNum = 0
+	while l <= r:
+		mid = l + (r - l) // 2
+		print(kAlphabet[mid], l, r)
+		result, symbolIdx = measure(byteIdx, mid)
+		if result == Step.kLeft:
+			r = mid - 1
+		elif result == Step.kRight:
+			l = mid + 1
+		elif result == Step.kMatch:
+			return True, symbolIdx
+		else:
+			if repeatsNum == 2:
+				return False, 0
+			repeatsNum += 1
+			continue
+	return False, 0
+
+
+#idx = 15
+#FLAG = "ABCDEFGHIJKLMNOPQRSTUVWXYZ012345"
+#result, symbolIdx = binary_search(idx, 1, len(kAlphabet) - 2)
+#print(result, kAlphabet[symbolIdx], FLAG[idx])
+#exit(0)
+
+
+flag = ""
+for byteIdx in range(0,31):
+	result, symbolIdx = binary_search(byteIdx, 1, len(kAlphabet) - 2)
+	flag += kAlphabet[symbolIdx]
+print(flag + "=")

@@ -68,9 +68,9 @@ int main(int argc, char** argv)
 						{1,2,3},
 						{2,2,3}};
 
-    const char kAlphabet[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '=', 'A', 'B', 'C', 
-                              'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 
-                              'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'};
+    const char kAlphabet[] = {'.', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 
+							  '=', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 
+							  'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a'};
 
 	for(uint32_t byteIdx = 0; byteIdx < 32; byteIdx++)
 	{
