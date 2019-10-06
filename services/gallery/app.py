@@ -44,15 +44,6 @@ IMG_HEADERS = [
     ("Cache-Control", "max-age=86400"),
 ]
 
-#MODEL_PATH = "models/model.h5"
-#MODEL_PATH = "model_big_30_30.h5"
-
-# train_model = dnn.create_and_train_model()
-# model = dnn.create_model(train_model)
-# model.save(MODEL_PATH)
-
-
-
 model = dnn.load(MODEL_PATH)
 
 def gen_json_ans(obj):

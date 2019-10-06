@@ -1,5 +1,7 @@
 #!/bin/sh
 
+export PYTHONUNBUFFERED=1
+
 chown SePtoN: /home/SePtoN/data
 chmod 755 /home/SePtoN
 chmod 700 /home/SePtoN/data

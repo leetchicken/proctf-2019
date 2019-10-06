@@ -1,0 +1,15 @@
+version: '2.0'
+services:
+  gallery:
+    build: .
+    ports:
+      - "0.0.0.0:80:80"
+    volumes:
+      - ./data:/home/gallery/data
+      - ./static:/home/gallery/static
+      - ./start.sh:/home/gallery/start.sh
+      - ./app.py:/home/gallery/app.py
+      - ./dnn.py:/home/gallery/dnn.py
+    restart: unless-stopped
+    mem_limit: 2000m
+	container_name: gallery
