@@ -20,7 +20,7 @@ from user_agents import USER_AGENTS
 
 OK, CORRUPT, MUMBLE, DOWN, CHECKER_ERROR = 101, 102, 103, 104, 110
 
-PORT = 10001
+PORT = 80
 TIMEOUT = 3
 
 SCRIPT_PATH = pathlib.Path(__file__).parent
