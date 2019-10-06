@@ -94,7 +94,7 @@ def post_replica(query, body):
         return gen_json_ans({"error": "can't remember painting"})
 
     replica_emb = model.predict(np.array([np.array(replica)]))
-    dist = np.linalg.norm(painting_emb - replica_emb)
+    dist = np.float64(np.linalg.norm(painting_emb - replica_emb))
 
     if dist >= 0.05:
         return gen_json_ans({"dist": dist})
@@ -106,7 +106,6 @@ def post_replica(query, body):
 
 def put_painting(query, body):
     reward = query["reward"][0]
-    print("got reward:", reward)
 
     try:
         painting = parse_jpg_bytes(body)
