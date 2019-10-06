@@ -9,7 +9,7 @@ debug: CXXFLAGS += -O0 -DDEBUG=1
 debug: OUTPUT = convolution-dbg
 debug: convolution
 
-release: CXXFLAGS += -O2
+release: CXXFLAGS += -O3
 release: OUTPUT = convolution
 release: convolution
 

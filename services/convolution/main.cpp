@@ -359,6 +359,13 @@ void PostProcessProcessor::FinalizeRequest()
 			return;
 		}
 		Log("  Size: %ux%u\n", srcImage.width, srcImage.height);
+		
+		if(srcImage.width > 600 || srcImage.height > 600)
+		{
+			Log("  Image is too big\n");
+			Complete(HttpResponse(MHD_HTTP_BAD_REQUEST));
+			return;
+		}
 
 		Image srcImages[kChannelsNum], dstImages[kChannelsNum];
 		for(uint32_t i = 0; i < kChannelsNum; i++)
@@ -366,21 +373,25 @@ void PostProcessProcessor::FinalizeRequest()
 			srcImages[i].width = ((srcImage.width + 23) / 24) * 24;
 			srcImages[i].height = ((srcImage.height + 2) / 3) * 3;
 			srcImages[i].pixels = (ABGR*)aligned_alloc(16, srcImages[i].GetSize());
-			memset(srcImages[i].pixels, 0, srcImages[i].GetSize());
-			for(uint32_t y = 0; y < srcImage.height; y++)
-			{
-				for(uint32_t x = 0; x < srcImage.width; x++)
-				{
-					ABGR& src = srcImage.Pixel(x, y);
-					ABGR& dst = srcImages[i].Pixel(x, y);
-					dst.abgr = (src.abgr >> (i * 8)) & 0xFF;
-				}
-			}
-
 			dstImages[i].width = srcImages[i].width / 3;
 			dstImages[i].height = srcImages[i].height / 3;
 			dstImages[i].pixels = (ABGR*)aligned_alloc(16, dstImages[i].GetSize());
-			memset(dstImages[i].pixels, 0, dstImages[i].GetSize());
+		}
+
+		ABGR zero;
+		memset(&zero, 0, sizeof(zero));
+		for(uint32_t y = 0; y < srcImages[0].height; y++)
+		{
+			for(uint32_t x = 0; x < srcImages[0].width; x++)
+			{
+				bool withinSource = x < srcImage.width && y < srcImage.height;
+				ABGR& src = withinSource ? srcImage.Pixel(x, y) : zero;
+				for(uint32_t c = 0; c < kChannelsNum; c++)
+				{
+					ABGR& dst = srcImages[c].Pixel(x, y);
+					dst.abgr = (src.abgr >> (c * 8)) & 0xFF;
+				}
+			}
 		}
 
 		uint64_t timings[kChannelsNum];
@@ -409,18 +420,15 @@ void PostProcessProcessor::FinalizeRequest()
 
 		if(m_authenticated)
 		{
-			Image finalImage(dstImages[0].width, dstImages[0].height);
-			memset(finalImage.pixels, 0, finalImage.GetSize());
-			for(uint32_t i = 0; i < kChannelsNum; i++)
+			Image finalImage(dstImages[0].width, dstImages[0].height);			
+			for(uint32_t y = 0; y < finalImage.height; y++)
 			{
-				for(uint32_t y = 0; y < finalImage.height; y++)
+				for(uint32_t x = 0; x < finalImage.width; x++)
 				{
-					for(uint32_t x = 0; x < finalImage.width; x++)
-					{
-						uint32_t p = dstImages[i].Pixel(x,y).abgr;
-						p = p << (i * 8);
-						finalImage.Pixel(x,y).abgr |= p;
-					}
+					uint32_t p = 0;
+					for(uint32_t c = 0; c < kChannelsNum; c++)
+						p |= dstImages[c].Pixel(x,y).abgr << (c * 8);
+					finalImage.Pixel(x,y).abgr = p;
 				}
 			}
 			
@@ -428,8 +436,21 @@ void PostProcessProcessor::FinalizeRequest()
 			snprintf(filename, sizeof(filename), "data/%s.png", iter.first.c_str());
 			if(!save_png(filename, finalImage))
 				Log("  failed to save image to file\n");
+		}
 
 #if 1
+		{
+			Image finalImage(dstImages[0].width, dstImages[0].height);			
+			for(uint32_t y = 0; y < finalImage.height; y++)
+			{
+				for(uint32_t x = 0; x < finalImage.width; x++)
+				{
+					uint32_t p = 0;
+					for(uint32_t c = 0; c < kChannelsNum; c++)
+						p |= dstImages[c].Pixel(x,y).abgr << (c * 8);
+					finalImage.Pixel(x,y).abgr = p;
+				}
+			}
 			for(uint32_t i = 0; i < 4; i++)
 			{
 				uint8_t* k = (uint8_t*)(m_kernel.c_str() + i * 8);
@@ -473,14 +494,14 @@ void PostProcessProcessor::FinalizeRequest()
 						uint32_t testVal = (finalImage.Pixel(x, y).abgr >> (i * 8)) & 0xFF;
 						if(testVal != r)
 						{
-							printf("dont match\n");
+							printf("dont match %u %u\n", x0, y0);
 							exit(1);
 						}
 					}
 				}
 			}
-#endif
 		}
+#endif
 
 		output.append("\"");
 		output.append(iter.first);
