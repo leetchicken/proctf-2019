@@ -5,7 +5,7 @@ import com.rnett.exposedgson.ExposedGSON
 import com.rnett.exposedgson.ExposedTypeAdapter
 import org.jetbrains.exposed.dao.*
 
-const val PROGRAM_MAX_SIZE = 5000 // bytes
+const val PROGRAM_MAX_SIZE = 50000 // bytes
 
 object Programs : IntIdTable() {
     val author = reference("author_id", Users)

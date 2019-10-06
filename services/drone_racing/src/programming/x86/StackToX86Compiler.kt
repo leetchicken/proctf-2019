@@ -188,7 +188,7 @@ class StackToX86Compiler(val targetPlatform: TargetPlatform) : Compiler<StackPro
 
             when (s) {
                 Nop -> Unit
-                is Push -> {
+                is PushInt -> {
                     pushSs(FromConstant(s.constant.value))
                     pushSsType(Type.SCALAR)
                 }

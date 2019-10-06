@@ -51,6 +51,21 @@ end
     }
 
     @ExperimentalUnsignedTypes
+    @ExperimentalStdlibApi
+    @Test
+    fun returnStrTest() {
+        val program = readProgram("""
+fun hello(): str
+begin
+    return "hello world"
+end
+
+write_string(hello())
+""")
+        compileAndRunProgram(program)
+    }
+
+    @ExperimentalUnsignedTypes
     @Test
     fun functionTest() {
         val program = readProgram("""

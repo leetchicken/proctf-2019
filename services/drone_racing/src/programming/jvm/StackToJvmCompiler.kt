@@ -29,7 +29,7 @@ class StackToJvmCompiler : Compiler<StackProgram, ByteArray> {
             visitEnd()
         }
 
-        source.functions.forEach { (declaration, code) -> compileFunction(declaration, code, cw, declaration == source.entryPoint, source.literalPool) }
+        source.functions.forEach { (declaration, code) -> compileFunction(declaration, code, cw, source.literalPool) }
 
         return cw.toByteArray()
     }
@@ -44,6 +44,8 @@ class StackToJvmCompiler : Compiler<StackProgram, ByteArray> {
     }
 
     private fun findFunctionVariableType(function: FunctionDeclaration, v: Variable): FunctionType {
+        if (v == returnDataVariable && (function.returnType in listOf(FunctionType.STRING, FunctionType.INTEGER)))
+            return function.returnType
         val index = function.parameterNames.indexOf(v)
         if (index < 0)
             return FunctionType.INTEGER
@@ -54,7 +56,6 @@ class StackToJvmCompiler : Compiler<StackProgram, ByteArray> {
         function: FunctionDeclaration,
         source: List<StackStatement>,
         cw: ClassWriter,
-        isMain: Boolean,
         literalPool: List<CharArray>
     ) {
         val signature = "(" + function.parameterTypes.joinToString { getJavaType(it) } + ")" + getJavaType(function.returnType)
@@ -64,7 +65,7 @@ class StackToJvmCompiler : Compiler<StackProgram, ByteArray> {
             val endLabel = Label().apply { info = "end" }
             visitLabel(beginLabel)
 
-            var variablesMap = function.parameterNames.withIndex().associate { (index, it) -> it to index }.toMutableMap()
+            val variablesMap = function.parameterNames.withIndex().associate { (index, it) -> it to index }.toMutableMap()
 
             val functionVariables = (collectVariables(source) + function.parameterNames).distinct()
             val functionLocalVariables = functionVariables - function.parameterNames
@@ -82,13 +83,24 @@ class StackToJvmCompiler : Compiler<StackProgram, ByteArray> {
                 when (s) {
                     Nop -> visitInsn(NOP)
 
-                    is Push -> visitLdcInsn(s.constant.value)
-                    is Ld -> visitVarInsn(ILOAD, variablesMap[s.v]!!)
+                    is PushInt -> visitLdcInsn(s.constant.value)
+                    is PushString -> visitLdcInsn(s.constant.value)
+                    is Ld -> {
+                        if (s.v == returnDataVariable && (function.returnType == FunctionType.INTEGER || function.returnType == FunctionType.VOID) || s.v != returnDataVariable)
+                            visitVarInsn(ILOAD, variablesMap[s.v]!!)
+                        else
+                            visitVarInsn(ALOAD, variablesMap[s.v]!!)
+                    }
                     is LdParam -> {
                         visitLdcInsn(s.p.name)
                         visitMethodInsn(INVOKESTATIC, "java/lang/System", "getProperty", "(Ljava/lang/String;)Ljava/lang/String;", false)
                     }
-                    is St -> visitVarInsn(ISTORE, variablesMap[s.v]!!)
+                    is St -> {
+                        if (s.v == returnDataVariable && (function.returnType == FunctionType.INTEGER || function.returnType == FunctionType.VOID) || s.v != returnDataVariable)
+                            visitVarInsn(ISTORE, variablesMap[s.v]!!)
+                        else
+                            visitVarInsn(ASTORE, variablesMap[s.v]!!)
+                    }
                     is Unop -> when (s.kind) {
                         Not -> {
                             val labelIfNz = Label()
@@ -171,7 +183,10 @@ class StackToJvmCompiler : Compiler<StackProgram, ByteArray> {
                         visitInsn(RETURN)
                     }
                     Ret1 -> {
-                        visitInsn(IRETURN)
+                        if (function.returnType == FunctionType.STRING)
+                            visitInsn(ARETURN)
+                        else
+                            visitInsn(IRETURN)
 //                        visitInsn(POP)
                     }
                     Pop -> visitInsn(POP)

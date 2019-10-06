@@ -6,7 +6,8 @@ sealed class StackStatement
 
 object Nop : StackStatement()
 object Pop : StackStatement()
-data class Push(val constant: IntLiteral) : StackStatement()
+data class PushInt(val constant: IntLiteral) : StackStatement()
+data class PushString(val constant: StringLiteral) : StackStatement()
 data class PushPooled(val id: Int) : StackStatement()
 data class Ld(val v: Variable) : StackStatement()
 data class LdParam(var p: Param) : StackStatement()

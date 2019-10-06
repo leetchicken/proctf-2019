@@ -80,7 +80,7 @@ class StatementToStackCompiler : Compiler<Program, StackProgram> {
         fun emit(statement: StackStatement, atIndex: Int = program.size) {
             val currentStack = stackContent[atIndex]!!
             val modifiedStack : List<StackStatement> = when (statement) {
-                is Ld, is LdParam, is Push, is PushPooled -> currentStack + statement
+                is Ld, is LdParam, is PushInt, is PushString, is PushPooled -> currentStack + statement
                 is St, is Jz, Ret1, Pop -> currentStack.dropLast(1)
                 is Call -> {
                     val cutStack = currentStack.dropLast(statement.function.parameterNames.size)
@@ -143,7 +143,7 @@ class StatementToStackCompiler : Compiler<Program, StackProgram> {
         fun compileExpression(expression: Expression) {
             exprsDebugStack.push(expression)
             when (expression) {
-                is IntLiteral -> emit(Push(expression))
+                is IntLiteral -> emit(PushInt(expression))
                 is StringLiteral -> {
                     val stringIndex = saveStringToPool(expression)
                     emit(PushPooled(stringIndex))
@@ -174,15 +174,15 @@ class StatementToStackCompiler : Compiler<Program, StackProgram> {
         compileArrayLiteral = { arrayLiteral ->
             arrayLiteralDepth++
             val arrayVariable = Variable("###array-under-construction-$arrayLiteralDepth")
-            emit(Push(IntLiteral(arrayLiteral.initializers.size)))
-            emit(Push(IntLiteral(0)))
+            emit(PushInt(IntLiteral(arrayLiteral.initializers.size)))
+            emit(PushInt(IntLiteral(0)))
             val intrinsic = if (arrayLiteral.isBoxed) Intrinsic.ARRMAKEBOX else Intrinsic.ARRMAKE
             emit(Call(intrinsic))
             if (arrayLiteral.initializers.isNotEmpty()) {
                 emit(St(arrayVariable))
                 for ((index, init) in arrayLiteral.initializers.withIndex()) {
                     emit(Ld(arrayVariable))
-                    emit(Push(IntLiteral(index)))
+                    emit(PushInt(IntLiteral(index)))
                     compileExpression(init)
                     emit(Call(Intrinsic.ARRSET))
                     emit(Pop)
@@ -264,7 +264,7 @@ class StatementToStackCompiler : Compiler<Program, StackProgram> {
                             listOf(ExceptionType("###all-uncaught")), statement.finallyStatement != Pass
                         )
                         emit(Ld(currentExceptionVariable))
-                        emit(Push(IntLiteral(exceptionIds[branch.exceptionType]!!)))
+                        emit(PushInt(IntLiteral(exceptionIds[branch.exceptionType]!!)))
                         emit(Binop(Eq))
                         jzToNextBranchPlaceholder = emitJumpPlaceholder(::Jz)
 
@@ -304,13 +304,13 @@ class StatementToStackCompiler : Compiler<Program, StackProgram> {
                     exitHandlersStack.pop().also { check(it === tryExitHandler) }
 
                     emit(Ld(currentExceptionVariable))
-                    emit(Push(IntLiteral(0)))
+                    emit(PushInt(IntLiteral(0)))
                     emit(Binop(Eq))
                     val jzOnUncaughtExceptionPlaceholder = emitJumpPlaceholder(::Jz)
                     exitHandlerWhenThrown().throwPlaceholders.add(jzOnUncaughtExceptionPlaceholder)
                 }
                 is ThrowStatement -> {
-                    emit(Push(IntLiteral(exceptionIds[statement.exceptionType]!!)))
+                    emit(PushInt(IntLiteral(exceptionIds[statement.exceptionType]!!)))
                     emit(St(currentExceptionVariable))
                     compileExpression(statement.dataExpression)
                     emit(St(exceptionDataVariable))
@@ -321,7 +321,10 @@ class StatementToStackCompiler : Compiler<Program, StackProgram> {
             check(statementsDebugStack.pop() == statement)
         }
 
-        emit(Push(IntLiteral(0)))
+        if (function.returnType == FunctionType.STRING)
+            emit(PushString(StringLiteral("")))
+        else
+            emit(PushInt(IntLiteral(0)))
         emit(St(returnDataVariable))
 
         compileStatement(source)

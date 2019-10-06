@@ -1,0 +1,3 @@
+# Requirements for the checker of the drone-racing service (ProCTF 2019)
+
+requests
