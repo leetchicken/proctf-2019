@@ -11,8 +11,8 @@ import json
 import pathlib
 import base64
 import traceback
-#import PIL.Image
-#from io import BytesIO
+import PIL.Image
+from io import BytesIO
 
 import paintings
 
@@ -25,22 +25,17 @@ TIMEOUT = 3
 
 SCRIPT_PATH = pathlib.Path(__file__).parent
 
-#!!!!!!!!!!!!!!!
-#!!!!!!!!!!!!!!!
-#! TODO HTTPS !!
-#!!!!!!!!!!!!!!!
-#!!!!!!!!!!!!!!!
 
 def get_team_num(host):
 	m = re.search(r"\d+\.\d+\.(\d+)\.\d+", host)
 	if not m:
 		return None
 
-	return m.group(1)    
+	return m.group(1)
 
 def parse_jpg_bytes(body):
     try:
-        painting = PIL.Image.open(BytesIO(body))        
+        painting = PIL.Image.open(BytesIO(body))
     except Exception as e:
         return None
     return painting
@@ -75,19 +70,19 @@ def call_put_painting_api(session, host, reward, painting_bytes):
         return None
     ans_obj = ans.json()
     if type(ans_obj) is not dict:
-        return None    
+        return None
     return ans_obj
 
 def call_post_replica_api(session, host, painting_id, replica_bytes):
     url = "http://%s:%d/replica?id=%s" % (host, PORT, painting_id)
 
-    ans = session.post(url, data=painting_bytes)
+    ans = session.post(url, data=replica_bytes)
     if ans.status_code != 200:
         return None
     ans_obj = ans.json()
     if type(ans_obj) is not dict:
         return None
-    return ans_obj    
+    return ans_obj
 
 
 def call_get_preview_api(session, host, painting_id):
@@ -96,7 +91,7 @@ def call_get_preview_api(session, host, painting_id):
     ans = session.get(url)
     if ans.status_code != 200:
         return None
-    ans_bytes = ans.content    
+    ans_bytes = ans.content
     return ans_bytes
 
 def verdict(exit_code, public="", private=""):
@@ -138,7 +133,7 @@ def put(host, flag_id, flag, vuln):
     if painting_id is None:
         verdict(MUMBLE, "Painting id not found", "Painting id not found")
 
-    base64.b64encode(json.dumps({"file": file_name, "id": painting_id}).encode()).decode()
+    flag_id = base64.b64encode(json.dumps({"file": file_name, "id": painting_id}).encode()).decode()
 
     verdict(OK, flag_id)
 
@@ -148,7 +143,7 @@ def get(host, flag_id, flag, vuln):
     file_name = obj["file"]
     painting_id = obj["id"]
 
-    s = create_session()    
+    s = create_session()
     ids = call_get_paintings_api(s, host)
     if ids is None or painting_id not in ids:
         verdict(MUMBLE, "Can't find painting id in list", "Can't find painting id in list")
@@ -162,14 +157,14 @@ def get(host, flag_id, flag, vuln):
         verdict(MUMBLE, "Can't parse preview", "Can't parse preview")
     # TODO check preview image
 
-    team_num = get_team_num(host)    
+    team_num = get_team_num(host)
 
     # TODO randomly change order of valid and random replica
 
     file_name, painting_bytes = paintings.get_random_painting(team_num, file_name)
     ans = call_post_replica_api(s, host, painting_id, painting_bytes)
     if ans is None or ans.get("dist") is None:
-        verdict(MUMBLE, "Can't get dist", "Can't get dist")
+        verdict(MUMBLE, "Can't get dist", f"Can't get dist: ans {ans}")
 
     file_name, replica_bytes = paintings.get_replica(team_num, file_name)
     ans = call_post_replica_api(s, host, painting_id, replica_bytes)
@@ -178,7 +173,7 @@ def get(host, flag_id, flag, vuln):
 
     reward = ans.get("reward")
     dist = ans.get("dist")
-    if reward != flag:    	
+    if reward != flag:
         verdict(CORRUPT, "Can't get valid reward", f"Can't get reward: reward '{reward}', dist '{dist}'")
 
     verdict(OK)
