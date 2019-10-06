@@ -60,6 +60,7 @@ services: |
   {name => 'SePtoN',         path => 'checkers/SePtoN/checker.sh', timeout => 15, host_suffix => '3'},
   {name => 'polyfill',       path => 'checkers/polyfill/checker.py', timeout => 15, host_suffix => '8'},
   {name => 'convolution',    path => 'checkers/convolution/checker.py', timeout => 15, host_suffix => '9'},
+  {name => 'gallery',        path => 'checkers/gallery/checker.py', timeout => 15, host_suffix => '4'},
   {name => 'up1',   path => 't/checkers/up.pl', timeout => 1},
   {name => 'up2',   path => 't/checkers/up.pl', timeout => 1},
   {name => 'up3',   path => 't/checkers/up.pl', timeout => 1},
