@@ -22,7 +22,7 @@ os.makedirs(REWARDS_DIR, exist_ok=True)
 os.makedirs(EMBEDDINGS_DIR, exist_ok=True)
 os.makedirs(PREVIEWS_DIR, exist_ok=True)
 
-MODEL_PATH = "models/model_big_30_30_predict.h5"
+MODEL_PATH = "models/model_big_compact_30_30_predict.h5"
 
 DYNAMIC_HEADERS = [
     ("Content-Type", "application/json; charset=utf8"),
@@ -40,7 +40,7 @@ HTML_HEADERS = [
 ]
 
 IMG_HEADERS = [
-    ("Content-Type", "image/png"),
+    ("Content-Type", "image/jpeg"),
     ("Cache-Control", "max-age=86400"),
 ]
 
@@ -58,18 +58,17 @@ model = dnn.load(MODEL_PATH)
 def gen_json_ans(obj):
     return "200 OK", JSON_HEADERS, json.dumps(obj)
 
-def gen_png_ans(obj):
+def gen_jpg_ans(obj):
     return "200 OK", IMG_HEADERS, obj
 
-
-def parse_png_bytes(body):
+def parse_jpg_bytes(body):
     try:
         painting = PIL.Image.open(BytesIO(body))
     except Exception as e:
         raise Exception("can't parse image bytes", e)
 
-    if painting.format != "PNG" or painting.mode != "RGB" or painting.width != 128 or painting.height != 128:
-        raise Exception(f"image should be in .png format in RGB mode and be 128x128px, but is {painting.format} {painting.mode} {painting.width} {painting.height}")
+    if painting.format != "JPEG" or painting.mode != "RGB" or painting.width != 128 or painting.height != 128:
+        raise Exception(f"image should be in .jpg format in RGB mode and be 128x128px, but is {painting.format} {painting.mode} {painting.width} {painting.height}")
 
     return painting
 
@@ -81,7 +80,7 @@ def post_replica(query, body):
         return gen_json_ans({"error": "painting 'id' param not specified or is invalid"})
 
     try:
-        replica = parse_png_bytes(body)
+        replica = parse_jpg_bytes(body)
     except Exception as e:
         print("can't parse replica image:", e)
         return gen_json_ans({"error": str(e)})
@@ -103,14 +102,14 @@ def post_replica(query, body):
         reward_file_name = painting_id + ".txt"
         with open(REWARDS_DIR / reward_file_name, "r") as file:            
             reward = file.read()
-        return gen_json_ans(reward)
+        return gen_json_ans({"reward": reward})
 
 def put_painting(query, body):
     reward = query["reward"][0]
     print("got reward:", reward)
 
     try:
-        painting = parse_png_bytes(body)
+        painting = parse_jpg_bytes(body)
     except Exception as e:
         print("can't parse painting image:", e)
         return gen_json_ans({"error": "can't parse painting image"})
@@ -126,7 +125,7 @@ def put_painting(query, body):
         print("can't memorize painting:", e)
         return gen_json_ans({"error": "can't memorize painting"})
 
-    image_file_name = painting_id + ".png"
+    image_file_name = painting_id + ".jpg"
     try:
         with open(PAINTINGS_DIR / image_file_name, "xb") as file:
             file.write(body)
@@ -156,23 +155,23 @@ def get_paintings(query, body):
     paintings_ids = []
 
     for x in PREVIEWS_DIR.iterdir():
-        if(len(paintings_ids) >= 10_000):
+        if(len(paintings_ids) >= 5_000):
             break
-        if x.is_file() and x.suffix == '.png':
+        if x.is_file() and x.suffix == '.jpg':
             paintings_ids.append(x.stem)
 
     return gen_json_ans(paintings_ids)
 
 def get_preview(query, body):
     try:
-        file_name = str(uuid.UUID(query["id"][0])) + ".png"
+        file_name = str(uuid.UUID(query["id"][0])) + ".jpg"
     except Exception as e:
         print("painting 'id' param not specified or is invalid:", e)
         return gen_json_ans({"error": "preview 'id' param not specified or is invalid"})
 
     try:
         with open(PREVIEWS_DIR / file_name, "rb") as file:
-            return gen_png_ans(file.read())
+            return gen_jpg_ans(file.read())
     except Exception as e:
         print("can't read preview:", e)
         return gen_json_ans({"error": "can't read preview"})
@@ -218,7 +217,7 @@ def application(environ, start_response):
 
     handler = URLS[(method, url)]
     if not callable(handler):
-        if url.endswith((".png", ".ico")):
+        if url.endswith((".jpg", ".png", ".ico")):
             start_response("200 OK", IMG_HEADERS)
         else:
             start_response("200 OK", HTML_HEADERS)
