@@ -184,7 +184,7 @@ def generate_variable_value(variable, value):
         term1, term2 = get_random_multiplicators(value)
         operation = "*"
     else:
-        term2 = random.randint(-100, 100)
+        term2 = random.randint(1, 100)
         term1 = term2 * value
         operation = "/"
 

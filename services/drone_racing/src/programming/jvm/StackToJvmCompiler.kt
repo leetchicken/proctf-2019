@@ -39,7 +39,6 @@ class StackToJvmCompiler : Compiler<StackProgram, ByteArray> {
             FunctionType.INTEGER -> "I"
             FunctionType.STRING -> "Ljava/lang/String;"
             FunctionType.VOID -> "V"
-            else -> ""
         }
     }
 
@@ -166,11 +165,6 @@ class StackToJvmCompiler : Compiler<StackProgram, ByteArray> {
                             Intrinsic.STRCAT -> TODO()
                             Intrinsic.STRSUB -> TODO()
                             Intrinsic.STRLEN -> visitMethodInsn(INVOKEVIRTUAL, "java/lang/String", "length", "()I", false)
-                            Intrinsic.ARRMAKE -> TODO()
-                            Intrinsic.ARRMAKEBOX -> TODO()
-                            Intrinsic.ARRGET -> TODO()
-                            Intrinsic.ARRSET -> TODO()
-                            Intrinsic.ARRLEN -> TODO()
                         }
                         else -> {
                             val descriptor = "(" + s.function.parameterTypes.joinToString { getJavaType(it) } + ")" + getJavaType(s.function.returnType)

@@ -74,7 +74,6 @@ open class LanguageVisitor {
         is FunctionCall -> visitFunctionCall(expression)
         is UnaryOperation -> visitUnaryOperation(expression)
         is BinaryOperation -> visitBinaryOperation(expression)
-        is ArrayLiteral -> visitArrayLiteral(expression)
     }
 
     open fun visitStringLiteral(stringLiteral: StringLiteral): Any = Unit
@@ -98,13 +97,6 @@ open class LanguageVisitor {
 
     open fun visitFunctionCall(functionCall: FunctionCall): Any {
         functionCall.argumentExpressions.forEach {
-            visitExpression(it)
-        }
-        return Unit
-    }
-
-    open fun visitArrayLiteral(arrayLiteral: ArrayLiteral): Any {
-        arrayLiteral.initializers.forEach {
             visitExpression(it)
         }
         return Unit

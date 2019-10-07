@@ -137,9 +137,6 @@ class StatementToStackCompiler : Compiler<Program, StackProgram> {
             emit(placeholder.fillFunction(jumpTo), placeholder.position)
         }
 
-        var arrayLiteralDepth = 0
-        lateinit var compileArrayLiteral: (arrayLiteral: ArrayLiteral) -> Unit
-
         fun compileExpression(expression: Expression) {
             exprsDebugStack.push(expression)
             when (expression) {
@@ -164,32 +161,9 @@ class StatementToStackCompiler : Compiler<Program, StackProgram> {
                     for (e in expression.argumentExpressions)
                         compileExpression(e)
                     emit(Call(expression.functionDeclaration))
-                    Unit
                 }
-                is ArrayLiteral -> compileArrayLiteral(expression)
             }.exhaustive
             check(exprsDebugStack.pop() == expression)
-        }
-
-        compileArrayLiteral = { arrayLiteral ->
-            arrayLiteralDepth++
-            val arrayVariable = Variable("###array-under-construction-$arrayLiteralDepth")
-            emit(PushInt(IntLiteral(arrayLiteral.initializers.size)))
-            emit(PushInt(IntLiteral(0)))
-            val intrinsic = if (arrayLiteral.isBoxed) Intrinsic.ARRMAKEBOX else Intrinsic.ARRMAKE
-            emit(Call(intrinsic))
-            if (arrayLiteral.initializers.isNotEmpty()) {
-                emit(St(arrayVariable))
-                for ((index, init) in arrayLiteral.initializers.withIndex()) {
-                    emit(Ld(arrayVariable))
-                    emit(PushInt(IntLiteral(index)))
-                    compileExpression(init)
-                    emit(Call(Intrinsic.ARRSET))
-                    emit(Pop)
-                }
-                emit(Ld(arrayVariable))
-            }
-            arrayLiteralDepth--
         }
 
         fun compileStatement(statement: Statement) {
@@ -335,19 +309,9 @@ class StatementToStackCompiler : Compiler<Program, StackProgram> {
             emit(Ld(returnDataVariable))
             emit(Ret1)
         }
-//        // Implicit zero return value
-//        emit(Push(IntLiteral(0)))
-//        emit(St(exceptionDataVariable))
-//
+
         check(exitHandlersStack.peek() == returnHandler)
         exitHandlersStack.pop()
-//        (returnHandler.throwPlaceholders + returnHandler.exitWithoutCatchPlaceholders).forEach {
-//            fillJumpPlaceholder(it, nextInsn())
-//        }
-//
-//        emit(TransEx)
-//        emit(Ld(exceptionDataVariable))
-//        emit(Ret1)
 
         return program.mapIndexed { idx, (insn, st, ex) ->
             if (insn is StackStatement) {
