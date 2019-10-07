@@ -40,6 +40,6 @@ for t in 10 11; do
 done
 
 for t in 10 11; do
-    echo -n "Team$t is launching on ssh root@10.60.10.$SERVICE_NUM password:"
+    echo -n "Team$t is launching on ssh root@10.60.$t.$SERVICE_NUM password:"
     cat cloud/roles/cloud_master/files/api_srv/db/team$t/serv${SERVICE_NUM}_root_passwd.txt
 done
