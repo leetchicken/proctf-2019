@@ -117,5 +117,10 @@ services/convolution/./compiler/antlr4-runtime/include/tree/xpath/
 services/convolution/./compiler/antlr4-runtime/lib/
 EOF
     ;;
+    "gallery")
+    cat <<EOF
+services/gallery/./
+EOF
+    ;;
     *) echo "No such service" >&2; exit 1;;
 esac
