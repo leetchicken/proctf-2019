@@ -159,24 +159,21 @@ def get(host, flag_id, flag, vuln):
 
     team_num = get_team_num(host)
 
-    # TODO randomly change order of valid and random replica
+    methods = [paintings.get_replica, paintings.get_copy, paintings.get_random_painting]
+    random.shuffle(methods)
 
-    random_file_name, random_painting_bytes = paintings.get_random_painting(team_num, file_name)
-    ans = call_post_replica_api(s, host, painting_id, random_painting_bytes)
-    if ans is None or ans.get("dist") is None:
-        verdict(MUMBLE, "Can't get dist", f"Can't get dist for random img {random_file_name}: ans {ans}")
+    for m in methods:
+        name, painting_bytes = m(team_num, file_name)
+        ans = call_post_replica_api(s, host, painting_id, painting_bytes)
+        print(f"{file_name}: sent file {name}: ans {ans}", file=sys.stderr)
+        if ans is not None and ans.get("reward") is not None:
+            reward = ans.get("reward")
+            if reward != flag:
+                verdict(CORRUPT, "Got invalid reward", f"Got invalid reward: {reward}")
+            else:
+                verdict(OK)
 
-    file_name, replica_bytes = paintings.get_replica(team_num, file_name)
-    ans = call_post_replica_api(s, host, painting_id, replica_bytes)
-    if ans is None:
-    	verdict(CORRUPT, "Can't post replica", f"Can't post replica")
-
-    reward = ans.get("reward")
-    if reward != flag:
-        verdict(CORRUPT, "Can't get valid reward", f"Can't get reward for replica {file_name}: ans '{ans}'")
-
-    verdict(OK)
-
+    verdict(CORRUPT, "Can't get valid reward", "Can't get valid reward")
 
 def main(args):
     CMD_MAPPING = {
