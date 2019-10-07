@@ -122,5 +122,12 @@ EOF
 services/gallery/./
 EOF
     ;;
+    "drone_racing")
+    cat <<EOF
+services/drone_racing/./docker-compose.yml
+services/drone_racing/./Dockerfile
+services/drone_racing/./build/distributions/drone_racing-1.0.0.zip
+EOF
+    ;;
     *) echo "No such service" >&2; exit 1;;
 esac
