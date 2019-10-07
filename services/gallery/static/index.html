@@ -1,0 +1,164 @@
+﻿<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <title>gallery</title>
+    <style>
+        body {
+            background: url('wall.jpg');
+            text-align: center;
+        }
+        #gallery {
+            display: flex;
+            flex-flow: row wrap;
+            margin: 0 auto;
+            justify-content: center;
+            text-align: center;
+            max-width: 1024px;
+        }
+        h1 {
+            font-size: 48px;
+        }
+        #paging a {
+            color: #960000;
+            text-shadow: 0 0 10px white;
+        }
+        .img {
+            flex: 1 0 0;
+            padding: 54px 33px 50px 30px;
+            background: url(baget.png) center no-repeat;
+            background-size: 191px;
+        }
+        .img img {
+            width: 128px;
+            height: 128px;
+            image-rendering: pixelated;
+            box-shadow: 0 0 5px black;
+        }
+        #upload {
+            width: 300px;
+            height: 200px;
+            top: 50%;
+            left: 50%;
+            background: #fff;
+            margin-left: -150px;
+            margin-top: -100px;
+            position: absolute;
+            z-index: 100;
+            border: 1px dashed gray;
+            border-radius: 20px;
+            display: none;
+            line-height: 200px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Gallery</h1>
+<div id="gallery"></div>
+<h2 id="paging"><a id="prev" href>&lt;&nbsp;prev</a>&emsp;<span id="page"></span>&emsp;<a id="next" href>next&nbsp;&gt;</a></h2>
+
+
+<template id="imgtemplate">
+    <div class="img"><img/></div>
+</template>
+
+<div id="upload">
+    Drop replica here to get your reward
+</div>
+
+<script>
+    let $ = (selector) => { return document.querySelector(selector); }
+
+    let error = (text) => {
+        alert(text);
+    };
+
+    let clear = () => {
+        do {
+            var img = $(".img");
+            if (!!img) img.remove();
+        } while (!!img);
+    };
+
+    $("#prev").onclick = e => {
+        if (page <= 1) return false;
+        history.pushState(null, null, "/?page=" + (page -= 1));
+        render();
+        return false;
+    };
+    $("#next").onclick = e => {
+        if (count <= page * 15) return false;
+        history.pushState(null, null, "/?page=" + (page += 1));
+        render();
+        return false;
+    };
+
+    let page = Number(new URLSearchParams(location.search).get("page") || "1");
+    let count = 0;
+
+    let dropbox = $("#upload");
+    dropbox.onclick = dropbox.ondragover = dropbox.ondragenter = function(e) {
+        e.stopPropagation();
+        e.preventDefault();
+    }
+
+    dropbox.ondrop = function drop(e) {
+        e.stopPropagation();
+        e.preventDefault();
+        sendFile(e.dataTransfer.files[0]);
+    }
+
+    $("body").onclick = () => dropbox.style = "display:none";
+    function sendFile(file) {
+        var uri = "/replica?id=" + window.rid;
+        fetch(uri, {
+            method: 'POST',
+            body: file
+        }).then(response => response.text().then(text => {
+            error(text);
+            dropbox.style = "display:none";
+        }
+        ));
+    }
+
+    let render = () => {
+        fetch("/paintings").then(response => {
+            if (!response.ok)
+                response.text().then(text => { error(text); });
+            else {
+                response.json().then(json => {
+                    clear();
+                    count = json.length;
+                    let start = (page - 1) * 15;
+                    json = json.slice(start, start + 15);
+                    let gallery = $("#gallery");
+                    $("#page").textContent = page;
+                    for (var i = 0; i < json.length; i++) {
+                        var t = $("#imgtemplate");
+                        let img = t.content.querySelector("img");
+                        let id = json[i];
+                        img.src = "/preview?id=" + id;
+                        img.title = id;
+                        img.rid = id;
+                        var clone = document.importNode(t.content, true);
+                        gallery.appendChild(clone);
+                    }
+                    gallery.querySelectorAll("img").forEach(i => {
+                        i.onclick = e => {
+                            window.rid = i.title;
+                            dropbox.style = "display:block";
+                            e.stopImmediatePropagation();
+                            e.preventDefault();
+                        }
+                    });
+                });
+            }
+        }).catch(() => error("/paintings failed"));
+    };
+
+    render();
+</script>
+</body>
+</html>
