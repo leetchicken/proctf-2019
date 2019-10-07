@@ -6,7 +6,7 @@ MY_DIR="`dirname "$MY_NAME"`"
 cd "${MY_DIR}"
 
 if [ -z "$1" ]; then
-    echo "USAGE: make_service_ova.sh <service>" >&2
+    echo "USAGE: ./deploy_to_cloud_master.sh <service>" >&2
     exit 1
 fi
 
