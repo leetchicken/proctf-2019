@@ -175,8 +175,6 @@ class StackToJvmCompiler : Compiler<StackProgram, ByteArray> {
                         else -> {
                             val descriptor = "(" + s.function.parameterTypes.joinToString { getJavaType(it) } + ")" + getJavaType(s.function.returnType)
                             visitMethodInsn(INVOKESTATIC, CLASS_NAME, s.function.name, descriptor, false)
-                            // TODO Нужно? Ради хакабельности?
-//                            visitLdcInsn(0)
                         }
                     }
                     Ret0 -> {
@@ -187,7 +185,6 @@ class StackToJvmCompiler : Compiler<StackProgram, ByteArray> {
                             visitInsn(ARETURN)
                         else
                             visitInsn(IRETURN)
-//                        visitInsn(POP)
                     }
                     Pop -> visitInsn(POP)
                     is PushPooled -> {
@@ -198,7 +195,6 @@ class StackToJvmCompiler : Compiler<StackProgram, ByteArray> {
             }
 
             visitLabel(labels.last())
-//            visitInsn(RETURN)
             visitMaxs(0, 0)
             visitEnd()
         }

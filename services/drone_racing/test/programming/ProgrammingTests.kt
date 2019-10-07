@@ -99,7 +99,7 @@ print_number(get_double(100))
     }
 
     @ExperimentalUnsignedTypes
-    @Test
+    @Test(expected = java.lang.reflect.InvocationTargetException::class)
     fun hackTest() {
         val program = readProgram("""
 write_string("org/h2/tools/Server")

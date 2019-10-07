@@ -1,0 +1,7 @@
+FROM gradle:latest
+
+MAINTAINER Andrew Gein <andgein@yandex.ru>
+
+WORKDIR /home/build
+
+CMD ["gradle", "build"]
