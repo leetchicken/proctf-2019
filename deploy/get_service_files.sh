@@ -136,5 +136,30 @@ services/ca/./data/
 services/ca/./ssl/
 EOF
     ;;
+    "tracker")
+    cat <<EOF
+services/tracker/./Dockerfile
+services/tracker/./main.py
+services/tracker/./db
+services/tracker/./db/drop.sql
+services/tracker/./db/create.sql
+services/tracker/./app
+services/tracker/./app/enums.py
+services/tracker/./app/__init__.py
+services/tracker/./app/config.py
+services/tracker/./app/protocol.py
+services/tracker/./app/network.py
+services/tracker/./app/common.py
+services/tracker/./app/api
+services/tracker/./app/api/track.py
+services/tracker/./app/api/__init__.py
+services/tracker/./app/api/tracker.py
+services/tracker/./app/api/point.py
+services/tracker/./app/api/user.py
+services/tracker/./config.yaml
+services/tracker/./docker-compose.yml
+services/tracker/./requirements.txt
+EOF
+    ;;
     *) echo "No such service" >&2; exit 1;;
 esac
