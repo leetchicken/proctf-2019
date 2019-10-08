@@ -120,6 +120,8 @@ EOF
     "gallery")
     cat <<EOF
 services/gallery/./
+services/gallery/./models/
+services/gallery/./static/
 EOF
     ;;
     "drone_racing")
