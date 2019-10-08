@@ -42,7 +42,7 @@ services:
   deer:
     image: proctf/deer
     container_name: deer
-    restart: on-failure
+    restart: unless-stopped
     volumes:
       - ./Deer.appsettings.json:/app/appsettings.json
       - ./root-ca.pem:/app/root-ca.pem
