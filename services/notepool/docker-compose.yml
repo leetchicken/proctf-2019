@@ -1,0 +1,13 @@
+version: '3'
+services:
+  notepool:
+    image: proctf/notepool
+    container_name: notepool
+    restart: unless-stopped
+    build: .
+    ports:
+      - 5073:5073
+    expose:
+      - "5073"
+    volumes:
+      - ./data:/app/data
