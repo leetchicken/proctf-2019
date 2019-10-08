@@ -142,6 +142,8 @@ EOF
     cat <<EOF
 services/tracker/./Dockerfile
 services/tracker/./main.py
+services/tracker/./dccp_modules/dccp.ko
+services/tracker/./dccp_modules/dccp_ipv4.ko
 services/tracker/./db
 services/tracker/./db/drop.sql
 services/tracker/./db/create.sql
