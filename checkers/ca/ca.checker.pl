@@ -23,7 +23,7 @@ warn 'Invalid mode.' and exit $INTERNAL_ERROR unless $mode ~~ %MODES;
 my $agents = c(<DATA>)->map(sub {chomp; $_});
 my $ua = _ua();
 
-my $url = Mojo::URL->new("https://$ip:8443/");
+my $url = Mojo::URL->new("https://$ip/");
 my $log = Mojo::Log->new;
 $log->info("URL for check: $url");
 
