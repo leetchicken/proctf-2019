@@ -163,5 +163,14 @@ services/tracker/./docker-compose.yml
 services/tracker/./requirements.txt
 EOF
     ;;
+    "notepool")
+    cat <<EOF
+services/notepool/./docker-compose.yml
+services/notepool/./Dockerfile
+services/notepool/./start.sh
+services/notepool/./out/
+services/notepool/./out/wwwroot/
+EOF
+    ;;
     *) echo "No such service" >&2; exit 1;;
 esac
