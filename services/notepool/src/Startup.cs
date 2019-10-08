@@ -26,9 +26,10 @@ namespace notepool
 			services.AddControllers();
 		}
 
-		public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+		public void Configure(IApplicationBuilder app, IHostingEnvironment env, IApplicationLifetime applicationLifetime)
 		{
 			var provider = new PhysicalFileProvider(Path.GetFullPath("wwwroot"));
+			applicationLifetime.ApplicationStopping.Register(LuceneIndex.Close);
 			app
 				.UseDefaultFiles(new DefaultFilesOptions {DefaultFileNames = new List<string> {"index.html"}, FileProvider = provider})
 				.UseStaticFiles(new StaticFileOptions {FileProvider = provider})

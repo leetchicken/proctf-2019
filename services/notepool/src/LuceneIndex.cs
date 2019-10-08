@@ -40,7 +40,15 @@ namespace notepool
 				Priority = ThreadPriority.BelowNormal,
 				IsBackground = true
 			};
-			Task.Run(() => reopenThread.Run());
+			reopenThread.Start();
+
+			new Thread(() => {
+				while(true)
+				{
+					Thread.Sleep(10000);
+					try { writer.Commit(); } catch {}
+				}
+			}) {IsBackground = true, Priority = ThreadPriority.BelowNormal}.Start();
 		}
 
 		public static long AddNote(User user, Note note, bool isPrivate)
@@ -129,18 +137,14 @@ namespace notepool
 			}
 		}
 
-		public static void Commit()
-		{
-			var start = DateTime.UtcNow;
-			writer.Commit();
-			searcherKeeper.MaybeRefresh();
-			Console.WriteLine("LuceneIndex Commit, elapsed {0}", DateTime.UtcNow - start);
-		}
-
 		public static void Close()
 		{
+			var start = DateTime.UtcNow;
+			Console.WriteLine("Closing...");
+			writer.Commit();
 			writer.Dispose(true);
 			directory.Dispose();
+			Console.WriteLine("Closed, elapsed {0}...", DateTime.UtcNow - start);
 		}
 
 		private const string IndexDirectory = "data/index";

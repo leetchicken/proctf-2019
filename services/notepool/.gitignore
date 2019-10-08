@@ -3,6 +3,8 @@
 bin/
 obj/
 
+data/
+
 packages/
 
 *.DotSettings
