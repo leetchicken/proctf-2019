@@ -24,7 +24,7 @@ os.makedirs(PREVIEWS_DIR, exist_ok=True)
 
 MAX_BODY_BYTES = 128_000
 
-MODEL_PATH = "models/model_big_compact_30_30_predict.h5"
+MODEL_PATH = "models/model.h5"
 
 DYNAMIC_HEADERS = [
     ("Content-Type", "application/json; charset=utf8"),
@@ -60,8 +60,8 @@ def parse_jpg_bytes(body):
     except Exception as e:
         raise Exception("can't parse image bytes", e)
 
-    if painting.format != "JPEG" or painting.mode != "RGB" or painting.width != 128 or painting.height != 128:
-        raise Exception(f"image should be in .jpg format in RGB mode and be 128x128px, but is {painting.format} {painting.mode} {painting.width} {painting.height}")
+    if painting.format != "JPEG" or painting.mode != "RGB" or painting.width != 256 or painting.height != 256:
+        raise Exception(f"image should be in .jpg format in RGB mode and be 256x256px, but is {painting.format} {painting.mode} {painting.width} {painting.height}")
 
     return painting
 

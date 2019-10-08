@@ -1,19 +1,11 @@
-FROM python:3.7.3-alpine3.9
+FROM tensorflow/tensorflow:1.14.0-py3
 
-RUN adduser gallery -u 10001 -D
-RUN apk add --update alpine-sdk
-RUN pip3.7 install gunicorn
-RUN pip3.7 install numpy
-RUN apk add perl
-RUN wget https://github.com/xianyi/OpenBLAS/archive/v0.3.6.tar.gz \
-	&& tar -xf v0.3.6.tar.gz \
-	&& cd OpenBLAS-0.3.6/ \
-	&& make BINARY=64 FC=$(which gfortran) USE_THREAD=1 \
-	&& make PREFIX=/usr/lib/openblas install
-RUN ATLAS=/usr/lib/openblas/lib/libopenblas.so LAPACK=/usr/lib/openblas/lib/libopenblas.so pip3.7 install scipy
-RUN pip3.7 install Pillow
-RUN pip3.7 install tensorflow
-RUN pip3.7 install keras
+RUN pip3 install --upgrade pip
+RUN pip3 install keras
+RUN pip3 install Pillow
+RUN pip3 install gunicorn
+
+RUN adduser --home /home/gallery --shell /usr/sbin/nologin --no-create-home --disabled-password gallery
 
 WORKDIR /home/gallery/
 CMD ["./start.sh"]
