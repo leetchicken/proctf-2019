@@ -1,0 +1,11 @@
+version: '3'
+
+services:
+  web:
+    build: .
+    image: "ca:latest"
+    ports:
+      - "443:8443"
+    volumes:
+      - "./ssl:/app/ssl"
+      - "./data:/app/data"
