@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
-#include <map>
+#include <vector>
 #include "log.h"
 #include "httpserver.h"
 #include "png.h"
@@ -45,6 +45,7 @@ public:
 
 	struct InputImage
 	{
+		std::string name;
 		char* data;
 		uint32_t size;
 	};
@@ -52,7 +53,7 @@ public:
     uint32_t m_contentLength = 0;
     char* m_content = nullptr;
 	char* m_curContentPtr = nullptr;
-	std::map<std::string, InputImage> m_inputImages;
+	std::vector<InputImage> m_inputImages;
 	std::string m_kernel;
 	bool m_authenticated = false;
 
@@ -341,18 +342,25 @@ void PostProcessProcessor::FinalizeRequest()
         return;
     }
 
+	if(m_inputImages.size() > 32)
+	{
+		Log("  Too many images\n");
+		Complete(HttpResponse(MHD_HTTP_BAD_REQUEST));
+		return;
+	}
+
 	Timer totalTimer;
 
 	std::string output = "{ ";
 	uint32_t counter = 0;
 
-	for(auto& iter : m_inputImages)
+	for(auto& img : m_inputImages)
 	{
-		Log("  Process image '%s'\n", iter.first.c_str());
+		Log("  Process image '%s'\n", img.name.c_str());
 		Timer timer;
 
 		Image srcImage;
-		if(!read_png_from_memory(iter.second.data, iter.second.size, srcImage))
+		if(!read_png_from_memory(img.data, img.size, srcImage))
 		{
 			Log("  Bad png\n");
 			Complete(HttpResponse(MHD_HTTP_BAD_REQUEST));
@@ -367,30 +375,23 @@ void PostProcessProcessor::FinalizeRequest()
 			return;
 		}
 
-		Image srcImages[kChannelsNum], dstImages[kChannelsNum];
-		for(uint32_t i = 0; i < kChannelsNum; i++)
-		{
-			srcImages[i].width = ((srcImage.width + 23) / 24) * 24;
-			srcImages[i].height = ((srcImage.height + 2) / 3) * 3;
-			srcImages[i].pixels = (ABGR*)aligned_alloc(16, srcImages[i].GetSize());
-			dstImages[i].width = srcImages[i].width / 3;
-			dstImages[i].height = srcImages[i].height / 3;
-			dstImages[i].pixels = (ABGR*)aligned_alloc(16, dstImages[i].GetSize());
-		}
+		Image srcImagePadded, dstImage;
+		srcImagePadded.width = ((srcImage.width + 23) / 24) * 24;
+		srcImagePadded.height = ((srcImage.height + 2) / 3) * 3;
+		srcImagePadded.pixels = (ABGR*)aligned_alloc(16, srcImagePadded.GetSize());
+		dstImage.width = srcImagePadded.width / 3;
+		dstImage.height = srcImagePadded.height / 3;
+		dstImage.pixels = (ABGR*)aligned_alloc(16, dstImage.GetSize());
 
 		ABGR zero;
 		memset(&zero, 0, sizeof(zero));
-		for(uint32_t y = 0; y < srcImages[0].height; y++)
+		for(uint32_t y = 0; y < srcImagePadded.height; y++)
 		{
-			for(uint32_t x = 0; x < srcImages[0].width; x++)
+			for(uint32_t x = 0; x < srcImagePadded.width; x++)
 			{
 				bool withinSource = x < srcImage.width && y < srcImage.height;
 				ABGR& src = withinSource ? srcImage.Pixel(x, y) : zero;
-				for(uint32_t c = 0; c < kChannelsNum; c++)
-				{
-					ABGR& dst = srcImages[c].Pixel(x, y);
-					dst.abgr = (src.abgr >> (c * 8)) & 0xFF;
-				}
+				srcImagePadded.Pixel(x, y) = src;
 			}
 		}
 
@@ -401,74 +402,51 @@ void PostProcessProcessor::FinalizeRequest()
 			{
 				uint64_t srcImage;
 				uint32_t srcImageWidth;
-				uint32_t srcImageHeight;
+				uint32_t channelIdx;
 				uint64_t kernel;
 				uint64_t dstImage;
 				uint32_t dstImageWidth;
 				uint32_t dstImageHeight;
 			};
 			UserData userData;
-			userData.srcImage = (uint64_t)srcImages[i].pixels;
-			userData.srcImageWidth = srcImages[i].width;
-			userData.srcImageHeight = srcImages[i].height;
+			userData.srcImage = (uint64_t)srcImagePadded.pixels;
+			userData.srcImageWidth = srcImagePadded.width;
+			userData.channelIdx = i;
 			userData.kernel = (uint64_t)(m_kernel.c_str() + i * 8);
-			userData.dstImage = (uint64_t)dstImages[i].pixels;
-			userData.dstImageWidth = dstImages[i].width;
-			userData.dstImageHeight = dstImages[i].height;
-			timings[i] = Dispatch(srcImages[i].width / 24, srcImages[i].height / 3, (uint64_t)&userData);
+			userData.dstImage = (uint64_t)dstImage.pixels;
+			userData.dstImageWidth = dstImage.width;
+			userData.dstImageHeight = dstImage.height;
+			timings[i] = Dispatch(srcImagePadded.width / 24, srcImagePadded.height / 3, (uint64_t)&userData);
 		}
 
 		if(m_authenticated)
-		{
-			Image finalImage(dstImages[0].width, dstImages[0].height);			
-			for(uint32_t y = 0; y < finalImage.height; y++)
-			{
-				for(uint32_t x = 0; x < finalImage.width; x++)
-				{
-					uint32_t p = 0;
-					for(uint32_t c = 0; c < kChannelsNum; c++)
-						p |= dstImages[c].Pixel(x,y).abgr << (c * 8);
-					finalImage.Pixel(x,y).abgr = p;
-				}
-			}
-			
+		{			
 			char filename[256];
-			snprintf(filename, sizeof(filename), "data/%s.png", iter.first.c_str());
-			if(!save_png(filename, finalImage))
+			snprintf(filename, sizeof(filename), "data/%s.png", img.name.c_str());
+			if(!save_png(filename, dstImage))
 				Log("  failed to save image to file\n");
 		}
 
 #if 1
 		{
-			Image finalImage(dstImages[0].width, dstImages[0].height);			
-			for(uint32_t y = 0; y < finalImage.height; y++)
-			{
-				for(uint32_t x = 0; x < finalImage.width; x++)
-				{
-					uint32_t p = 0;
-					for(uint32_t c = 0; c < kChannelsNum; c++)
-						p |= dstImages[c].Pixel(x,y).abgr << (c * 8);
-					finalImage.Pixel(x,y).abgr = p;
-				}
-			}
 			for(uint32_t i = 0; i < 4; i++)
 			{
 				uint8_t* k = (uint8_t*)(m_kernel.c_str() + i * 8);
-				for(uint32_t y = 0; y < finalImage.height; y++)
+				for(uint32_t y = 0; y < dstImage.height; y++)
 				{
-					for(uint32_t x = 0; x < finalImage.width; x++)
+					for(uint32_t x = 0; x < dstImage.width; x++)
 					{
 						uint32_t x0 = x * 3;
 						uint32_t y0 = y * 3;
 						uint32_t v[8];
-						v[0] = srcImages[i].Pixel(x0 + 0, y0 + 0).abgr;
-						v[1] = srcImages[i].Pixel(x0 + 1, y0 + 0).abgr;
-						v[2] = srcImages[i].Pixel(x0 + 2, y0 + 0).abgr;
-						v[3] = srcImages[i].Pixel(x0 + 0, y0 + 1).abgr;
-						v[4] = srcImages[i].Pixel(x0 + 2, y0 + 1).abgr;
-						v[5] = srcImages[i].Pixel(x0 + 0, y0 + 2).abgr;
-						v[6] = srcImages[i].Pixel(x0 + 1, y0 + 2).abgr;
-						v[7] = srcImages[i].Pixel(x0 + 2, y0 + 2).abgr;
+						v[0] = (srcImagePadded.Pixel(x0 + 0, y0 + 0).abgr >> (i * 8)) & 0xFF;
+						v[1] = (srcImagePadded.Pixel(x0 + 1, y0 + 0).abgr >> (i * 8)) & 0xFF;
+						v[2] = (srcImagePadded.Pixel(x0 + 2, y0 + 0).abgr >> (i * 8)) & 0xFF;
+						v[3] = (srcImagePadded.Pixel(x0 + 0, y0 + 1).abgr >> (i * 8)) & 0xFF;
+						v[4] = (srcImagePadded.Pixel(x0 + 2, y0 + 1).abgr >> (i * 8)) & 0xFF;
+						v[5] = (srcImagePadded.Pixel(x0 + 0, y0 + 2).abgr >> (i * 8)) & 0xFF;
+						v[6] = (srcImagePadded.Pixel(x0 + 1, y0 + 2).abgr >> (i * 8)) & 0xFF;
+						v[7] = (srcImagePadded.Pixel(x0 + 2, y0 + 2).abgr >> (i * 8)) & 0xFF;
 						
 						float counter = 0.0f;
 						uint32_t sum = 0;
@@ -491,10 +469,10 @@ void PostProcessProcessor::FinalizeRequest()
 							r = _mm_cvt_ss2si(vfr);
 						}
 
-						uint32_t testVal = (finalImage.Pixel(x, y).abgr >> (i * 8)) & 0xFF;
+						uint32_t testVal = (dstImage.Pixel(x, y).abgr >> (i * 8)) & 0xFF;
 						if(testVal != r)
 						{
-							printf("dont match %u %u\n", x0, y0);
+							printf("dont match %u %u %x %x\n", x0, y0, testVal, r);
 							exit(1);
 						}
 					}
@@ -504,7 +482,7 @@ void PostProcessProcessor::FinalizeRequest()
 #endif
 
 		output.append("\"");
-		output.append(iter.first);
+		output.append(img.name);
 		output.append("\": ");
 		char buf[512];
 		snprintf(buf, sizeof(buf), "{ \"red_channel\" : %lu, \"green_channel\" : %lu, \"blue_channel\" : %lu, \"alpha_channel\" : %lu }", timings[0], timings[1], timings[2], timings[3]);
@@ -534,15 +512,16 @@ void PostProcessProcessor::FinalizeRequest()
 int PostProcessProcessor::IteratePostData(MHD_ValueKind kind, const char *key, const char *filename, const char *contentType,
                                             const char *transferEncoding, const char *data, uint64_t offset, size_t size) 
 {
-	if(m_inputImages.find(key) == m_inputImages.end())
+	if(m_inputImages.empty() || m_inputImages.back().name != key)
 	{
 		InputImage img;
+		img.name = key;
 		img.data = m_curContentPtr;
 		img.size = 0;
-		m_inputImages[key] = img;
+		m_inputImages.push_back(img);
 	}
 
-	auto& img = m_inputImages.find(key)->second;
+	auto& img = m_inputImages.back();
 	char* ptr = img.data + offset;
 	char* endPtr = m_content + m_contentLength;
 	if(ptr < endPtr)

@@ -4,7 +4,7 @@
 #include <map>
 #include <netinet/in.h>
 
-#define THREADPOOL_SIZE 16
+#define THREADPOOL_SIZE 1
 
 class HttpRequestState;
 class HttpRequestHandler;

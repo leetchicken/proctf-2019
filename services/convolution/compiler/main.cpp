@@ -355,6 +355,10 @@ void GenerateCode(std::string& asmbl, const ParsedCode& parsedCode)
             case kVectorAdd_u32:
             case kVectorSub_u32:
             case kVectorMul_u32:
+            case kVectorAnd_u32:            
+            case kVectorAndNot_u32:
+            case kVectorOr_u32:
+            case kVectorXor_u32:   
             {
                 const char* mnemonic = nullptr;
                 if(inst.opCode == kVectorAdd_f32)
@@ -371,6 +375,14 @@ void GenerateCode(std::string& asmbl, const ParsedCode& parsedCode)
                     mnemonic = type == kAVX ? "vpsubd" : "psubd";
                 else if(inst.opCode == kVectorMul_u32)
                     mnemonic = type == kAVX ? "vpmulld" : "pmulld";
+                else if(inst.opCode == kVectorAnd_u32)
+                    mnemonic = type == kAVX ? "vandps" : "andps";
+                else if(inst.opCode == kVectorAndNot_u32)
+                    mnemonic = type == kAVX ? "vandnps" : "andnps";
+                else if(inst.opCode == kVectorOr_u32)
+                    mnemonic = type == kAVX ? "vorps" : "orps";
+                else if(inst.opCode == kVectorXor_u32)
+                    mnemonic = type == kAVX ? "vxorps" : "xorps";
                 
                 Register src2;
                 if(inst.operands[2].type == kOperandImmediate)
@@ -393,6 +405,30 @@ void GenerateCode(std::string& asmbl, const ParsedCode& parsedCode)
                         AddLine<kSSE>(asmbl, "movaps", inst.operands[0], inst.operands[1]);
                     AddLine<kSSE>(asmbl, mnemonic, inst.operands[0], src2);
                 }
+                break;
+            }
+
+            case kVectorSll_u32:
+            case kVectorSrl_u32:
+            {
+                const char* mnemonic = nullptr;
+                if(inst.opCode == kVectorSll_u32)
+                    mnemonic = "vpsllvd";
+                else if(inst.opCode == kVectorSrl_u32)
+                    mnemonic = "vpsrlvd";
+
+                Register src2;
+                if(inst.operands[2].type == kOperandImmediate)
+                {
+                    src2 = Register(Register::kVector, 15);
+                    EmitBroadcast<type>(asmbl, src2, inst.operands[2]);
+                }
+                else
+                {
+                    src2 = inst.operands[2].reg;
+                }
+
+                AddLine<type>(asmbl, mnemonic, inst.operands[0], inst.operands[1], src2);
                 break;
             }
 
