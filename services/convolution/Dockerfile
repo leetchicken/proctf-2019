@@ -6,10 +6,10 @@ RUN apt-get update && apt-get install -y libmicrohttpd-dev libssl-dev antlr4 g++
 COPY . .
 
 WORKDIR /home/build/compiler
-RUN make -j8
+RUN make clean && make -j8
 
 WORKDIR /home/build
-RUN make -j8
+RUN make clean && make -j8
 
 FROM ubuntu:18.04
 WORKDIR /home/convolution

@@ -31,6 +31,12 @@ enum InstructionType
     USER_DEFINE(kVectorAdd_u32,         "v_add_u32",        3, kInstructionTypeVector)\
     USER_DEFINE(kVectorSub_u32,         "v_sub_u32",        3, kInstructionTypeVector)\
     USER_DEFINE(kVectorMul_u32,         "v_mul_u32",        3, kInstructionTypeVector)\
+    USER_DEFINE(kVectorSll_u32,         "v_sll_u32",        3, kInstructionTypeVector)\
+    USER_DEFINE(kVectorSrl_u32,         "v_srl_u32",        3, kInstructionTypeVector)\
+    USER_DEFINE(kVectorAnd_u32,         "v_and_u32",        3, kInstructionTypeVector)\
+    USER_DEFINE(kVectorAndNot_u32,      "v_andnot_u32",     3, kInstructionTypeVector)\
+    USER_DEFINE(kVectorOr_u32,          "v_or_u32",         3, kInstructionTypeVector)\
+    USER_DEFINE(kVectorXor_u32,         "v_xor_u32",        3, kInstructionTypeVector)\
     USER_DEFINE(kVectorCmpEq_u32,       "v_cmp_eq_u32",     2, kInstructionTypeVector)\
     USER_DEFINE(kVectorCmpGt_u32,       "v_cmp_gt_u32",     2, kInstructionTypeVector)\
     USER_DEFINE(kVectorCvtU32_F32,      "v_cvt_u32_f32",    2, kInstructionTypeVector)\
@@ -45,11 +51,7 @@ enum InstructionType
     USER_DEFINE(kScalarShl,             "s_shl",            3, kInstructionTypeScalar)\
     USER_DEFINE(kScalarShr,             "s_shr",            3, kInstructionTypeScalar)\
     USER_DEFINE(kScalarLoad,            "s_load",           3, kInstructionTypeScalar)\
-    USER_DEFINE(kScalarStore,           "s_store",          3, kInstructionTypeScalar)\
-    USER_DEFINE(kScalarBranchVCCZ,      "s_branch_vccz",    1, kInstructionTypeScalar)\
-    USER_DEFINE(kScalarBranchVCCNZ,     "s_branch_vccnz",   1, kInstructionTypeScalar)\
-    USER_DEFINE(kScalarBranchEXECZ,     "s_branch_execz",   1, kInstructionTypeScalar)\
-    USER_DEFINE(kScalarBranchEXECNZ,    "s_branch_execnz",  1, kInstructionTypeScalar)
+    USER_DEFINE(kScalarStore,           "s_store",          3, kInstructionTypeScalar)
 
 
 enum EOpCode
@@ -179,6 +181,12 @@ public:
     void enterV_add_u32(VectorAssemblerParser::V_add_u32Context* ctx) override;
     void enterV_sub_u32(VectorAssemblerParser::V_sub_u32Context* ctx) override;
     void enterV_mul_u32(VectorAssemblerParser::V_mul_u32Context* ctx) override;
+    void enterV_sll_u32(VectorAssemblerParser::V_sll_u32Context* ctx) override;
+    void enterV_srl_u32(VectorAssemblerParser::V_srl_u32Context* ctx) override;
+    void enterV_and_u32(VectorAssemblerParser::V_and_u32Context* ctx) override;
+    void enterV_andnot_u32(VectorAssemblerParser::V_andnot_u32Context* ctx) override;
+    void enterV_or_u32(VectorAssemblerParser::V_or_u32Context* ctx) override;
+    void enterV_xor_u32(VectorAssemblerParser::V_xor_u32Context* ctx) override;
     void enterV_cmp_eq_u32(VectorAssemblerParser::V_cmp_eq_u32Context* ctx) override;
     void enterV_cmp_gt_u32(VectorAssemblerParser::V_cmp_gt_u32Context* ctx) override;
     void enterV_cvt_u32_f32(VectorAssemblerParser::V_cvt_u32_f32Context* ctx) override;
@@ -194,10 +202,6 @@ public:
     void enterS_shr(VectorAssemblerParser::S_shrContext* ctx) override;
     void enterS_load(VectorAssemblerParser::S_loadContext* ctx) override;
     void enterS_store(VectorAssemblerParser::S_storeContext* ctx) override;
-    void enterS_branch_vccz(VectorAssemblerParser::S_branch_vcczContext* ctx) override;
-    void enterS_branch_vccnz(VectorAssemblerParser::S_branch_vccnzContext* ctx) override;
-    void enterS_branch_execz(VectorAssemblerParser::S_branch_execzContext* ctx) override;
-    void enterS_branch_execnz(VectorAssemblerParser::S_branch_execnzContext* ctx) override;
 
     const ParsedCode& GetParsedCode() const
     {

@@ -2,7 +2,7 @@
 s_load s1q, 0, s0q
 # width
 s_load s3, 8, s0q
-# height
+# channel idx
 s_load s4, 12, s0q
 
 # save indices
@@ -16,32 +16,51 @@ v_mul_u32 v10, v1, v10
 v_mul_u32 v0, v0, 3
 v_add_u32 v10, v0, v10
 
+v_mov v12, s4
+v_sll_u32 v12, v12, 3
+
 v_mov v11, v10
 v_load v0, v11, s1q
+v_srl_u32 v0, v0, v12
+v_and_u32 v0, v0, 0xff
 
 v_add_u32 v11, v11, 1
 v_load v1, v11, s1q
+v_srl_u32 v1, v1, v12
+v_and_u32 v1, v1, 0xff
 
 v_add_u32 v11, v11, 1
 v_load v2, v11, s1q
+v_srl_u32 v2, v2, v12
+v_and_u32 v2, v2, 0xff
 
-v_mov v12, s3
-v_add_u32 v11, v10, v12
+v_mov v11, s3
+v_add_u32 v11, v10, v11
 v_load v3, v11, s1q
+v_srl_u32 v3, v3, v12
+v_and_u32 v3, v3, 0xff
 
 v_add_u32 v11, v11, 2
 v_load v4, v11, s1q
+v_srl_u32 v4, v4, v12
+v_and_u32 v4, v4, 0xff
 
-v_mov v12, s3
-v_add_u32 v11, v10, v12
-v_add_u32 v11, v11, v12
+v_mov v11, s3
+v_add_u32 v11, v11, v11
+v_add_u32 v11, v10, v11
 v_load v5, v11, s1q
+v_srl_u32 v5, v5, v12
+v_and_u32 v5, v5, 0xff
 
 v_add_u32 v11, v11, 1
 v_load v6, v11, s1q
+v_srl_u32 v6, v6, v12
+v_and_u32 v6, v6, 0xff
 
 v_add_u32 v11, v11, 1
 v_load v7, v11, s1q
+v_srl_u32 v7, v7, v12
+v_and_u32 v7, v7, 0xff
 
 # 
 v_mov v12, 0
@@ -170,7 +189,7 @@ v_cvt_f32_u32 v12, v12
 # dest image
 s_load s1q, 24, s0q
 s_load s2, 32, s0q
-s_load s3, 36, s0q
+s_load s3, 12, s0q
 
 # restore indices
 v_mov v0, v8
@@ -180,4 +199,14 @@ v_mov v10, s2
 v_mul_u32 v10, v1, v10
 v_add_u32 v10, v0, v10
 
-v_store v12, v10, s1q
+v_mov v13, s3
+v_sll_u32 v13, v13, 3
+v_sll_u32 v12, v12, v13
+
+v_mov v0, 0xff
+v_sll_u32 v0, v0, v13
+
+v_load v1, v10, s1q
+v_andnot_u32 v1, v0, v1
+v_or_u32 v1, v1, v12
+v_store v1, v10, s1q

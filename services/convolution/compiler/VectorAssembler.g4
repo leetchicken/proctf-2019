@@ -26,6 +26,12 @@ instruction: v_mov
     |   v_add_u32
     |   v_sub_u32
     |   v_mul_u32
+    |   v_sll_u32
+    |   v_srl_u32
+    |   v_and_u32
+    |   v_andnot_u32
+    |   v_or_u32
+    |   v_xor_u32
     |   v_cmp_eq_u32
     |   v_cmp_gt_u32
     |   v_cvt_u32_f32
@@ -41,10 +47,6 @@ instruction: v_mov
     |   s_shr
     |   s_load
     |   s_store
-    |   s_branch_vccz
-    |   s_branch_vccnz
-    |   s_branch_execz
-    |   s_branch_execnz
     ;
 
 v_mov:  V_MOV op0=VREGISTER ',' op1=(VREGISTER|SREGISTER|DECIMAL|HEXADECIMAL|FLOAT)
@@ -87,6 +89,24 @@ v_sub_u32: V_SUB_U32 op0=VREGISTER ',' op1=VREGISTER ',' op2=(VREGISTER|DECIMAL|
     ;
 
 v_mul_u32: V_MUL_U32 op0=VREGISTER ',' op1=VREGISTER ',' op2=(VREGISTER|DECIMAL|HEXADECIMAL)
+    ;
+
+v_sll_u32: V_SLL_U32 op0=VREGISTER ',' op1=VREGISTER ',' op2=(VREGISTER|DECIMAL|HEXADECIMAL)
+    ;
+
+v_srl_u32: V_SRL_U32 op0=VREGISTER ',' op1=VREGISTER ',' op2=(VREGISTER|DECIMAL|HEXADECIMAL)
+    ;
+
+v_and_u32: V_AND_U32 op0=VREGISTER ',' op1=VREGISTER ',' op2=(VREGISTER|DECIMAL|HEXADECIMAL)
+    ;
+
+v_andnot_u32: V_ANDNOT_U32 op0=VREGISTER ',' op1=VREGISTER ',' op2=(VREGISTER|DECIMAL|HEXADECIMAL)
+    ;
+
+v_or_u32: V_OR_U32 op0=VREGISTER ',' op1=VREGISTER ',' op2=(VREGISTER|DECIMAL|HEXADECIMAL)
+    ;
+
+v_xor_u32: V_XOR_U32 op0=VREGISTER ',' op1=VREGISTER ',' op2=(VREGISTER|DECIMAL|HEXADECIMAL)
     ;
 
 v_cmp_eq_u32: V_CMP_EQ_U32 op0=VREGISTER ',' op1=VREGISTER
@@ -142,17 +162,7 @@ s_load: S_LOAD op0=(SREGISTER|SREGISTER64) ',' op1=(SREGISTER|SREGISTER64|DECIMA
 s_store: S_STORE op0=(SREGISTER|SREGISTER64) ',' op1=(SREGISTER|SREGISTER64|DECIMAL|HEXADECIMAL) ',' op2=SREGISTER64
     ;
 
-s_branch_vccz: S_BRANCH_VCCZ label_id=ID
-    ;
 
-s_branch_vccnz: S_BRANCH_VCCNZ label_id=ID
-    ;
-
-s_branch_execz: S_BRANCH_EXECZ label_id=ID
-    ;
-
-s_branch_execnz: S_BRANCH_EXECNZ label_id=ID
-    ;
 
 V_MOV: 'v_mov';
 V_ADD_F32: 'v_add_f32';
@@ -168,6 +178,12 @@ V_CMP_NE_F32: 'v_cmp_ne_f32';
 V_ADD_U32: 'v_add_u32';
 V_SUB_U32: 'v_sub_u32';
 V_MUL_U32: 'v_mul_u32';
+V_SLL_U32: 'v_sll_u32';
+V_SRL_U32: 'v_srl_u32';
+V_AND_U32: 'v_and_u32';
+V_ANDNOT_U32: 'v_andnot_u32';
+V_OR_U32: 'v_or_u32';
+V_XOR_U32: 'v_xor_u32';
 V_CMP_EQ_U32: 'v_cmp_eq_u32';
 V_CMP_GT_U32: 'v_cmp_gt_u32';
 V_CVT_U32_F32: 'v_cvt_u32_f32';
@@ -183,10 +199,6 @@ S_SHL: 's_shl';
 S_SHR: 's_shr';
 S_LOAD: 's_load';
 S_STORE: 's_store';
-S_BRANCH_VCCZ: 's_branch_vccz';
-S_BRANCH_VCCNZ: 's_branch_vccnz';
-S_BRANCH_EXECZ: 's_branch_execz';
-S_BRANCH_EXECNZ: 's_branch_execnz';
 
 VREGISTER: 'v0'|'v1'|'v2'|'v3'|'v4'|'v5'|'v6'|'v7'|'v8'|'v9'|'v10'|'v11'|'v12'|'v13'|'v14';
 VREGISTER_RANGE: 'v[' ([0-9])+ ':' ([0-9])+ ']';

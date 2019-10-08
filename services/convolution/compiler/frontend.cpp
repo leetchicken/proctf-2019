@@ -102,6 +102,42 @@ void FrontEnd::enterV_mul_u32(VectorAssemblerParser::V_mul_u32Context* ctx)
 }
 
 
+void FrontEnd::enterV_sll_u32(VectorAssemblerParser::V_sll_u32Context* ctx)
+{
+    Add3OpInstruction(kVectorSll_u32, ctx);
+}
+
+
+void FrontEnd::enterV_srl_u32(VectorAssemblerParser::V_srl_u32Context* ctx)
+{
+    Add3OpInstruction(kVectorSrl_u32, ctx);
+}
+
+
+void FrontEnd::enterV_and_u32(VectorAssemblerParser::V_and_u32Context* ctx)
+{
+    Add3OpInstruction(kVectorAnd_u32, ctx);
+}
+
+
+void FrontEnd::enterV_andnot_u32(VectorAssemblerParser::V_andnot_u32Context* ctx)
+{
+    Add3OpInstruction(kVectorAndNot_u32, ctx);
+}
+
+
+void FrontEnd::enterV_or_u32(VectorAssemblerParser::V_or_u32Context* ctx)
+{
+    Add3OpInstruction(kVectorOr_u32, ctx);
+}
+
+
+void FrontEnd::enterV_xor_u32(VectorAssemblerParser::V_xor_u32Context* ctx)
+{
+    Add3OpInstruction(kVectorXor_u32, ctx);
+}
+
+
 void FrontEnd::enterV_cmp_eq_u32(VectorAssemblerParser::V_cmp_eq_u32Context* ctx) 
 {
     Add2OpInstruction(kVectorCmpEq_u32, ctx);
@@ -189,62 +225,6 @@ void FrontEnd::enterS_load(VectorAssemblerParser::S_loadContext* ctx)
 void FrontEnd::enterS_store(VectorAssemblerParser::S_storeContext* ctx)
 {
     Add3OpInstruction(kScalarStore, ctx);
-}
-
-
-void FrontEnd::enterS_branch_vccz(VectorAssemblerParser::S_branch_vcczContext* ctx) 
-{
-    Instruction instr;
-    instr.opCode = kScalarBranchVCCZ;
-    instr.operands[0] = ParseBranch(ctx->label_id);
-    if(!m_curLabel.empty())
-    {
-        instr.label = m_curLabel;
-        m_curLabel.clear();
-    }
-    m_parsedCode.instructions.push_back(instr);
-}
-
-
-void FrontEnd::enterS_branch_vccnz(VectorAssemblerParser::S_branch_vccnzContext* ctx) 
-{
-    Instruction instr;
-    instr.opCode = kScalarBranchVCCNZ;
-    instr.operands[0] = ParseBranch(ctx->label_id);
-    if(!m_curLabel.empty())
-    {
-        instr.label = m_curLabel;
-        m_curLabel.clear();
-    }
-    m_parsedCode.instructions.push_back(instr);
-}
-
-
-void FrontEnd::enterS_branch_execz(VectorAssemblerParser::S_branch_execzContext* ctx) 
-{
-    Instruction instr;
-    instr.opCode = kScalarBranchEXECZ;
-    instr.operands[0] = ParseBranch(ctx->label_id);
-    if(!m_curLabel.empty())
-    {
-        instr.label = m_curLabel;
-        m_curLabel.clear();
-    }
-    m_parsedCode.instructions.push_back(instr);
-}
-
-
-void FrontEnd::enterS_branch_execnz(VectorAssemblerParser::S_branch_execnzContext* ctx) 
-{
-    Instruction instr;
-    instr.opCode = kScalarBranchEXECNZ;
-    instr.operands[0] = ParseBranch(ctx->label_id);
-    if(!m_curLabel.empty())
-    {
-        instr.label = m_curLabel;
-        m_curLabel.clear();
-    }
-    m_parsedCode.instructions.push_back(instr);
 }
 
 
