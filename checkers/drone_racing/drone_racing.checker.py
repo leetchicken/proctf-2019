@@ -37,17 +37,46 @@ class DroneRacingChecker(checklib.http.HttpChecker):
         self.mumble_if_false(run["success"], "Program should successfully pass the maze")
 
     def put(self, address, flag_id, flag, vuln):
-        self.check(address)
+        name = checklib.random.from_collection("firstname") + " " + checklib.random.from_collection("lastname")
+        login = checklib.random.string(string.ascii_lowercase, 10)
+        password = checklib.random.string(string.ascii_lowercase, 10)
+        self._register_user(name, login, password)
+        self._login(login, password)
+
+        level_title = checklib.random.string(string.ascii_lowercase + " ", 20, True)
+        map = checklib.random.from_collection("map")
+        level_id = self._upload_level(level_title, map)
+
+        program_title = checklib.random.string(string.ascii_lowercase, 30, True)
+        source_code, params = self._generate_program_for_map(map, flag)
+        program_id = self._upload_program(program_title, source_code, level_id)
 
         # Print flag_id for calling get() after some time
         print(json.dumps({
-
+            "login": login,
+            "password": password,
+            "level_id": level_id,
+            "program_id": program_id,
+            "params": params,
         }))
 
     def get(self, address, flag_id, flag, vuln):
-        params = json.loads(flag_id)
+        data = json.loads(flag_id)
+        login = data["login"]
+        password = data["password"]
+        level_id = data["level_id"]
+        program_id = data["program_id"]
+        params = data["params"]
 
-        self.check(address)
+        self._login(login, password)
+
+        run, output = self._run_program(program_id, params)
+        logging.info("Program finished at %d milliseconds" % (run["finishTime"] - run["startTime"]))
+        self.mumble_if_false(run["success"], "Program should successfully pass the maze")
+
+        logging.info('Flag is "%s", program\'s output is "%s"' % (flag, output.strip()))
+        self.corrupt_if_false(output.strip() == flag, "Program didn't write a flag to the output")
+
 
     # INTERNAL METHODS:
 
@@ -56,8 +85,8 @@ class DroneRacingChecker(checklib.http.HttpChecker):
         return checklib.random.from_collection('company') + ' ' + str(checklib.random.integer(range(1000000)))
 
     @staticmethod
-    def _generate_program_for_map(map):
-        return program_generator.generate_program(program_generator.generate_moves_sequence(map))
+    def _generate_program_for_map(map, flag=None):
+        return program_generator.generate_program(program_generator.generate_moves_sequence(map), flag)
 
     def _register_user(self, name, login, password):
         logging.info('Try to register user "%s" with login "%s" and password "%s"' % (name, login, password))
@@ -136,7 +165,7 @@ class DroneRacingChecker(checklib.http.HttpChecker):
             logging.info('Received error while running a correct program. Error message: "%s"' % error_message)
             self.exit(checklib.StatusCode.MUMBLE, "Received error while running a correct program")
 
-        return run
+        return run, r["output"]
 
     def _parse_json_response(self, r):
         content_type = r.headers['Content-type']

@@ -60,7 +60,7 @@ EOF
     "deer")
     cat <<EOF
 services/deer/./docker-compose.yml
-services/deer/./run-docker-compose.sh
+services/deer/./init.sh
 EOF
     ;;
     "bb")

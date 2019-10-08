@@ -37,7 +37,7 @@ def is_uuid(value):
 
 
 def configure_logging(debug: bool):
-    log_level = logging.DEBUG if debug else logging.WARNING
+    log_level = logging.DEBUG if debug else logging.INFO
     logging.basicConfig(format="%(asctime)s %(levelname)8s %(message)s", level=log_level)
 
 

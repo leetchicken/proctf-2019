@@ -9,16 +9,19 @@ open class StaticSharedMazeWalker {
         private val states: ConcurrentMap<Thread, MazeWalker> = ConcurrentHashMap<Thread, MazeWalker>()
 
         @JvmStatic
-        fun goRight() = states[Thread.currentThread()]!!.goRight()
+        fun right() = states[Thread.currentThread()]!!.goRight()
 
         @JvmStatic
-        fun goLeft() = states[Thread.currentThread()]!!.goLeft()
+        fun left() = states[Thread.currentThread()]!!.goLeft()
 
         @JvmStatic
-        fun goUp() = states[Thread.currentThread()]!!.goUp()
+        fun up() = states[Thread.currentThread()]!!.goUp()
 
         @JvmStatic
-        fun goDown() = states[Thread.currentThread()]!!.goDown()
+        fun down() = states[Thread.currentThread()]!!.goDown()
+
+        @JvmStatic
+        fun write(s: String) = states[Thread.currentThread()]!!.write(s)
 
         @JvmStatic
         fun isOnTopRightCell() = states[Thread.currentThread()]!!.isOnTopRightCell()
@@ -30,10 +33,13 @@ open class StaticSharedMazeWalker {
 
         @JvmStatic
         fun getMovesCount() = states[Thread.currentThread()]!!.movesCount
+
+        @JvmStatic
+        fun getOutput() = states[Thread.currentThread()]!!.output
     }
 }
 
-class MazeWalker(private val maze: Maze, var x: Int = 0, var y: Int = 0, var movesCount: Int = 0) {
+class MazeWalker(private val maze: Maze, var x: Int = 0, var y: Int = 0, var movesCount: Int = 0, var output: String = "") {
     fun goUp() {
         if (x == 0)
             throw BadMove("Can't go left!")
@@ -68,10 +74,13 @@ class MazeWalker(private val maze: Maze, var x: Int = 0, var y: Int = 0, var mov
             throw BadMove("Can't go up: it's wall there!")
         y += 1
         movesCount += 1
-
     }
 
     fun isOnTopRightCell() = (x == maze.size - 1) && (y == maze.size - 1)
+
+    fun write(s: String) {
+        output += s + "\n"
+    }
 }
 
 class BadMove(message: String) : Throwable(message)

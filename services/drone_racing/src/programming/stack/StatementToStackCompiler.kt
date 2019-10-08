@@ -35,7 +35,7 @@ class StatementToStackCompiler : Compiler<Program, StackProgram> {
 
     override fun compile(source: Program): StackProgram {
         val environment = CompilationEnvironment()
-        val functionBodies = source.functionDeclarations.associate { it to environment.compileFunction(it) }
+        val functionBodies = source.functionDeclarations.associateWith { environment.compileFunction(it) }
         return StackProgram(functionBodies, source.mainFunction, environment.stringPool)
     }
 

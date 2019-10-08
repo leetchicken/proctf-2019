@@ -1,0 +1,5 @@
+FROM mcr.microsoft.com/dotnet/core/sdk:3.0
+
+COPY ./src /app
+
+CMD ["bash", "-c", "export DOTNET_CLI_TELEMETRY_OPTOUT=1; cd /app && dotnet restore && dotnet publish -c Release -o out"]
