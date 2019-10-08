@@ -21,8 +21,6 @@ namespace notepool
 				options.Limits.MaxRequestHeadersTotalSize = 8192;
 				options.Limits.RequestHeadersTimeout = TimeSpan.FromSeconds(3.0);
 			}).UseContentRoot(Directory.GetCurrentDirectory()).UseStartup<Startup>().Build().Run();
-
-			LuceneIndex.Close();
 		}
 	}
 }
