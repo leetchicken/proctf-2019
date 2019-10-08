@@ -19,4 +19,4 @@ data class ProgramsResponse(val programs: List<Program>) : IApiResponse
 data class ProgramResponse(val programId: Int) : IApiResponse
 
 data class RunsResponse(val runs: List<Run>) : IApiResponse
-data class RunResponse(val run: Run, val error: Boolean, val errorMessage: String) : IApiResponse
+data class RunResponse(val run: Run, val output: String, val error: Boolean, val errorMessage: String) : IApiResponse

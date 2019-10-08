@@ -138,20 +138,8 @@ class StackToJvmCompiler : Compiler<StackProgram, ByteArray> {
                     }
                     is Call -> when (s.function) {
                         is Intrinsic -> when (s.function) {
-                            Intrinsic.READ -> {
-                                visitFieldInsn(GETSTATIC, CLASS_NAME, "input", brDescriptor)
-                                visitMethodInsn(INVOKEVIRTUAL, "java/io/BufferedReader", "readLine", "()Ljava/lang/String;", false)
-                                visitMethodInsn(INVOKESTATIC, "java/lang/Integer", "parseInt", "(Ljava/lang/String;)I", false)
-                            }
-                            Intrinsic.WRITE -> {
-                                visitFieldInsn(GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;")
-                                visitInsn(SWAP)
-                                visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "println", "(I)V", false)
-                            }
-                            Intrinsic.WRITESTRING -> {
-                                visitFieldInsn(GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;")
-                                visitInsn(SWAP)
-                                visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "println", "(Ljava/lang/String;)V", false)
+                            Intrinsic.TO_STRING -> {
+                                visitMethodInsn(INVOKESTATIC, "java/lang/String", "valueOf", "(I)Ljava/lang/String;", false)
                             }
                             Intrinsic.STRMAKE -> TODO()
                             Intrinsic.STRCMP -> {

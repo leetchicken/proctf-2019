@@ -399,7 +399,7 @@ fun Application.module(testing: Boolean = false) {
                     var result: String? = null
                     dbQuery {
                         val run = runService.createRun(program, startTime, finishTime, runResult.success, runResult.score)
-                        result = gson.toJson(OkResponse(RunResponse(run, runResult.error, runResult.errorMessage)))
+                        result = gson.toJson(OkResponse(RunResponse(run, runResult.output, runResult.error, runResult.errorMessage)))
                     }
 
                     call.respond(TextContent(result!!, ContentType.Application.Json))

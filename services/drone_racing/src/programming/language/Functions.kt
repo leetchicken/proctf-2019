@@ -29,9 +29,7 @@ data class UnresolvedFunction(override val name: String, val dimensions: Int) : 
 sealed class Intrinsic(name: String, parameterNames: List<Variable>, parameterTypes: List<FunctionType>, returnType: FunctionType) : FunctionDeclaration(name, parameterNames, parameterTypes, returnType, Pass) {
     override val body: Statement get() = throw IllegalStateException("Getting body of an unresolved function $this")
 
-    object READ : Intrinsic("read", emptyList(), emptyList(), FunctionType.VOID)
-    object WRITE : Intrinsic("write", listOf(Variable("expression")), listOf(FunctionType.INTEGER), FunctionType.VOID)
-    object WRITESTRING : Intrinsic("write_string", listOf(Variable("expression")), listOf(FunctionType.STRING), FunctionType.VOID)
+    object TO_STRING : Intrinsic("to_string", listOf(Variable("n")), listOf(FunctionType.INTEGER), FunctionType.STRING)
     object STRMAKE : Intrinsic("strmake", listOf(Variable("n"), Variable("c")), listOf(FunctionType.INTEGER, FunctionType.STRING), FunctionType.STRING)
     object STRCMP : Intrinsic("strcmp", listOf(Variable("S1"), Variable("S2")), listOf(FunctionType.STRING, FunctionType.STRING), FunctionType.INTEGER)
     object STRGET : Intrinsic("strget", listOf(Variable("S"), Variable("i")), listOf(FunctionType.STRING, FunctionType.INTEGER), FunctionType.INTEGER)
@@ -44,7 +42,7 @@ sealed class Intrinsic(name: String, parameterNames: List<Variable>, parameterTy
     companion object {
         val resolvable by lazy {
             listOf(
-                READ, WRITE, WRITESTRING, STRMAKE, STRCMP, STRGET, STRDUP, STRSET, STRCAT, STRSUB, STRLEN
+                TO_STRING, STRMAKE, STRCMP, STRGET, STRDUP, STRSET, STRCAT, STRSUB, STRLEN
             )
         }
     }
