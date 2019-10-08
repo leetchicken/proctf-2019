@@ -55,11 +55,29 @@ sub _check_http_response {
 }
 
 sub check {
+  $log->info("GET / without cert");
+  $_ = _check_http_response($ua->get($url));
+  $log->info("Responce: " . $_->text);
+  _mumble "Invalid message" unless ($_->json('/message') // '') eq "only transactions with certificate allowed";
+
   return $SERVICE_OK;
 }
 
 sub get {
   my ($id, $flag) = @_;
+
+  my $login = $id;
+
+  my $key = path("./accounts/$ip/$login/key.pem");
+  my $cert = path("./accounts/$ip/$login/cert.pem");
+
+  $log->info("GET / with cert");
+  $_ = _check_http_response($ua->cert($cert)->key($key)->get($url));
+  $log->info("Responce: " . $_->text);
+  _mumble "Invalid email" unless ($_->json('/email') // '') eq "$login\@example.com";
+
+  my $data = $_->json('/data') // [];
+  _corrupt "Invalid flag" unless $flag eq $data->[0]{data} // '';
 
   return $SERVICE_OK;
 }
@@ -78,7 +96,6 @@ sub put {
   _mumble "Invalid account url" unless $new_account_url =~ qr/^$url/;
   my $new_order_url = $_->json('/newOrder');
   _mumble "Invalid order url" unless $new_order_url =~ qr/^$url/;
-
 
   my $login;
   $login .= $chars[rand @chars] for 1 .. 12;
