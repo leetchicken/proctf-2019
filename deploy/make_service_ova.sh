@@ -79,6 +79,11 @@ fi
 $SSH 127.0.0.2 "chmod +x $RC"
 $SSH 127.0.0.2 "echo '$FIRST_RUN_CMD' >> $RC"
 
+if [ $SERVICE == "tracker" ]; then
+    $SSH 127.0.0.2 "echo 'insmod /service/tracker/dccp_modules/dccp.ko' >> $RC"
+    $SSH 127.0.0.2 "echo 'insmod /service/tracker/dccp_modules/dccp_ipv4.ko' >> $RC"
+fi
+
 VBoxManage controlvm "proctf_$SERVICE" acpipowerbutton
 
 while VBoxManage list runningvms | grep -q "proctf_$SERVICE"; do
