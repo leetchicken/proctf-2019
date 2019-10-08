@@ -54,8 +54,10 @@ popd > /dev/null
 
 if [ $SERVICE == "deer" ]; then
     echo "import docker images"
+    docker save amazon/opendistro-for-elasticsearch:1.1.0 | $SSH 127.0.0.2 docker import - amazon/opendistro-for-elasticsearch:1.1.0
     docker save proctf/deer-elasticsearch | $SSH 127.0.0.2 docker import - proctf/deer-elasticsearch
     docker save proctf/deer-rabbitmq | $SSH 127.0.0.2 docker import - proctf/deer-rabbitmq
+    docker save mongo | $SSH 127.0.0.2 docker import - mongo
     docker save proctf/deer | $SSH 127.0.0.2 docker import - proctf/deer
 fi
 
