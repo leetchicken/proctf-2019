@@ -40,14 +40,15 @@ namespace notepool
 				Priority = ThreadPriority.BelowNormal,
 				IsBackground = true
 			};
-			Task.Run(() => reopenThread.Run());
-			Task.Run(() => {
+			reopenThread.Start();
+
+			new Thread(() => {
 				while(true)
 				{
 					Thread.Sleep(10000);
 					try { writer.Commit(); } catch {}
 				}
-			});
+			}) {IsBackground = true, Priority = ThreadPriority.BelowNormal}.Start();
 		}
 
 		public static long AddNote(User user, Note note, bool isPrivate)
