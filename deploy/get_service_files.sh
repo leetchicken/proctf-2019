@@ -129,5 +129,12 @@ services/drone_racing/./Dockerfile
 services/drone_racing/./build/distributions/drone_racing-1.0.0.zip
 EOF
     ;;
+    "ca")
+    cat <<EOF
+services/ca/./
+services/ca/./data/
+services/ca/./ssl/
+EOF
+    ;;
     *) echo "No such service" >&2; exit 1;;
 esac
