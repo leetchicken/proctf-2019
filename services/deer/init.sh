@@ -68,7 +68,6 @@ EOF
     }
 }
 EOF
-	sudo chown 1000:1000 Deer.appsettings.json
 
 	cat << EOF > internal_users.yml
 _meta:
@@ -108,7 +107,8 @@ EOF
 	rm -f deer.csr
 	openssl pkcs12 -inkey deer-key.pem -in deer.pem -export -out deer.pfx -passout pass:deer
 	rm -f deer-key.pem deer.pem
-	sudo chown 1000:1000 deer.pfx
+
+	chmod a+r *
 else
   echo "All files already exists"
 fi
