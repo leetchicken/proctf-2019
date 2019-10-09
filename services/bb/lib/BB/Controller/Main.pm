@@ -50,6 +50,8 @@ sub do_register {
   my $login = $c->param('login');
   my $password = $c->param('password');
 
+  return $c->reply->not_found unless $login and $password;
+
   my $r = $c->users->create($login, $password);
 
   if ($r->{status} eq 'ok') {
