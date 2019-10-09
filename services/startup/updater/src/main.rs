@@ -1,18 +1,25 @@
 use std::time;
 use std::collections::HashMap;
+use hex;
 
 use serde::{Serialize, Deserialize};
 
 use tokio::{
     prelude::*,
     net::TcpListener,
-    codec
+    codec,
+    fs
 };
+
+use ring::signature;
+
 
 const LISTEN_ADDR: &str = "0.0.0.0:3255";
 const TIMEOUT: time::Duration = time::Duration::from_secs(15);
+const MAX_FILE_COUNT: usize = 100;
 const CHUNK_SIZE: usize = 1024;
 
+const PUB_KEY_HEX: &str = "6f1de41bcfd9ac78f8acd09b8caa536cee7d52c4cf7a47328ceb410501ee0dd7";
 
 #[derive(Serialize, Deserialize, Debug)]
 struct Manifest {
@@ -227,6 +234,19 @@ impl ExternalDownloader {
             Err(_) => return Err("Bad content length".into())
         };
 
+        let filename = match url.rsplitn(2, '/').next() {
+            Some(f) if !f.is_empty() => f,
+            _ => return Err("Bad uri".into())
+        };
+
+        let tmp_file = String::from("site/") + &filename + ".tmp";
+        let final_file = String::from("site/") + &filename;
+
+        let mut file = match fs::File::create(&tmp_file).await {
+            Ok(f) => f,
+            Err(_) => return Err("Failed to create output file".into())
+        };
+
         let mut left = content_length;
         while left > 0 {
             let chunk = read_stream.read(left).await;
@@ -234,6 +254,13 @@ impl ExternalDownloader {
                 return Err("Protocol error, remote connection was closed".into());
             }
             left -= chunk.len();
+            if file.write_all(&chunk).await.is_err() {
+                return Err("Failed to write to file".into());
+            }
+        }
+
+        if fs::rename(&tmp_file, &final_file).await.is_err() {
+            return Err("Failed to rename resulting file".into());
         }
 
         Ok(String::new())
@@ -250,8 +277,11 @@ impl ExternalDownloader {
 }
 
 
-fn is_signature_valid(_raw_manifest: &str, _signature: &str) -> bool {
-    true
+fn is_signature_valid(raw_manifest: &str, sign: &[u8]) -> bool {
+    let peer_public_key_bytes = hex::decode(PUB_KEY_HEX).unwrap();
+    let peer_public_key = signature::UnparsedPublicKey::new(&signature::ED25519, peer_public_key_bytes);
+
+    peer_public_key.verify(raw_manifest.as_bytes(), &sign).is_ok()
 }
 
 
@@ -277,7 +307,7 @@ fn is_hostport_valid(hostport: &str) -> bool {
 }
 
 
-async fn handle_client(stream: tokio::net::TcpStream) -> Result<String, ClientError> {
+async fn handle_client(stream: tokio::net::TcpStream) -> Result<(), ClientError> {
     let mut lines = codec::Framed::new(stream, codec::LinesCodec::new());
 
     lines.send("Upgrade service ready".into()).await?;
@@ -317,6 +347,14 @@ async fn handle_client(stream: tokio::net::TcpStream) -> Result<String, ClientEr
         }
     };
 
+    let signature = match hex::decode(signature) {
+        Ok(s) => s,
+        Err(_) => {
+            lines.send("Bad signature format".into()).await?;
+            return Err("Bad signature format".into());
+        }
+    };
+
     if !is_signature_valid(&raw_manifest, &signature) {
         lines.send("Bad signature".into()).await?;
         return Err("Bad signature".into());        
@@ -325,24 +363,27 @@ async fn handle_client(stream: tokio::net::TcpStream) -> Result<String, ClientEr
     lines.send("Signature is ok, downloading".into()).await?;
 
     let mut downloader = ExternalDownloader::new();
-    for link in manifest.links {
+    for link in manifest.links.iter().take(MAX_FILE_COUNT) {
         let url = link.url.replacen("mirror", &hostport, 1);
-        let checksum = link.checksum;
+        let checksum = &link.checksum;
 
         match downloader.download(&url, &checksum).await {
             Ok(_) => lines.send((url + " OK").into()).await?,
-            Err(e) => lines.send((url + " ERR, " + &e).into()).await?,
+            Err(e) => {
+                lines.send((url + " ERR, " + &e).into()).await?;
+                break;
+            }
         };
     }
     downloader.cleanup().await;
 
-    Ok("done".into())
+    Ok(())
 }
 
 
 async fn handle_client_wrapper(stream: tokio::net::TcpStream) {
     match handle_client(stream).await {
-        Ok(s) => println!("OK: {}", s),
+        Ok(()) => println!("OK"),
         Err(s) => println!("ERR: {}", s)
     };
 }
