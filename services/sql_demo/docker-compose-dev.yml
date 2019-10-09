@@ -1,0 +1,16 @@
+version: '3'
+services:
+  sql_demo:
+    image: proctf/sql_demo
+    build: .
+    container_name: sql_demo
+    restart: unless-stopped
+    volumes:
+      - db-data:/data
+    ports:
+      - 1433:1433
+    expose:
+      - "1433"
+
+volumes:
+  db-data:
