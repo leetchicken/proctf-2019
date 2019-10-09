@@ -23,7 +23,7 @@ if VBoxManage showvminfo "proctf_$SERVICE" --machinereadable &> /dev/null; then
  VBoxManage unregistervm "proctf_$SERVICE" --delete
 fi
 
-VBoxManage import centos8_master_v2.ova --vsys 0 --vmname "proctf_$SERVICE"
+VBoxManage import centos8_master_v3.ova --vsys 0 --vmname "proctf_$SERVICE"
 
 PORT="$((RANDOM+10000))"
 VBoxManage modifyvm "proctf_$SERVICE" --natpf1 "deploy,tcp,127.0.0.2,$PORT,,22"
@@ -65,6 +65,11 @@ if [ $SERVICE == "handy" ]; then
     echo "import docker images"
     docker save mongo:4 | $SSH 127.0.0.2 docker import - mongo:4.2.0
     docker save handy | $SSH 127.0.0.2 docker import - handy
+fi
+
+if [ $SERVICE == "sql_demo" ]; then
+    echo "import docker images"
+    docker save proctf/sql_demo | $SSH 127.0.0.2 docker load
 fi
 
 $SSH 127.0.0.2 "cd /service/$SERVICE; docker-compose up --no-start"

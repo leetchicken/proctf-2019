@@ -239,8 +239,8 @@ impl ExternalDownloader {
             _ => return Err("Bad uri".into())
         };
 
-        let tmp_file = String::from("site/") + &filename + ".tmp";
-        let final_file = String::from("site/") + &filename;
+        let tmp_file = String::from("html/") + &filename + ".tmp";
+        let final_file = String::from("html/") + &filename;
 
         let mut file = match fs::File::create(&tmp_file).await {
             Ok(f) => f,

@@ -3,7 +3,7 @@
 #include <dirent.h>
 #include <string.h>
 #include <stdio.h>
-#include <map>
+#include <inttypes.h>
 
 //typedef  unsigned long long int uint64_t;
 //typedef  unsigned long long int uint32_t;
@@ -21,8 +21,8 @@ typedef struct __attribute__ ((packed)) _Spaceship {
 typedef struct __attribute__ ((packed)) _Spaceman {
   unsigned int name_len;
   unsigned int password_len;
-  char Name[60];
-  char Password[60];
+  char Name[32];
+  char Password[88];
   _Spaceship * ship;
 } Spaceman;
 
@@ -564,7 +564,6 @@ int main() {
       //printf("%llx\n",spaceships[idx]);fflush(stdout);
       if (spaceships[idx] != 0){
         printf("Name: %s\n",&(spaceships[idx]->Name));fflush(stdout);
-        printf("Acc: %s\n",&(spaceships[idx]->AccessCode));fflush(stdout);
         if (spaceships[idx]->pilot != 0){
           printf("Pilot: %s\n",&(spaceships[idx]->pilot->Name));fflush(stdout);
         }

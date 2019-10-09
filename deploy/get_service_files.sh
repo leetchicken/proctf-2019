@@ -182,7 +182,7 @@ services/startup/./start.sh
 services/startup/./transport_http
 services/startup/./transport_http2
 services/startup/./updater
-services/startup/./site/
+services/startup/./html/
 services/startup/./src/
 services/startup/./src/transport_http/
 services/startup/./src/transport_http/src/
@@ -191,6 +191,11 @@ services/startup/./src/transport_http2/src/
 services/startup/./src/updater/
 services/startup/./src/updater/src/
 services/startup/./src/hashsum/readme.txt
+EOF
+    ;;
+    "sql_demo")
+    cat <<EOF
+services/sql_demo/./docker-compose.yml
 EOF
     ;;
     *) echo "No such service" >&2; exit 1;;
