@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 using Lucene.Net.Analysis;
 using Lucene.Net.Analysis.Miscellaneous;
 using Lucene.Net.Documents;
@@ -77,7 +76,7 @@ namespace notepool
 
 		private static readonly FieldType LoginFieldType = new FieldType
 		{
-			IsTokenized = false,
+			IsTokenized = true,
 			IsIndexed = true,
 			IsStored = false
 		};
@@ -110,10 +109,10 @@ namespace notepool
 		{
 			var parser = new MultiFieldQueryParser(LuceneVersion.LUCENE_48, SearchFields, analyzer) {DefaultOperator = Operator.AND};
 
-			text = text.TrimToNull().EscapeText() ?? EmptyRequest;
-			var login = (myOnly ? user?.Login.EscapeKeyword() : null) ?? EmptyRequest;
+			var escapedText = text.TrimToNull().EscapeText() ?? EmptyRequest;
+			var escapedLogin = (myOnly ? user?.Login.EscapeKeyword() : null) ?? EmptyRequest;
 
-			var query = parser.Parse($"(({text}) OR ({text.HashWords(user?.Key)})) login:{login}");
+			var query = parser.Parse($"(({escapedText}) OR ({escapedText.HashWords(user?.Key)})) login:{escapedLogin}");
 
 			if(gen != null && gen <= trackingWriter.Generation) reopenThread.WaitForGeneration(gen.Value, 3000);
 			var searcher = searcherKeeper.Acquire();

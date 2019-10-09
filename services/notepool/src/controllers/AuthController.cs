@@ -91,6 +91,6 @@ namespace notepool.controllers
 		}
 
 		private const int MaxFieldLength = 64;
-		private static readonly Regex LoginValidateRegex = new Regex(@"^[a-z0-9_]{2,16}$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+		private static readonly Regex LoginValidateRegex = new Regex(@"^[a-z0-9_]{3,20}$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 	}
 }
