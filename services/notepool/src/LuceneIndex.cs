@@ -19,22 +19,25 @@ namespace notepool
 		static LuceneIndex()
 		{
 			System.IO.Directory.CreateDirectory(IndexDirectory);
-			directory = new MMapDirectory(IndexDirectory);
+			directory = new NRTCachingDirectory(new MMapDirectory(IndexDirectory), 256, 256);
 			analyzer = new WordAnalyzer(LuceneVersion.LUCENE_48);
 			writer = new IndexWriter(directory, new IndexWriterConfig(LuceneVersion.LUCENE_48, analyzer)
 			{
 				IndexDeletionPolicy = new KeepOnlyLastCommitDeletionPolicy(),
-				MergedSegmentWarmer = new SimpleMergedSegmentWarmer(null),
+				MergedSegmentWarmer = new SimpleMergedSegmentWarmer(InfoStream.NO_OUTPUT),
 				//UseCompoundFile = false,
 				OpenMode = OpenMode.CREATE_OR_APPEND,
 				UseReaderPooling = true,
-				RAMBufferSizeMB = 1024 * 1024
-			});
+				MergeScheduler = new TaskMergeScheduler(),
+				MergePolicy = new TieredMergePolicy(),
+				RAMBufferSizeMB = 1024,
+				MaxBufferedDocs = 1024
+			}.SetInfoStream(InfoStream.NO_OUTPUT));
 			trackingWriter = new TrackingIndexWriter(writer);
 
 			searcherKeeper = new SearcherManager(writer, false, null);
 
-			reopenThread = new ControlledRealTimeReopenThread<IndexSearcher>(trackingWriter, searcherKeeper, 30.0, 0.0)
+			reopenThread = new ControlledRealTimeReopenThread<IndexSearcher>(trackingWriter, searcherKeeper, 3.0, 0.0)
 			{
 				Priority = ThreadPriority.BelowNormal,
 				IsBackground = true
@@ -44,7 +47,7 @@ namespace notepool
 			new Thread(() => {
 				while(true)
 				{
-					Thread.Sleep(10000);
+					Thread.Sleep(30000);
 					try { writer.Commit(); } catch {}
 				}
 			}) {IsBackground = true, Priority = ThreadPriority.BelowNormal}.Start();
