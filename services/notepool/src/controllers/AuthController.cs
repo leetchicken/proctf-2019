@@ -43,7 +43,7 @@ namespace notepool.controllers
 				if(user == null || !CryptographicOperations.FixedTimeEquals(Encoding.UTF8.GetBytes(user.Password), Encoding.UTF8.GetBytes(password)))
 					return StatusCode(403, "No such user or invalid password");
 
-				await SignInAsync(user);
+				await SignInAsync(login);
 			}
 
 			return Ok("Ok");
@@ -53,8 +53,8 @@ namespace notepool.controllers
 		[HttpPost("/auth/signup")]
 		public async Task<IActionResult> SignUp(string login, string name, string password)
 		{
-			if(string.IsNullOrEmpty(login) || string.IsNullOrEmpty(password))
-				return BadRequest("Login or password is empty");
+			if(string.IsNullOrEmpty(login) || string.IsNullOrEmpty(password) || string.IsNullOrEmpty(name))
+				return BadRequest("Login or password or name is empty");
 
 			if(!LoginValidateRegex.IsMatch(login))
 				return BadRequest("Bad login");
@@ -76,7 +76,7 @@ namespace notepool.controllers
 				var user = new User {Login = login, Name = name, Password = password, Key = key};
 				await UserManager.AddAsync(user);
 
-				await SignInAsync(user);
+				await SignInAsync(login);
 			}
 
 			return Ok("Ok");
@@ -84,9 +84,9 @@ namespace notepool.controllers
 
 		private async Task SignOutAsync() => await HttpContext.SignOutAsync();
 
-		private async Task SignInAsync(User user)
+		private async Task SignInAsync(string login)
 		{
-			var principal = new ClaimsPrincipal(new ClaimsIdentity(new List<Claim>{new Claim(ClaimTypes.Name, user.Login)}, CookieAuthenticationDefaults.AuthenticationScheme));
+			var principal = new ClaimsPrincipal(new ClaimsIdentity(new List<Claim>{new Claim(ClaimTypes.Name, login)}, CookieAuthenticationDefaults.AuthenticationScheme));
 			await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
 		}
 
