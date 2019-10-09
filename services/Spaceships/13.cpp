@@ -482,15 +482,17 @@ int main() {
       }
 
       // Changing ship launch code
-      printf("Enter ship access code (blank to leave unchanged):\n");fflush(stdout);
-      fgets(buf, 1024, stdin);
-      RemoveCRLF(buf);
-      if (strlen(buf)!=0){
-        strcpy(spaceships[idx]->AccessCode,buf);
-        printf("Changed to %s\n",spaceships[idx]->AccessCode);fflush(stdout);
-      }
-      else{
-        printf("Unchanged\n");fflush(stdout);
+      if (strlen(spaceships[idx]->AccessCode) ==0){
+        printf("Enter ship access code (blank to leave unchanged):\n");fflush(stdout);
+        fgets(buf, 1024, stdin);
+        RemoveCRLF(buf);
+        if (strlen(buf)!=0){
+          strcpy(spaceships[idx]->AccessCode,buf);
+          printf("Changed to %s\n",spaceships[idx]->AccessCode);fflush(stdout);
+        }
+        else{
+          printf("Unchanged\n");fflush(stdout);
+        }
       }
 
       // Changing ship pilot
@@ -559,7 +561,7 @@ int main() {
       printf("View ship info:\nEnter ship idx:\n");fflush(stdout);
       fgets(buf, 1024, stdin);
       uint32_t idx = atoi(buf);
-      printf("%llx\n",spaceships[idx]);fflush(stdout);
+      //printf("%llx\n",spaceships[idx]);fflush(stdout);
       if (spaceships[idx] != 0){
         printf("Name: %s\n",&(spaceships[idx]->Name));fflush(stdout);
         printf("Acc: %s\n",&(spaceships[idx]->AccessCode));fflush(stdout);
@@ -738,6 +740,7 @@ int main() {
         printf("No spaceship dir found\n");fflush(stdout);
       }
     }
+    /*
     else if (command == 254){
       printf("Spaceships:\n");fflush(stdout);fflush(stdout);
       for (int i=0; i<32; i++){
@@ -776,7 +779,7 @@ int main() {
         printf("%016llx: %016llx\n",&rr[ii],rr[ii]);
       }
       puts("");fflush(stdout);
-    }
+    }*/
     else{
       printf("Invalid command number %d\n",command);;fflush(stdout);
     }

