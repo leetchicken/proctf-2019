@@ -9,5 +9,7 @@ RUN apk --update add --virtual build-dependencies libffi-dev openssl-dev python-
   && pip install -r requirements.txt \
   && apk del build-dependencies
 
+COPY . /app
+
 
 CMD ["python", "main.py"]
