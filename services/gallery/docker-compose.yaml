@@ -11,6 +11,7 @@ services:
       - ./start.sh:/home/gallery/start.sh
       - ./app.py:/home/gallery/app.py
       - ./dnn.py:/home/gallery/dnn.py
+      - ./public.pem:/home/gallery/public.pem
     restart: unless-stopped
     mem_limit: 2000m
     container_name: gallery

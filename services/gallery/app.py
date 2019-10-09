@@ -7,24 +7,23 @@ import dnn
 import numpy as np
 import pickle
 import os
+import base64
+
+from Crypto.PublicKey import RSA 
+from Crypto.Signature import PKCS1_v1_5 
+from Crypto.Hash import SHA256 
 
 from cgi import parse_qs
 from io import BytesIO
 
 STATIC_DIR = pathlib.Path("static")
-PAINTINGS_DIR = pathlib.Path("data/paintings/")
 REWARDS_DIR = pathlib.Path("data/rewards/")
 EMBEDDINGS_DIR = pathlib.Path("data/embeddings/")
 PREVIEWS_DIR = pathlib.Path("data/previews/")
 os.makedirs(STATIC_DIR, exist_ok=True)
-os.makedirs(PAINTINGS_DIR, exist_ok=True)
 os.makedirs(REWARDS_DIR, exist_ok=True)
 os.makedirs(EMBEDDINGS_DIR, exist_ok=True)
 os.makedirs(PREVIEWS_DIR, exist_ok=True)
-
-MAX_BODY_BYTES = 128_000
-
-MODEL_PATH = "models/model.h5"
 
 DYNAMIC_HEADERS = [
     ("Content-Type", "application/json; charset=utf8"),
@@ -46,7 +45,13 @@ IMG_HEADERS = [
     ("Cache-Control", "max-age=86400"),
 ]
 
+MODEL_PATH = "models/model.h5"
 model = dnn.load(MODEL_PATH)
+
+signer = PKCS1_v1_5.new(RSA.importKey(open("public.pem").read()))
+
+
+MAX_BODY_BYTES = 128_000
 
 def gen_json_ans(obj):
     return "200 OK", JSON_HEADERS, json.dumps(obj)
@@ -65,7 +70,7 @@ def parse_jpg_bytes(body):
 
     return painting
 
-def post_replica(query, body):
+def post_replica(query, body, environ):
     try:
         painting_id = str(uuid.UUID(query["id"][0]))
     except Exception as e:
@@ -95,9 +100,24 @@ def post_replica(query, body):
         reward_file_name = painting_id + ".txt"
         with open(REWARDS_DIR / reward_file_name, "r") as file:            
             reward = file.read()
+        print(f"GIVING REWARD, dist: {dist}")
         return gen_json_ans({"reward": reward})
 
-def put_painting(query, body):
+def put_painting(query, body, environ):
+    try:
+        sign = environ["HTTP_X_SIGN"]
+        h = SHA256.new()
+        h.update(environ["HTTP_HOST"].encode())
+        h.update(body)
+
+        # only authorized merchants can put their paintings!
+        if not signer.verify(h, base64.b64decode(sign)):
+            raise Exception("signature invalid")
+    
+    except Exception as e:
+        print(f"can't validate signature '{sign}':", e)
+        return gen_json_ans({"error": "can't validate signature"})    
+
     reward = query["reward"][0]
 
     try:
@@ -118,12 +138,6 @@ def put_painting(query, body):
         return gen_json_ans({"error": "can't memorize painting"})
 
     image_file_name = painting_id + ".jpg"
-    try:
-        with open(PAINTINGS_DIR / image_file_name, "xb") as file:
-            file.write(body)
-    except Exception as e:
-        print("can't save painting:", e)
-        return gen_json_ans({"error": "can't save painting"})
 
     reward_file_name = painting_id + ".txt"
     try:
@@ -143,18 +157,21 @@ def put_painting(query, body):
     return gen_json_ans({"id": painting_id})
 
 
-def get_paintings(query, body):
-    paintings_ids = []
+def get_paintings(query, body, environ):
+    paintings = []
 
     for x in PREVIEWS_DIR.iterdir():
-        if(len(paintings_ids) >= 5_000):
+        if(len(paintings) >= 5_000):
             break
         if x.is_file() and x.suffix == '.jpg':
-            paintings_ids.append(x.stem)
+            paintings.append(x)
+
+    paintings.sort(key=lambda x: os.path.getmtime(str(x)), reverse=True)    
+    paintings_ids = list(map(lambda x: x.stem, paintings[:100]))
 
     return gen_json_ans(paintings_ids)
 
-def get_preview(query, body):
+def get_preview(query, body, environ):
     try:
         file_name = str(uuid.UUID(query["id"][0])) + ".jpg"
     except Exception as e:
@@ -221,7 +238,7 @@ def application(environ, start_response):
             start_response("200 OK", HTML_HEADERS)
         return [(STATIC_DIR / handler).read_bytes()]
 
-    status, headers, data = handler(get_request_query(environ), get_request_body(environ))
+    status, headers, data = handler(get_request_query(environ), get_request_body(environ), environ)
     start_response(status, headers)
 
     if isinstance(data, str):

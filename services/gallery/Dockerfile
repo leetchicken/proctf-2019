@@ -4,6 +4,7 @@ RUN pip3 install --upgrade pip
 RUN pip3 install keras
 RUN pip3 install Pillow
 RUN pip3 install gunicorn
+RUN pip3 install pycryptodome
 
 RUN adduser --home /home/gallery --shell /usr/sbin/nologin --no-create-home --disabled-password gallery
 

@@ -14,6 +14,10 @@ import traceback
 import PIL.Image
 from io import BytesIO
 
+from Crypto.PublicKey import RSA
+from Crypto.Signature import PKCS1_v1_5
+from Crypto.Hash import SHA256
+
 import paintings
 
 from user_agents import USER_AGENTS
@@ -24,6 +28,9 @@ PORT = 80
 TIMEOUT = 3
 
 SCRIPT_PATH = pathlib.Path(__file__).parent
+
+
+signer = PKCS1_v1_5.new(RSA.importKey(open("private.pem").read()))
 
 
 def get_team_num(host):
@@ -65,7 +72,12 @@ def call_get_paintings_api(session, host):
 def call_put_painting_api(session, host, reward, painting_bytes):
     url = "http://%s:%d/painting?reward=%s" % (host, PORT, reward)
 
-    ans = session.put(url, data=painting_bytes)
+    h = SHA256.new()
+    h.update(host.encode())
+    h.update(painting_bytes)
+    sign = signer.sign(h)
+
+    ans = session.put(url, data=painting_bytes, headers={"X_SIGN": base64.b64encode(sign)})
     if ans.status_code != 200:
         return None
     ans_obj = ans.json()
