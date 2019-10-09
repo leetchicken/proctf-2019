@@ -10,3 +10,5 @@ all:
 	../compiler/compiler save_restore.asm -elf save_restore_kernel.o
 	g++ -O3 -g -std=c++11 -mavx2 save_restore_test.cpp ../dispatch.cpp ../misc.cpp save_restore_kernel.o -o save_restore
 	./save_restore 1 100000
+	#
+	../compiler/compiler ref.asm -elf ref.o

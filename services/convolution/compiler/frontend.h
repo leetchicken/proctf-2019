@@ -44,10 +44,12 @@ enum InstructionType
     USER_DEFINE(kVectorLoad,            "v_load",           3, kInstructionTypeVector)\
     USER_DEFINE(kVectorStore,           "v_store",          3, kInstructionTypeVector)\
     USER_DEFINE(kScalarMov,             "s_mov",            2, kInstructionTypeScalar)\
-    USER_DEFINE(kScalarAddu,            "s_addu",           3, kInstructionTypeScalar)\
+    USER_DEFINE(kScalarAdd,             "s_add",            3, kInstructionTypeScalar)\
+    USER_DEFINE(kScalarSub,             "s_sub",            3, kInstructionTypeScalar)\
     USER_DEFINE(kScalarAnd,             "s_and",            3, kInstructionTypeScalar)\
     USER_DEFINE(kScalarAndN2,           "s_andn2",          3, kInstructionTypeScalar)\
     USER_DEFINE(kScalarOr,              "s_or",             3, kInstructionTypeScalar)\
+    USER_DEFINE(kScalarXor,             "s_xor",            3, kInstructionTypeScalar)\
     USER_DEFINE(kScalarShl,             "s_shl",            3, kInstructionTypeScalar)\
     USER_DEFINE(kScalarShr,             "s_shr",            3, kInstructionTypeScalar)\
     USER_DEFINE(kScalarLoad,            "s_load",           3, kInstructionTypeScalar)\
@@ -194,10 +196,12 @@ public:
     void enterV_load(VectorAssemblerParser::V_loadContext* ctx) override;
     void enterV_store(VectorAssemblerParser::V_storeContext* ctx) override;
     void enterS_mov(VectorAssemblerParser::S_movContext* ctx) override;
-    void enterS_addu(VectorAssemblerParser::S_adduContext* ctx) override;
+    void enterS_add(VectorAssemblerParser::S_addContext* ctx) override;
+    void enterS_sub(VectorAssemblerParser::S_subContext* ctx) override;
     void enterS_and(VectorAssemblerParser::S_andContext *ctx) override;
     void enterS_andn2(VectorAssemblerParser::S_andn2Context* ctx) override;
     void enterS_or(VectorAssemblerParser::S_orContext* ctx) override;
+    void enterS_xor(VectorAssemblerParser::S_xorContext* ctx) override;
     void enterS_shl(VectorAssemblerParser::S_shlContext* ctx) override;
     void enterS_shr(VectorAssemblerParser::S_shrContext* ctx) override;
     void enterS_load(VectorAssemblerParser::S_loadContext* ctx) override;

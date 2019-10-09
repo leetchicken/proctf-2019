@@ -614,30 +614,56 @@ void GenerateCode(std::string& asmbl, const ParsedCode& parsedCode)
                 AddLine<type>(asmbl, "mov", inst.operands[0], inst.operands[1]);
                 break;
 
-            case kScalarAddu:
+            case kScalarAdd:
+            case kScalarSub:
             case kScalarAnd:
             case kScalarOr:
+            case kScalarXor:
             case kScalarShl:
             case kScalarShr:
             {
                 const char* mnemonic = nullptr;
-                if(inst.opCode == kScalarAddu)
+                bool commutative = true;
+                if(inst.opCode == kScalarAdd)
                     mnemonic = "add";
+                else if(inst.opCode == kScalarSub)
+                {
+                    mnemonic = "sub";
+                    commutative = false;
+                }
                 else if(inst.opCode == kScalarAnd)
                     mnemonic = "and";
                 else if(inst.opCode == kScalarOr)
                     mnemonic = "or";
+                else if(inst.opCode == kScalarXor)
+                    mnemonic = "xor";
                 else if(inst.opCode == kScalarShl)
+                {
                     mnemonic = "shl";
+                    commutative = false;
+                }
                 else if(inst.opCode == kScalarShr)
+                {
                     mnemonic = "shr";
+                    commutative = false;
+                }
 
                 auto& dst = inst.operands[0];
                 auto& src0 = inst.operands[1];
                 auto& src1 = inst.operands[2];
                 if(src1.type == kOperandRegister && dst.reg == src1.reg)
                 {
-                    AddLine<type>(asmbl, mnemonic, dst, src0);
+                    if(commutative)
+                    {
+                        AddLine<type>(asmbl, mnemonic, dst, src0);
+                    }
+                    else
+                    {
+                        const char* tmpReg = dst.reg.type == Register::kScalar64 ? "rax" : "eax";
+                        AddLine<type>(asmbl, "mov", tmpReg, src0);
+                        AddLine<type>(asmbl, mnemonic, tmpReg, src1);
+                        AddLine<type>(asmbl, "mov", dst, tmpReg);
+                    }
                 }
                 else if(src0.type == kOperandRegister && dst.reg == src0.reg)
                 {

@@ -180,9 +180,15 @@ void FrontEnd::enterS_mov(VectorAssemblerParser::S_movContext* ctx)
 }
 
 
-void FrontEnd::enterS_addu(VectorAssemblerParser::S_adduContext* ctx)
+void FrontEnd::enterS_add(VectorAssemblerParser::S_addContext* ctx)
 {
-    Add3OpInstruction(kScalarAddu, ctx);
+    Add3OpInstruction(kScalarAdd, ctx);
+}
+
+
+void FrontEnd::enterS_sub(VectorAssemblerParser::S_subContext* ctx)
+{
+    Add3OpInstruction(kScalarSub, ctx);
 }
 
 
@@ -201,6 +207,12 @@ void FrontEnd::enterS_andn2(VectorAssemblerParser::S_andn2Context* ctx)
 void FrontEnd::enterS_or(VectorAssemblerParser::S_orContext* ctx)
 {
     Add3OpInstruction(kScalarOr, ctx);
+}
+
+
+void FrontEnd::enterS_xor(VectorAssemblerParser::S_xorContext* ctx)
+{
+    Add3OpInstruction(kScalarXor, ctx);
 }
 
 
