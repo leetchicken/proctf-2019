@@ -1,0 +1,8 @@
+[workspace]
+
+members = [
+    "updater",
+    "transport_http",
+    "transport_http2",
+    "hashsum"
+]

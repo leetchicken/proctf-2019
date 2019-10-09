@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.0</TargetFramework>
+    <AspNetCoreHostingModel>InProcess</AspNetCoreHostingModel>
+    <Deterministic>false</Deterministic>
+    <DebugType>None</DebugType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Lucene.Net" Version="4.8.0-beta00006" />
+    <PackageReference Include="Lucene.Net.Analysis.Common" Version="4.8.0-beta00006" />
+    <PackageReference Include="Lucene.Net.QueryParser" Version="4.8.0-beta00006" />
+  </ItemGroup>
+
+</Project>

@@ -1,6 +1,5 @@
 package ae.hitb.proctf.drone_racing
 
-import ae.hitb.proctf.drone_racing.dao.PROGRAMS_PATH
 import java.lang.reflect.InvocationTargetException
 import java.nio.file.*
 import kotlin.concurrent.thread
@@ -13,6 +12,7 @@ class CodeRunner {
         val classLoader = ByteArrayClassLoader(mapOf("Code" to classBytes))
         var movesCount= Int.MAX_VALUE
         var success = false
+        var output = ""
         var exception: Throwable? = null
 
         setParams(params);
@@ -29,6 +29,9 @@ class CodeRunner {
 
                     val getMovesCount = klass.getMethod("getMovesCount")
                     movesCount = getMovesCount.invoke(null) as Int
+
+                    val getOutput = klass.getMethod("getOutput")
+                    output = getOutput.invoke(null) as String
 
                     val isOnTopRightCell = klass.getMethod("isOnTopRightCell")
                     success = isOnTopRightCell.invoke(null) as Boolean
@@ -49,11 +52,9 @@ class CodeRunner {
                     println("Thread is dead. Long live the thread!")
                     break
                 }
-                println("Continue checking")
                 Thread.sleep(10)
             }
             if (codeThread.isAlive) {
-                println("It's toooooo long. I'll kill it")
                 try {
                     codeThread.interrupt()
                 } catch (e: Throwable) {
@@ -65,8 +66,6 @@ class CodeRunner {
                     errorMessage = "Your code has been interrupted because it needs more than $TIME_LIMIT_MILLISECONDS milliseconds"
                 )
             }
-
-            println("Finish")
         } finally {
             clearParams(params)
         }
@@ -80,7 +79,8 @@ class CodeRunner {
 
         return RunResult(
             success = success,
-            score = movesCount
+            score = movesCount,
+            output = output
         )
     }
 
@@ -105,7 +105,13 @@ class CodeRunner {
     }
 }
 
-data class RunResult(val success: Boolean, val score: Int = 0, val error: Boolean = false, val errorMessage: String = "")
+data class RunResult(
+    val success: Boolean,
+    val score: Int = 0,
+    val error: Boolean = false,
+    val errorMessage: String = "",
+    val output: String = ""
+)
 
 
 class ByteArrayClassLoader(private val classBytes: Map<String, ByteArray>): ClassLoader() {

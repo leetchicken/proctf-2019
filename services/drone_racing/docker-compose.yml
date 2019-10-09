@@ -1,19 +1,11 @@
 version: '2'
 services:
 
-  # SQL database
-  postgres:
-    image: "postgres:latest"
-    restart: "always"
-    volumes:
-      - "drone-racing-data:/var/lib/postgresql/data"
+  drone_racing:
+    build: "."
     ports:
-      - "5432:5432"
-    environment:
-      POSTGRES_USER: "user"
-      POSTGRES_PASSWORD: "password"
-      POSTGRES_DB: "drone-racing"
-    mem_limit: "8g"
-
-volumes:
-  drone-racing-data:
+      - "0.0.0.0:8080:8080"
+#    volumes:
+#      - ./data/database.h2.mv.db:/home/drone_racing/database.h2.mv.db
+#      - ./data/database.h2.trace.db:/home/drone_racing/database.h2.trace.db
+#      - ./data/session.key:/home/drone_racing/session.key

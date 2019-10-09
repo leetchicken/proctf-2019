@@ -8,7 +8,7 @@ import pprint
 from dataclasses import dataclass
 
 
-DIRECTION_TO_FUNCTION = dict(U="goUp", D="goDown", R="goRight", L="goLeft")
+DIRECTION_TO_FUNCTION = dict(U="up", D="down", R="right", L="left")
 ID_CHARS = string.ascii_letters
 INDENT = "   "
 
@@ -73,9 +73,9 @@ def get_move(x1, y1, x2, y2):
     raise ValueError("Unknown move from (%d, %d) to (%d, %d)" % (x1, y1, x2, y2))
 
 
-def generate_program(moves):
+def generate_program(moves, flag=None):
     params = generate_params()
-    functions = generate_function('main', moves, params)
+    functions = generate_function('main', moves, params, flag)
     source_code = ''
     for function in functions:
         if function.name == "main":
@@ -92,7 +92,7 @@ def render_function(function: Function):
     return "fun %s()%s\nbegin\n" % (function.name, function_return_type) + textwrap.indent(function.body, INDENT) + "end\n\n"
 
 
-def generate_function(name, moves, params):
+def generate_function(name, moves, params, flag=None):
     function = Function(name, {}, "", "")
 
     if name != "main":
@@ -104,14 +104,22 @@ def generate_function(name, moves, params):
 
     functions = []
     parts = split_to_parts(moves)
+    already_printed_flag = flag is None
     for part in parts:
-        if random.randint(0, 2) <= 1 and len(part) >= 3:
+        if random.randint(0, 2) <= 1 and len(part) >= 3:  # generate a function and call it
             extracted_function_name = generate_id()
-            extracted_functions = generate_function(extracted_function_name, part, params)
+            flag_for_function = None
+            if not already_printed_flag and random.choice(parts) == part:
+                flag_for_function = flag
+                already_printed_flag = True
+            extracted_functions = generate_function(extracted_function_name, part, params, flag_for_function)
             extracted_function = extracted_functions[-1]
             functions.extend(extracted_functions)
             function.body += extracted_function_name + "()\n"
-        else:
+        else:  # generate a sequence of moves (calls of goX() methods), maybe with loops
+            if not already_printed_flag and random.choice(parts) == part:
+                function.body += "write(\"%s\")\n" % flag
+                already_printed_flag = True
             move_idx = 0
             while move_idx < len(part):
                 if move_idx + 2 < len(part) and part[move_idx] == part[move_idx + 1] == part[move_idx + 2] and random.randint(0, 2) <= 1:
@@ -128,6 +136,9 @@ def generate_function(name, moves, params):
                     move_idx += 1
                 if random.randint(0, 4) == 0:
                     function.body += generate_nop(params)
+
+    if not already_printed_flag:
+        function.body += "write(\"%s\")\n" % flag
 
     if function.return_type == "str":
         function.body += 'return "%s"\n' % generate_random_string_literal()
@@ -152,8 +163,8 @@ def generate_loop(operation, length):
         )
 
 
-def generate_nop(params, allow_moves=False):
-    option = random.randint(0, 2 if allow_moves else 1)
+def generate_nop(params, never_be_here=False):
+    option = random.randint(0, 2 if never_be_here else 1)
     if option == 0:
         return "%s = %d\n" % (generate_id(), random.randint(-1000, -1000))
     elif option == 1 and len(params) > 0:
@@ -168,7 +179,7 @@ def generate_nop(params, allow_moves=False):
 
 def generate_variable_value(variable, value):
     option = random.randint(0, 4)
-    if option == 0:  # Just a assignment
+    if option == 0:  # Just an assignment
         return "%s = %d\n" % (variable, value)
 
     result = ""
@@ -184,7 +195,7 @@ def generate_variable_value(variable, value):
         term1, term2 = get_random_multiplicators(value)
         operation = "*"
     else:
-        term2 = random.randint(-100, 100)
+        term2 = random.randint(1, 100)
         term1 = term2 * value
         operation = "/"
 

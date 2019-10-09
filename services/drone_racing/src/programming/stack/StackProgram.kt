@@ -26,13 +26,6 @@ data class StackProgram(val functions: Map<FunctionDeclaration, List<StackStatem
                         val literalPool: List<CharArray>)
 
 val currentExceptionVariable = Variable("___current_exception")
-val thrownExceptionVariable = Variable("___thrown_exception")
-val exceptionDataVariable = Variable("___exception_data")
 val poppedUnusedValueVariable = Variable("___popped_unused")
 val returnDataVariable = Variable("___return_data")
 
-val returnNormallyFakeException = ExceptionType("ReturnNormally")
-val returnNormallyFakeExceptionId = -1
-
-val StackProgram.code get() =
-    functions[entryPoint]!!

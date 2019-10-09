@@ -2,7 +2,6 @@ version: '3'
 services:
   elasticsearch:
     image: proctf/deer-elasticsearch
-    build: elasticsearch/
     container_name: deer-elastic
     volumes:
       - ./root-ca.pem:/usr/share/elasticsearch/config/root-ca.pem
@@ -25,7 +24,6 @@ services:
 
   rabbitmq:
     image: proctf/deer-rabbitmq
-    build: rabbitmq/
     container_name: deer-rabbit
     volumes:
       - ./definitions.json:/etc/rabbitmq/definitions.json
@@ -43,9 +41,8 @@ services:
 
   deer:
     image: proctf/deer
-    build: src/Deer/
     container_name: deer
-    restart: on-failure
+    restart: unless-stopped
     volumes:
       - ./Deer.appsettings.json:/app/appsettings.json
       - ./root-ca.pem:/app/root-ca.pem

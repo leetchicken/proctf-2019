@@ -13,12 +13,6 @@ object ProgramGrammar : Grammar<Program>() {
     private val LPAR by token("\\(")
     private val RPAR by token("\\)")
 
-    private val LSQ by token("\\[")
-    private val RSQ by token("]")
-
-    private val LBRC by token("\\{")
-    private val RBRC by token("}")
-
     private val PLUS by token("\\+")
     private val MINUS by token("-")
     private val DIV by token("/")
@@ -69,7 +63,6 @@ object ProgramGrammar : Grammar<Program>() {
 
     private val INTEGER_TYPE by token("int\\b")
     private val STRING_TYPE by token("str\\b")
-    private val ARRAY_TYPE by token("array\\b")
 
     private val NUMBER_LITERAL by token("\\d+")
     private val CHAR_LITERAL by token("'.'")
@@ -105,17 +98,6 @@ object ProgramGrammar : Grammar<Program>() {
             (TRUE asJust IntLiteral(1)) or
             (FALSE asJust IntLiteral(0))
 
-    private val intArrayLiteral by
-    -LSQ * separatedTerms(parser(ProgramGrammar::expression), COMMA, acceptZero = true) * -RSQ map {
-        ArrayLiteral(isBoxed = false, initializers = it)
-    }
-
-    // TODO: выкинуть?
-    private val boxedArrayLiteral by
-    -LBRC * separatedTerms(parser(ProgramGrammar::expression), COMMA, acceptZero = true) * -RBRC map {
-        ArrayLiteral(isBoxed = true, initializers = it)
-    }
-
     private val functionCall: Parser<FunctionCall> by
             (ID * -LPAR * separatedTerms(parser(this::expression), COMMA, acceptZero = true) * -RPAR).map { (name, args) ->
                 FunctionCall(UnresolvedFunction(name.text, args.size), args)
@@ -130,17 +112,8 @@ object ProgramGrammar : Grammar<Program>() {
     private val notTerm by (-NOT * parser(this::term)) map { UnaryOperation(it, Not) }
     private val parenTerm by -LPAR * parser(this::expression) * -RPAR
 
-    private val nonIndexedTerm: Parser<Expression> by
-        intConst or functionCall or notTerm or variable or param or parenTerm or stringLiteral or intArrayLiteral or boxedArrayLiteral
-
-    private val indexedTerm: Parser<FunctionCall> by
-        (nonIndexedTerm * oneOrMore(-LSQ * parser(ProgramGrammar::expression) * -RSQ))
-            .map { (term, indices) ->
-                indices.fold(term) { acc, it -> FunctionCall(Intrinsic.ARRGET, listOf(acc, it)) } as FunctionCall
-            }
-
-    private val term by
-        indexedTerm or nonIndexedTerm
+    private val term: Parser<Expression> by
+        intConst or functionCall or notTerm or variable or param or parenTerm or stringLiteral
 
     private val multiplicationOperator by TIMES or DIV or MOD
     private val multiplicationOrTerm by leftAssociative(term, multiplicationOperator) { l, o, r ->
@@ -166,12 +139,6 @@ object ProgramGrammar : Grammar<Program>() {
 
     private val assignStatement: Parser<AssignStatement> by
         (variable * -ASSIGN * expression).map { (v, e) -> AssignStatement(v, e) }
-
-    private val arrayPutStatement: Parser<FunctionCallStatement> by
-        (indexedTerm * -ASSIGN * expression)
-            .map { (call, value) ->
-                FunctionCallStatement(FunctionCall(Intrinsic.ARRSET, call.argumentExpressions + listOf(value)))
-            }
 
     private val ifStatement: Parser<IfStatement> by
             (-IF * expression * -THEN *
@@ -213,10 +180,9 @@ object ProgramGrammar : Grammar<Program>() {
             whileStatement or
             forStatement or
             repeatStatement or
-            returnStatement or
-            arrayPutStatement
+            returnStatement
 
-    private val typeName: Parser<FunctionType> by (INTEGER_TYPE map { FunctionType.INTEGER }) or (STRING_TYPE map { FunctionType.STRING }) or (ARRAY_TYPE map { FunctionType.ARRAY })
+    private val typeName: Parser<FunctionType> by (INTEGER_TYPE map { FunctionType.INTEGER }) or (STRING_TYPE map { FunctionType.STRING })
 
     private val functionArgument: Parser<Pair<Variable, FunctionType>> by
             ID * -COLON * typeName map { (name, type) -> Pair(Variable(name.text), type)}

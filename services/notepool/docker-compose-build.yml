@@ -1,0 +1,10 @@
+version: '3'
+services:
+  notepool_build:
+    image: proctf/notepool-build
+    container_name: notepool-build
+    build:
+      context: .
+      dockerfile: Dockerfile-build
+    volumes:
+      - ./out:/app/out

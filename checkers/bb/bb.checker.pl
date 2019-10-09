@@ -115,8 +115,8 @@ sub put {
 
   my $password = $id;
   my ($login1, $login2) = ('', '');
-  $login1 .= $chars[rand @chars] for 1 .. 5;
-  $login2 .= $chars[rand @chars] for 1 .. 5;
+  $login1 .= $chars[rand @chars] for 1 .. 9;
+  $login2 .= $chars[rand @chars] for 1 .. 9;
   my ($title, $descr) = ('', '');
   $title .= $chars[rand @chars] for 1 .. 12;
   $descr .= $chars[rand @chars] for 1 .. 50;

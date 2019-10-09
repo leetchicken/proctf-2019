@@ -2,7 +2,6 @@ package ae.hitb.proctf.drone_racing.programming.stack
 
 import ae.hitb.proctf.drone_racing.programming.Compiler
 import ae.hitb.proctf.drone_racing.programming.exhaustive
-import ae.hitb.proctf.drone_racing.programming.languageUtils.LanguageVisitor
 import ae.hitb.proctf.drone_racing.programming.language.*
 import java.util.*
 
@@ -13,7 +12,7 @@ class StatementToStackCompiler : Compiler<Program, StackProgram> {
         val traceException: Exception = RuntimeException()
     )
 
-    class CompilationEnvironment(val exceptionIds: Map<ExceptionType, Int>) {
+    class CompilationEnvironment {
         val stringPool = mutableListOf<CharArray>()
 
         val unknownStackContent = listOf<StackStatement>()
@@ -28,24 +27,15 @@ class StatementToStackCompiler : Compiler<Program, StackProgram> {
             }
         }
 
-        class ExitHandler(
-            val hasExceptionTypes: List<ExceptionType>,
-            val hasFinallyBlock: Boolean
-        ) {
-            val throwPlaceholders = mutableListOf<JumpPlaceholder>()
-            val exitWithoutCatchPlaceholders = mutableListOf<JumpPlaceholder>()
-        }
+        class ExitHandler
 
         val exitHandlersStack = Stack<ExitHandler>().apply { }
 
-        fun exitHandlerWhenThrown() =
-            exitHandlersStack.last { it.hasFinallyBlock || it.hasExceptionTypes.isNotEmpty() }
     }
 
     override fun compile(source: Program): StackProgram {
-        val exceptions = generateExceptionIds(collectExceptions(source.functionDeclarations.map { it.body }))
-        val environment = CompilationEnvironment(exceptions)
-        val functionBodies = source.functionDeclarations.associate { it to environment.compileFunction(it) }
+        val environment = CompilationEnvironment()
+        val functionBodies = source.functionDeclarations.associateWith { environment.compileFunction(it) }
         return StackProgram(functionBodies, source.mainFunction, environment.stringPool)
     }
 
@@ -56,10 +46,7 @@ class StatementToStackCompiler : Compiler<Program, StackProgram> {
         stackContent[0] = emptyList()
 
         check(exitHandlersStack.isEmpty())
-        val returnHandler = CompilationEnvironment.ExitHandler(
-            hasExceptionTypes = listOf(ExceptionType("###all-uncaught")),
-            hasFinallyBlock = true
-        )
+        val returnHandler = CompilationEnvironment.ExitHandler()
         exitHandlersStack.push(returnHandler)
 
         val statementsDebugStack = Stack<Statement>()
@@ -137,9 +124,6 @@ class StatementToStackCompiler : Compiler<Program, StackProgram> {
             emit(placeholder.fillFunction(jumpTo), placeholder.position)
         }
 
-        var arrayLiteralDepth = 0
-        lateinit var compileArrayLiteral: (arrayLiteral: ArrayLiteral) -> Unit
-
         fun compileExpression(expression: Expression) {
             exprsDebugStack.push(expression)
             when (expression) {
@@ -164,32 +148,9 @@ class StatementToStackCompiler : Compiler<Program, StackProgram> {
                     for (e in expression.argumentExpressions)
                         compileExpression(e)
                     emit(Call(expression.functionDeclaration))
-                    Unit
                 }
-                is ArrayLiteral -> compileArrayLiteral(expression)
             }.exhaustive
             check(exprsDebugStack.pop() == expression)
-        }
-
-        compileArrayLiteral = { arrayLiteral ->
-            arrayLiteralDepth++
-            val arrayVariable = Variable("###array-under-construction-$arrayLiteralDepth")
-            emit(PushInt(IntLiteral(arrayLiteral.initializers.size)))
-            emit(PushInt(IntLiteral(0)))
-            val intrinsic = if (arrayLiteral.isBoxed) Intrinsic.ARRMAKEBOX else Intrinsic.ARRMAKE
-            emit(Call(intrinsic))
-            if (arrayLiteral.initializers.isNotEmpty()) {
-                emit(St(arrayVariable))
-                for ((index, init) in arrayLiteral.initializers.withIndex()) {
-                    emit(Ld(arrayVariable))
-                    emit(PushInt(IntLiteral(index)))
-                    compileExpression(init)
-                    emit(Call(Intrinsic.ARRSET))
-                    emit(Pop)
-                }
-                emit(Ld(arrayVariable))
-            }
-            arrayLiteralDepth--
         }
 
         fun compileStatement(statement: Statement) {
@@ -230,7 +191,6 @@ class StatementToStackCompiler : Compiler<Program, StackProgram> {
                 is ReturnStatement -> {
                     check(function.returnType != FunctionType.VOID) { "Can't return from void function" }
                     compileStatement(AssignStatement(returnDataVariable, statement.expression))
-//                    compileStatement(ThrowStatement(returnNormallyFakeException, statement.expression))
                 }
                 is FunctionCallStatement -> {
                     if (statement.functionCall.functionDeclaration.returnType != FunctionType.VOID) {
@@ -238,84 +198,6 @@ class StatementToStackCompiler : Compiler<Program, StackProgram> {
                         emit(Pop)
                     } else
                         compileExpression(statement.functionCall)
-                }
-                is TryStatement -> {
-                    val tryExitHandler = CompilationEnvironment.ExitHandler(
-                        hasExceptionTypes = statement.catchBranches.map { it.exceptionType },
-                        hasFinallyBlock = statement.finallyStatement != Pass
-                    )
-
-                    exitHandlersStack.push(tryExitHandler)
-
-                    // Inside the statement body, the throwing & returning instruction positions are recorded into the
-                    // exit handler.
-                    compileStatement(statement.body)
-                    // If the body finishes normally, we jump over the catch blocks (into the finally block, if present)
-                    val exitNormallyPlaceholder = emitJumpPlaceholder(::Jmp)
-                    tryExitHandler.exitWithoutCatchPlaceholders.add(exitNormallyPlaceholder)
-                    tryExitHandler.throwPlaceholders.forEach { fillJumpPlaceholder(it, nextInsn()) }
-
-                    var jzToNextBranchPlaceholder: JumpPlaceholder? = null // Jump over a catch block if exception type does not match
-                    val catchExitHandlers = statement.catchBranches.map { branch ->
-                        if (jzToNextBranchPlaceholder != null) {
-                            fillJumpPlaceholder(jzToNextBranchPlaceholder!!, nextInsn())
-                        }
-                        val catchExitHandler = CompilationEnvironment.ExitHandler(
-                            listOf(ExceptionType("###all-uncaught")), statement.finallyStatement != Pass
-                        )
-                        emit(Ld(currentExceptionVariable))
-                        emit(PushInt(IntLiteral(exceptionIds[branch.exceptionType]!!)))
-                        emit(Binop(Eq))
-                        jzToNextBranchPlaceholder = emitJumpPlaceholder(::Jz)
-
-                        exitHandlersStack.push(catchExitHandler)
-                        compileStatement(AssignStatement(branch.dataVariable, exceptionDataVariable))
-                        compileStatement(branch.body)
-                        check(exitHandlersStack.pop() == catchExitHandler)
-
-                        compileStatement(AssignStatement(currentExceptionVariable, IntLiteral(0)))
-                        compileStatement(AssignStatement(exceptionDataVariable, IntLiteral(0)))
-                        val jumpOverOtherCatchBranchesWhenCaught = emitJumpPlaceholder(::Jmp)
-                        tryExitHandler.exitWithoutCatchPlaceholders.add(jumpOverOtherCatchBranchesWhenCaught)
-
-                        catchExitHandler
-                    }
-
-                    if (jzToNextBranchPlaceholder != null) {
-                        fillJumpPlaceholder(jzToNextBranchPlaceholder!!, nextInsn())
-                    }
-
-                    (tryExitHandler.exitWithoutCatchPlaceholders +
-                     catchExitHandlers.flatMap { it.throwPlaceholders + it.exitWithoutCatchPlaceholders })
-                        .forEach { fillJumpPlaceholder(it, nextInsn()) }
-
-                    val finallyExitHandler = CompilationEnvironment.ExitHandler(emptyList(), true)
-                    exitHandlersStack.push(finallyExitHandler)
-                    compileStatement(statement.finallyStatement)
-
-                    val jmpOutsideOnUncaughtException = emitJumpPlaceholder(::Jmp)
-                    exitHandlersStack.last { it.throwPlaceholders.add(jmpOutsideOnUncaughtException) }
-
-                    check(exitHandlersStack.pop() == finallyExitHandler)
-                    (finallyExitHandler.throwPlaceholders + finallyExitHandler.exitWithoutCatchPlaceholders).forEach {
-                        fillJumpPlaceholder(it, nextInsn())
-                    }
-                    // nextInsn should handle uncaught exceptions
-                    exitHandlersStack.pop().also { check(it === tryExitHandler) }
-
-                    emit(Ld(currentExceptionVariable))
-                    emit(PushInt(IntLiteral(0)))
-                    emit(Binop(Eq))
-                    val jzOnUncaughtExceptionPlaceholder = emitJumpPlaceholder(::Jz)
-                    exitHandlerWhenThrown().throwPlaceholders.add(jzOnUncaughtExceptionPlaceholder)
-                }
-                is ThrowStatement -> {
-                    emit(PushInt(IntLiteral(exceptionIds[statement.exceptionType]!!)))
-                    emit(St(currentExceptionVariable))
-                    compileExpression(statement.dataExpression)
-                    emit(St(exceptionDataVariable))
-                    val exitPlaceholder = emitJumpPlaceholder(::Jmp)
-                    exitHandlerWhenThrown().throwPlaceholders.add(exitPlaceholder)
                 }
             }.exhaustive
             check(statementsDebugStack.pop() == statement)
@@ -335,19 +217,9 @@ class StatementToStackCompiler : Compiler<Program, StackProgram> {
             emit(Ld(returnDataVariable))
             emit(Ret1)
         }
-//        // Implicit zero return value
-//        emit(Push(IntLiteral(0)))
-//        emit(St(exceptionDataVariable))
-//
+
         check(exitHandlersStack.peek() == returnHandler)
         exitHandlersStack.pop()
-//        (returnHandler.throwPlaceholders + returnHandler.exitWithoutCatchPlaceholders).forEach {
-//            fillJumpPlaceholder(it, nextInsn())
-//        }
-//
-//        emit(TransEx)
-//        emit(Ld(exceptionDataVariable))
-//        emit(Ret1)
 
         return program.mapIndexed { idx, (insn, st, ex) ->
             if (insn is StackStatement) {
@@ -362,20 +234,3 @@ class StatementToStackCompiler : Compiler<Program, StackProgram> {
     }
 }
 
-private fun collectExceptions(statements: List<Statement>): Set<ExceptionType> {
-    val exceptionsCollector = object : LanguageVisitor() {
-        val exceptions = mutableSetOf<ExceptionType>()
-
-        override fun visitExceptionType(exceptionType: ExceptionType) {
-            exceptions += exceptionType
-        }
-    }
-
-    statements.forEach { exceptionsCollector.visitStatement(it) }
-    return exceptionsCollector.exceptions
-}
-
-fun generateExceptionIds(exceptions: Iterable<ExceptionType>): Map<ExceptionType, Int> {
-    return exceptions.mapIndexed { index, exceptionType -> exceptionType to index + 1 }.toMap() +
-           (returnNormallyFakeException to returnNormallyFakeExceptionId)
-}

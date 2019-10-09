@@ -60,7 +60,7 @@ EOF
     "deer")
     cat <<EOF
 services/deer/./docker-compose.yml
-services/deer/./run-docker-compose.sh
+services/deer/./init.sh
 EOF
     ;;
     "bb")
@@ -120,6 +120,58 @@ EOF
     "gallery")
     cat <<EOF
 services/gallery/./
+services/gallery/./models/
+services/gallery/./static/
+EOF
+    ;;
+    "drone_racing")
+    cat <<EOF
+services/drone_racing/./docker-compose.yml
+services/drone_racing/./Dockerfile
+services/drone_racing/./build/distributions/drone_racing-1.0.0.zip
+EOF
+    ;;
+    "ca")
+    cat <<EOF
+services/ca/./
+services/ca/./data/
+services/ca/./ssl/
+EOF
+    ;;
+    "tracker")
+    cat <<EOF
+services/tracker/./Dockerfile
+services/tracker/./main.py
+services/tracker/./dccp_modules/dccp.ko
+services/tracker/./dccp_modules/dccp_ipv4.ko
+services/tracker/./db
+services/tracker/./db/drop.sql
+services/tracker/./db/create.sql
+services/tracker/./app
+services/tracker/./app/enums.py
+services/tracker/./app/__init__.py
+services/tracker/./app/config.py
+services/tracker/./app/protocol.py
+services/tracker/./app/network.py
+services/tracker/./app/common.py
+services/tracker/./app/api
+services/tracker/./app/api/track.py
+services/tracker/./app/api/__init__.py
+services/tracker/./app/api/tracker.py
+services/tracker/./app/api/point.py
+services/tracker/./app/api/user.py
+services/tracker/./config.yaml
+services/tracker/./docker-compose.yml
+services/tracker/./requirements.txt
+EOF
+    ;;
+    "notepool")
+    cat <<EOF
+services/notepool/./docker-compose.yml
+services/notepool/./Dockerfile
+services/notepool/./start.sh
+services/notepool/./out/
+services/notepool/./out/wwwroot/
 EOF
     ;;
     *) echo "No such service" >&2; exit 1;;

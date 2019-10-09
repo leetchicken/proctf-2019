@@ -23,8 +23,8 @@ for i = 1..11-1 do begin
    sum = sum + i
 end
 a = 100
-write(getSum(a))
-write(sum)
+write(to_string(getSum(a)))
+write(to_string(sum))
 """);
 
         compileAndRunProgram(program)
@@ -38,11 +38,11 @@ sum = 0
 for i = 1 .. 10 do begin
     sum = sum + i
 end
-write(sum)
-write(2 * sum)
-write(strlen("hello"))
+write(to_string(sum))
+write(to_string(2 * sum))
+write(to_string(strlen("hello")))
 if strcmp("hello", "world") < 0 then
-    write_string("Yes")
+    write("Yes")
 end
 
 """)
@@ -60,7 +60,7 @@ begin
     return "hello world"
 end
 
-write_string(hello())
+write(hello())
 """)
         compileAndRunProgram(program)
     }
@@ -71,11 +71,11 @@ write_string(hello())
         val program = readProgram("""
 fun print_number(x: int)
 begin
-   write(x)
-   write(2 * x)
-   write_string("Yes")
+   write(to_string(x))
+   write(to_string(2 * x))
+   write("Yes")
    local = 10
-   write(local + 100500)
+   write(to_string(local + 100500))
 end
 
 fun empty_function(x: int)
@@ -99,11 +99,11 @@ print_number(get_double(100))
     }
 
     @ExperimentalUnsignedTypes
-    @Test
+    @Test(expected = java.lang.reflect.InvocationTargetException::class)
     fun hackTest() {
         val program = readProgram("""
-write_string("org/h2/tools/Server")
-write_string("MyProgram")
+write("org/h2/tools/Server")
+write("MyProgram")
 
 openBrowser("yandex.ru")
 """)
@@ -116,7 +116,7 @@ openBrowser("yandex.ru")
     @ExperimentalUnsignedTypes
     @Test
     fun paramTest() {
-        val program = readProgram("write_string(\$n)")
+        val program = readProgram("write(\$n)")
         System.setProperty("n", "HELLO WORLD")
         compileAndRunProgram(program)
     }
@@ -139,6 +139,7 @@ openBrowser("yandex.ru")
 
         val classLoader = ByteArrayClassLoader(mapOf("Program" to jvmBytecode))
         val klass = classLoader.loadClass("Program")
+        klass.getMethod("setMaze", String::class.java).invoke(null, "....")
         val main = klass.getMethod("main")
         main.invoke(null)
     }

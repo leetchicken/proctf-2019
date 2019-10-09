@@ -102,3 +102,6 @@
     become: yes
     become_user: "{{cs_user}}"
     tags: septon
+
+  - name: ca deps
+    cpanm: name=Crypt::JWT

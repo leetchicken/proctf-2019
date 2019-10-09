@@ -39,7 +39,6 @@ class StackToJvmCompiler : Compiler<StackProgram, ByteArray> {
             FunctionType.INTEGER -> "I"
             FunctionType.STRING -> "Ljava/lang/String;"
             FunctionType.VOID -> "V"
-            else -> ""
         }
     }
 
@@ -139,20 +138,8 @@ class StackToJvmCompiler : Compiler<StackProgram, ByteArray> {
                     }
                     is Call -> when (s.function) {
                         is Intrinsic -> when (s.function) {
-                            Intrinsic.READ -> {
-                                visitFieldInsn(GETSTATIC, CLASS_NAME, "input", brDescriptor)
-                                visitMethodInsn(INVOKEVIRTUAL, "java/io/BufferedReader", "readLine", "()Ljava/lang/String;", false)
-                                visitMethodInsn(INVOKESTATIC, "java/lang/Integer", "parseInt", "(Ljava/lang/String;)I", false)
-                            }
-                            Intrinsic.WRITE -> {
-                                visitFieldInsn(GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;")
-                                visitInsn(SWAP)
-                                visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "println", "(I)V", false)
-                            }
-                            Intrinsic.WRITESTRING -> {
-                                visitFieldInsn(GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;")
-                                visitInsn(SWAP)
-                                visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "println", "(Ljava/lang/String;)V", false)
+                            Intrinsic.TO_STRING -> {
+                                visitMethodInsn(INVOKESTATIC, "java/lang/String", "valueOf", "(I)Ljava/lang/String;", false)
                             }
                             Intrinsic.STRMAKE -> TODO()
                             Intrinsic.STRCMP -> {
@@ -166,17 +153,10 @@ class StackToJvmCompiler : Compiler<StackProgram, ByteArray> {
                             Intrinsic.STRCAT -> TODO()
                             Intrinsic.STRSUB -> TODO()
                             Intrinsic.STRLEN -> visitMethodInsn(INVOKEVIRTUAL, "java/lang/String", "length", "()I", false)
-                            Intrinsic.ARRMAKE -> TODO()
-                            Intrinsic.ARRMAKEBOX -> TODO()
-                            Intrinsic.ARRGET -> TODO()
-                            Intrinsic.ARRSET -> TODO()
-                            Intrinsic.ARRLEN -> TODO()
                         }
                         else -> {
                             val descriptor = "(" + s.function.parameterTypes.joinToString { getJavaType(it) } + ")" + getJavaType(s.function.returnType)
                             visitMethodInsn(INVOKESTATIC, CLASS_NAME, s.function.name, descriptor, false)
-                            // TODO Нужно? Ради хакабельности?
-//                            visitLdcInsn(0)
                         }
                     }
                     Ret0 -> {
@@ -187,7 +167,6 @@ class StackToJvmCompiler : Compiler<StackProgram, ByteArray> {
                             visitInsn(ARETURN)
                         else
                             visitInsn(IRETURN)
-//                        visitInsn(POP)
                     }
                     Pop -> visitInsn(POP)
                     is PushPooled -> {
@@ -198,7 +177,6 @@ class StackToJvmCompiler : Compiler<StackProgram, ByteArray> {
             }
 
             visitLabel(labels.last())
-//            visitInsn(RETURN)
             visitMaxs(0, 0)
             visitEnd()
         }

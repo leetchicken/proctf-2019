@@ -32,7 +32,6 @@ private class Resolution(val program: Program) {
         is BinaryOperation -> expression.copy(left = resolveCallsIn(expression.left),
                                               right = resolveCallsIn(expression.right))
         is StringLiteral -> expression
-        is ArrayLiteral -> expression.copy(initializers = expression.initializers.map { resolveCallsIn<Expression>(it) })
     } as T
 
     private fun resolveCallsInStatement(s: Statement): Statement = when (s) {
@@ -43,10 +42,6 @@ private class Resolution(val program: Program) {
         is ChainStatement -> s.copy(resolveCallsInStatement(s.leftPart), resolveCallsInStatement(s.rightPart))
         is ReturnStatement -> s.copy(resolveCallsIn(s.expression))
         is FunctionCallStatement -> s.copy(resolveCallsIn(s.functionCall))
-        is TryStatement -> s.copy(resolveCallsInStatement(s.body),
-                         s.catchBranches.map { it.copy(body = resolveCallsInStatement(it.body)) },
-                         resolveCallsInStatement(s.finallyStatement))
-        is ThrowStatement -> s.copy(dataExpression = resolveCallsIn(s.dataExpression))
     }
 }
 

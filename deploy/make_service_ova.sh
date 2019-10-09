@@ -54,9 +54,11 @@ popd > /dev/null
 
 if [ $SERVICE == "deer" ]; then
     echo "import docker images"
-    docker save proctf/deer-elasticsearch | $SSH 127.0.0.2 docker import - proctf/deer-elasticsearch
-    docker save proctf/deer-rabbitmq | $SSH 127.0.0.2 docker import - proctf/deer-rabbitmq
-    docker save proctf/deer | $SSH 127.0.0.2 docker import - proctf/deer
+    docker save amazon/opendistro-for-elasticsearch:1.1.0 | $SSH 127.0.0.2 docker load
+    docker save proctf/deer-elasticsearch | $SSH 127.0.0.2 docker load
+    docker save proctf/deer-rabbitmq | $SSH 127.0.0.2 docker load
+    docker save mongo | $SSH 127.0.0.2 docker load
+    docker save proctf/deer | $SSH 127.0.0.2 docker load
 fi
 
 if [ $SERVICE == "handy" ]; then
@@ -76,6 +78,11 @@ if [ -f "../services/$SERVICE/init.sh" ]; then
 fi
 $SSH 127.0.0.2 "chmod +x $RC"
 $SSH 127.0.0.2 "echo '$FIRST_RUN_CMD' >> $RC"
+
+if [ $SERVICE == "tracker" ]; then
+    $SSH 127.0.0.2 "echo 'insmod /service/tracker/dccp_modules/dccp.ko' >> $RC"
+    $SSH 127.0.0.2 "echo 'insmod /service/tracker/dccp_modules/dccp_ipv4.ko' >> $RC"
+fi
 
 VBoxManage controlvm "proctf_$SERVICE" acpipowerbutton
 
