@@ -5,7 +5,7 @@ services:
     ports:
      - "0.0.0.0:3255:3255"
     volumes:
-      - ./site:/var/www/html/
+      - ./site:/var/www/site/
       - ./updater:/var/www/updater
       - ./transport_http:/var/www/transport_http
       - ./transport_http2:/var/www/transport_http2
