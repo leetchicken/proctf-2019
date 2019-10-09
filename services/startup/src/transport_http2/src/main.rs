@@ -64,7 +64,7 @@ async fn main() -> Result<(), ()> {
 
         println!("Success: {}", head.status.is_success());
 
-        let mut data : Vec<u8> = vec![];
+        let mut data: Vec<u8> = vec![];
 
         while let Some(chunk) = body.data().await {
             match chunk {

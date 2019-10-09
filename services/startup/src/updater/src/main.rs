@@ -338,7 +338,7 @@ async fn handle_client(stream: tokio::net::TcpStream) -> Result<(), ClientError>
         }
     };
 
-    lines.send("Enter manifest signature (32 hex):".into()).await?;
+    lines.send("Enter manifest signature (128 hex):".into()).await?;
     let signature = match lines.next().await {
         Some(Ok(s)) => s,
         _ => {
