@@ -5,10 +5,8 @@ use serde::{Serialize, Deserialize};
 
 use tokio::{
     prelude::*,
-    net::{TcpListener, TcpStream},
-    codec,
-    timer,
-    fs
+    net::TcpListener,
+    codec
 };
 
 const LISTEN_ADDR: &str = "0.0.0.0:3255";
@@ -32,6 +30,7 @@ struct FileLink {
 #[derive(Debug)]
 struct ClientError (String);
 
+
 impl std::fmt::Display for ClientError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let ClientError(msg) = self;
@@ -39,11 +38,13 @@ impl std::fmt::Display for ClientError {
     }
 }
 
+
 impl From<&str> for ClientError {
     fn from(error: &str) -> Self {
         ClientError(error.to_string())
     }
 }
+
 
 impl From<codec::LinesCodecError> for ClientError {
     fn from(_error: codec::LinesCodecError) -> Self {
@@ -56,6 +57,7 @@ struct AsyncUnbufferedWriteStream {
     stream: Box<dyn AsyncWrite+Unpin+Send+Sync>,
 }
 
+
 impl AsyncUnbufferedWriteStream {
     fn new(stream: Box<dyn AsyncWrite+Unpin+Send+Sync>) -> AsyncUnbufferedWriteStream {
         AsyncUnbufferedWriteStream {
@@ -63,8 +65,9 @@ impl AsyncUnbufferedWriteStream {
         }
     }
 
-    async fn write_all(&mut self, buf: &[u8]) -> Result<(), std::io::Error> {
-        self.stream.write_all(buf).await?;
+    async fn write_line(&mut self, buf: &str) -> Result<(), std::io::Error> {
+        self.stream.write_all(buf.as_bytes()).await?;
+        self.stream.write_all(b"\n").await?;
         self.stream.flush().await
     }
 }
@@ -75,6 +78,7 @@ struct AsyncBufferedReadStream {
     buf: [u8; CHUNK_SIZE],
     avail: usize
 }
+
 
 impl AsyncBufferedReadStream {
     fn new(stream: Box<dyn AsyncRead+Unpin+Send+Sync>) -> AsyncBufferedReadStream {
@@ -113,13 +117,13 @@ impl AsyncBufferedReadStream {
         }
     }
 
-    async fn read(&mut self) -> Vec<u8> {
+    async fn read(&mut self, n: usize) -> Vec<u8> {
         if self.avail == 0 {
             if self.fullfill_buffer().await.is_err() {
                 return vec![]
             };
         }
-        let ret = self.buf[..self.avail].to_vec();
+        let ret = self.buf[..std::cmp::min(self.avail, n)].to_vec();
         self.avail -= ret.len();
         ret
     }
@@ -129,10 +133,12 @@ impl AsyncBufferedReadStream {
 // protocol->pair of streams
 type ProcessMap = HashMap<String, (AsyncUnbufferedWriteStream, AsyncBufferedReadStream)>;
 
+
 struct ExternalDownloader {
     processes: Vec<tokio::net::process::Child>,
     process_channels: ProcessMap
 }
+
 
 impl ExternalDownloader {
     fn new() -> ExternalDownloader{
@@ -142,6 +148,7 @@ impl ExternalDownloader {
         }
     }
 
+
     fn get_link_protocol(link: &str) -> Option<&str> {
         if !link.contains("://") {
             return None
@@ -149,10 +156,11 @@ impl ExternalDownloader {
         link.split("://").next()
     }
 
-    async fn download(&mut self, link: &str) -> Result<String, String> {
+
+    async fn download(&mut self, link: &str, expected_checksum: &str) -> Result<String, String> {
         let downloader_name = match Self::get_link_protocol(link) {
-            Some("http") => "transport/http",
-            Some("http2") => "transport/http2",
+            Some("http") => "./transport_http",
+            Some("http2") => "./transport_http2",
             Some("debug") => "/bin/cat",
             _ => return Err("Unknown protocol".into())
         };
@@ -180,10 +188,53 @@ impl ExternalDownloader {
 
         let (write_stream, read_stream) = self.process_channels.get_mut(downloader_name).unwrap();
 
-        if write_stream.write_all(b"qqq").await.is_err() {
+        if write_stream.write_line(link).await.is_err() {
             return Err("Failed to write data to process".into());
         }
-        println!("{}", read_stream.read_line().await);
+
+        let url = read_stream.read_line().await;
+        let is_success = read_stream.read_line().await;
+        let checksum = read_stream.read_line().await;
+        let content_length = read_stream.read_line().await;
+
+        if !url.starts_with("Url: ") ||
+           !is_success.starts_with("Success: ") ||
+           !checksum.starts_with("Hashsum: ") ||
+           !content_length.starts_with("Content-Length: ") {
+
+            return Err("Protocol error".into());
+        }
+
+        let url = &url["Url: ".len()..];
+        let is_success = &is_success["Success: ".len()..];
+        let checksum = &checksum["Hashsum: ".len()..];
+        let content_length = &content_length["Content-Length: ".len()..];
+
+        if url != link {
+            return Err("Returned link != Expected link".into());
+        }
+
+        if is_success != "true" {
+            return Err("Unsuccessful request".into());
+        }
+
+        if checksum != expected_checksum {
+            return Err(format!("Bad checksum, {} != {}", expected_checksum, checksum));
+        }
+
+        let content_length = match usize::from_str_radix(content_length, 10) {
+            Ok(num) => num,
+            Err(_) => return Err("Bad content length".into())
+        };
+
+        let mut left = content_length;
+        while left > 0 {
+            let chunk = read_stream.read(left).await;
+            if chunk.is_empty() {
+                return Err("Protocol error, remote connection was closed".into());
+            }
+            left -= chunk.len();
+        }
 
         Ok(String::new())
     }
@@ -199,14 +250,10 @@ impl ExternalDownloader {
 }
 
 
-
-fn check_data(host_port: String, signature: String, manifest: String ) -> Result<Manifest, String> {
-    return Err("BAY".into());
-}
-
-fn is_signature_valid(raw_manifest: &str, signature: &str) -> bool {
+fn is_signature_valid(_raw_manifest: &str, _signature: &str) -> bool {
     true
 }
+
 
 fn is_hostport_valid(hostport: &str) -> bool {
     let v: Vec<&str> = hostport.splitn(2, ':').collect();
@@ -228,6 +275,7 @@ fn is_hostport_valid(hostport: &str) -> bool {
     }
     true
 }
+
 
 async fn handle_client(stream: tokio::net::TcpStream) -> Result<String, ClientError> {
     let mut lines = codec::Framed::new(stream, codec::LinesCodec::new());
@@ -279,7 +327,12 @@ async fn handle_client(stream: tokio::net::TcpStream) -> Result<String, ClientEr
     let mut downloader = ExternalDownloader::new();
     for link in manifest.links {
         let url = link.url.replacen("mirror", &hostport, 1);
-        println!("{:?}", downloader.download(&url).await);
+        let checksum = link.checksum;
+
+        match downloader.download(&url, &checksum).await {
+            Ok(_) => lines.send((url + " OK").into()).await?,
+            Err(e) => lines.send((url + " ERR, " + &e).into()).await?,
+        };
     }
     downloader.cleanup().await;
 
@@ -295,17 +348,9 @@ async fn handle_client_wrapper(stream: tokio::net::TcpStream) {
 }
 
 
-
-async fn command() {
-    let mut downloader = ExternalDownloader::new();
-    println!("{:?}", downloader.download("debug://fafads").await);
-    timer::delay_for(time::Duration::from_millis(1000)).await;
-    downloader.cleanup().await;
-}
-
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>>{
-    tokio::spawn(async move { command().await });
+    std::env::set_current_dir(std::env::current_exe()?.parent().unwrap())?;
 
     let mut listener = TcpListener::bind(LISTEN_ADDR).await?;
 
@@ -319,7 +364,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>>{
         tokio::spawn(async move {
             let res = handle_client_wrapper(stream).timeout(TIMEOUT).await;
             if res.is_err() {
-               println!("client timed out");
+               println!("Client timed out");
             }
         });
     }
