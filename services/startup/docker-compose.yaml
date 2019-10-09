@@ -14,7 +14,7 @@ services:
   apache:
     image: php:apache
     ports:
-      - "0.0.0.0:8000:80"
+      - "0.0.0.0:80:80"
     volumes:
       - ./site:/var/www/html/
     environment:
