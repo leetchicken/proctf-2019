@@ -5,7 +5,7 @@ function get_rabbit_password_hash () {
 }
 
 function get_es_password_hash () {
-	local HASH="$(docker run -it --rm amazon/opendistro-for-elasticsearch:1.1.0 /bin/bash /usr/share/elasticsearch/plugins/opendistro_security/tools/hash.sh -p $1)"
+	local HASH="$(docker run --rm amazon/opendistro-for-elasticsearch:1.1.0 /bin/bash /usr/share/elasticsearch/plugins/opendistro_security/tools/hash.sh -p $1)"
 	echo $HASH | sed $'s/\r//'
 }
 
