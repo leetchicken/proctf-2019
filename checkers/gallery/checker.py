@@ -108,10 +108,14 @@ def info():
 
 def check(host):
     if random.randint(0,1) == 0:
+        print("Lucky! skipping check", file=sys.stderr)
         verdict(OK)
 
+    start = time.time()
     s = create_session()
-    ids = call_get_paintings_api(s, host)
+    ids = call_get_paintings_api(s, host)    
+    elapsed = time.time() - start
+    print(f"Done call_get_paintings_api in {elapsed}", file=sys.stderr)
     if ids is None:
         verdict(MUMBLE, "Can't get valid paintings list", f"Can't get valid paintings list")
 
@@ -122,7 +126,11 @@ def put(host, flag_id, flag, vuln):
 
     file_name, painting_bytes = paintings.next_painting(get_team_num(host))
 
+    start = time.time()
     ans = call_put_painting_api(s, host, flag, painting_bytes)
+    elapsed = time.time() - start
+    print(f"Done call_put_painting_api in {elapsed}", file=sys.stderr)
+
     if ans is None:
         verdict(MUMBLE, "Malformed response", "Malformed response: can't parse as expected")
     error = ans.get("error")
@@ -143,12 +151,18 @@ def get(host, flag_id, flag, vuln):
     file_name = obj["file"]
     painting_id = obj["id"]
 
+    start = time.time()
     s = create_session()
     ids = call_get_paintings_api(s, host)
+    elapsed = time.time() - start
+    print(f"Done call_get_paintings_api in {elapsed}", file=sys.stderr)
     if ids is None or painting_id not in ids:
         verdict(MUMBLE, "Can't find painting id in list", "Can't find painting id in list")
 
+    start = time.time()
     preview_bytes = call_get_preview_api(s, host, painting_id)
+    elapsed = time.time() - start
+    print(f"Done call_get_preview_api in {elapsed}", file=sys.stderr)
     if preview_bytes is None:
         verdict(MUMBLE, "Can't get preview", "Can't get preview")
 
@@ -164,8 +178,10 @@ def get(host, flag_id, flag, vuln):
 
     for m in methods:
         name, painting_bytes = m(team_num, file_name)
+        start = time.time()
         ans = call_post_replica_api(s, host, painting_id, painting_bytes)
-        print(f"{file_name}: sent file {name}: ans {ans}", file=sys.stderr)
+        elapsed = time.time() - start
+        print(f"{file_name}: sent file {name} in {elapsed}: ans {ans}", file=sys.stderr)
         if ans is not None and ans.get("reward") is not None:
             reward = ans.get("reward")
             if reward != flag:
