@@ -182,7 +182,7 @@ services/startup/./start.sh
 services/startup/./transport_http
 services/startup/./transport_http2
 services/startup/./updater
-services/startup/./site/
+services/startup/./html/
 services/startup/./src/
 services/startup/./src/transport_http/
 services/startup/./src/transport_http/src/

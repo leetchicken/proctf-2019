@@ -5,7 +5,7 @@ services:
     ports:
      - "0.0.0.0:3255:3255"
     volumes:
-      - ./site:/var/www/site/
+      - ./html:/var/www/html/
       - ./updater:/var/www/updater
       - ./transport_http:/var/www/transport_http
       - ./transport_http2:/var/www/transport_http2
@@ -16,7 +16,7 @@ services:
     ports:
       - "0.0.0.0:80:80"
     volumes:
-      - ./site:/var/www/html/
+      - ./html:/var/www/html/
     environment:
       - LOG_STDOUT=1
       - ALLOW_OVERRIDE=None
