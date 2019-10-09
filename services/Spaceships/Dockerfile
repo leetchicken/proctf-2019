@@ -8,4 +8,4 @@ RUN useradd spaceships
 EXPOSE 3777/tcp
 WORKDIR /home/service
 #CMD sleep 100000000
-CMD ./run.sh
+CMD ./runserver.sh
