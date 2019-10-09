@@ -38,4 +38,6 @@ def create_playlist_file(flag=""):
             f.write(f"{PLAYLIST_INFO_HEADER}:42, {tag['artist']} – {tag['album']}\n")
             f.write(music[i].split('/')[1] + "\n\n")
 
-    shutil.make_archive()
+    shutil.make_archive(f"{playlist_dir}", "zip", str(playlist_dir))
+    shutil.rmtree(str(playlist_dir))
+    return f"{playlist_dir}.zip"
