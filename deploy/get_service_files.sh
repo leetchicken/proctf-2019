@@ -120,6 +120,8 @@ EOF
     "gallery")
     cat <<EOF
 services/gallery/./
+services/gallery/./models/
+services/gallery/./static/
 EOF
     ;;
     "drone_racing")
@@ -140,6 +142,8 @@ EOF
     cat <<EOF
 services/tracker/./Dockerfile
 services/tracker/./main.py
+services/tracker/./dccp_modules/dccp.ko
+services/tracker/./dccp_modules/dccp_ipv4.ko
 services/tracker/./db
 services/tracker/./db/drop.sql
 services/tracker/./db/create.sql
@@ -159,6 +163,15 @@ services/tracker/./app/api/user.py
 services/tracker/./config.yaml
 services/tracker/./docker-compose.yml
 services/tracker/./requirements.txt
+EOF
+    ;;
+    "notepool")
+    cat <<EOF
+services/notepool/./docker-compose.yml
+services/notepool/./Dockerfile
+services/notepool/./start.sh
+services/notepool/./out/
+services/notepool/./out/wwwroot/
 EOF
     ;;
     *) echo "No such service" >&2; exit 1;;
