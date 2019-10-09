@@ -67,6 +67,11 @@ if [ $SERVICE == "handy" ]; then
     docker save handy | $SSH 127.0.0.2 docker import - handy
 fi
 
+if [ $SERVICE == "sql_demo" ]; then
+    echo "import docker images"
+    docker save proctf/sql_demo | $SSH 127.0.0.2 docker load
+fi
+
 $SSH 127.0.0.2 "cd /service/$SERVICE; docker-compose up --no-start"
 
 
