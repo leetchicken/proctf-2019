@@ -1,0 +1,11 @@
+.vs/
+
+ext/
+
+bin/
+obj/
+
+packages/
+
+*.DotSettings
+*.user
