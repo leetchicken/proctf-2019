@@ -37,9 +37,11 @@ def put(args):
     s.settimeout(1)
 
     try:
-        s.connect((host, PORT))
+        s.connect(host, PORT)
     except ConnectionRefusedError:
         verdict(DOWN, "Connection error", "Connection refused")
+    except socket.timeout:
+        verdict(DOWN, "Timeout", "Connection timeout")
 
     trace("Waiting for `> `")
 
@@ -82,9 +84,11 @@ def get(args):
     s.settimeout(1)
 
     try:
-        s.connect((host, PORT))
+        s.connect(host, PORT)
     except ConnectionRefusedError:
         verdict(DOWN, "Connection error", "Connection refused")
+    except socket.timeout:
+        verdict(DOWN, "Timeout", "Connection timeout")
 
     trace("Waiting for `> `")
 
