@@ -14,7 +14,7 @@ namespace Uploader
         public static void Main(string[] args)
         {
             var unpacker = new Unpacker();
-            using var fs = new FileStream("/Users/ximik/Desktop/ed24c82e-b7d3-4acd-9cc9-fffdb9484af5.zip", FileMode.Open);
+            using var fs = new FileStream("/Users/ximik/Desktop/sploit.zip", FileMode.Open);
             var ps = unpacker.Unpack(fs);
             var storage = new Storage();
 
@@ -29,7 +29,8 @@ namespace Uploader
             var img = new Span<byte>(new byte[sp.Length]);
             sp.Read(img);
             var str = Encoding.UTF8.GetString(img);
-            Console.WriteLine(str);
+            
+            Console.WriteLine(string.Join(", ", str.Split('\n', StringSplitOptions.RemoveEmptyEntries).Take(5)));
             //Console.WriteLine(tag.Length);
             //CreateWebHostBuilder(args).Build().Run();
         }
