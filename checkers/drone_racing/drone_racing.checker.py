@@ -31,7 +31,7 @@ class DroneRacingChecker(checklib.http.HttpChecker):
         source_code, params = self._generate_program_for_map(map)
         program_id = self._upload_program(program_title, source_code, level_id)
 
-        run = self._run_program(program_id, params)
+        run, output = self._run_program(program_id, params)
         logging.info("Program finished at %d milliseconds" % (run["finishTime"] - run["startTime"]))
 
         self.mumble_if_false(run["success"], "Program should successfully pass the maze")
