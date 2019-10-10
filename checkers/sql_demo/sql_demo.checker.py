@@ -34,7 +34,7 @@ def put(args):
     trace("put(%s, %s, %s, %s)" % (host, flag_id, flag_data, vuln))
 
     s = socket.socket()
-    s.settimeout(1)
+    s.settimeout(5)
 
     try:
         s.connect((host, PORT))
@@ -81,7 +81,7 @@ def get(args):
     trace("get(%s, %s, %s, %s)" % (host, flag_id, flag_data, vuln))
 
     s = socket.socket()
-    s.settimeout(1)
+    s.settimeout(5)
 
     try:
         s.connect((host, PORT))
