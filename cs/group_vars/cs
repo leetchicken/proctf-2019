@@ -67,3 +67,4 @@ services: |
   {name => 'tracker',        path => 'checkers/tracker/checker.py',        timeout => 30, host_suffix => '15'},
   {name => 'notepool',       path => 'checkers/notepool/checker.sh',       timeout => 30, host_suffix => '16'},
   {name => 'Spaceships',     path => 'checkers/Spaceships/checker.py',     timeout => 30, host_suffix => '17'},
+  {name => 'sql_demo',       path => 'checkers/sql_demo/sql_demo.checker.py',         timeout => 30, host_suffix => '18'},
