@@ -1,0 +1,24 @@
+
+    %define START_KEY 0xcafebabe
+    %define SECOND_KEY 0x95cfcafe
+    %define INDEX rcx
+    %define KEY_BYTE dl
+    %define SECOND_KEY_REG ebx
+    %define SECOND_KEY_REG_BYTE bl
+    %define MESSAGE_0 0xa6fdfbce
+%define MESSAGE_1 0xa2f9ffca
+%define MESSAGE_2 0xa4fff3c6
+%define MESSAGE_3 0xa0fbf9cc
+%define MESSAGE_4 0xacf7fdc8
+%define MESSAGE_5 0xa6fdfbce
+%define MESSAGE_6 0xa2f9ffca
+%define MESSAGE_7 0xa4fff3c6
+%define MESSAGE_8 0xa0fbf9cc
+%define MESSAGE_9 0xacf7fdc8
+%define MESSAGE_10 0xa6fdfbce
+%define MESSAGE_11 0xa2f9ffca
+%define MESSAGE_12 0xa4fff3c6
+%define MESSAGE_13 0xa0fbf9cc
+%define MESSAGE_14 0xacf7fdc8
+%define MESSAGE_15 0x000000f4
+%define MESSAGE_LEN 61

@@ -1,0 +1,8 @@
+version : '2'
+
+services:
+  binder_agent:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "3011:22"
