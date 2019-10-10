@@ -4,6 +4,7 @@ import sys
 import traceback
 
 OK, CORRUPT, MUMBLE, DOWN, CHECKER_ERROR = 101, 102, 103, 104, 110
+PORT = 1433
 
 def trace(message):
     print(message, file=sys.stderr)
