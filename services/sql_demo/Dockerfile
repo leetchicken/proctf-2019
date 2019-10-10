@@ -14,4 +14,4 @@ WORKDIR /data
 
 USER sql
 
-CMD socat -s TCP-LISTEN:1433,reuseaddr,fork EXEC:"/usr/bin/python /app/service.py"
+CMD socat -s TCP-LISTEN:1433,reuseaddr,fork EXEC:"/usr/bin/python /app/service.py",pty,echo=0,stderr
