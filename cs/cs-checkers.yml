@@ -74,6 +74,7 @@
         - pika
         - m2crypto
         - pillow
+        - msgpack
 
   - name: build binder
     command: ./build.sh
