@@ -4,6 +4,8 @@ screen -dmS ClearOld ./ClearLast20mins.py
 
 mkdir -p spacemans
 mkdir -p spaceships
+chown spaceships:spaceships  spacemans
+chown spaceships:spaceships  spaceships
 
 while true; do
     socat -dd TCP4-LISTEN:3777,reuseaddr,fork,keepalive exec:./run.sh,end-close
