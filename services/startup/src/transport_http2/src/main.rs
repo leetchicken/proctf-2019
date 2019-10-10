@@ -22,7 +22,6 @@ async fn main() -> Result<(), ()> {
             Ok(_) => input.trim()
         };
 
-        println!("Url: {}", url);
         let url = match url.parse::<Uri>() {
             Ok(u) => u,
             Err(_) => return Err(())
@@ -45,7 +44,7 @@ async fn main() -> Result<(), ()> {
             connection.await.unwrap();
         });
 
-        let request = match Request::get(url).body(()) {
+        let request = match Request::get(url.clone()).body(()) {
             Ok(r) => r,
             Err(_) => return Err(())
         };
@@ -62,7 +61,7 @@ async fn main() -> Result<(), ()> {
 
         let mut release_capacity = body.release_capacity().clone();
 
-        println!("Success: {}", head.status.is_success());
+        let success = head.status.is_success();
 
         let mut data: Vec<u8> = vec![];
 
@@ -81,9 +80,15 @@ async fn main() -> Result<(), ()> {
             }
         }
 
-        println!("Hashsum: {}", hashsum::calc_hash(&data));
+        let hashsum = hashsum::calc_hash(&data);
 
-        println!("Content-Length: {}", data.len());
+        let headers = format!("Url: {}\nSuccess: {}\nHashsum: {}\nContent-Length: {}\n",
+                              url, success, hashsum, data.len());
+
+        if io::stdout().write_all(headers.as_bytes()).is_err() {
+            return Err(());
+        }
+
         if io::stdout().write_all(&data).is_err() {
             return Err(());
         }

@@ -4,7 +4,6 @@ services:
     image: postgres:12.0
     environment:
       POSTGRES_USER: tracker
-      POSTGRES_PASSWORD: zHSKoKea+FXCxY+an5Q=
       POSTGRES_DB: tracker
     restart: unless-stopped
     volumes:
@@ -13,6 +12,12 @@ services:
 
   app:
     build: .
+    environment:
+      LISTEN_HOST: 0.0.0.0
+      LISTEN_PORT: 9090
+      DB_HOST: localhost:5432
+      DB_NAME: tracker
+      DB_USER: tracker
     depends_on:
       - "db"
     network_mode: "host"

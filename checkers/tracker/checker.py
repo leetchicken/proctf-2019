@@ -98,7 +98,7 @@ class ExitCode:
     INTERNAL_ERROR = 110
 
 
-def create_login(length=16):
+def create_random_string(length=16):
     letters = string.ascii_lowercase
     return "".join(random.choice(letters) for _ in range(length))
 
@@ -109,23 +109,61 @@ def create_password(login):
 
 
 def check(ip):
-    login = create_login()
+    login = create_random_string()
     password = create_password(login)
+
+    login2 = create_random_string()
+    password2 = create_password(login2)
+
+    tracker_name = create_random_string(length=4)
 
     try:
         client = Client(ip)
 
-        logging.info("Register user %r with password %r ...", login, password)
+        logging.info("Register first user %r with password %r ...", login, password)
         client.query(Request.USER_REGISTER, login, password, expect=Response.OK)
         logging.info("Register succeeded")
 
-        logging.info("Log in user %r with password %r ...", login, password)
+        logging.info("Log in first user %r with password %r ...", login, password)
         secret = client.query(Request.USER_LOGIN, login, password, expect=Response.OK)
         logging.info("Log in succeeded, secret: %r", secret)
 
-        logging.info("Delete user with secret %r ...", secret)
+        logging.info("Register second user %r with password %r ...", login2, password2)
+        client.query(Request.USER_REGISTER, login2, password2, expect=Response.OK)
+        logging.info("Register succeeded")
+
+        logging.info("Log in second user %r with password %r ...", login2, password2)
+        secret2 = client.query(Request.USER_LOGIN, login2, password2, expect=Response.OK)
+        logging.info("Log in succeeded, secret: %r", secret)
+
+        logging.info("Creating tracker %r ...", tracker_name)
+        token = client.query(Request.TRACKER_ADD, secret, tracker_name, expect=Response.OK)
+        points = [
+            (1.2, 3.4, "f"),
+            (5.6, 7.8, "o"),
+            (9.0, 1.2, "o"),
+        ]
+        logging.info("Adding points to track ... ")
+        track_id = client.query(Request.POINT_ADD_BATCH, token, points, expect=Response.OK)
+        logging.info("Created track %r", track_id)
+
+        logging.info("Second user asks for share track %r ...", track_id)
+        client.query(Request.TRACK_REQUEST_SHARE, secret2, track_id, expect=Response.OK)
+
+        logging.info("First user shares track %r ...", track_id)
+        client.query(Request.TRACK_SHARE, secret, track_id, expect=Response.OK)
+
+        logging.info("Second user tries to access shared track %r ...", track_id)
+        client.query(Request.TRACK_GET, secret2, track_id, expect=Response.OK)
+
+        logging.info("Delete first user with secret %r ...", secret)
         client.query(Request.USER_DELETE, secret, expect=Response.OK)
         logging.info("Delete succeeded")
+
+        logging.info("Delete second user with secret %r ...", secret2)
+        client.query(Request.USER_DELETE, secret2, expect=Response.OK)
+        logging.info("Delete succeeded")
+
     except AssertionError as e:
         logging.exception(e)
         return ExitCode.MUMBLE
@@ -159,11 +197,10 @@ def put(ip, id, flag):
         for char in flag:
             lat = random.uniform(-10, 10)  # FIXME
             lon = random.uniform(-10, 10)
-            logging.info("Add point (%r, %r, %r) ...", lat, lon, char)
             points.append((lat, lon, char))
-            # client.query(Request.POINT_ADD, token, lat, lon, char, expect=Response.OK)
-            logging.info("Add point succeeded")
+        logging.info("Add points %r ...", points)
         client.query(Request.POINT_ADD_BATCH, token, points, expect=Response.OK)
+        logging.info("Add points succeeded")
 
     except AssertionError as e:
         logging.exception(e)

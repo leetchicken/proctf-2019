@@ -63,8 +63,8 @@ fi
 
 if [ $SERVICE == "handy" ]; then
     echo "import docker images"
-    docker save mongo:4 | $SSH 127.0.0.2 docker import - mongo:4.2.0
-    docker save handy | $SSH 127.0.0.2 docker import - handy
+    docker save mongo:4 | $SSH 127.0.0.2 docker load
+    docker save handy | $SSH 127.0.0.2 docker load
 fi
 
 if [ $SERVICE == "sql_demo" ]; then

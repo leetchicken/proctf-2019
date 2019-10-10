@@ -1,3 +1,4 @@
+import os
 import yaml
 from schematics.models import Model
 from schematics.types import StringType, BooleanType, IntType
@@ -16,8 +17,15 @@ class Config(Model):
 def get_config() -> Config:
     global _CONFIG
     if _CONFIG is None:
-        with open(CONFIG_FILE) as f:
-            raw_data = yaml.safe_load(f)
-        _CONFIG = Config(raw_data)
+        _CONFIG = Config(dict(
+            host=os.environ["LISTEN_HOST"],
+            port=os.environ["LISTEN_PORT"],
+            database_uri="postgresql://{}@{}/{}".format(
+                os.environ["DB_USER"],
+                os.environ["DB_HOST"],
+                os.environ["DB_NAME"],
+            ),
+            debug=os.environ.get("DEBUG", False)
+        ))
         _CONFIG.validate()
     return _CONFIG
