@@ -95,6 +95,14 @@
     become_user: "{{cs_user}}"
     tags: rubik
 
+  - name: build notepool
+    command: dotnet publish -c Release
+    args:
+      chdir: "{{cs_dir}}/checkers/notepool/src"
+    become: yes
+    become_user: "{{cs_user}}"
+    tags: notepool
+
   - name: build septon
     command: dotnet publish -c Release
     args:
