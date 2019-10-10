@@ -3,6 +3,7 @@ services:
   elasticsearch:
     image: proctf/deer-elasticsearch
     container_name: deer-elastic
+    restart: unless-stopped
     volumes:
       - ./root-ca.pem:/usr/share/elasticsearch/config/root-ca.pem
       - ./esnode.pem:/usr/share/elasticsearch/config/node.pem
@@ -25,6 +26,7 @@ services:
   rabbitmq:
     image: proctf/deer-rabbitmq
     container_name: deer-rabbit
+    restart: unless-stopped
     volumes:
       - ./definitions.json:/etc/rabbitmq/definitions.json
       - ./root-ca.pem:/etc/rabbitmq/root-ca.pem
@@ -38,6 +40,7 @@ services:
   mongodb:
     image: mongo
     container_name: deer-mongo
+    restart: unless-stopped
 
   deer:
     image: proctf/deer
