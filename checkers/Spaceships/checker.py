@@ -172,10 +172,12 @@ def SearchSpaceship(s,tmp):
     send_mes(s,tmp[:3])
     return read_until(s,b">")
 
-
+if sys.argv[1] == "info":
+    print("vulns: 1")
+    exit(101)
 #proc = sp.Popen("./serv12",shell=True,stdin=sp.PIPE,stdout=sp.PIPE)
 proc = socket(AF_INET,SOCK_STREAM)
-proc.connect(('localhost',3777))
+proc.connect((sys.argv[2],3777))
 
 res = read_until(proc,b"\n")
 res = read_until(proc,b">")
