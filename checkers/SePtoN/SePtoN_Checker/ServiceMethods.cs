@@ -9,6 +9,7 @@ using System.Net.Sockets;
 using System.Numerics;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Xml.Serialization;
 using SPN;
 
@@ -27,6 +28,7 @@ namespace SePtoN_Checker
 			return (int)ExitCode.OK;
 		}
 
+		private const int MaxConsecutiveFileIdsDiff = 500;
 
 		public static int ProcessPut(string host, string id, string flag)
 		{
@@ -72,6 +74,14 @@ namespace SePtoN_Checker
 						SourceImageHash = imageHash
 					};
 
+					var lastImageId = FindLastId(host);
+					SaveLastFileId(host, imageId);
+					if(lastImageId != null)
+					{
+						if(Math.Abs(lastImageId.Value - imageId) > MaxConsecutiveFileIdsDiff)
+							throw new ServiceException(ExitCode.MUMBLE, $"LastImageId {lastImageId}, got new imageId {imageId}, difference is more than threshold {MaxConsecutiveFileIdsDiff}. Possibly service was 'patched' to make ids non-predictable. It's not fairplay, so punishing service's SLA", "Unexpected image id");
+					}
+
 					Console.WriteLine(state.ToJsonString().ToBase64String());
 					return (int)ExitCode.OK;
 				}
@@ -83,6 +93,44 @@ namespace SePtoN_Checker
 			catch(Exception e)
 			{
 				throw new ServiceException(ExitCode.DOWN, string.Format("General failure"), innerException: e);
+			}
+		}
+
+		private static int GetTeamNum(string host)
+		{
+			var match = new Regex(@"\d+\.\d+\.(\d+)\.\d+").Match(host);
+			return int.Parse(match.Groups[1].Value);
+		}
+
+		private static void SaveLastFileId(string host, int fileId)
+		{
+			try
+			{
+				var teamNum = GetTeamNum(host);
+				var fileInfo = new FileInfo(Path.Combine(teamNum.ToString(), "last_file_id"));
+				fileInfo.Directory.Create();
+				File.WriteAllText(fileInfo.FullName, fileId.ToString());
+				Console.Error.WriteLine($"Saved last fileId {fileId}");
+			}
+			catch(Exception e)
+			{
+				throw new ServiceException(ExitCode.CHECKER_ERROR, $"Failed to save last fileId {fileId}", innerException: e);
+			}
+		}
+
+		private static int? FindLastId(string host)
+		{
+			try
+			{
+				var teamNum = GetTeamNum(host);
+				var result = int.Parse(File.ReadAllText($"{teamNum}/last_file_id"));
+				Console.Error.WriteLine($"Read last fileId {result}");
+				return result;
+			}
+			catch(Exception e)
+			{
+				Console.Error.WriteLine($"Failed to find last fileId: {e}");
+				return null;
 			}
 		}
 
