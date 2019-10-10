@@ -1,0 +1,2 @@
+zT0dnKD php V35ZjB ') BUmRRcdZ1_ system('id')  cmd dH5tchHJ2OBXW2d_JOlDh readdir dxTI6OBGcAcNmCjKH8 system('id') yUoIg7YmD exec  php jbzd62 system('id')  SELECT ' FNUM2S6 php  '<>>  readdir 5YFFsgb SELECT ' 
+ eval($GET[$cmd])  ') 

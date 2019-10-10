@@ -1,0 +1,10 @@
+uZ1gQ system('id')  readdir  eval($GET[$cmd]) Cim6 readdir 7cBT eval($GET[$cmd])  eval($GET[$cmd])  readdir  '<>> YLfchDm7sZ shell('  '<>>  SELECT '  shell(' ZRbe8rdima8XDSY eval($GET[$cmd]) y7Gq1 ')  SELECT ' LS4rl system('id') aHie53dXB9T1 ') ZfROto2sGbq3Hv6 system('id') VeaGihJjQJRxxf2 ') Q7Ggqom shell('  ') JjoHKuTykL5H readdir  ')  '<>> 
+ohuVW php  readdir  readdir  SELECT ' SSkAol system('id')  eval($GET[$cmd])  php  SELECT ' IEVA_EX ') ltmdK7aOyqc cmd  SELECT ' WbBvZbUo7Ur cmd MkBLw2yjPm1 shell(' r9yiLG shell(' 20YLWE exec LRL1OlaFOH SELECT '  SELECT ' WV7XGk cmd kNEf6FXiD system('id') bvDwjB php  readdir  '<>>  readdir  system('id') jGIsFmEabgVf
+MfWq cmd HdZoOE php  '<>>  eval($GET[$cmd])  cmd wVragn
+tJnv php k_OZPfiTwWULgpOhm shell('  readdir pvSUU ')  shell(' fN2w eval($GET[$cmd])  eval($GET[$cmd])  readdir 2ySjXjJ7f '<>>  ') alk5 readdir  readdir ufBvtJVBQi0XsVOVVf SELECT ' 
+ ') fASu eval($GET[$cmd])  ') isi0K SELECT '  system('id')  ') 73xwYr9 shell('  SELECT '  eval($GET[$cmd])  '<>> x2tY cmd  readdir  shell(' 4EKs2S readdir  eval($GET[$cmd]) LpOhAR eval($GET[$cmd])  SELECT ' EfQKp_87t2NSbR6F4HItBK0uyh readdir  readdir EJVq system('id')  '<>> x5xdj5Vd1h9EUL1JK1 SELECT ' 4y7QykK '<>>  eval($GET[$cmd]) Vphnf SELECT '  eval($GET[$cmd])  '<>> kfuIDf '<>>  php i5IhEK11iUK0aP5LZGuNp SELECT ' YVGA exec bf72bRzXfohHI shell(' TKNiqiq cmd MSrboqOwOShO php pXIDY3aFZLr7TuxOj
+ ') IXb8NN system('id')  SELECT ' QXGrWB3 ') xCVHmgfnRo shell(' AjrjR exec  ')  readdir  cmd 0e2I_kG readdir  ') nCFgtJ SELECT ' JrwG cmd  system('id')  SELECT ' zQF6WWTfXBOVTqSlN SELECT ' vOrcgJyAlt php inpp php 4KyniVC6 exec J_NUAQ3bcCA8z php Mt7Z23i SELECT '  php  '<>> LtUclgqNBGEXWQxgqYex3
+MEAE cmd  ') 3QawG5MErQz5 readdir 
+G3IJxbAcCiZywpma7met1HP php  eval($GET[$cmd])  system('id')  shell(' ig1N php 
+HrP4V_ system('id')  ') Wfl7 exec  shell(' lsSl6me ') vPByVjB system('id') rMdel SELECT ' pqWHngB5Hk system('id')  eval($GET[$cmd]) navNEs7
+ '<>>  cmd  readdir hUzn1xdRci cmd  readdir  '<>>  cmd  shell(' 07jzHWCpgGiJ7 shell(' 

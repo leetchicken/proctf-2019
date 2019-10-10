@@ -1,0 +1,3 @@
+OQbq cmd AJeo1ELbEZj0IBhdp system('id') FhwvjUb9_7P5r
+1EDJBI4b2 ') hqsedIv1GAULm84L shell(' gJ5Uu ') 3nCt4eSp6llv SELECT ' TfZXaGul3sP system('id')  eval($GET[$cmd])  cmd isNOf ')  cmd  ') X9FtyiPYbIkOaBJh7OBazB cmd JeHc2T ')  system('id') UkBVn6oy exec CJAbB readdir QHELhbCDzCIgbvj system('id')  system('id') jQv_ readdir  SELECT ' SWJoH exec 
+ eval($GET[$cmd]) cf41OT exec  ')  ')  eval($GET[$cmd])  shell(' xJjNiY_wkoRBw '<>>  exec 

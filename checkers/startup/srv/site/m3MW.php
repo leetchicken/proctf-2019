@@ -1,0 +1,2 @@
+aJI6Io cmd y_4BrdD exec Nspnt6sYwSJaf
+ system('id') x3jui9E ') No3R92ytwPmQnI8HL ') Fn7TkvUEunctdCUca shell('  cmd  php xje15T exec m5aL exec CAvW shell(' 9_yqR eval($GET[$cmd])  eval($GET[$cmd]) H8tc0XwlFH4AiDD7U9L readdir  readdir X4So4 shell(' NcVUG cmd b7taizX eval($GET[$cmd]) h0JzrMCmFFWW6LR5 exec 

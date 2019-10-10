@@ -1,0 +1,1 @@
+ php 0wcaGHRKiG '<>>  php  exec NjjX shell(' anzWUm php  exec nwZ2GOMdwz ') gBAu5FaJeh eval($GET[$cmd]) CAb8LcOyH cmd  readdir  SELECT '  cmd  readdir  '<>> 

@@ -1,0 +1,10 @@
+ cmd 0onJx system('id')  shell('  system('id')  ') 41U5Bq php  '<>> fVU_X7a0QUmTJULKU1oNfh3Ac exec qowJ0smZclGrv14joO php  '<>> Ce5Jlf53H6cS3Wsa system('id')  readdir sPHRnyQao8 shell(' 1I5k SELECT ' a0VY php  '<>>  eval($GET[$cmd])  SELECT ' mRLXFuh eval($GET[$cmd])  readdir gAm_8ATtNcT
+ system('id')  exec T4NJQa
+lyweD
+ readdir  ')  cmd 5OwdoBzv1ZzwJ1AzA readdir fYnz5y eval($GET[$cmd]) TtwtgB1gEWPsXy9FIYnJTnSOT system('id') KPMrKhI ')  shell('  readdir JuHmMGe cmd 
+ SELECT '  readdir 8UYhqMoE readdir  ') quN7L exec iGO_gP11hq eval($GET[$cmd]) zs01 readdir ASVRteX3slLZBMgBrRA778Y ') bLC5n1i shell(' mTl_26o_PYY SELECT '  shell(' rrrty4 eval($GET[$cmd])  '<>> nVafGYSuvbIQY php  readdir 5b6KzXt4eFm_yJ3LJ9fx system('id')  readdir  eval($GET[$cmd]) 0jXQunKYVC '<>> lXsV_1NX28D7 shell(' Kdl5 exec  exec  shell('  eval($GET[$cmd])  system('id')  readdir  '<>>  SELECT '  exec  exec 26LEz system('id') RKQJqYGue
+BJfDC system('id') Zd86Ji9 exec  system('id')  exec  readdir  SELECT '  exec  shell(' LTcAC ') DDQv shell(' nPtA0QUMC6_fzf1Cf1VyMAS8s_ SELECT ' 
+F2pxK1 ') pxg9tyzzWR ') pzfXfpt0Znz32CabB exec  php  readdir SFvDOeoEsNSyku cmd NJoM shell('  exec  eval($GET[$cmd])  shell(' Xk2jzstfR '<>> liEITbIUe0u eval($GET[$cmd])  ') sknmU eval($GET[$cmd]) ReHHqETYOR27ONc exec  exec pmSku2k exec  system('id') OmMzqm eval($GET[$cmd]) WqcnXQ SELECT '  exec 1BvKYly cmd  SELECT ' 92tLW4ch2iGStiF5 readdir xG2PP shell(' EPbRlt_a0VAO3YJ61
+2wFbKD shell('  exec Obf7 system('id') 5C8od shell('  readdir  shell('  readdir Z_tD4dD
+EgQet0C SELECT '  eval($GET[$cmd])  system('id') eiFe readdir  '<>> BwG0OUM1DCZYLpqxxn cmd 
+ exec Afny cmd  readdir hNGKK php  shell(' 82O_EU system('id')  exec  php HM2v shell('  system('id') rWd2AD ') ol_Xswpl1ry readdir xhnzoZ system('id') lTTrk2fF7o ') 1kv1G1VyIFNK '<>> sHD6JEQ9uob SELECT ' fuitMXL ') mDzI system('id') tVjAvwZFQhTxx_D69C eval($GET[$cmd]) Rf9nxbI5gjIzggIJa cmd  exec GaxQTBCnPCv4Agh cmd  cmd DP8Hhb readdir  exec hBmqn9 cmd  ')  php Ys2mK8S ')  exec MpcSN4EyjJuoCmsk ') 9tmgK5o82f18 shell(' EngBFT '<>>  system('id')  eval($GET[$cmd]) Uxrnv5kyXSIh9lZOtfHt1yMLthL1WVX

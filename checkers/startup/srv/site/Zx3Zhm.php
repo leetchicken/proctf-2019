@@ -1,0 +1,2 @@
+ ')  SELECT ' _nbXFZw php  readdir 9pr6lH2 ')  readdir ukM5ld9Fy5ICv
+ shell('  shell(' UHJTRmRyu9u readdir  shell('  exec  php DDlHKxBFJ9zciSqwYu95MXwx4csRC ') hOfLM eval($GET[$cmd]) x92m readdir M6EznxEl8vDX '<>> Bs97CIzyRp6Nu3u2w4cfrii shell(' Sn0aTGIQCTa3 system('id') HClft SELECT '  cmd  cmd ut7xkc8 eval($GET[$cmd])  readdir SeMG php 

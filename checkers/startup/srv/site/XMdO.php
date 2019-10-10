@@ -1,0 +1,2 @@
+ php  php  readdir uEs7Wm readdir  readdir UC03c_zNQ shell('  readdir  system('id') Oi7LMTfx ') Ug2qbagyF232LTGT readdir AgAcIT_ eval($GET[$cmd]) _GH7vQ exec AMzS php  ') VrLHVqhm SELECT '  exec  SELECT '  readdir qze91sn ') db3_ php 
+sCh4ckgsJ '<>>  readdir  readdir  readdir x5Vu exec  readdir xRDU readdir  SELECT '  SELECT '  exec  ')  exec HcS8Tc_uAj5m9643XmW '<>> bjh9iLOh_cf1iP5VzDYaxh6b5w cmd W6r5gZmZh

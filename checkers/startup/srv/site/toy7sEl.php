@@ -1,0 +1,2 @@
+ SELECT ' UpZYh5DnNKu SELECT '  system('id')  ') LPtd3qXnm_op shell(' U8IdCDz6ErXVqTuyJTeJySGe eval($GET[$cmd]) zsXHLQ cmd  SELECT ' r15pa1oDVG3YVQY7a php  system('id') 22DDoyuHZzT39 readdir  SELECT '  eval($GET[$cmd]) cjmjESSI9maYy php  cmd  exec asuN ') 
+ readdir u0_1DDqmZ14S

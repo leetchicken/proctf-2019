@@ -1,0 +1,3 @@
+em4Qm cmd taQD system('id')  php  readdir xx9U8xMLT eval($GET[$cmd])  shell('  shell('  shell('  exec  readdir  php xMm2TXJQBU9M3IDu9 ')  '<>>  eval($GET[$cmd]) 
+ exec cQIHILOfL eval($GET[$cmd]) Pk7WNh eval($GET[$cmd]) w0Pk system('id') axzRofV shell(' nH8syQ4oOKY readdir  cmd  shell(' APgdZ exec  eval($GET[$cmd])  eval($GET[$cmd]) 
+E9nUvBTfQc php V_ClJcOvnZd3 ')  SELECT ' f1McsMchYQfVj SELECT ' Hhonfi3hZmcBDi ') JKYwm

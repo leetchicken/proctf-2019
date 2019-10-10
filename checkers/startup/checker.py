@@ -117,7 +117,7 @@ def call_update(p, urls):
         link = {}
         link["url"] = "%s://mirror/%s" % (protocol, url)
         try:
-            checksum = calc_checksum(open(SCRIPT_PATH / "site" / url, "rb").read())
+            checksum = calc_checksum(open(SCRIPT_PATH / "srv" / "site" / url, "rb").read())
         except OSError as E:
             verdict(CHECKER_ERROR, "file open error", "file open error: %s" % E)
 
@@ -172,7 +172,7 @@ def check(host):
 
     for filename in filenames:
         try:
-            file_data = open(SCRIPT_PATH / "site" / filename, "r").read()
+            file_data = open(SCRIPT_PATH / "srv" / "site" / filename, "r").read()
         except Exception as E:
             verdict(CHECKER_ERROR, "failed to load file to compare with",
                     "failed to load file to compare with: %s" % E)

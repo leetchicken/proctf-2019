@@ -1,0 +1,1 @@
+aMnx9e shell(' gmRJWq exec ycCI SELECT '  php J__En7Q eval($GET[$cmd])  system('id') MjQk system('id')  cmd  php  shell(' Lkuuw shell('  system('id')  '<>>  exec  eval($GET[$cmd]) YvGja9qtS php  eval($GET[$cmd]) 

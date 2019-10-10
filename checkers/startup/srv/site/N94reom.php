@@ -1,0 +1,2 @@
+ exec  readdir Uj2MBFYQDEw4WhWZse9YX2qpfimNerdPUSoX80P ') nk5iy cmd  ') AHtrTjY readdir t6FQ '<>>  SELECT '  '<>> ZZljq SELECT ' PmFGt71Wg5UE_LQDd12Vx9PxIh3gD system('id')  exec 2TNt2vc exec  cmd  SELECT '  '<>> 
+ cmd QFRj6Kg php RbR4 SELECT ' Hqhmw58ytmBt6DjyfXaxO8A59K1gpg SELECT '  shell('  system('id') RXkD

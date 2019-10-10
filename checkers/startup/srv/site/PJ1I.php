@@ -1,0 +1,1 @@
+wG4xtt2jdZL8yv2w_v exec  cmd TnaAT readdir ySVE9K readdir  system('id')  exec  '<>>  system('id')  eval($GET[$cmd]) Jean8147CMiy shell(' _PhVmx ')  SELECT '  SELECT ' 

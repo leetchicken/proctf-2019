@@ -1,0 +1,2 @@
+ SELECT '  cmd  shell(' jeBHeVkdbDtyJtEBVFmxC2wz2Jx8Orj2QaMmu8eKuXiWu SELECT ' tWzdP php  '<>>  cmd i5L8_A cmd  '<>>  system('id') HZDg readdir r4VNcwXGNEyd php HqlqiMbp_ readdir 7q1E cmd  php 5JmLg shell('  php  system('id')  exec cFix
+xh3glBLoOmPKI

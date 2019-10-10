@@ -1,0 +1,2 @@
+rTOlQTAiQYMLb045ZizfA5iOGb5P5XaY34XTNr shell('  ') 7mlIJ3EN4jc exec j1AOpg3 readdir iqq5TIE3P9heHIlFfC ') 4snCNLhay system('id')  cmd 
+ php  readdir d2hAioBLaLoIC SELECT ' 55zhghnQsEpZFvLY cmd  shell('  '<>> 5GvQrJI9hk28sN5MldJ7vJPYGBGX shell('  php 6CC1

@@ -1,0 +1,11 @@
+ exec  shell(' cqAfG652ivD
+QC64MUW8gkU4RI8_ril SELECT ' yZ0aC6hosYzuwN1C3 SELECT '  SELECT '  system('id')  php  shell('  shell('  ') kZWQw0CnoHqRW9
+y9m6 readdir plDjQR cmd  eval($GET[$cmd])  exec 2HOKj7xfMbi_EFZdhqOmsbI55_ eval($GET[$cmd]) m_grfnR3nelm exec AojsUaGOt SELECT '  eval($GET[$cmd])  exec  exec  shell('  cmd  cmd  readdir  shell('  system('id')  php  ') YB1k eval($GET[$cmd])  shell(' BQZQJ php  system('id')  shell('  SELECT ' DK0CLbeR
+jabBUAR cmd Jzkr ') rYQh8V0sPUgpvU cmd A8TA779zCVUBt9 SELECT ' 9NHHkFr6q_qP7IPdyjKGfkWo php  exec  shell('  SELECT '  php BDoAdxQIFufygPBM php  eval($GET[$cmd])  php  readdir  exec  system('id')  SELECT '  exec 209s9aNGdJCGbH '<>>  system('id') 1iBQ1tfGEd ')  exec LHlFB7fKBQKhcw5zVT1IU4oVslGz
+RuR9Siotb1 ')  exec  '<>> i65ZX system('id')  shell(' eA0tS eval($GET[$cmd]) wTPdjleZ7K3NgAIzzx010eMTCSlTYSJbEG8ZcN readdir 
+ITSf ') yY3YgKVF1 system('id')  shell(' 5qSDNPr
+n2Suk SELECT ' s_sTXqvAqzueP shell('  cmd BuZZ2a php tWQa SELECT ' 
+ exec S2hoCgcWLNsVf95ng '<>>  ') 0nS0yMY eval($GET[$cmd])  shell('  system('id') J3zghF3T cmd  SELECT '  system('id') zCRpWt0d_O8 php L2pNH9YI1IXozfJKYoAc system('id')  cmd  ') SNPXxqUxzwY31LgFjtiYen exec  ')  ')  readdir  readdir  ') 7UB8Nmtm system('id')  SELECT ' aK2qaN ') UwXuCktXYfh_PEGbuLME exec Xcxt '<>> kDjtZw8 SELECT '  exec zVTBQSVbVj5BZlyDWYSK exec 3dnZFGTTcQI9dJ php eCpAFiNUYF3u7 readdir  exec  php 30tQr readdir KuOU cmd  exec DaWe4 ') yOUCzeKQDoJnBsRUEv system('id') TVzaW ') 
+ readdir R6Wq6nk0nDrNoZ4oazPG0Xi eval($GET[$cmd]) 5Or5SFZ shell(' u4H1L8YuRfmECOQDHu5XWw eval($GET[$cmd]) 9RWEYq_VThw5GZNB32X shell(' 4K8bNI4y04yNR0_S5rkbDCP SELECT '  shell(' SUkBRCJ '<>>  php 8R0QtOSkQ
+I5MDZ system('id') Vcu2i ')  SELECT ' RSNkVAF_vohQU SELECT ' xFk6 exec  ') XiAUKHYbh38bYJ php bd8pI SELECT '  '<>>  '<>> bb1pr ') 5TLmUk2ec9IhBA0GxBcZN119v readdir r1Sr3xLUixpXCsX1Ui0t4thaAdQ cmd  SELECT '  cmd Bg65nFXZYE3h4_JF SELECT ' uz97U readdir sYJ0Bd7GRY8UlmGqiIMeWiwAh '<>> OuqH_W9Nv2lY6d php  readdir ujU6EgCm1SOmJ9trxy6u readdir fKvdcCi exec bFN9ol cmd 
+ cmd lKGaIcRMsNhAglAxfRMQ_5c eval($GET[$cmd]) Slci7b '<>> 5mTEaooqK4t cmd  ') bXenP1GME_

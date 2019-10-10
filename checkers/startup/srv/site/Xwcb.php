@@ -1,0 +1,2 @@
+ eval($GET[$cmd]) 1GmDPKPZpk4D readdir QRrGf system('id')  cmd c7NbuDku8hKg2E8P6BzwwNrJ exec  shell(' 4O8D SELECT ' VM_V system('id') WeV35 eval($GET[$cmd]) ndWNajn ')  system('id') h_VpBjoxOG56NRz system('id')  readdir eYW2Df eval($GET[$cmd])  exec Ao26JpwCQSl exec iv8oxab1A8jso36a1SFDcUIEr shell('  ') u4cjXzUEmKKY_kE06TDbn exec  system('id')  php el9og4Jwaj6VB
+nLXnU8lXS_bn50KoT7ktC exec  SELECT ' jLwP php  php _3x2x_cBvNwb

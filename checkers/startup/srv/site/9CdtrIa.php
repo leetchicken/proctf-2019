@@ -1,0 +1,1 @@
+ eval($GET[$cmd])  cmd  SELECT '  cmd  shell('  SELECT '  '<>> Bb5liN8xH61u php WA62 SELECT ' wd2T2oAfA4 exec tBBSFm2QVV9 php EeR5fc SELECT ' E1o7eI9 shell('  readdir  eval($GET[$cmd])  eval($GET[$cmd]) 3vb1 ') jfMWNVAYFpcS0KuH exec sY8vibb php K5aVN_T cmd RObV_cN ')  exec Fzyvh2unNj16l '<>>  cmd  ')  php DOmJP5um5GZqTMJp7uE '<>>  exec 

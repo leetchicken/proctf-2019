@@ -1,0 +1,2 @@
+x8yn6qMwMtP '<>> GSno system('id') plCo1We11H cmd  SELECT ' Exws8Pb7RYB shell(' 02yp system('id') ahs_CsOSGSz8i108lySYMddkQNc6oI64v SELECT ' Xw4uewFqr '<>> vIsb
+ exec wVYS2 '<>> 4AFJym readdir  exec UDK0x '<>> uI2FC5 shell(' vKDyIJSA7MWGUtyw5hj43jQLUtk '<>>  cmd 

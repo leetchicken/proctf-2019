@@ -1,0 +1,3 @@
+6AwJpJVcUh0AOw
+ php C1FVoe3 exec  readdir r29QI '<>>  SELECT ' Gd1bnHjsdhtN system('id') CEg6jNl shell('  shell('  '<>> 8RLJ
+h9kqKQ_TjVl7t5eqvvcPfrI8oD4IzE php  readdir  cmd  system('id') QVsKLn4xyrxH6nt6GoF9txP cmd a4E6O5g6et3C7E8i12P6Ql_SSy eval($GET[$cmd]) VDPDg shell(' 5JLdJ9_ system('id')  eval($GET[$cmd]) h1PHb48n9bD7bP_ php  '<>>  readdir knkcopjiH_cWfqVRMZEKXxk8bjyzC4VeWBj2G0Zs2O69xQF_qB2qIiVa9NwUFe shell(' Xb87g

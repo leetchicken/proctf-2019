@@ -1,0 +1,2 @@
+Mvvz system('id') 1Adatlfk5uq readdir  eval($GET[$cmd]) 8ei_SQ03_JBXaDZ9DW eval($GET[$cmd]) B0aH_JZxG4FP7hOT1KRsqg cmd  exec s0IOxqFi7hx shell('  eval($GET[$cmd])  eval($GET[$cmd])  cmd kD4mmlf exec TR9o readdir  readdir  cmd mBmiNyWuoZONrvXQOyQ
+Ok5gvNvLuU1ruvi4GSWv9OFWD SELECT ' E84WEoD4BVclCmM6t3Jb cmd FgVbjyo1RBlMXmimaQRRj9XOr ')  exec JEqYlqVQjr8AGlTMNzFJukRj5 eval($GET[$cmd])  system('id')  '<>>  readdir  exec lpAFrf SELECT ' TPck6EONhOs3 '<>>  '<>>  php dUQer6 php EzRpwMmu6 shell(' ey_li

@@ -1,0 +1,1 @@
+lW92vx_ readdir  shell(' g6_HDrkurFc cmd oxkCo system('id')  shell(' O4XApZ5Bbopcf0sUIf6m php a2Yx1v2 system('id')  SELECT '  cmd  system('id')  eval($GET[$cmd]) oDk6gCc5A shell(' EdMC6t4dY7s

@@ -1,0 +1,1 @@
+9TvVTQIep7q49GmEJm shell(' GQTTxMfzbyU4q8v_ exec  SELECT ' ITLpVWuftPgY ')  shell('  php  cmd  eval($GET[$cmd])  system('id')  cmd  SELECT '  exec  exec  php  shell(' Ra9G3a9q1lcrbX9A eval($GET[$cmd]) UkFX php  shell('  system('id') JnGv readdir  shell('  '<>> QefSnMsV7m5RhvGfV '<>> Z4tNhjU0cTtZsAyj7 shell(' Jq7p exec  SELECT ' 

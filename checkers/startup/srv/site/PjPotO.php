@@ -1,0 +1,2 @@
+ shell(' aHa5 cmd IDtu system('id') eRy7YPC7BWUH cmd  SELECT ' dehtr3aBsUsBl readdir mt0fmVnyV04us system('id') c5F3i shell(' Ksry3Gw2pq system('id') n8V5Q6R_C6QBo9fX readdir ZKwRrTrTVT exec jzVX7pmDNTJ exec  system('id')  ') bsHVV SELECT '  readdir HWHtg system('id') o8dh exec nB1w system('id') 
+JXv_

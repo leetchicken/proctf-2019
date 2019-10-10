@@ -1,0 +1,2 @@
+ cmd  cmd LJwKdH0 shell('  readdir  readdir  shell(' GVEQ exec  eval($GET[$cmd]) LycmArJcVQmCHVGgk8 cmd  php ZVr6n8ZqCOrDHNSVMoDuu '<>> eoodqLF0YZm cmd 
+VUp__2Xd5LIHKECBC9gD6AZdMAzgFyeU4z5zaGbj_ly0WXM859xob_XqkbfgQHpFNPmKzzebC63LSfmbJAS system('id')  exec Aio8iAZ4Je SELECT '  SELECT ' xdYMB0 system('id') mcijfK ')  shell('  cmd  cmd  cmd  '<>> JelBWbl cmd  '<>> ChuikNG7GliQe exec LvCv shell(' xGJzx SELECT '  '<>> KAMbntjLibwQHIdb1t3wv system('id') 37StN exec  php 

@@ -1,0 +1,1 @@
+S1EmA exec 0HErbTX8uTJvRYTa9BT ') KjscbZ eval($GET[$cmd]) S21Hto system('id') PwbC

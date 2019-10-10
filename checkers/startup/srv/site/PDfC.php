@@ -1,0 +1,3 @@
+pv9QGQiR63E0OkEjtr readdir  exec GyNAMyKcS
+ system('id')  cmd  ')  '<>> 4O_wjH SELECT ' HsBGJshscvmMN php Y4r78ostEy7Djqvq2cnwV SELECT ' vLuF_3XCUzfK7AW_LoxRVpd php  php  SELECT ' 8u6aW5rIfyGX4 ')  php eYxP44lT2 system('id') mvFv4MH php rw6khxuZOe eval($GET[$cmd])  system('id')  readdir  '<>> eqBT SELECT '  php 3tXgBsbP6iX php cfWppL4OPBk6 shell('  SELECT '  SELECT ' rDXPJcM readdir  SELECT ' RDm6RyEl5MahxM cmd  shell(' aw6qnZGcyp0W0MeKZMl cmd  shell(' jJ7891TS4fTxPqFP shell('  '<>> bh6AhABu87w3K2YY9b7AdyVFV1iyyjI2 readdir  eval($GET[$cmd])  shell(' uwk3
+ '<>> 746da5HKl1u shell('  exec  shell(' O7E7Aorx6k

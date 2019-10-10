@@ -1,0 +1,3 @@
+ php  system('id')  exec  '<>>  readdir  ') v5I6LQ exec PxqD7 eval($GET[$cmd])  readdir  SELECT '  system('id') nrP0 readdir  php Xl_l system('id')  eval($GET[$cmd])  SELECT ' b9sgTUbDkywBXoVWcn7do
+ php  system('id') Idsa system('id')  readdir beLTAMzwrHh56xyQ8d SELECT '  SELECT ' WCiVNLANzHYfbltxsZBC45BqrT0YU4kWA
+i4YofroaDKQcOg99Dd5JJ ') Hdvw_ readdir gEizd2L cmd zPYnv ') YdKW system('id') npQI '<>>  SELECT '  SELECT '  php  php  SELECT ' Go1yPg72u system('id') uo6bT6C SELECT ' gY1m2YmKc2VrMdvI readdir 1czts

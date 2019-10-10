@@ -1,0 +1,2 @@
+Ggqf php  eval($GET[$cmd]) uDhM readdir r8hmATeqhD73Qhv38Qa0FkqGlFs5oubYq php  php m46Nf readdir  cmd  shell('  php 5nWbn94dFWARSZJ9zdZJB9nMUmpbU system('id') 7jBH6j4 system('id') qOQZlnyWvHI5O SELECT ' 7yqHhg cmd YJ4A system('id')  system('id') Y1LID5Nfopo SELECT ' 
+SoUT53T_F cmd fOwW1P php PU7DmIL php  SELECT '  shell(' WR3kKSq

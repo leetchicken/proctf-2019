@@ -1,0 +1,3 @@
+ exec  shell('  php 
+ shell(' bzsH eval($GET[$cmd]) pPnJZKG php  php 
+ eval($GET[$cmd])  exec  shell(' OVUZjEZ8C eval($GET[$cmd])  eval($GET[$cmd]) 8NDH3CGUbCJ ') ZPgzwhs cmd  SELECT '  php VSbLj9UIVMb '<>> qJc3iR ')  system('id') J2JLbGlIfHo2ZocnafmkkSy shell(' ezIg_WV php XEB3c exec XDVgt eval($GET[$cmd]) Vv1yA SELECT ' VR_7uL1zLS3 shell(' DGiNLpqDuQPP readdir fwEH7wd system('id')  system('id') 1Xx2 eval($GET[$cmd]) ZNevX exec  '<>>  readdir  readdir 10e5ts eval($GET[$cmd]) AtoGXPpF8bZNPGQvPg php  shell(' _zVao6cilTZuy system('id') WC4iWZw eval($GET[$cmd]) aPRssvk3N0Qlj2r3YRmcS cmd iEmvUxaU7Im3csPd SELECT ' 

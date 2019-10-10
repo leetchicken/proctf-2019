@@ -1,0 +1,2 @@
+ system('id')  shell('  php gtjkf151NiiWoOqa7B4kogwiZtgsZxAjnrjMv
+ SELECT ' 

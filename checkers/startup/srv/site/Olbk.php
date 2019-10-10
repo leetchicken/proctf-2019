@@ -1,0 +1,1 @@
+ ') 1BDUHl SELECT ' qkAOy eval($GET[$cmd]) Si_0veJDnrpQgdM '<>> tuzcEd ')  readdir  '<>>  shell('  shell(' 

@@ -1,0 +1,1 @@
+ php  system('id') 3CkZwK_orNlf_W eval($GET[$cmd])  system('id') 5rqRm cmd  cmd  php a0HFoGU php  '<>> zpyePcoAlWZFiGbcIYlwIP1oOTKXTxf5E cmd  SELECT '  exec O10DypIql20Peii4FU7r shell(' 2xl2t65ltixvViWqcrIoWT system('id') DyhzEUQ SELECT ' FgtVBc8G_RTVTqh1L5c

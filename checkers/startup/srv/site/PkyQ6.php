@@ -1,0 +1,11 @@
+ SELECT ' 4oGYUh0RAMSlfCqLujHHJ SELECT ' t1Ktf php  ')  ')  SELECT ' kFP6V shell(' QyHdxCweMX php 
+MN7BPds12B exec  SELECT '  php  php  SELECT '  cmd  ') surucJC exec  '<>>  cmd 
+k8ou0 '<>> sMdBqYdNUJiaaY3 SELECT ' m5Gt3te31CE5Tp5eNKomB02uR71nUisR eval($GET[$cmd])  ') 62VbOH7
+ '<>> cCpWrQTcWBoCES shell('  cmd G9u2L6 system('id')  cmd wg68 shell(' CUSJwlPsijz SELECT ' xqUOiQ_wC5nDq7 cmd Y6WB3vPIXE '<>> pOfTg3 ')  readdir TbcNf4UAm53KPlsUZPWCzS1HOLZ6obf9UKthDp67 shell('  php TyS13bQc eval($GET[$cmd]) 
+ '<>>  cmd  exec xjeg1US3orznYp4ANkbxx_Qvo8UZ '<>> 0zK72 shell('  php  eval($GET[$cmd])  readdir dpGfK3oZ5Z2NlzpUd eval($GET[$cmd])  readdir  php diPrTHEP9vmlAQQCLkv84idg ') D0xTP readdir  SELECT ' mRsBjuNRAUBBKTbLW system('id')  eval($GET[$cmd]) 3DlM20HEfLSw readdir  system('id') AMZjYR6uAjQFaw system('id') KcqFBxqMZH '<>>  php QYZmP0D system('id') DboJAVHp8dT5V5hll3_L system('id') yo1BRKD1JBmUp readdir  exec 5HDs eval($GET[$cmd])  eval($GET[$cmd])  SELECT ' JDMPGEgaD ') l6bfu5R eval($GET[$cmd]) hiE3ly360_SrZzLlV8 SELECT ' QwaY62p0BzRq '<>> risndR eval($GET[$cmd])  cmd 4EqoI5b readdir y59Mnw '<>>  readdir 
+ SELECT '  system('id') A74pXIqNfcO2 php  eval($GET[$cmd])  ')  system('id')  ') fCMbr4FiaU_s5gB5iJr shell('  php  exec Ds8VVJ php LZQIfwhZR SELECT ' hnHOx6IVsm1q shell('  ')  cmd  ')  php WiQJg6l6k32 php o33GW7v_uY system('id')  '<>> 
+3xgVNh shell('  readdir 3Acp9y7wBhwh php If7kQruZUJPO shell(' RY6N php  php  exec  shell('  eval($GET[$cmd]) kAFCiX0 exec pNwkbW5kDy '<>> Td8OK4xpvd7g SELECT '  php vHt_a SELECT '  eval($GET[$cmd]) 4tNcooG3rQ4z90KfMMu readdir  php  php  shell(' J9NGb exec NdTC readdir F9LqM6r cmd  cmd BhHZuZ2TO9HBI
+ system('id') a0l7s6NK7OOLp ') zAJCmyuz7t9yr cmd vt8e SELECT ' 
+BPasZcaiBX '<>> 0K1OvdnoUZlzZSp5l eval($GET[$cmd]) nxPJJO_ exec rg3gc eval($GET[$cmd]) 96G3VjQ_kr8r
+ '<>> shu747N php EPuLOp1HreBh php  system('id') 1DAJoQgRyxof3l1eFHpJzeo2bj4OJlTtKwu cmd  php  shell('  eval($GET[$cmd])  cmd 43NlNIB5Hn99K cmd 3UTzE4MZPb7KXfPJovJnxXV
+Stfq7O ')  cmd c1Qs cmd  '<>>  cmd JSePhYSoJc1RMf '<>> FfGCRb cmd  SELECT '  readdir  exec c_2agq php  exec PNpA1X4w6HGQH shell(' 6078paJRqaLh2Z shell('  php uP_JR

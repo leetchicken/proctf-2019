@@ -1,0 +1,3 @@
+ SELECT ' 09CGg9
+ exec  php  shell('  SELECT ' KkJAAzn php tfj_2xW exec J_yJUzim814a exec 2woi SELECT '  system('id')  exec  exec  eval($GET[$cmd]) KKQtmCzC4MRKCsnf cmd  system('id')  cmd Sk4MK4HsjUfo2V shell('  ')  ')  '<>> qOMpWnI system('id')  shell(' GWtfqbaFo system('id')  ')  php  eval($GET[$cmd])  ')  SELECT '  shell(' 8RgTrd SELECT ' QMRdzw72pRw5m2W eval($GET[$cmd])  eval($GET[$cmd]) mqIEl2bqBq9z8o261 eval($GET[$cmd]) 
+ system('id')  cmd YIxT1nDmaH1i shell('  eval($GET[$cmd])  '<>>  eval($GET[$cmd]) UhUttr_S3UGM4 shell(' GfMi shell(' svrN eval($GET[$cmd])  readdir 

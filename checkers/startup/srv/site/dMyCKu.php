@@ -1,0 +1,1 @@
+ ')  system('id')  shell(' jaNYfQL php mBYyKVeZI50v shell(' yjyJn5 cmd  php q81Ok eval($GET[$cmd]) Zitk shell(' tI8e9 cmd UjaG exec  system('id') CYykQ5MEq

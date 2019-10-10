@@ -1,0 +1,1 @@
+ php  SELECT '  exec TI1K readdir  system('id') VA8hFKsPK5kkSv SELECT '  php  readdir  php  ')  php  cmd  readdir 5wXNX0jgoHY1meqN4t system('id')  '<>> 

@@ -1,0 +1,2 @@
+ cmd  system('id') 
+ php ECIGuvX exec  system('id')  readdir bC3kNRQD0vk shell('  ') 

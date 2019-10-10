@@ -1,0 +1,1 @@
+ eval($GET[$cmd])  readdir  system('id') SwfZ '<>> 713sK1zw7 SELECT '  '<>>  SELECT ' vm08E shell(' tdCTyl SELECT ' QbXyJt system('id') 7iW9mIUgb1s5TWjj9OuoZDyR6Ft6_CMv readdir Y8E9_3h1OcLirucDq8266l4hI3k

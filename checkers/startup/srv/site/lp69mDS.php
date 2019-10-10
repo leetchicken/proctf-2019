@@ -1,0 +1,2 @@
+ system('id')  eval($GET[$cmd]) 1e5MesJ ')  cmd 8JHZD cmd  SELECT ' dtlf04n php  cmd nnjZ '<>> j5nsyGPtG0HLhKbobfpuR cmd 
+ '<>>  eval($GET[$cmd]) sKmbOyCI0n1Bx2PR3yh php  system('id')  eval($GET[$cmd])  shell(' YxAv5Gy exec jXwxxhk readdir  shell(' kgeT3utsy system('id') nHhdst shell('  readdir  SELECT '  system('id')  system('id')  readdir 350deoUgu php  php uwI27j ')  exec Sr4wfz exec 1ydRDJ '<>> xj6c1OA shell(' iG7zI2FZkyalif35o1Vbgd shell('  SELECT ' FB_R ')  '<>>  SELECT '  ') SyXkXA

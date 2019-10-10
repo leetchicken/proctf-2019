@@ -1,0 +1,11 @@
+kCNAL SELECT ' tEFGE_ '<>> Uau3E readdir  shell('  readdir  SELECT ' 940T readdir SzHjnsZRVAeVyuixWP8
+a_H8sP2WK2RWYCHtJCgEpERyBzIN shell('  ') bpEKJ eval($GET[$cmd])  exec  php  cmd r4q2 '<>>  system('id')  '<>>  eval($GET[$cmd])  ') YE3Mz5OZ6bbn php NbwNSam
+ cmd N1uJp system('id')  eval($GET[$cmd]) 9RT17_e shell('  cmd 
+ php kLWXh system('id')  shell('  '<>> GiYdyI eval($GET[$cmd]) 5KDC readdir  SELECT ' 7hwTL8a8w6qO cmd 
+OCGazltNgdKDdmoimGe '<>> eX45De php PDx_ shell(' EUCFOw8 shell('  shell('  cmd  ') 2elBG shell(' _xTG963fGJldJQrT system('id')  SELECT ' bcrl8FHx24ohGlRIF eval($GET[$cmd])  ')  php Tsuvo exec C7xmJAzrFiS eval($GET[$cmd]) IVr4 SELECT ' 
+ SELECT '  readdir LX8t SELECT '  '<>>  system('id')  system('id')  SELECT '  readdir  cmd sk0i7 readdir 7ukGhKR '<>>  system('id')  readdir 3Hv_OAeaM2CjXw8 php jYvkE
+ shell('  readdir 5KOx6vo1KDlO_w exec  php  shell('  cmd  system('id') w_tdHwdd46lV73 SELECT '  php  ') kXXrDNITIW9UUG php e0JymgDGq13eYFn_ SELECT '  system('id')  SELECT ' LIV7GuoNz ')  cmd 
+HD3gyMGdjxB exec  '<>> xrjZuL ')  php  cmd  cmd sQ2fhC ')  php MSCoWTMF7HuWhtt82Afj cmd AwIlsil exec FtG70I1 SELECT '  ')  cmd  shell(' 7sPJ cmd  system('id')  cmd  ') 5OPdZLq php  SELECT '  system('id') jfN4s '<>>  exec  '<>>  '<>>  SELECT '  eval($GET[$cmd])  exec yf8X eval($GET[$cmd]) 6zJhue9 eval($GET[$cmd]) JuEx0EygHZp eval($GET[$cmd])  eval($GET[$cmd]) f054JA1kBsPUDbtPJFJz1ylRMsu32sR0I8KT3K ')  readdir  cmd  eval($GET[$cmd])  readdir ruGc ')  cmd wONZlVnLQTLMucRpXB5QZnvGmKVc53hP php BR8NHC05Vg readdir 0L5KoQrPI60 '<>>  cmd mOaL php cYJn8wEPnhe ') l1Bz61N exec sRJYI SELECT ' tNFQa9j_6dwsJchek99Xq system('id')  system('id')  SELECT '  system('id')  shell('  shell('  php uxvkFCBpi '<>> KO1vopx cmd c1UBAbc2ZxCX0ZrIkm_ eval($GET[$cmd]) raedfD eval($GET[$cmd])  php Cn9CF9ph ') 
+ exec WO3yaLaO98Ap '<>> z6ae
+bHtm cmd  readdir 8pd5R php _pkj5L shell('  ') CllKiK cmd Vr1AEXJNt4U3 SELECT '  shell('  shell('  SELECT '  system('id') SFGPT cmd  SELECT '  '<>> oZBdqS7XuUpBN0JlIj ')  readdir 4H5gFI system('id') DX9JQ8 system('id') TNNITe shell(' 
+hMqZPo php  ') l79bz readdir KVpocthxo php  cmd wmfSdG php EXkrs shell(' ueDOqbl SELECT '  SELECT '  '<>> 

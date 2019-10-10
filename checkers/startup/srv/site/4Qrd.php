@@ -1,0 +1,1 @@
+ exec  readdir  SELECT ' Dd_qQ8tPlYJjREeaj shell(' DcB2MEt9QOBrg88dfnQAlJoXAi ')  eval($GET[$cmd]) 

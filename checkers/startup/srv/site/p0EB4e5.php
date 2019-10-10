@@ -1,0 +1,3 @@
+edHhPxXGoH readdir bgHZd
+C5Fq readdir cFd7 cmd 23ASZ system('id')  SELECT ' e5qmu8Pt0AS system('id')  php RjmgWfVlXj2zo system('id') sRP0vzLqI system('id')  eval($GET[$cmd]) UIL554i7HMw cmd  '<>>  cmd  php 5CMbTYagOa '<>> NZ4HF SELECT '  '<>> 8Ed0Fu6BKp shell('  shell(' 0Ka0M
+ ')  system('id')  ') xuUQHug readdir 2AiFyYGECWNT996T '<>> KTny3Z_ system('id') 5IX0 exec B2v4 eval($GET[$cmd]) f8LWDpJD0HNMP8 php  system('id') 4_jvxU readdir  exec c5EOfpGWLv shell('  php  system('id')  system('id') UyKTV6uyz SELECT '  system('id') xvwg3Sqboik eval($GET[$cmd]) f0nHLySl eval($GET[$cmd]) R4vHcut ')  system('id')  exec  shell(' lneC12y

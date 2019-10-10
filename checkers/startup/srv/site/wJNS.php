@@ -1,0 +1,2 @@
+ cmd  exec qKAfZPJAHchO5tTO57py eval($GET[$cmd]) RXCdSjeKlY SELECT '  eval($GET[$cmd])  php  php  system('id')  eval($GET[$cmd]) fhWXJU cmd A6Pv ') yvc_g5etltTmUXyfEdqXyfy shell('  SELECT ' HIBL system('id')  ')  exec 9J56BxJejVHU7XByP9wh0 php  exec  php eAXoi exec 
+45yqWuC exec 19_Sc ') ZHflCdwIEBoJawiH system('id') 

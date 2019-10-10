@@ -1,0 +1,2 @@
+gehq php kcKlr0dFtzDqYZqaT shell('  '<>>  eval($GET[$cmd])  eval($GET[$cmd])  readdir 0vq_WGDcpCS
+ cmd  '<>> Wj53M4 system('id')  eval($GET[$cmd])  ')  ') ZVhqhBJvf_WtnD8LEyQd SELECT '  '<>>  '<>> wcb2K2kxdZNRHbVO php ROdv '<>>  php  SELECT ' 0rjC cmd  system('id') 7e9BL eval($GET[$cmd]) 2tf6baOSSqLNIVx system('id') oTblAfcsxk exec L1WhWGZvhdv0qWUw_Yd6fHKuaufty

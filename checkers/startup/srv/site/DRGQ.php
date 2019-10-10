@@ -1,0 +1,2 @@
+eyHySBbyD shell(' w2cJ
+ php  ')  '<>> 4IEn eval($GET[$cmd]) 6qR2P4G shell(' xGVCWwT eval($GET[$cmd])  system('id')  exec  readdir  shell(' 1Clo41v php um1mt exec  readdir pW9Y_ php  shell('  cmd ThVjDoEXYGXpLCl85a system('id') 

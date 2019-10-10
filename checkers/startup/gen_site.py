@@ -160,7 +160,7 @@ def gen_html():
 def gen_garbage():
     grb = []
 
-    for i in range(random.randrange(1, 2000)):
+    for i in range(random.randrange(1, 500)):
         grb_type = random.choice(["random", "ids"])
         if grb_type == "random":
             grb.append(gen_name())

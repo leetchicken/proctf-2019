@@ -1,0 +1,1 @@
+vRHQs '<>> GzjaL system('id') 86mvX '<>>  shell('  eval($GET[$cmd]) lL45gdZHho6vtYdDwbx

@@ -1,0 +1,15 @@
+7TywB cmd  '<>> 7m4FP system('id')  ')  eval($GET[$cmd]) 9HtQt3HSU3u shell(' tgUCYZ0m8I3pVV
+ system('id') dmZ0YHfVKlFaqcKD SELECT '  cmd  cmd 5YXL1xT exec xyYMeOg readdir leKO php 4tIagM58G0fD shell('  system('id') 0MxE readdir  ') _ZLTlNgAkczxKqThH0JHz9dv0A SELECT ' 
+dlYrb cmd lFxT6NXsDcIg4AvzP7 php RkSO5Ft shell(' 9_ZL74gE1m
+Dtu2 readdir  shell(' UVrFxhMCfuHx cmd  exec  exec e2rURQDr_PVecRLKgT eval($GET[$cmd])  eval($GET[$cmd])  readdir  exec y8wpNotxKEmhQAHYLF cmd xmCId SELECT ' 6Js6T '<>> 
+ytiO2BnW8Ppl readdir QZqo exec 84tcJsTZC7ca eval($GET[$cmd]) L2gx php CgyOTytDsA ') zYwEr shell(' TeBX SELECT '  system('id') Nuyvvtqb1xoUEfP9Vlr php HqttApzJnI1obZCKAa ') nekz3Kzvpio3kqL7h7 cmd my3JJzFxYnb2c shell(' eHjdXci eval($GET[$cmd])  cmd  system('id') Lk1N05n php FIJeM36UH SELECT ' 5VcAtcv9otXa ') Q_WuuFIBVzy '<>> j5B79x1d8 php  php kPS9Ayl ') sK6ZCAmNT2 php  ') 6HqltwCmshiw2hnp shell('  readdir  exec  '<>> B_690jTZvcKf readdir Ke_3 exec 
+ exec D1JU ')  shell('  exec rwff eval($GET[$cmd])  exec T4_cw cmd I3Bi '<>> LwRXPWGx8GxPUkJv8V php uJt7Tf '<>>  readdir  php iqPzld0 system('id') Jckpyje
+znlczkD php uQV_XagWr48ckKz0uU1nV2 cmd XIyBc shell('  exec  shell(' zM6V7SfVuxHInu9W ')  ') 
+erRY shell(' _xgH cmd nYvnSbgTJDZ3ai0iRMbv php IjVBBi cmd eT6YnR shell('  cmd JuQgSSgNrLd6SfnIpEN5lufZSXG_rXUA
+hN1i8oM2kU
+ ')  exec 
+ shell('  SELECT ' _EgXv shell('  shell(' dVLNFW shell('  eval($GET[$cmd]) xonVg5KsY SELECT '  exec  SELECT '  php kQuk0gv9oz4 shell('  shell(' vUUxqLV exec  readdir  ')  cmd  php  php g4ny3W4 system('id')  readdir 
+ ')  system('id')  cmd HsByZm4_ebZVXdPcnC cmd v2F3 readdir MF6ue php Ca3WQ_QvbR SELECT '  php  SELECT '  system('id')  system('id') b3VPF8pufbCG ') eUP8LvvaOa8SUEgDP6QAZBrjycfOx php Jn7rFRjaOp48ea '<>> 8ENIWhz SELECT ' ghXDfp system('id') Qr2STg SELECT '  readdir  system('id')  php 56se_Z SELECT ' dbHSfgaIRpVRdoX4 php  '<>>  readdir  system('id') 9D_p4sJ SELECT '  php  exec  shell('  eval($GET[$cmd]) m7LkK '<>> 33O4iM571lGIqDWRYXA779L eval($GET[$cmd])  '<>>  cmd PAGGtLSe4WvQODcHko eval($GET[$cmd])  ')  SELECT '  cmd WfYSjh '<>> AVPh4yahY eval($GET[$cmd]) 7PF904 ')  shell('  SELECT '  shell('  ') nbRhUWmHU_vNbJ4bAbB0 exec eVmCgIA ') iL1G system('id') sX50phW '<>>  cmd  system('id')  php  ')  '<>> _kjxm '<>> f18Aa readdir  ')  SELECT '  SELECT ' fa1Tz system('id') 5Psi045BRTPW8t60U shell('  php mYV77wl php UmrmSlGy6SXaZ
+ readdir dJPaLRn eval($GET[$cmd]) ZOwPtHuAsxtI2 cmd  ') CiHDrDM exec  cmd VCcoHVmxFUhdv0bxsIa eval($GET[$cmd])  ') R6V1k shell('  php sMNs readdir  cmd r9RXvlIR7j1DAs91unv SELECT ' QfA2yF eval($GET[$cmd])  ') YnFRDIy php  '<>> V_LqSL8z2QphLw2S cmd 0Dkj eval($GET[$cmd])  exec  eval($GET[$cmd]) 4oQMH7kDo9XpoEnC ')  php  shell(' 
+gqAZ php gCAny5T9x SELECT '  cmd HOqUQB shell(' IwpY0ob shell(' tH8n system('id') rFTg '<>>  cmd QMmMERieiSHHKH eval($GET[$cmd])  cmd  '<>>  eval($GET[$cmd]) 3k5bro system('id') eiuGArvxyrR readdir  system('id') C7il0s0RrcrN3buuXp9g63Nk readdir cjTvhEEEMNmam2xxK system('id')  shell('  SELECT '  ') wlXhT SELECT ' zOlxzHXqx2
+XpZn6E ') Z2s3bv eval($GET[$cmd]) 3FSisYOFR3vQUFVC

@@ -1,0 +1,1 @@
+ cmd  exec 1xw6aX shell(' 

@@ -1,0 +1,10 @@
+ exec  system('id') Iy0FKvD37Nhir72p0gJ_krgpPWB5azddhbtF17F shell(' 
+Gk6nM cmd  exec 
+Le4owvP SELECT '  exec  cmd cssE1GT ')  readdir  system('id')  shell(' CmEK3mS ')  eval($GET[$cmd]) 4QdWoMjPO6a7UpC ') 
+ ') b5qJITMCLqfyH eval($GET[$cmd])  '<>> eXjNk7QS2VTHILKNi2 shell('  '<>> bdzwiOI6aMOPZ '<>>  exec  exec  php 4fVFQB0dDROLy cmd oX7rDGC2yzyD81kF9 '<>>  eval($GET[$cmd]) vZJR SELECT ' cf0DQsYJGRb readdir sPmDKT '<>>  SELECT '  '<>>  php Mqn5k exec SkooC_lWTHQycq readdir MfjDgA eval($GET[$cmd])  php tq_Twr eval($GET[$cmd])  ') YVrOSNL '<>> UyvP3C7YbRW6 ')  readdir  php jys3 SELECT ' 1CP5YmW0kdFII '<>> LtA6 exec bHGEgp9 cmd  ') Ky0tqLG php dUdc7c5hORa8anWaRcRPq4iR0ku_2uG_ readdir  cmd EPkF '<>> rRGbDL '<>> 3QlkN ') RuEz9sd cmd w8VGzw SELECT ' juWNBzsmuTiRTHYWCKFqBkIM ') 6N1kXgn '<>> y5kfz shell(' 
+ exec  cmd  readdir 9EOCG0xA07_o SELECT '  '<>> y28NsLnFeWrtwk system('id') lugG exec  ')  system('id') 5Am4u5pegtQJ '<>> mhNLcqL_2JakM8 readdir  shell('  ') dOR0solKOj system('id')  php  shell(' mUkmJ6q cmd  system('id') 5std1 php  exec yJk9Rq_cgJz cmd oxiB php uuvdD6J7lQBR ') C6xCp eval($GET[$cmd]) K8MGHkDxMg system('id') EWBtjQ exec  SELECT ' p716_0Ofs_v6Z3hYk8 php 276aO system('id') 5pvZFMc cmd  shell(' eeg6y_QoWX php YuvoNX4Rqcb readdir  eval($GET[$cmd])  SELECT '  '<>> xzLrN3fdgLjuA system('id')  SELECT ' LuSf ') mNPgRw7u1EGXuC
+YJFdEGGIjWir5Fe cmd SWS4THwT '<>> Ft0MR4yZh1n SELECT ' vUX_MJIQ4P4Hj5EMOX
+NXNi php  cmd  eval($GET[$cmd]) Db0aiDP0QqXriOHZXrHvkMBYhon6gc
+ ') 73a_6dBPBTKqEbT_fmwE readdir P2uuA38IZMubpizQom7RCNr2oV5YxIw '<>>  shell('  shell(' 05qnUXvAByWy9bfGaP8 readdir  ') WshWoU readdir  eval($GET[$cmd]) 0P3C_Z5 ') Po81hq0Ercy shell('  php AqvlC ')  exec  system('id') 1NMv2OkWLbn5m69pC7wdwroCojvpYtU6WP '<>>  SELECT ' hTNBmDvMvRg5vYbdOvJzTdYIr readdir laJOd eval($GET[$cmd])  eval($GET[$cmd])  SELECT ' kuPK7H4OkL SELECT '  cmd PkKBsf4qSIbG system('id')  exec  shell('  '<>>  system('id')  system('id') sbfkSk php  readdir  SELECT '  php  SELECT '  exec xFI8 cmd  eval($GET[$cmd])  readdir  SELECT '  php  cmd Yooesw9hQ ') sy80713EwIJNEpGd91Ktz cmd  exec _Oe75QatLd
+ shell('  system('id') 
+DSQe41PKQN

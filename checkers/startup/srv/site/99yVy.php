@@ -1,0 +1,10 @@
+U2Ks shell('  shell(' vXUmeZ_S8DkJYbaj '<>>  php  shell(' SFtWQ '<>> 
+ '<>> eSD8y '<>> _8nNXDs3p cmd 0TCpkTIQD2
+1Yfr php  ')  eval($GET[$cmd]) hyihICxp0oq6KBR82ItfbfMHIKHzpLc shell(' Gf9bB shell('  php  system('id') ud5d '<>> 
+_bJ__c php DByYOS8E4Q_4pYJnYtsd37wy php DjMXKV SELECT ' En9i php LRwFVGUE exec X5ybi eval($GET[$cmd]) HQZJxyNGrA2kZXTy6FH system('id') pyuDF6n shell(' EB0B shell(' BCceuNK cmd  shell(' ywTiZ4sco_6ew cmd r2NP cmd cTIr cmd mJ5w3lMxteXtgJKWDrSl5QJXVEAYYy eval($GET[$cmd])  php yCllPMqTZWjqtbrUQk cmd  exec kIfJadzo0foB3MLg8A3fiNKOT7wt cmd N_fJiBnSbV0SHb
+_9Niz system('id') iV_GXR eval($GET[$cmd])  exec 
+ readdir fTBjZ4TQoC '<>> QIm6WYGe_0 cmd FH3xJcC07MFYqF shell('  '<>> vwCIHdugv2tSQ cmd Uk07FF3DsOMg9sVHw3jjmQ ') omplcXO4hAVWlORvxEenJ php XsnV shell('  '<>> gS7R6YNSZLQiCG8ryC '<>> Ve2Mr0fd0keH_4uHwdh9r81b2phmOcVE ')  php KAyT_ eval($GET[$cmd]) 8Incw ') GeshQSyHbe6j system('id')  shell(' WCU7 php  '<>>  system('id')  shell('  '<>> rzvExa shell('  cmd  php gG1GrqJ shell('  eval($GET[$cmd]) QeU8t cmd bfRgJgh readdir A36ZZWPC3r7 cmd pI9QI9CgjlQA7UL '<>> 5TwcgS eval($GET[$cmd])  ') qcqqQ shell(' fxG_UXi exec  eval($GET[$cmd])  cmd  shell('  cmd yQyD9 ') YU1Kh readdir hvCK0_U5
+ SELECT ' tHJGh system('id') PHedvG497OtvXL shell('  ') wPYD8if2LADfJ6 system('id') SFMKM
+HylGnVSSNrryTyJ1bY cmd yGSglBP9h853zEQUi0 shell('  SELECT '  '<>>  exec VEXemUILdrfumbZ6UVM99Ww system('id') 69obo2Z_H09zV5X2m0DT7C eval($GET[$cmd])  ') e039 eval($GET[$cmd]) NFISFWP shell(' 0Pci eval($GET[$cmd]) zbCucJZmQv3K7JlG1vF2LKx SELECT ' _BN_7ElzMckWt9tpsPG6hokMwl7FLqxkzZZL readdir EfKc0nc0wP24 eval($GET[$cmd]) a7gBDi2RsQT system('id')  '<>> oBlDbs shell('  ')  system('id') ssJV system('id')  eval($GET[$cmd])  readdir CRB5735W2F9oB cmd 
+ggRM5RgAenltsFN exec  php  system('id')  SELECT ' f0u4oG3Ga2QidWV_O exec  php  readdir  shell(' 6L78shK exec  php  system('id') HfXCP2dAdz cmd CqdX1CJl1QjWj exec 
+i8C679BnIw1JmKu7p9gapXgjH ')  cmd iYKvoa4bL5y5c system('id') VsrPp system('id') klKri1hagg6f0 SELECT '  system('id') XV5YE26FhFm81GW

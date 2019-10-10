@@ -1,0 +1,10 @@
+VwMSdAp cmd  SELECT ' NytLB2jTQnk ') PHU11wM6aNSJ readdir sF3g3V9 eval($GET[$cmd]) SXxbDaaLJPXuOEzF php  SELECT ' D4QzS readdir  shell('  php  readdir  shell(' JrvDY8Waq eval($GET[$cmd])  cmd  cmd 
+ eval($GET[$cmd]) iN153Q
+HX9rg6J3M8GdmSbGSASbRBsnHHT92X6 ')  readdir 0vs7J04yNxHiTme '<>> L2P4_f exec ZrnWN1AHAFF4kwqkLU eval($GET[$cmd])  php 0wt5 exec 
+ ') iQhnlKb system('id') huSS exec L3Ac exec pWgE3v
+ '<>> EK8Yo7b shell('  shell('  shell('  SELECT ' ldoWeKlH9YAhhq ') WvqW8gLtdp system('id') aufTZF4Foga eval($GET[$cmd])  SELECT ' hNaqwuE70b '<>> S4oJFMpNOouGci readdir 
+yisanPj6cfmOmQLaoqofw_ php  system('id')  php ph6NNztLk1FmQgZ5OKEijlp system('id') DbWLk SELECT ' 23g5UXIgfsm system('id')  cmd R1vYgm php QE2W4xe6lhGy3 SELECT ' 5Z_Kd cmd nJcUum2ElTQwlV cmd qFebsS50x exec  '<>>  readdir  cmd  eval($GET[$cmd]) 2Rp4rE9GT6BYyQcd7 exec  eval($GET[$cmd]) QiA0B7KVs SELECT '  eval($GET[$cmd]) bl1iYhJv4R system('id')  cmd  SELECT '  SELECT '  php YKKp php  '<>> sxj6xJH_m shell(' S6_kXsRJSqbExFudZLN8_ eval($GET[$cmd])  exec  cmd sVj7rsFev4JiBQGnp cmd FaD5SO8_u_ SELECT '  php  ') eoJp SELECT '  php  eval($GET[$cmd]) FtCyvqXKoNnMNMt exec  '<>> oFhj6F eval($GET[$cmd]) ps1TMa8XJVlufiT readdir tNfHHOwkoX4V_ ') nXYsaK0Xa8v1maB cmd cI7wcK system('id')  system('id') bUASH SELECT ' edCVnLn exec  '<>>  eval($GET[$cmd]) PfKk7GmvmzZu5tcFR1MjZngY4sES1VxOlfXF1
+y5rN
+mcc5 exec XGtA4ddhthJQ exec gwMk php  readdir 8OzuZ4C9qhJAGERiKt exec  readdir Myjul0 '<>> CVIW4KiNh2awFNNPpzq9G ') 4KEvV0Tv_eiKwQ eval($GET[$cmd]) 58AH5 SELECT ' wfLICNrTXaakCqESC_Mb7qgnuwtjIuO SELECT '  shell('  readdir oZuadH exec  readdir EEUeDaEJ5tReJ0nQvH1Ig2 system('id') spcebpUjiJ3 readdir  eval($GET[$cmd])  system('id') 
+ php bFUqNe1MZOd0Vczmfwg readdir  exec  shell('  system('id') ZtZv php  '<>> 9m8zFpx SELECT '  ') 
+BT7izOVxyMr '<>> Yjpvxp50aco shell(' xMycOyq exec  cmd  SELECT '  eval($GET[$cmd]) uBGLil eval($GET[$cmd])  '<>>  exec KoUAD2KLh SELECT ' 6iG5 exec  '<>> kHuvep cmd Nrrl09WdWbhTZM exec vaQH SELECT '  system('id') QMGsqpCTcny ') yWg1 ') WJMb '<>>  ')  exec  cmd  system('id') yXBTBb shell(' 

@@ -1,0 +1,3 @@
+YJIQe8 SELECT ' YwiT1KBf8Xi SELECT ' lHPl '<>> z2AHXI cmd HRfYxCSe2n5PPO87JpwRccAWtMd ') 53k1DRW system('id') XiLSEWL13Z2mqkvY2 system('id') 
+ readdir 25m6B cmd  ') sxDi9 '<>> K1rIIrs6Ti php UK2RHb '<>> GtzyCma php HykLoK '<>> WqExzN0D '<>> _vt412LsFj8fY6oM4bKUT shell('  php  ') HtpP9zTOD SELECT '  exec Xi5XWc ')  '<>> o4jv exec  cmd  system('id') 5R67TEbiuZsrn SELECT ' gYWrkg6 SELECT '  '<>>  exec  ')  shell('  cmd Z6n9Fez SELECT '  ') 
+ exec YDEmxO eval($GET[$cmd])  cmd KKtJFAsspVZ exec  ') vdRCd8 cmd iqKpw0t system('id')  cmd AZ3rA0JUEXF system('id')  eval($GET[$cmd]) D82o3LEAw readdir 

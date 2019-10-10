@@ -1,0 +1,3 @@
+KBzHn3N php  php  shell('  system('id')  ')  system('id') igHszDKt1219lat1hH_spal SELECT '  shell('  system('id')  exec 
+Vmf2l4hCbs7BZa8PqnyAj5BYP7DDACZcyNqe3 ')  eval($GET[$cmd]) nOvGZq eval($GET[$cmd]) xk8qd readdir  SELECT '  system('id')  eval($GET[$cmd]) MdUaTx system('id')  eval($GET[$cmd])  system('id')  '<>>  shell('  ') zaOJFcboqHcg5dwLB
+ ') ZaYqQ2kHHA5cBthDWsgl_ixWD system('id') cLUWXpB cmd  readdir  SELECT '  eval($GET[$cmd])  system('id')  ') E_zU eval($GET[$cmd])  cmd PSUsvLK5EFryB
