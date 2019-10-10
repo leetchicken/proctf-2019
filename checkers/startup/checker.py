@@ -16,7 +16,6 @@ import requests
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.serialization import load_der_private_key
 
-from hosts import HOSTS_HTTP, HOSTS_HTTP2
 from user_agents import USER_AGENTS
 
 OK, CORRUPT, MUMBLE, DOWN, CHECKER_ERROR = 101, 102, 103, 104, 110
@@ -30,6 +29,11 @@ PRIVATE_KEY = ("302e020100300506032b657004220420cfbff62701f76c39" +
 
 SCRIPT_PATH = pathlib.Path(__file__).parent
 ABC = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+
+HOSTS = json.load(open("hosts.json"))
+
+HOSTS_HTTP = HOSTS["http"]
+HOSTS_HTTP2 = HOSTS["http2"]
 
 
 class P:
