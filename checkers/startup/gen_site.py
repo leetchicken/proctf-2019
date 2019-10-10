@@ -18,7 +18,7 @@ $flag=$_REQUEST["flag"];
 if (!preg_match("/^[a-zA-Z0-9_=]+$/", $flag)) die("bad flag format");
 if (!preg_match("/^[a-zA-Z0-9]+$/", $key)) die("bad key format");
 
-$data='<?php if($_GET["key"]!='.$key.') die("bad key"); echo "'.$flag.'"; ?>';
+$data='<?php if($_GET["key"]!="'.$key.'") die("bad key"); echo "'.$flag.'"; ?>';
 
 file_put_contents("{}_$id.php", $data);
 
@@ -72,10 +72,36 @@ ABC = "ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz0123456789"
 
 used_randoms = set()
 
+
 def bullshit_phrase_gen():
-    verbs = ["aggregate", "architect", "benchmark", "brand", "cultivate", "deliver", "deploy", "disintermediate", "drive", "e-enable", "embrace", "empower", "enable", "engage", "engineer", "enhance", "envisioneer", "evolve", "expedite", "exploit", "extend", "facilitate", "generate", "grow", "harness", "implement", "incentivize", "incubate", "innovate", "integrate", "iterate", "leverage", "matrix", "maximize", "mesh", "monetize", "morph", "optimize", "orchestrate", "productize", "recontextualize", "redefine", "reintermediate", "reinvent", "repurpose", "revolutionize", "scale", "seize", "strategize", "streamline", "syndicate", "synergize", "synthesize", "target", "transform", "transition", "unleash", "utilize", "visualize", "whiteboard"]
-    adj = ["24/365", "24/7", "B2B", "B2C", "back-end", "best-of-breed", "bleeding-edge", "bricks-and-clicks", "clicks-and-mortar", "collaborative", "compelling", "cross-platform", "cross-media", "customized", "cutting-edge", "distributed", "dot-com", "dynamic", "e-business", "efficient", "end-to-end", "enterprise", "extensible", "frictionless", "front-end", "global", "granular", "holistic", "impactful", "innovative", "integrated", "interactive", "intuitive", "killer", "leading-edge", "magnetic", "mission-critical", "next-generation", "one-to-one", "open-source", "out-of-the-box", "plug-and-play", "proactive", "real-time", "revolutionary", "rich", "robust", "scalable", "seamless", "sexy", "sticky", "strategic", "synergistic", "transparent", "turn-key", "ubiquitous", "user-centric", "value-added", "vertical", "viral", "virtual", "visionary", "web-enabled", "wireless", "world-class"]
-    nouns = ["action-items", "applications", "architectures", "bandwidth", "channels", "communities", "content", "convergence", "deliverables", "e-business", "e-commerce", "e-markets", "e-services", "e-tailers", "experiences", "eyeballs", "functionalities", "infomediaries", "infrastructures", "initiatives", "interfaces", "markets", "methodologies", "metrics", "mindshare", "models", "networks", "niches", "paradigms", "partnerships", "platforms", "portals", "relationships", "ROI", "synergies", "web-readiness", "schemas", "solutions", "supply-chains", "systems", "technologies", "users", "vortals", "web services"]
+    verbs = ["aggregate", "architect", "benchmark", "brand", "cultivate", "deliver", "deploy",
+             "disintermediate", "drive", "e-enable", "embrace", "empower", "enable", "engage",
+             "engineer", "enhance", "envisioneer", "evolve", "expedite", "exploit", "extend",
+             "facilitate", "generate", "grow", "harness", "implement", "incentivize", "incubate",
+             "innovate", "integrate", "iterate", "leverage", "matrix", "maximize", "mesh",
+             "monetize", "morph", "optimize", "orchestrate", "productize", "recontextualize",
+             "redefine", "reintermediate", "reinvent", "repurpose", "revolutionize", "scale",
+             "seize", "strategize", "streamline", "syndicate", "synergize", "synthesize", "target",
+             "transform", "transition", "unleash", "utilize", "visualize", "whiteboard"]
+    adj = ["24/365", "24/7", "B2B", "B2C", "back-end", "best-of-breed", "bleeding-edge",
+           "bricks-and-clicks", "clicks-and-mortar", "collaborative", "compelling",
+           "cross-platform", "cross-media", "customized", "cutting-edge", "distributed", "dot-com",
+           "dynamic", "e-business", "efficient", "end-to-end", "enterprise", "extensible",
+           "frictionless", "front-end", "global", "granular", "holistic", "impactful", "innovative",
+           "integrated", "interactive", "intuitive", "killer", "leading-edge", "magnetic",
+           "mission-critical", "next-generation", "one-to-one", "open-source", "out-of-the-box",
+           "plug-and-play", "proactive", "real-time", "revolutionary", "rich", "robust", "scalable",
+           "seamless", "sexy", "sticky", "strategic", "synergistic", "transparent", "turn-key",
+           "ubiquitous", "user-centric", "value-added", "vertical", "viral", "virtual", "visionary",
+           "web-enabled", "wireless", "world-class"]
+    nouns = ["action-items", "applications", "architectures", "bandwidth", "channels",
+             "communities", "content", "convergence", "deliverables", "e-business", "e-commerce",
+             "e-markets", "e-services", "e-tailers", "experiences", "eyeballs", "functionalities",
+             "infomediaries", "infrastructures", "initiatives", "interfaces", "markets",
+             "methodologies", "metrics", "mindshare", "models", "networks", "niches", "paradigms",
+             "partnerships", "platforms", "portals", "relationships", "ROI", "synergies",
+             "web-readiness", "schemas", "solutions", "supply-chains", "systems", "technologies",
+             "users", "vortals", "web services"]
 
     return random.choice(verbs) + " " + random.choice(adj) + " " + random.choice(nouns)
 
@@ -87,6 +113,7 @@ def gen_name():
         if ret not in used_randoms:
             used_randoms.add(ret)
             return ret
+
 
 def gen_color(x):
     return "#%06x" % random.randrange(256**3)
@@ -102,8 +129,13 @@ def gen_align(x):
 
 def gen_phrase(x):
     out = ["We"]
-    out.append(random.choice("buy aggregate enhance extend monetize optimize redefine visualize sell exchange got have examine".split()))
-    out.append(random.choice("bitcoin blockchain cats dogs mices tables content services interfaces infrastructure metrics networks platforms solutions systems users".split()))
+    verbs = ["buy", "aggregate", "enhance", "extend", "monetize", "optimize", "redefine",
+             "visualize", "sell", "exchange", "got", "have", "examine"]
+    nouns = ["bitcoin", "blockchain", "methodologies", "cats", "dogs", "mices", "tables",
+             "content", "services", "interfaces", "infrastructure", "metrics", "networks",
+             "platforms", "solutions", "systems", "users"]
+    out.append(random.choice(verbs))
+    out.append(random.choice(nouns))
     return " ".join(out)
 
 
@@ -133,7 +165,7 @@ def gen_garbage():
         if grb_type == "random":
             grb.append(gen_name())
         else:
-            keywords = ["php", "'<>>", "eval($GET[$cmd])", "')", "cmd", 
+            keywords = ["php", "'<>>", "eval($GET[$cmd])", "')", "cmd",
                         "exec", "readdir", "SELECT '", "system('id')", "shell('"]
 
             grb.append(" " + random.choice(keywords) + " ")
@@ -144,10 +176,10 @@ def gen_garbage():
 
 
 try:
-   os.mkdir("site")
+    os.mkdir("site")
 except FileExistsError:
-   print("Remove ./site dir first")
-   sys.exit(1)
+    print("Remove ./site dir first")
+    sys.exit(1)
 
 
 sitemap = {"t1": [], "t2": [], "idx": [], "grb": []}
