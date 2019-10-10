@@ -2,6 +2,7 @@
   
 import sys
 import traceback
+import socket
 
 OK, CORRUPT, MUMBLE, DOWN, CHECKER_ERROR = 101, 102, 103, 104, 110
 PORT = 1433
@@ -31,6 +32,44 @@ def put(args):
         verdict(CHECKER_ERROR, "Wrong args count", "Wrong args count for put()")
     host, flag_id, flag_data, vuln = args
     trace("put(%s, %s, %s, %s)" % (host, flag_id, flag_data, vuln))
+
+    s = socket.socket()
+    s.settimeout(1)
+
+    try:
+        s.connect((host, PORT))
+    except ConnectionRefusedError:
+        verdict(DOWN, "Connection error", "Connection refused")
+
+    trace("Waiting for `> `")
+
+    try:
+        data = s.recv(1024).decode('utf-8')
+    except socket.timeout:
+        verdict(DOWN, "Timeout", "Timeout while receiving `> `")
+
+    if data != '> ':
+        verdict(MUMBLE, "Protocol error", "Expected `> `, received `%s`" % data)
+ 
+    sql = "ATTACH DATABASE '%s' as db; CREATE TABLE db.flags (flag text NOT NULL); INSERT INTO db.flags VALUES('%s');\n" % (flag_id, flag_data)
+
+    trace("Executing `%s`" % sql.rstrip())
+
+    try:
+        s.send(sql.encode('utf-8'))
+    except socket.timeout:
+        verdict(DOWN, "Timeout", "Timeout while sending query")
+
+    try:
+        data = s.recv(1024).decode('utf-8')
+    except socket.timeout:
+        verdict(DOWN, "Timeout", "Timeout while receiving insert response")
+
+    if data != '> ':
+        verdict(MUMBLE, "Protocol error", "Expected `> `, received `%s`" % data)
+
+    s.close()
+
     sys.exit(OK)
 
 def get(args):
@@ -38,6 +77,46 @@ def get(args):
         verdict(CHECKER_ERROR, "Wrong args count", "Wrong args count for get()")
     host, flag_id, flag_data, vuln = args
     trace("get(%s, %s, %s, %s)" % (host, flag_id, flag_data, vuln))
+
+    s = socket.socket()
+    s.settimeout(1)
+
+    try:
+        s.connect((host, PORT))
+    except ConnectionRefusedError:
+        verdict(DOWN, "Connection error", "Connection refused")
+
+    trace("Waiting for `> `")
+
+    try:
+        data = s.recv(1024).decode('utf-8')
+    except socket.timeout:
+        verdict(DOWN, "Timeout", "Timeout while receiving `> `")
+
+    if data != '> ':
+        verdict(MUMBLE, "Protocol error", "Expected `> `, received `%s`" % data)
+ 
+    sql = "ATTACH DATABASE '%s' as db; SELECT flag from db.flags;\n" % flag_id
+    trace("Executing `%s`" % sql.rstrip())
+
+    try:
+        s.send(sql.encode('utf-8'))
+    except socket.timeout:
+        verdict(DOWN, "Timeout", "Timeout during put()")
+
+    try:
+        data = s.recv(1024).decode('utf-8')
+    except socket.timeout:
+        verdict(DOWN, "Timeout", "Timeout while receiving insert response")
+
+    lines = data.splitlines()
+
+    expected = '|%s|' % flag_data
+    if len(lines) > 0 and lines[0] != expected:
+        verdict(CORRUPT, "Can't get flag", "Expected `%s`, received `%s`" % (expected, lines[0]))
+
+    s.close()
+
     sys.exit(OK)
 
 def main(args):
