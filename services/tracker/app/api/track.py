@@ -1,3 +1,4 @@
+import asyncio
 import logging
 
 from app.common import handler, auth_user
@@ -23,6 +24,8 @@ async def track_get(db, secret, track_id):
     user_id = await auth_user(db, secret)
     if user_id is None:
         return Response.FORBIDDEN
+
+    await asyncio.sleep(1)
 
     row = await db.fetchrow("SELECT * FROM track WHERE id=$1", track_id)
     if row is None:
