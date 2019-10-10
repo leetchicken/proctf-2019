@@ -161,7 +161,7 @@ post '/acme/authz/:uuid' => sub {
 } => 'authz';
 
 post '/acme/authz/:uuid/finalize' => sub {
-  my $c = shift;
+  my $c = shift->render_later;
 
   my ($err, $acc, $payload) = $c->_validate;
   return $c->render(json => {type => 'malformed', detail => 'invalid account or jws'}) && $c->rendered(403) if $err;
@@ -170,30 +170,44 @@ post '/acme/authz/:uuid/finalize' => sub {
   my $order = $db->select(orders => '*', {authz_id => $authz_id})->hash;
   return $c->render(json => {type => 'malformed', detail => 'invalid order UUID'}) && $c->rendered(403) unless $order;
 
-  # Convert DER to PEM
-  my $csr = decode_b64u $payload->{csr};
-  my $path = tempfile->spurt($csr);
-  my $cmd = "openssl req -inform DER -in $path";
-  $csr = qx/$cmd/;
-  $path = tempfile->spurt($csr);
+  Mojo::IOLoop->subprocess(
+    sub {
+      alarm 5;
 
-  # Sign
-  my $subj = join '', pairmap { "/$a=$b" } (emailAddress => $acc->{contact}, countryName => 'AE', commonName => $order->{domain});
-  my $opts = "-config ca.conf -batch -create_serial -rand_serial";
-  $cmd = "openssl ca $opts -cert ssl/cert.pem -keyfile ssl/key.pem -subj $subj -in $path";
-  my $crt = qx/$cmd/;
-  return $c->render(json => {type => 'malformed', detail => 'invalid CSR'}) && $c->rendered(403) unless $crt;
+      # Convert DER to PEM
+      my $csr = decode_b64u $payload->{csr};
+      my $path = tempfile->spurt($csr);
+      my $cmd = "openssl req -inform DER -in $path";
+      $csr = qx/$cmd/;
+      $path = tempfile->spurt($csr);
 
-  $db->insert(certs => {order_id => $order->{id}, data => $crt});
+      # Sign
+      my $subj = join '', pairmap { "/$a=$b" } (emailAddress => $acc->{contact}, countryName => 'AE', commonName => $order->{domain});
+      my $opts = "-config ca.conf -batch -create_serial -rand_serial";
+      $cmd = "openssl ca $opts -cert ssl/cert.pem -keyfile ssl/key.pem -subj $subj -in $path";
+      my $crt = qx/$cmd/;
+      return $c->render(json => {type => 'malformed', detail => 'invalid CSR'}) && $c->rendered(403) unless $crt;
 
-  $c->_nonce;
-  $c->render(json => {
-    status         => 'valid',
-    identifiers    => [{type => 'dns', value => $order->{domain}}],
-    authorizations => [$c->url_for('authz', uuid => $authz_id)->to_abs],
-    finalize       => $c->url_for('authz_finalize', uuid => $authz_id)->to_abs,
-    certificate    => $c->url_for('cert', uuid => $order->{id})->to_abs
-  });
+      $db->insert(certs => {order_id => $order->{id}, data => $crt});
+
+      return;
+    },
+    sub {
+      my ($s, $err) = @_;
+
+      return $c->render(json => {type => 'serverInternal', detail => $err}) && $c->rendered(403)
+        if $err;
+
+      $c->_nonce;
+      $c->render(json => {
+        status         => 'valid',
+        identifiers    => [{type => 'dns', value => $order->{domain}}],
+        authorizations => [$c->url_for('authz', uuid => $authz_id)->to_abs],
+        finalize       => $c->url_for('authz_finalize', uuid => $authz_id)->to_abs,
+        certificate    => $c->url_for('cert', uuid => $order->{id})->to_abs
+      });
+    }
+  );
 } => 'authz_finalize';
 
 post '/acme/cert/:uuid' => sub {
