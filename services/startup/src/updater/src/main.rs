@@ -95,7 +95,7 @@ impl AsyncBufferedReadStream {
     }
 
     async fn fullfill_buffer(&mut self) -> Result<(), Box<dyn std::error::Error>>{
-        self.avail += self.stream.read(&mut self.buf).await?;
+        self.avail += self.stream.read(&mut self.buf[self.avail..]).await?;
         Ok(())
     }
 
@@ -111,10 +111,10 @@ impl AsyncBufferedReadStream {
                 let ret = String::from_utf8(line.to_vec()).unwrap_or_default();
                 let mut next_chunk = line.len();
 
-                while next_chunk < CHUNK_SIZE && self.buf[next_chunk] == b'\n' {
+                while next_chunk < self.avail && self.buf[next_chunk] == b'\n' {
                     next_chunk += 1;
                 }
-                for (n, i) in (next_chunk..CHUNK_SIZE).enumerate() {
+                for (n, i) in (next_chunk..self.avail).enumerate() {
                     self.buf[n] = self.buf[i];
                 }
                 self.avail -= next_chunk;

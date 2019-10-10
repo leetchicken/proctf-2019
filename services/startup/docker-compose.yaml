@@ -20,4 +20,5 @@ services:
     environment:
       - LOG_STDOUT=1
       - ALLOW_OVERRIDE=None
+    restart: unless-stopped
     mem_limit: 2000m
