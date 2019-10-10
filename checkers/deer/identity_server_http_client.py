@@ -20,7 +20,7 @@ class IdentityServerHttpClient:
     def create_new_user(self, username, password):
         try:
             data = {'username': username, 'password': password}
-            r = requests.post('%sAccount/SignUp' % self._base_url, data=data, allow_redirects=True, timeout=15, verify=False)
+            r = requests.post('%sAccount/SignUp' % self._base_url, data=data, allow_redirects=True, timeout=20, verify=False)
 
             if r.status_code != 200:
                 trace("Bad HTTP status code", "Bad HTTP status code: %d at IdentityServerHttpClient.create_new_user()" % r.status_code)
