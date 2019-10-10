@@ -4,6 +4,7 @@ services:
   web:
     build: .
     image: "ca:latest"
+    restart: unless-stopped
     ports:
       - "443:8443"
     volumes:

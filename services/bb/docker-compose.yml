@@ -4,6 +4,7 @@ services:
   web:
     build: .
     image: "bb:latest"
+    restart: unless-stopped
     depends_on:
       - pg
     ports:
