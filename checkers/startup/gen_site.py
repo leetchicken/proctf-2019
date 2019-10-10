@@ -50,7 +50,7 @@ h1 {
 }
 
 li {
-    color: COLOR,
+    color: COLOR;
     font-size: FONTSIZE;
 }
 </style>
