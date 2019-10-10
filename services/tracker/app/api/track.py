@@ -38,7 +38,7 @@ async def track_get(db, secret, track_id):
             return Response.FORBIDDEN
 
     if TrackAccess.GROUP_ACCESS_MIN <= access <= TrackAccess.GROUP_ACCESS_MAX:
-        # FIXME: check access == user_group
+        # TODO: check access for user_group
         return Response.FORBIDDEN
 
     rows = await db.fetch("SELECT timestamp, latitude, longitude, meta FROM point "
@@ -90,8 +90,7 @@ async def track_share(db, secret, track_id):
     if row is None:
         return Response.NOT_FOUND
 
-    if row["access"] is not TrackAccess.PENDING:
-        return Response.BAD_REQUEST
+    if row["access"] is TrackAccess.PENDING:
+        await db.fetchrow("UPDATE track SET access=$1 WHERE id=$2", TrackAccess.PUBLIC, track_id)
 
-    await db.fetchrow("UPDATE track SET access=$1 WHERE id=$2", TrackAccess.PUBLIC, track_id)
     return Response.OK
