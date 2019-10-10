@@ -6,20 +6,22 @@ namespace Uploader.Models
 {
     public class Playlist
     {
-        private readonly Dictionary<string, string> tracks;
+        public Dictionary<string, string> Tracks { get; }
+        public Dictionary<string, AudioFile> AudioFiles { get; }
         private const string M3UHeader = "#EXTM3U";
         private const string M3UINFOHeader = "#EXTINF";
 
         public Playlist(int size)
         {
-            tracks = new Dictionary<string, string>(size);
+            Tracks = new Dictionary<string, string>(size);
+            AudioFiles = new Dictionary<string, AudioFile>(size);
         }
 
         private void AddTrack(string trackName, string trackPath) => 
-            tracks[trackName] = trackPath;
+            Tracks[trackName] = trackPath;
 
         public override string ToString() => 
-            string.Join(", ", tracks.Select(x => $"{x.Key}: {x.Value}"));
+            string.Join(", ", Tracks.Select(x => $"{x.Key}: {x.Value}"));
 
 
         public static Playlist FromM3U(string m3uContent)
@@ -30,7 +32,7 @@ namespace Uploader.Models
                 throw new ArgumentException("Empty m3u file");
             }
 
-            if (m3uLines[0] != M3UHeader)
+            if (!m3uLines[0].Contains(M3UHeader))
             {
                 throw new ArgumentException("Bad m3u file formatting");
             }

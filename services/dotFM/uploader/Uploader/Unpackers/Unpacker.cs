@@ -11,11 +11,12 @@ namespace Uploader.Unpackers
     {
         private const string PlaylistDescriptionFile = "playlist.m3u";
         private const int DescriptionFileSizeLimit = 1024 * 16;
+        private const int EntryMaxLimit = 1024 * 1024;
         
         public Playlist Unpack(Stream compressedFile)
         {
             var archive = new ZipArchive(compressedFile);
-            var archiveDescriptionFile = archive.Entries.First(x => x.Name == PlaylistDescriptionFile);
+            var archiveDescriptionFile = archive.Entries.First(x => x.FullName == PlaylistDescriptionFile);
 
             if (archiveDescriptionFile == null)
             {
@@ -30,8 +31,7 @@ namespace Uploader.Unpackers
             var binaryText = new Span<byte>(new byte[archiveDescriptionFile.Length]);
             using (var fs = archiveDescriptionFile.Open())
             {
-                var res = fs.Read(binaryText);
-                Console.WriteLine(res);
+                fs.Read(binaryText);
             }
 
            
@@ -47,15 +47,22 @@ namespace Uploader.Unpackers
                 Console.WriteLine(e);
                 return null;
             }
-            
-            Console.WriteLine(playlist);
 
             foreach (var entry in archive.Entries)
             {
-                
+                if (playlist.Tracks.ContainsValue(entry.FullName))
+                {
+                    if (entry.Length < EntryMaxLimit)
+                    {
+                        var trackBytes = new byte[entry.Length];
+                        using var fs = entry.Open();
+                        fs.Read(trackBytes);
+                        playlist.AudioFiles[entry.FullName] = new AudioFile(trackBytes);
+                    }
+                }
             }
-            
-            return new Playlist(0);
+
+            return playlist;
         }
     }
 }
