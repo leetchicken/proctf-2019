@@ -1,0 +1,12 @@
+FROM node:current-alpine
+
+MAINTAINER Andrew Gein <andgein@yandex.ru>
+
+WORKDIR /home/frontend
+
+ENV PATH /home/frontend/node_modules/.bin:$PATH
+
+COPY package.json /home/frontend/package.json
+RUN npm install --silent
+
+CMD ["npm", "run", "build"]
