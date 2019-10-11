@@ -94,7 +94,12 @@ public final class ImagePutHandler: ChannelInboundHandler {
             return
         }
 
-        tryInjectWatermark(&imageBytes, generateWatermark(imageBytes))        
+        if(!tryInjectWatermark(&imageBytes, generateWatermark(imageBytes))) {
+            print("!! Failed to injectWatermark, maybe it's not an image?")
+            context.close(promise: nil)
+            return
+        }
+
 
         guard let newC = try? spn?.encryptWithPadding(imageBytes, SPN.generateIV()) else {        
             print("!! Failed to encryptWithPadding newImageData of \(imageBytes.count) bytes")
@@ -113,8 +118,6 @@ public final class ImagePutHandler: ChannelInboundHandler {
             context.close(promise: nil)
             return
         }
-
-        print("SAVED FILE: \(fileUrl.path), id \(id) size: \(newC.count)")
 
         var result = context.channel.allocator.buffer(capacity: 4)
         result.writeInteger(id)
@@ -139,19 +142,20 @@ public final class ImagePutHandler: ChannelInboundHandler {
         }
     }
 
-    private func tryInjectWatermark(_ imageBytes: inout [UInt8], _ watermarkPatternBits: [UInt8]) {
-        guard imageBytes.count >= 14 else { return }
-        guard imageBytes[0] == 0x42 && imageBytes[1] == 0x4D else { return }
-        guard buildUInt32(imageBytes, 2) == imageBytes.count else { return }
+    private func tryInjectWatermark(_ imageBytes: inout [UInt8], _ watermarkPatternBits: [UInt8]) -> Bool {
+        guard imageBytes.count >= 14 else { return false }
+        guard imageBytes[0] == 0x42 && imageBytes[1] == 0x4D else { return false }
+        guard buildUInt32(imageBytes, 2) == imageBytes.count else { return false }
 
         let pixelsOffset = buildUInt32(imageBytes, 0x0A)
-        if(pixelsOffset >= imageBytes.count) { return }
+        if(pixelsOffset >= imageBytes.count) { return false }
         
         for i in (Int(pixelsOffset)..<imageBytes.count) {
             let j = (i - Int(pixelsOffset)) % watermarkPatternBits.count
             imageBytes[i] &= 0xFE
             imageBytes[i] |= watermarkPatternBits[j]
         }
+        return true
     }
 
     private func buildUInt32(_ byteArray: [UInt8], _ offset: Int) -> UInt32 {
