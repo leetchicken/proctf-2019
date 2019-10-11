@@ -141,6 +141,8 @@ def call_update(p, urls):
 
     signature = sign(manifest)
 
+    #print(manifest, signature, file=sys.stderr)
+
     p.stdin.write(signature+"\n")
     p.stdin.flush()
 
