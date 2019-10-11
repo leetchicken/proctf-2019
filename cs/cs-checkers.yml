@@ -75,6 +75,7 @@
         - m2crypto
         - pillow
         - msgpack
+        - cssselect
 
   - name: build binder
     command: ./build.sh
