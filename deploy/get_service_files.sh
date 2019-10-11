@@ -41,7 +41,6 @@ services/rubik/./docker-compose.yml
 services/rubik/./Dockerfile
 services/rubik/./settings.ini
 services/rubik/./start.sh
-services/rubik/./rubik.sln
 services/rubik/./wwwroot/
 services/rubik/./wwwroot/fonts/
 services/rubik/./out/
