@@ -7,7 +7,7 @@ WORKDIR /home/frontend
 ENV PATH /home/frontend/node_modules/.bin:$PATH
 
 COPY package.json /home/frontend/package.json
-RUN npm install --silent
-RUN npm install -g --silent react-scripts@latest
+RUN npm install 
+RUN npm install -g react-scripts@latest
 
 CMD ["npm", "run", "build"]
