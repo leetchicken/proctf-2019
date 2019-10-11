@@ -94,7 +94,14 @@ def calc_checksum(data):
     return q[:32]
 
 
-def call_update(p, urls, fake_urls=None):
+def get_team_by_ip(ip):
+    m = re.match(r"\d+\.\d+\.(\d+)\.\d+", ip)
+    if m:
+        return int(m.group(1))
+    return None
+
+
+def call_update(p, urls, fake_urls=None, team=None):
     if fake_urls is None:
         fake_urls = []
 
@@ -113,10 +120,17 @@ def call_update(p, urls, fake_urls=None):
 
     protocol = random.choice(["http", "http2"])
 
-    if protocol == "http":
-        update_host = random.choice(HOSTS_HTTP)
-    else:
-        update_host = random.choice(HOSTS_HTTP2)
+    while True:
+        if protocol == "http":
+            update_host = random.choice(HOSTS_HTTP)
+        else:
+            update_host = random.choice(HOSTS_HTTP2)
+
+        # do not ask a host from the same network
+        if team and get_team_by_ip(update_host) == team:
+            continue
+
+        break
 
     p.stdin.write("%s\n" % update_host)
     p.stdin.flush()
@@ -193,7 +207,7 @@ def check(host):
     fake_urls = [random.choice(urls["grb"])["name"]]
 
     filenames = [u["name"] for u in random.sample(urls["grb"], 2) + [random.choice(urls["idx"])]]
-    call_update(p, filenames, fake_urls)
+    call_update(p, filenames, fake_urls, team=get_team_by_ip(host))
 
     s = create_session()
 
@@ -227,7 +241,7 @@ def put(host, flag_id, flag, vuln):
     putter = random.choice(urls["t1"])
     lister_name = random.choice(urls["t2"])["name"]
 
-    call_update(p, [putter["name"], lister_name])
+    call_update(p, [putter["name"], lister_name], team=get_team_by_ip(host))
 
     prefix = putter["prefix"]
 
