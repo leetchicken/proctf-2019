@@ -34,6 +34,12 @@ struct FileLink {
 }
 
 
+enum ErrorType {
+    Critical(String),
+    NonCritical(String)
+}
+
+
 #[derive(Debug)]
 struct ClientError (String);
 
@@ -131,6 +137,10 @@ impl AsyncBufferedReadStream {
             };
         }
         let ret = self.buf[..std::cmp::min(self.avail, n)].to_vec();
+        for (n, i) in (ret.len()..self.avail).enumerate() {
+            self.buf[n] = self.buf[i];
+        }
+
         self.avail -= ret.len();
         ret
     }
@@ -164,12 +174,12 @@ impl ExternalDownloader {
     }
 
 
-    async fn download(&mut self, link: &str, expected_checksum: &str) -> Result<String, String> {
+    async fn download(&mut self, link: &str, expected_checksum: &str) -> Result<(), ErrorType> {
         let downloader_name = match Self::get_link_protocol(link) {
             Some("http") => "./transport_http",
             Some("http2") => "./transport_http2",
             Some("debug") => "/bin/cat",
-            _ => return Err("Unknown protocol".into())
+            _ => return Err(ErrorType::Critical("Unknown protocol".into()))
         };
 
         if !self.process_channels.contains_key(downloader_name) {
@@ -186,17 +196,17 @@ impl ExternalDownloader {
                             self.process_channels.insert(downloader_name.into(),
                                                         (write_stream, read_stream));
                         }
-                        _ => return Err("Process standard streams problem".into())
+                        _ => return Err(ErrorType::Critical("Process standard streams problem".into()))
                     }
                 }
-                _ => return Err("Failed to run process".into())
+                _ => return Err(ErrorType::Critical("Failed to run process".into()))
             }
         }
 
         let (write_stream, read_stream) = self.process_channels.get_mut(downloader_name).unwrap();
 
         if write_stream.write_line(link).await.is_err() {
-            return Err("Failed to write data to process".into());
+            return Err(ErrorType::Critical("Failed to write data to process".into()));
         }
 
         let url = read_stream.read_line().await;
@@ -209,61 +219,62 @@ impl ExternalDownloader {
            !checksum.starts_with("Hashsum: ") ||
            !content_length.starts_with("Content-Length: ") {
 
-            return Err("Protocol error".into());
+            return Err(ErrorType::Critical("Protocol error".into()));
         }
 
         let url = &url["Url: ".len()..];
         let is_success = &is_success["Success: ".len()..];
         let checksum = &checksum["Hashsum: ".len()..];
         let content_length = &content_length["Content-Length: ".len()..];
-
-        if url != link {
-            return Err("Returned link != Expected link".into());
-        }
-
-        if is_success != "true" {
-            return Err("Unsuccessful request".into());
-        }
-
-        if checksum != expected_checksum {
-            return Err(format!("Bad checksum, {} != {}", expected_checksum, checksum));
-        }
-
         let content_length = match usize::from_str_radix(content_length, 10) {
             Ok(num) => num,
-            Err(_) => return Err("Bad content length".into())
+            Err(_) => return Err(ErrorType::Critical("Bad content length".into()))
         };
 
-        let filename = match url.rsplitn(2, '/').next() {
-            Some(f) if !f.is_empty() => f,
-            _ => return Err("Bad uri".into())
-        };
+        let mut ret = Ok(());
 
-        let tmp_file = String::from("html/") + &filename + ".tmp";
-        let final_file = String::from("html/") + &filename;
+        let mut tmp_file = String::from("/dev/null");
+        let mut final_file = String::from("/dev/null");
+
+        if url != link {
+            ret = Err(ErrorType::NonCritical("Returned link != Expected link".into()));
+        } else if is_success != "true" {
+            ret = Err(ErrorType::NonCritical("Unsuccessful request".into()));
+        } else if checksum != expected_checksum {
+            ret = Err(ErrorType::NonCritical(format!("Bad checksum, {} != {}", expected_checksum, checksum)));
+        } else if url.rsplitn(2, '/').next().is_none() {
+            ret = Err(ErrorType::NonCritical("Bad uri".into()));
+        } else {
+            let filename = url.rsplitn(2, '/').next().unwrap();
+
+            tmp_file = String::from("html/") + &filename + ".tmp";
+            final_file = String::from("html/") + &filename;
+        }
 
         let mut file = match fs::File::create(&tmp_file).await {
             Ok(f) => f,
-            Err(_) => return Err("Failed to create output file".into())
+            Err(_) => return Err(ErrorType::Critical("Failed to create output file".into()))
         };
 
         let mut left = content_length;
         while left > 0 {
             let chunk = read_stream.read(left).await;
             if chunk.is_empty() {
-                return Err("Protocol error, remote connection was closed".into());
+                return Err(ErrorType::Critical("Protocol error, remote connection was closed".into()));
             }
             left -= chunk.len();
             if file.write_all(&chunk).await.is_err() {
-                return Err("Failed to write to file".into());
+                return Err(ErrorType::Critical("Failed to write to file".into()));
             }
         }
 
-        if fs::rename(&tmp_file, &final_file).await.is_err() {
-            return Err("Failed to rename resulting file".into());
+        if tmp_file != final_file {
+            if fs::rename(&tmp_file, &final_file).await.is_err() {
+                return Err(ErrorType::Critical("Failed to rename resulting file".into()));
+            }
         }
 
-        Ok(String::new())
+        ret
     }
 
     async fn cleanup(&mut self) -> bool {
@@ -369,7 +380,8 @@ async fn handle_client(stream: tokio::net::TcpStream) -> Result<(), ClientError>
 
         match downloader.download(&url, &checksum).await {
             Ok(_) => lines.send((url + " OK").into()).await?,
-            Err(e) => {
+            Err(ErrorType::NonCritical(e)) => lines.send((url + " ERR, " + &e).into()).await?,
+            Err(ErrorType::Critical(e)) => {
                 lines.send((url + " ERR, " + &e).into()).await?;
                 break;
             }
