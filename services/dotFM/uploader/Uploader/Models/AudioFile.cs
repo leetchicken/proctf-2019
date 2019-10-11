@@ -25,6 +25,8 @@ namespace Uploader.Models
             return picture.PictureData;
         }
 
+        public byte[] GetContent() => content;
+
         public string GetTrackIdentity()
         {
             var tag = new ID3v2Tag(new MemoryStream(content));

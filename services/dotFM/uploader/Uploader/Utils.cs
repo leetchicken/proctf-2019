@@ -15,7 +15,5 @@ namespace Uploader
                 Directory.CreateDirectory(path);
             }
         }
-
-        
     }
 }

@@ -18,27 +18,31 @@ namespace Uploader
         public void AddPlaylist(Playlist playlist)
         {
             CreateImages(playlist);
+            CreateTracks(playlist);
         }
 
         private void CreateImages(Playlist playlist)
         {
-            foreach (var audioFile in playlist.AudioFiles)
+            foreach (var (_, value) in playlist.AudioFiles)
             {
                 var imagePath = Path.Combine(
                     Constants.ImagesPaths, 
-                    audioFile.Value.GetTrackIdentity() + ".png");
+                    value.GetTrackIdentity() + ".png");
                 using var fs = new FileStream(imagePath, FileMode.Create);
-                fs.Write(audioFile.Value.GetImage());
+                fs.Write(value.GetImage());
             }
         }
 
         private void CreateTracks(Playlist playlist)
         {
-            foreach (var audioFile in playlist.AudioFiles)
+            foreach (var (key, value) in playlist.AudioFiles)
             {
                 var audioPath = Path.Combine(
-                    Constants.MusicPath, audioFile.Key + ".mp3"
+                    Constants.MusicPath, 
+                    key + ".mp3"
                 );
+                using var fs = new FileStream(audioPath, FileMode.Create);
+                fs.Write(value.GetContent());
             }
         }
     }

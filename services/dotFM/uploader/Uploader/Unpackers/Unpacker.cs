@@ -3,6 +3,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Text;
+using Uploader.Extensions;
 using Uploader.Models;
 
 namespace Uploader.Unpackers
@@ -57,7 +58,8 @@ namespace Uploader.Unpackers
                         var trackBytes = new byte[entry.Length];
                         using var fs = entry.Open();
                         fs.Read(trackBytes);
-                        playlist.AudioFiles[entry.FullName] = new AudioFile(trackBytes);
+                        playlist.AudioFiles[entry.FullName.CleanupFromBadPathSymbols()] 
+                            = new AudioFile(trackBytes);
                     }
                 }
             }
