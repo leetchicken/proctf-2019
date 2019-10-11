@@ -2,7 +2,7 @@ version: '2'
 services:
 
   drone_racing:
-    build: "."
+    build: "backend"
     ports:
       - "0.0.0.0:8080:8080"
 #    volumes:

@@ -143,7 +143,12 @@ namespace SePtoN_Checker
 				{
 					for(int y = 0; y < bmp.Height; y++)
 					{
-						ms.WriteByte((byte)(bmp.GetPixel(x, y).R & 0xFE));
+						var pixel = bmp.GetPixel(x, y);
+						ms.WriteByte((byte)(pixel.R & 0xFE));
+						pixel = bmp.GetPixel(x, y);
+						ms.WriteByte((byte)(pixel.G & 0xFE));
+						pixel = bmp.GetPixel(x, y);
+						ms.WriteByte((byte)(pixel.B & 0xFE));
 					}
 				}
 				return MD5.Create().ComputeHash(ms.ToArray()).ToHex();

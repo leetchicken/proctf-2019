@@ -7,7 +7,6 @@ public final class ImageGetHandler: ChannelInboundHandler {
     public typealias OutboundOut = ByteBuffer
 
     let dirSize: UInt32 = 500
-    let storageDir = "./storage"
 
     let filesProvider: FilesProvider
 
@@ -36,7 +35,6 @@ public final class ImageGetHandler: ChannelInboundHandler {
             context.close(promise: nil)
             return
         }
-        print("READ FILE: \(data.count) bytes from \(path)")
 
         var buffer = context.channel.allocator.buffer(capacity: data.count)
         buffer.writeBytes(data)

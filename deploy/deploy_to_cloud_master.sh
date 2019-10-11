@@ -22,7 +22,7 @@ case "$SERVICE" in
     "game_console") SERVICE_NUM=7   ;; "polyfill") SERVICE_NUM=8 ;; "convolution") SERVICE_NUM=9 ;;
     "handy") SERVICE_NUM=10         ;; "gallery") SERVICE_NUM=11 ;; "ca") SERVICE_NUM=12 ;;
     "drone_racing") SERVICE_NUM=13  ;; "startup") SERVICE_NUM=14 ;; "tracker") SERVICE_NUM=15 ;;
-    "notepool") SERVICE_NUM=16      ;;
+    "notepool") SERVICE_NUM=16      ;; "spaceships") SERVICE_NUM=17 ;; "sql_demo") SERVICE_NUM=18 ;;
     *) echo "No such service" >&2; exit 1;;
 esac
 
