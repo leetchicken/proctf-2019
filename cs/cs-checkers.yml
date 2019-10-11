@@ -10,6 +10,13 @@
       group: "{{cs_user}}"
       recurse: yes
 
+  - name: dccp module (for tracker)
+    copy:
+      content: |
+        dccp
+        dccp_ipv4
+      dest: /etc/modules-load.d/dccp.conf
+
   - name: install docker deps
     apt:
       name:
