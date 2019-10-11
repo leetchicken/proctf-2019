@@ -94,7 +94,16 @@ def calc_checksum(data):
     return q[:32]
 
 
-def call_update(p, urls):
+def call_update(p, urls, fake_urls=None):
+    if fake_urls is None:
+        fake_urls = []
+
+    urls = urls[:]
+    random.shuffle(urls)
+
+    fake_urls = fake_urls[:]
+    random.shuffle(fake_urls)
+
     prompt1 = p.stdout.readline().strip()
     if not prompt1.startswith("Upgrade service ready"):
         verdict(MUMBLE, "bad welcome prompt", "bad weclome prompt1: %s" % prompt1)
@@ -116,7 +125,15 @@ def call_update(p, urls):
     if not prompt3.startswith("Enter manifest"):
         verdict(MUMBLE, "bad manifest prompt", "bad manifest prompt: %s" % prompt3)
 
+
     links = []
+
+    for url in fake_urls:
+        link = {}
+        link["url"] = "%s://mirror/%s" % (protocol, url)
+        link["checksum"] = calc_checksum(gen_secret_string().encode())
+        links.append(link)
+
     for url in urls:
         link = {}
         link["url"] = "%s://mirror/%s" % (protocol, url)
@@ -151,11 +168,14 @@ def call_update(p, urls):
         verdict(MUMBLE, "server doesn't accept signed data",
                 "bad manifest signature: %s" % sig_check_result)
 
-    for link in links:
+    for pos, link in enumerate(links):
         link_result = p.stdout.readline().strip()
+        if pos < len(fake_urls):
+            continue
         if " OK" not in link_result:
             verdict(MUMBLE, "bad download status",
                     "bad download status: %s, ans is: %s" % (link, link_result))
+        # print("result", link_result)
 
 
 def get_urls():
@@ -170,9 +190,10 @@ def check(host):
     p = P(socket.create_connection((host, UPDATER_PORT), timeout=TIMEOUT))
 
     urls = get_urls()
+    fake_urls = [random.choice(urls["grb"])["name"]]
 
     filenames = [u["name"] for u in random.sample(urls["grb"], 2) + [random.choice(urls["idx"])]]
-    call_update(p, filenames)
+    call_update(p, filenames, fake_urls)
 
     s = create_session()
 
@@ -193,7 +214,7 @@ def check(host):
             verdict(DOWN, "failed to get http answer", "%s" % E)
 
         if file_data != resp and filename != "index.html":
-            verdict(MUMBLE, "update failed", "bad update data" % E)
+            verdict(MUMBLE, "update failed", "bad update data: %s" % file_data)
 
     verdict(OK)
 
