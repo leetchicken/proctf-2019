@@ -10,7 +10,7 @@ namespace Uploader.Models
         public Dictionary<string, AudioFile> AudioFiles { get; }
         private const string M3UINFOHeader = "#EXTINF";
 
-        public Playlist(int size)
+        private Playlist(int size)
         {
             Tracks = new Dictionary<string, string>(size);
             AudioFiles = new Dictionary<string, AudioFile>(size);
@@ -45,7 +45,7 @@ namespace Uploader.Models
                 {
                     throw new ArgumentException("Could not find track info");
                 }
-
+                
                 playlist.AddTrack(trackName[1].Trim(' '), link);
             }
 

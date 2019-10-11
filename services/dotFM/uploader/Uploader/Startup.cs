@@ -2,6 +2,8 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
+using Uploader.Handlers;
+using Uploader.Unpackers;
 
 namespace Uploader
 {
@@ -16,13 +18,9 @@ namespace Uploader
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
-
-            var requestDelegate = new RequestDelegate(async (ctx) =>
-            {
-                await ctx.Response.WriteAsync("dd");
-            });
-            
-            
+            var unpacker = new Unpacker();
+            var playlistHandler = new PlaylistUnpacker(unpacker);
+            var requestDelegate = new RequestDelegate(playlistHandler.HandleRequest);
             app.Run(requestDelegate);
         }
     }

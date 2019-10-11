@@ -24,9 +24,21 @@ namespace Uploader
         {
             foreach (var audioFile in playlist.AudioFiles)
             {
-                var imagePath = Path.Combine(Constants.MusicPath, audioFile.Value.GetTrackIdentity() + ".png");
+                var imagePath = Path.Combine(
+                    Constants.ImagesPaths, 
+                    audioFile.Value.GetTrackIdentity() + ".png");
                 using var fs = new FileStream(imagePath, FileMode.Create);
                 fs.Write(audioFile.Value.GetImage());
+            }
+        }
+
+        private void CreateTracks(Playlist playlist)
+        {
+            foreach (var audioFile in playlist.AudioFiles)
+            {
+                var audioPath = Path.Combine(
+                    Constants.MusicPath, audioFile.Key + ".mp3"
+                );
             }
         }
     }

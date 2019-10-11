@@ -5,7 +5,8 @@ namespace Uploader
 {
     public class Utils
     {
-        public static string PlaylistsPath => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, Constants.PlaylistsPath);
+        public static string PlaylistsPath
+            => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, Constants.PlaylistsPath);
         
         public static void CreateDirectoryIfNotExists(string path)
         {
@@ -14,5 +15,7 @@ namespace Uploader
                 Directory.CreateDirectory(path);
             }
         }
+
+        
     }
 }
