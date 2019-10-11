@@ -427,60 +427,6 @@ void PostProcessProcessor::FinalizeRequest()
 				Log("  failed to save image to file\n");
 		}
 
-#if 1
-		{
-			for(uint32_t i = 0; i < 4; i++)
-			{
-				uint8_t* k = (uint8_t*)(m_kernel.c_str() + i * 8);
-				for(uint32_t y = 0; y < dstImage.height; y++)
-				{
-					for(uint32_t x = 0; x < dstImage.width; x++)
-					{
-						uint32_t x0 = x * 3;
-						uint32_t y0 = y * 3;
-						uint32_t v[8];
-						v[0] = (srcImagePadded.Pixel(x0 + 0, y0 + 0).abgr >> (i * 8)) & 0xFF;
-						v[1] = (srcImagePadded.Pixel(x0 + 1, y0 + 0).abgr >> (i * 8)) & 0xFF;
-						v[2] = (srcImagePadded.Pixel(x0 + 2, y0 + 0).abgr >> (i * 8)) & 0xFF;
-						v[3] = (srcImagePadded.Pixel(x0 + 0, y0 + 1).abgr >> (i * 8)) & 0xFF;
-						v[4] = (srcImagePadded.Pixel(x0 + 2, y0 + 1).abgr >> (i * 8)) & 0xFF;
-						v[5] = (srcImagePadded.Pixel(x0 + 0, y0 + 2).abgr >> (i * 8)) & 0xFF;
-						v[6] = (srcImagePadded.Pixel(x0 + 1, y0 + 2).abgr >> (i * 8)) & 0xFF;
-						v[7] = (srcImagePadded.Pixel(x0 + 2, y0 + 2).abgr >> (i * 8)) & 0xFF;
-						
-						float counter = 0.0f;
-						uint32_t sum = 0;
-						for(uint32_t j = 0; j < 8; j++)
-						{
-							if(v[j] >= k[j])
-							{
-								sum += v[j];
-								counter += 1.0f;
-							}
-						}
-
-						uint32_t r = 0;
-						if(counter > 0)
-						{
-							__m128i vsum = _mm_set1_epi32(sum);
-							__m128 vfsum = _mm_cvtepi32_ps(vsum);
-							__m128 vcounter = _mm_set1_ps(counter);
-							__m128 vfr = _mm_div_ps(vfsum, vcounter);
-							r = _mm_cvt_ss2si(vfr);
-						}
-
-						uint32_t testVal = (dstImage.Pixel(x, y).abgr >> (i * 8)) & 0xFF;
-						if(testVal != r)
-						{
-							printf("dont match %u %u %x %x\n", x0, y0, testVal, r);
-							exit(1);
-						}
-					}
-				}
-			}
-		}
-#endif
-
 		output.append("\"");
 		output.append(img.name);
 		output.append("\": ");
