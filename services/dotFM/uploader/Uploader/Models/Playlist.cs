@@ -8,7 +8,6 @@ namespace Uploader.Models
     {
         public Dictionary<string, string> Tracks { get; }
         public Dictionary<string, AudioFile> AudioFiles { get; }
-        private const string M3UHeader = "#EXTM3U";
         private const string M3UINFOHeader = "#EXTINF";
 
         public Playlist(int size)
@@ -32,26 +31,15 @@ namespace Uploader.Models
                 throw new ArgumentException("Empty m3u file");
             }
 
-            if (!m3uLines[0].Contains(M3UHeader))
-            {
-                throw new ArgumentException("Bad m3u file formatting");
-            }
-            
             var tracks = m3uLines
                 .Select((line, index) => (index, line))
-                .Skip(1)
-                .Where(x => x.index % 2 == 1)
+                .Where(x => x.line.StartsWith(M3UINFOHeader))
                 .Select(x => (x.line, m3uLines[x.index + 1]))
                 .ToList();
 
             var playlist = new Playlist(tracks.Count);
             foreach (var (description, link) in tracks)
             {
-                if (!description.StartsWith(M3UINFOHeader))
-                {
-                    throw new ArgumentException("Bad track description!");
-                }
-
                 var trackName = description.Split(",", StringSplitOptions.RemoveEmptyEntries);
                 if (trackName.Length < 2)
                 {

