@@ -174,7 +174,7 @@ def check(ip):
     return ExitCode.OK
 
 
-def put(ip, id, flag):
+def put(ip, id, flag, *args):
     login = id
     password = create_password(login)
 
@@ -212,7 +212,7 @@ def put(ip, id, flag):
     return ExitCode.OK
 
 
-def get(ip, id, flag):
+def get(ip, id, flag, *args):
     login = id
     password = create_password(login)
 
