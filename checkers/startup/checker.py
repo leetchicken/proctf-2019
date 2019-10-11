@@ -201,7 +201,10 @@ def get_urls():
 
 
 def check(host):
-    p = P(socket.create_connection((host, UPDATER_PORT), timeout=TIMEOUT))
+    try:
+        p = P(socket.create_connection((host, UPDATER_PORT), timeout=TIMEOUT))
+    except Exception as E:
+        verdict(DOWN, "connect failed", "connect failed: %s" % E)
 
     urls = get_urls()
     fake_urls = [random.choice(urls["grb"])["name"]]
@@ -234,7 +237,10 @@ def check(host):
 
 
 def put(host, flag_id, flag, vuln):
-    p = P(socket.create_connection((host, UPDATER_PORT), timeout=TIMEOUT))
+    try:
+        p = P(socket.create_connection((host, UPDATER_PORT), timeout=TIMEOUT))
+    except Exception as E:
+        verdict(DOWN, "connect failed", "connect failed: %s" % E)
 
     urls = get_urls()
 
