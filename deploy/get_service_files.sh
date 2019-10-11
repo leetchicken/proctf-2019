@@ -168,7 +168,6 @@ services/tracker/./app/api/__init__.py
 services/tracker/./app/api/tracker.py
 services/tracker/./app/api/point.py
 services/tracker/./app/api/user.py
-services/tracker/./config.yaml
 services/tracker/./docker-compose.yml
 services/tracker/./requirements.txt
 EOF

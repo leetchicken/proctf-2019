@@ -1,4 +1,0 @@
-host: 0.0.0.0
-port: 9090
-database_uri: "postgresql://tracker:zHSKoKea+FXCxY+an5Q=@localhost:5432/tracker"
-debug: False
