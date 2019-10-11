@@ -64,21 +64,22 @@ def main():
 
         id = gen_id()
         flag = gen_flag()
+        smth = 123
         with MeasureTime(logger, "put"):
-            result = checker.put(HOST, id, flag)
+            result = checker.put(HOST, id, flag, smth)
         logger.info("[%d] put result: %d", round, result)
         put_counter[result] += 1
         if result == checker.ExitCode.OK:
             flags[id] = flag
 
         with MeasureTime(logger, "get"):
-            result = checker.get(HOST, id, flag)
+            result = checker.get(HOST, id, flag, smth)
         logger.info("[%d] get result: %d", round, result)
         get_counter[result] += 1
 
         rand_id, rand_flag = random.choice(list(flags.items()))
         with MeasureTime(logger, "get_rand"):
-            result = checker.get(HOST, rand_id, rand_flag)
+            result = checker.get(HOST, rand_id, rand_flag, smth)
         logger.info("[%d] get_rand result: %d", round, result)
         get_rand_counter[result] += 1
 
