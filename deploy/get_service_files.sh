@@ -142,8 +142,16 @@ EOF
     cat <<EOF
 services/tracker/./Dockerfile
 services/tracker/./main.py
-services/tracker/./dccp_modules/dccp.ko
-services/tracker/./dccp_modules/dccp_ipv4.ko
+services/tracker/./kernel/kernel-headers-4.18.0-80.7.1.el8.dccp.x86_64.rpm
+services/tracker/./kernel/kernel-cross-headers-4.18.0-80.7.1.el8.dccp.x86_64.rpm
+services/tracker/./kernel/kernel-tools-libs-devel-4.18.0-80.7.1.el8.dccp.x86_64.rpm
+services/tracker/./kernel/kernel-core-4.18.0-80.7.1.el8.dccp.x86_64.rpm
+services/tracker/./kernel/kernel-modules-4.18.0-80.7.1.el8.dccp.x86_64.rpm
+services/tracker/./kernel/kernel-4.18.0-80.7.1.el8.dccp.x86_64.rpm
+services/tracker/./kernel/kernel-tools-4.18.0-80.7.1.el8.dccp.x86_64.rpm
+services/tracker/./kernel/kernel-devel-4.18.0-80.7.1.el8.dccp.x86_64.rpm
+services/tracker/./kernel/kernel-modules-extra-4.18.0-80.7.1.el8.dccp.x86_64.rpm
+services/tracker/./kernel/kernel-tools-libs-4.18.0-80.7.1.el8.dccp.x86_64.rpm
 services/tracker/./db
 services/tracker/./db/drop.sql
 services/tracker/./db/create.sql
