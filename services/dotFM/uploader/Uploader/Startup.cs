@@ -19,7 +19,8 @@ namespace Uploader
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
             var unpacker = new Unpacker();
-            var playlistHandler = new PlaylistUnpacker(unpacker);
+            var storage = new Storage();
+            var playlistHandler = new PlaylistUnpacker(unpacker, storage);
             var requestDelegate = new RequestDelegate(playlistHandler.HandleRequest);
             app.Run(requestDelegate);
         }

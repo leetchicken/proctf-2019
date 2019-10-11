@@ -1,24 +1,19 @@
 using System.Collections.Concurrent;
 using System.IO;
 using Uploader.Models;
+using Uploader.Storages;
 
 namespace Uploader
 {
-    public class Storage
+    public class Storage: IStorage
     {
         private ConcurrentDictionary<string, string> MusicCache;
-        
+
         public Storage()
         {
             Utils.CreateDirectoryIfNotExists(Constants.PlaylistsPath);
             Utils.CreateDirectoryIfNotExists(Constants.MusicPath);
             Utils.CreateDirectoryIfNotExists(Constants.ImagesPaths);
-        }
-
-        public void AddPlaylist(Playlist playlist)
-        {
-            CreateImages(playlist);
-            CreateTracks(playlist);
         }
 
         private void CreateImages(Playlist playlist)
@@ -44,6 +39,18 @@ namespace Uploader
                 using var fs = new FileStream(audioPath, FileMode.Create);
                 fs.Write(value.GetContent());
             }
+        }
+
+        public void Store(Playlist playlist)
+        {
+            CreateImages(playlist);
+            CreateTracks(playlist);
+            //todo create playlist file 
+        }
+
+        public Playlist Get(int id)
+        {
+            throw new System.NotImplementedException();
         }
     }
 }

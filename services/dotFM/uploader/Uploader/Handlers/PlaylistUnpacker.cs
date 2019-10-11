@@ -1,7 +1,9 @@
+using System;
 using System.IO;
 using System.Net;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
+using Uploader.Storages;
 using Uploader.Unpackers;
 
 namespace Uploader.Handlers
@@ -9,10 +11,12 @@ namespace Uploader.Handlers
     public class PlaylistUnpacker: IHandler
     {
         private readonly IUnpacker unpacker;
+        private readonly IStorage storage;
 
-        public PlaylistUnpacker(IUnpacker unpacker)
+        public PlaylistUnpacker(IUnpacker unpacker, IStorage storage)
         {
             this.unpacker = unpacker;
+            this.storage = storage;
         }
         
         public async Task HandleRequest(HttpContext context)
@@ -37,7 +41,8 @@ namespace Uploader.Handlers
 
         private async Task TrySavePlaylist(HttpContext context)
         {
-            var archive_bytes = new byte[context.Request.Body.Length];
+            //Console.WriteLine(context.Request.ContentLength.Value);
+            var archive_bytes = new byte[context.Request.ContentLength.Value];
             await context.Request.Body.ReadAsync(archive_bytes);
 
             var unpacked = unpacker.Unpack(new MemoryStream(archive_bytes));
@@ -46,6 +51,10 @@ namespace Uploader.Handlers
                 context.Response.StatusCode = (int) HttpStatusCode.BadRequest;
                 await context.Response.WriteAsync("Bad formatting!");
             }
+            
+            storage.Store(unpacked);
+            context.Response.StatusCode = (int) HttpStatusCode.OK;
+            await context.Response.WriteAsync("saved!");
         }
     }
 }
