@@ -89,6 +89,8 @@ if [ $SERVICE == "tracker" ]; then
         yum -y install linux-firmware perl-interpreter pciutils-libs
         rpm -ivh /service/$SERVICE/kernel/kernel-*.rpm --force
         rm -rf /service/$SERVICE/kernel/
+        yum -y install gcc perl elfutils-libelf-devel tar
+        /sbin/rcvboxadd quicksetup all
 EOF
 fi
 
