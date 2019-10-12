@@ -19,7 +19,7 @@ static RSA* CreatePublicRSA()
 	uint32_t pubKeyFileSize = 0;
 	void* pubKey = ReadFile("pubkey.pem", pubKeyFileSize);
 
-	BIO* keybio = BIO_new_mem_buf(pubKey, -1);
+	BIO* keybio = BIO_new_mem_buf(pubKey, pubKeyFileSize);
 	if(!keybio) 
 	{
 		free(pubKey);
@@ -51,8 +51,8 @@ static void* Base64Decode(const char* input, uint32_t& decodedLength)
     uint32_t test = BIO_read(bioMem, ret, inputLen);
 	if(decodedLength != test)
 	{
-		printf("!!!!!!!!!!!\n");
-		exit(1);
+		BIO_free_all(bioMem);
+		return nullptr;
 	}
     BIO_free_all(bioMem);
 
@@ -86,6 +86,8 @@ bool VerifySignature(const char* plainText, const char* signatureBase64)
 {
 	uint32_t signatureLen = 0;
 	void* signature = Base64Decode(signatureBase64, signatureLen);
+	if(!signature)
+		return false;
 
     EVP_MD_CTX* mdCtx = EVP_MD_CTX_create();
 
