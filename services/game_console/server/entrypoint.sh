@@ -1,3 +1,3 @@
 #!/bin/bash
-./server
+su server -s /bin/sh -c './server'
 
