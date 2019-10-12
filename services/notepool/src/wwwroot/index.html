@@ -4,7 +4,7 @@
     <meta charset="utf-8"/>
     <title>notepool</title>
     <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <link rel="stylesheet" href="/bootstrap-4.3.1.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T">
     <style>
         body {
             background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHhtbG5zOnhsaW5rPSdodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rJyB3aWR0aD0nMjAwJyBoZWlnaHQ9JzIwMCcgdmlld0JveD0nMCAwIDIwMCAyMDAnPjxtZXRhZGF0YT5DQzAgTGljZW5zZSAtIGh0dHBzOi8vY3JlYXRpdmVjb21tb25zLm9yZy9wdWJsaWNkb21haW4vemVyby8xLjAvZGVlZC5lbjwvbWV0YWRhdGE+PGRlZnM+PHBhdGggaWQ9J2EnIHRyYW5zZm9ybT0nc2NhbGUoLjA0KScgZD0nTTEwNTggMTMwLjVjLS43LjgtMS44IDEuNS0yLjQgMS41LTIuNCAwLTEwLjcgOC40LTE2LjQgMTYuNy01LjYgOC4zLTEwLjIgMTYuOS0yMC4xIDM3LjMtNC4zIDktMTAuMSAyMC4xLTMxLjEgNTkuNS0yLjEgMy44LTYuNiAxMi40LTEwIDE5LTE0LjYgMjcuOS0xNy40IDMzLjMtMjEgNDAtMiAzLjgtNiAxMS4zLTguNyAxNi41LTIuOCA1LjItNy4xIDEzLjMtOS41IDE4LTIuNSA0LjctNy42IDE0LjMtMTEuMyAyMS41LTMuNyA3LjEtOC45IDE3LTExLjUgMjItMTYuOSAzMi4xLTQ2LjcgODktNTguNiAxMTItMy41IDYuNi02LjggMTItNy42IDEyLTEuNiAwLTcuNC05LjUtMzUuMy01OC4xLTExLjktMjAuOC0yMi44LTM4LjktMjQuMi00MC4yLTEuMy0xLjItMy42LTIuMi01LjEtMi4yLTEuNSAwLTE2LjQgMi4zLTMzLjIgNS0xNi44IDIuOC0zMy40IDUuNS0zNyA2bC0xMiAyYy0yMC43IDMuNi0xMTIuMSAxNy4yLTE0MC41IDIxLTMuOC41LTEwLjYgMS40LTE1IDItNDAuOCA1LjUtOTYuMyAxMS40LTE0MSAxNWwtMjQgMmMtMjUuOSAyLjItMzcuNiAzLjEtNzAuNSA1LjUtMzguMSAyLjktNTUuMSA0LjEtNzYuNSA1LjUtOC4yLjUtMjEuMSAxLjQtMjguNSAyLTcuNC41LTE5LjYgMS4yLTI3IDEuNi0xNC44LjctMTkuNCAyLTIxLjEgNS44LTEuNSAzLjEtMS41IDMgMjUgNDMuMSA0MS4xIDYyLjIgNDcuMiA3MS44IDQ2LjQgNzIuNS0uNC40LTQuOCAxLjctOS44IDIuOS0yNC4yIDUuNy0zNi40IDguMS01MiAxMC41LTE5LjYgMy4xLTI3IDQuMi0zNS44IDUuNi0zLjQuNS0xMC45IDEuNy0xNi43IDIuNS02Mi41IDguOC04My45IDEyLjQtOTEgMTUuMy0zIDEuMi04IDYuNi04IDguNyAwIC44LjggMi41IDEuNyAzLjcgNC4yIDUuMiAxNi4zIDE5IDM2LjggNDIuMyAxMDAuNCAxMTMuOSAxNjIuMSAxODguOCAyMDggMjUyLjUgMzQuMSA0Ny40IDY1LjEgOTIuNSAxMDcuMiAxNTYgNTMuNiA4MC43IDU2LjUgODUgNTkuOCA4Ni44IDEuNyAxIDMuMiAyIDMuMyAyLjQuNSAxLjEgNS4yIDEgNS4yLS4xIDAtLjUgMS41LTEuMiAzLjMtMS41IDMuOS0uNyAxMS43LTMuMyA4Ni43LTI4IDg5LjktMjkuOCAxMzMuNi00My42IDE3Ni41LTU1LjcgMi4yLS43IDUuNC0xLjYgNy0yIDQyLTEyLjEgMTAxLjMtMjUgMTcyLTM3LjQgNS0uOSAxMS4zLTIgMTQtMi41IDUuNS0xIDU1LjgtOS42IDY0LjUtMTEgMy0uNSA4LjItMS40IDExLjUtMS45IDcuOS0xLjMgMjcuOS00LjggMzcuMS02LjYgMTguOC0zLjYgMjAuNy05LjggNy40LTI0LjItMy4zLTMuNi02LTctNi03LjQgMC0xIDIuMy0xLjYgMTEtMi44IDE0LjQtMi4xIDYzLjktOS4xIDcwLjUtMTAuMSAyNC4yLTMuNCA2Ni4zLTkgOTAuOC0xMiA0LjItLjYgMTEuMi0xLjQgMTUuNS0yIDQuMi0uNSAxMi45LTEuNiAxOS4yLTIuNCA2LjMtLjggMTQuNy0xLjggMTguNS0yLjIgOC42LS44IDEyLjgtMi40IDE1LTUuOCAxLjYtMi40IDEuNi0yLjctLjEtNS40LTEuMS0xLjYtNi42LTcuMS0xMi40LTEyLjItNS44LTUuMi0xMC43LTkuNy0xMS0xMC0uMy0uMy03LjctNy0xNi41LTE1LTYzLjYtNTcuNi0xMDYuMS05Ny42LTE0NS41LTEzNy02Mi44LTYyLjgtOTIuOS05Ni4xLTEyMC4xLTEzMy0zLTQuMS03LjktMTAuOC0xMC45LTE0LjgtMTIuNC0xNi44LTM1LjktNTEuOC0zNi01My40IDAtMSAxLjEtMy43IDIuNC02IDEuMy0yLjQgNS42LTEwLjYgOS42LTE4LjMgNC03LjcgNy42LTE0LjUgOC0xNSAuNC0uNiAzLjUtNi40IDctMTMgMy40LTYuNiA4LjMtMTUuOCAxMC44LTIwLjUgMi40LTQuNyA2LjctMTIuOCA5LjUtMTggMi43LTUuMiA2LjctMTIuNyA4LjctMTYuNSAyLjEtMy45IDYuMy0xMiA5LjUtMTggOS42LTE4LjUgMTYuNi0zMS43IDIwLjUtMzkgNS4xLTkuNSAxMi40LTIzLjQgMjAuNS0zOSA3LjgtMTQuOSAxNC43LTI4LjEgMjEuNS00MSAyLjYtNSA4LTE1LjMgMTItMjMgNC03LjcgOS4yLTE3LjYgMTEuNS0yMiA3LTEzLjIgMjAuMi0zOC40IDMzLjUtNjQgNC03LjcgOS41LTE3LjYgMTIuMS0yMi4xIDExLjEtMTguNSAxNy45LTM2LjQgMTcuOS00Ny4xIDAtNS43LS41LTcuNi0zLTExLjktNC41LTgtMTQuNS0xNS42LTI2LTE5LjktMi41LTEtNS45LTIuMy03LjctMy4xLTQuNC0yLTE5LjYtMS45LTIxLjMuMXptMTkuMyAxM2MxMS4yIDIuOSAyMyAxMSAyNS43IDE3LjYgMS43IDQuMS4yIDExLjgtNC40IDIyLjgtMy45IDkuMi0xMiAyNC4zLTEzLjggMjUuOS0yLjkgMi40LTI0LjQtMS44LTMyLjktNi40LTcuNy00LjMtMTguNC0xMi45LTE4LjctMTUuMi0uNC0yLjYgOS40LTIyIDE1LjktMzEuNyA0LjctNyAxMC4xLTEyLjggMTIuOS0xMy44IDIuOS0xIDkuNi0uNyAxNS4zLjh6bS00MC44IDYwLjVjNy4zIDUuNCA5IDggNi42IDEwLjUtLjUuNi00LjYgOC4yLTkuMSAxNy00LjYgOC44LTEwIDE5LjEtMTIgMjMtMi4xIDMuOC05LjMgMTcuNi0xNiAzMC41LTE3LjYgMzMuOC0yMy43IDQ1LjUtMjguNSA1NC41LTIuMyA0LjQtNy41IDE0LjMtMTEuNSAyMi00IDcuNy05LjQgMTgtMTIgMjMtMi42IDQuOS03LjggMTQuOC0xMS41IDIyLTMuNyA3LjEtOS4xIDE3LjUtMTIgMjMtNS44IDExLTI0LjMgNDYuNC0zMy44IDY0LjUtMy4zIDYuMy04LjEgMTUuNS0xMC43IDIwLjUtMi42IDQuOS03LjggMTQuOC0xMS41IDIyLTYuOSAxMy4yLTEzLjEgMjUuMi0yMy41IDQ1LTUuNCAxMC4zLTguOCAxNi44LTI0LjggNDcuNS0zLjUgNi45LTguMSAxNS42LTEwLjIgMTkuNS0yLjEgMy44LTYuNCAxMi4yLTkuNyAxOC41LTMuMyA2LjMtOC41IDE2LjItMTEuNSAyMi0zLjEgNS44LTguOCAxNi44LTEyLjggMjQuNS05LjMgMTgtOS4xIDE3LjctMTQgMTYtMi4xLS43LTUuOS0xLjctOC40LTItMi42LS40LTQuOS0xLjItNS4yLTEuNy0uMy0uNS43LTMuNSAyLjItNi42IDUuNy0xMiAzMy02Ni40IDQxLjEtODIuMiA0LjctOS4xIDEzLTI1LjMgMTguNi0zNiA1LjUtMTAuNyAxMi44LTI0LjkgMTYuMi0zMS41IDMuNC02LjYgMTAtMTkuMiAxNC41LTI4czEwLjQtMjAuMSAxMy0yNWMyLjYtNSA3LjgtMTQuOSAxMS41LTIyIDEwLjMtMTkuOCAxOC44LTM2LjEgMjkuNS01Ni41IDUuNC0xMC4yIDEyLjgtMjQuNCAxNi41LTMxLjUgMy43LTcuMiA4LjktMTcuMSAxMS41LTIyIDIuNi01IDcuMS0xMy41IDEwLTE5IDkuNS0xOC4xIDE2LjItMzAuOSAyMS00MCAyLjYtNSA3LjEtMTMuNSAxMC0xOSAyLjktNS41IDctMTMuMiA5LTE3IDIuMS0zLjkgNi44LTEyLjkgMTAuNS0yMCAzLjctNy4yIDgtMTUuMyA5LjUtMTggMS41LTIuOCA1LjgtMTAuOSA5LjUtMTggMy43LTcuMiA4LTE1LjMgOS41LTE4IDEuNS0yLjggNC4yLTcuOCA2LTExLjMgMS44LTMuNCAzLjctNi4xIDQuMi02IC41LjIgNC4yIDIuOCA4LjMgNS44em0yNi41IDEzLjFjNC4xIDEgOS4yIDEuOSAxMS4yIDEuOXM0IC40IDQuMyAxYy4zLjUtMS42IDUuMi00LjMgMTAuMi0yLjcgNS4xLTcuNyAxNC43LTExLjIgMjEuMy0xMC45IDIwLjktMTguMSAzNC43LTIzIDQ0LTkuOCAxOC42LTE0LjkgMjguNC0yMiA0Mi00IDcuNy05LjIgMTcuNi0xMS41IDIyLTIuMyA0LjQtNy4xIDEzLjQtMTAuNSAyMC0zLjQgNi42LTcuOSAxNS4xLTEwIDE5LTIuMSAzLjgtNi44IDEyLjgtMTAuNSAyMC0zLjcgNy4xLTggMTUuMi05LjUgMTgtMS41IDIuNy01LjggMTAuOC05LjUgMTgtMy43IDcuMS04IDE1LjItOS41IDE4LTEuNSAyLjctNS42IDEwLjQtOSAxNy0zLjUgNi42LTguNSAxNi4zLTExLjMgMjEuNS00LjcgOC45LTYuNiAxMi41LTE2LjQgMzEtMi4yIDQuMS02LjIgMTEuNS04LjggMTYuNS02LjUgMTIuNC0xMy4yIDI0LjgtMTcgMzItMS44IDMuMy02LjEgMTEuNC05LjUgMTgtMy41IDYuNi02LjYgMTIuNC03IDEzLS40LjUtMy42IDYuNC03IDEzcy02LjYgMTIuNC03IDEzYy0uNC41LTMuMyA1LjktNi41IDEyLTMuMiA2LTYuNiAxMi4zLTcuNSAxNC0uOSAxLjYtMy45IDctNi41IDEyLTIuNyA0LjktNi4xIDExLjItNy43IDEzLjgtMS41IDIuNi0yLjggNS0yLjggNS4yIDAgLjItMS43IDMuNC0zLjkgNy4yLTIuMSAzLjctNS4zIDkuNS03LjEgMTIuOC03LjQgMTMuNC0xMi4yIDIxLjUtMTIuOSAyMS41LS44IDAtMTYuOC0xMC41LTE4LjUtMTIuMS0uNS0uNS0uNS0xLjMuMS0yLjEuNi0uNyA3LjItMTMuMiAxNC44LTI3LjggNy42LTE0LjYgMTUuNy0zMC4xIDE4LTM0LjUgNC03LjYgNy41LTE0LjIgMjMtNDQgMy43LTcuMiA4LjktMTcuMSAxMS41LTIyIDIuNi01IDgtMTUuMyAxMi0yMyA0LTcuNyA5LjItMTcuNiAxMS41LTIyIDguNi0xNi4yIDIxLjktNDEuNiAzMy02MyAzLjctNy4yIDguOS0xNy4xIDExLjUtMjIgMi42LTUgOC0xNS4zIDEyLTIzIDQtNy43IDkuNC0xOC4xIDEyLTIzIDkuNy0xOC40IDE1LjktMzAuNCAyMy00NCA0LTcuNyAxMS4yLTIxLjQgMTYtMzAuNSA0LjgtOS4xIDEyLTIyLjggMTYtMzAuNSA5LjctMTguNyAxOC4zLTM1IDI0LTQ2IDIuNi01IDcuOC0xNC45IDExLjUtMjIgMjIuNS00My4zIDIxLjEtNDAuOSAyMy40LTQwIC45LjQgNSAxLjUgOS4xIDIuNnpNODAyLjcgNDUzYzIyLjMgMzguNyAzMCA1MS44IDM2LjIgNjEuNGw0LjQgNi45LTUuNSAxMC42Yy0zIDUuOC0xMC4xIDE5LjYtMTUuOCAzMC42LTQ0LjUgODUuNy04Mi45IDE2My04Ni43IDE3NC41LTUuOSAxNy43LTExLjMgNDIuNy0xNS44IDcyLjktMy4zIDIxLjUtMy4zIDI2LjQgMCAyOS42IDIuNyAyLjggMy43IDMgNi44IDEuNCA3LjYtNC4xIDQ2LjctNDAuMiA2Mi41LTU3LjkgNi45LTcuNyAyMS4yLTI3LjUgMjEuMi0yOS40IDAtLjIgMS45LTMuNyA0LjMtNy44IDIuNC00IDUuOS0xMC4yIDcuOS0xMy44IDItMy42IDYuOS0xMi42IDExLTIwczkuMi0xNi43IDExLjMtMjAuNWMyLjEtMy45IDUtOS4zIDYuNS0xMiAxLjUtMi44IDQuOS05LjEgNy41LTE0IDIuNi01IDUuNi0xMC40IDYuNS0xMiAxLTEuNyA0LjYtOC40IDgtMTUgMy41LTYuNiA2LjYtMTIuNSA3LTEzIC40LS42IDMuMy02IDYuNS0xMiAzLjEtNi4xIDYuMS0xMS40IDYuNS0xMS45LjQtLjQgMy4yIDIuNyA2LjEgNyAxMCAxNSAyNi4zIDM4IDM5LjIgNTUuNCAyNi44IDM2IDUxLjYgNjMuOCAxMDcuMiAxMTkuOSA1Mi42IDUzIDgxLjUgODAuNSAxNTcuNSAxNDkuNSAxNi4yIDE0LjggMjkuNSAyNy4zIDI5LjUgMjcuOSAwIDEuMi0xLjMgMS40LTIwIDMuNi05LjggMS4yLTE2LjEgMi0zMiA0LjEtNC40LjYtMTYuOCAyLjItMjcuNSAzLjUtMjkuNSAzLjgtMTEzLjkgMTUuNi0xNDAgMTkuNi0zLjYuNi04LjMuNy0xMC40LjQtMi45LS40LTUuMSAwLTggMS40LTIuNiAxLjItMTMuOSAzLjUtMzAuMSA2LTQxLjIgNi42LTgzLjQgMTQuNS0xMDYuOSAyMC4xLTQuNyAxLjEtMTIuNSAyLjktMTcuMyA0LjEtMjQuOSA1LjgtNjkuOSAxNy4zLTgyLjMgMjAuOS0xLjkuNS0xMi41IDMuNS0yMy41IDYuNXMtMjEuMyA1LjktMjMgNi4zYy0xLjYuNS00LjggMS40LTcgMi4xLTM4LjIgMTEtNzAuNyAyMC41LTg5IDI2LjEtMzEuOSA5LjctMzAuNSA5LjQtMzIgNy45LTEuMy0xLjMtMTMuNS0xOS0zNy44LTU0LjktNC43LTYuOS0zMC45LTQ1LjQtNTguNC04NS42LTI3LjQtNDAuMS01NS4xLTgwLjktNjEuNi05MC41LTYuNS05LjUtMjIuMi0zMi43LTM0LjktNTEuNC0yMS4zLTMxLjUtMTAwLjMtMTUwLTE0NC4yLTIxNi41LTYxLTkyLjQtNzAuNi0xMDcuMi03MC4yLTEwNy45LjMtLjUgNi4xLTEuMSAxMi44LTEuNSA2LjgtLjQgMTguMi0xLjEgMjUuMy0xLjYgNy4yLS41IDIwLTEuNCAyOC41LTIgMzMuMi0yLjMgOTguMS03LjEgMTEwLTggNi45LS42IDE3LjctMS41IDI0LTIgMzYuNS0zIDQxLjQtMy40IDc0LjUtNi41IDE5LjYtMS44IDU4LjMtNiA3MC03LjUgNC40LS42IDExLjItMS41IDE1LTIgMTEuNi0xLjUgMjEuOS0yLjkgNDQuNS02IDExLjgtMS43IDIzLjMtMy4yIDI1LjUtMy42IDQuNy0uNiAxNC0yIDIyLjgtMy40IDMuNC0uNSAxNS40LTIuMyAyNi43LTQgMTEuMy0xLjcgMjcuMy00LjIgMzUuNS01LjUgNDUuMi03LjMgNjEuMy05LjkgNzMuNS0xMiA3LjQtMS4zIDE0LjYtMi4zIDE1LjktMi4yIDIuMS4yIDUuMiA1IDIxLjggMzMuN3ptLTU1OCAxNjEuOGMxMDkuNCAxNjQuOSAxMzkuMSAyMDkuMSAyMDguOSAzMTEuNCAxNy42IDI1LjcgNDAgNTguNyA0OS45IDczLjMgNDkuNSA3Mi45IDczLjIgMTA2LjkgNzUuNyAxMDguMyAzIDEuOC42IDIuMyAzMy4zLTcuOCAxNy45LTUuNSA0NC44LTEzLjYgNTAuMy0xNS4xIDEuNy0uNSA0LjctMS4zIDYuNS0xLjggMi45LS44IDI3LTcuOCAzNC4yLTkuOSA2LjUtMiAzOC42LTEwLjkgNjctMTguNyAzOS40LTEwLjggMTAwLjYtMjUuMiAxMzQuNS0zMS42IDE2LjMtMy4xIDE3LjMtMy4zIDU2LTkuOGwzNi41LTYuMiAyLjUgMi45YzcuNSA4LjcgMTEgMTMuMiAxMSAxNC4xIDAgLjUtMi40IDEuNC01LjIgMi01LjggMS4yLTMxLjcgNS43LTQxLjMgNy4yLTcuMiAxLjEtNzYuOSAxMy04NCAxNC40LTEuNi4zLTEwLjIgMS44LTE5IDMuNS0zMy4zIDYuMS00OS40IDkuMy03MiAxNC4xLTE0LjEgMy0xNi44IDMuNi0zNyA4LjQtMTAuNiAyLjUtMzMuOCA4LjUtNDAgMTAuMy0xLjYuNS00LjggMS40LTcgMi4xLTI1LjIgNy4yLTQ4IDE0LTY1LjUgMTkuNS01LjggMS45LTEzLjYgNC40LTE3LjUgNS41LTE1LjQgNC44LTcxLjQgMjMuMS0xMTIuNSAzNi44LTUxIDE2LjktNzAuOSAyMy4zLTcyLjYgMjMuMy0uNyAwLTkuMS0xMS44LTE4LjYtMjYuMy0zMy4zLTUwLjYtODUuNi0xMjguNS0xMDUuMi0xNTYuNkMyMzYuOSA4NzggMTk3LjUgODI5LjIgNDcuNyA2NTguN2MtNy43LTguNy0xMy41LTE2LjItMTMuMS0xNi42IDEtLjkgMTYuMS0zLjQgNDMuOS03LjUgOS40LTEuNCAyMi0zLjMgMjgtNC4xIDYuMS0uOSAxNi45LTIuNSAyNC0zLjYgNy4yLTEgMTYuMi0yLjQgMjAtMi45IDE0LjctMi4yIDQ0LjEtNy4yIDQ3LjUtOCAxLjktLjUgNy44LTEuOSAxMy0zLjEgNS4yLTEuMiAxMy4zLTMuMSAxOC00LjMgNC43LTEuMiA5LTIuMSA5LjUtMS45LjYuMiAzLjQgMy44IDYuMiA4LjF6TTc1OC45IDc0MGM0LjYgMS4xIDEwIDIuOCAxMiAzLjcgNS42IDIuNiAyMC4yIDEyLjQgMjAuOCAxMy45IDEgMi43LTIxLjQgMjguNy0zNS4yIDQwLjhsLTYuNyA1LjktMy4yLTEuNmMtMS43LS45LTUuMi0yLjUtNy44LTMuNi0yLjctMS4xLTQuOC0yLjMtNC44LTIuNSAwLTEuMSA2LjEtMzAuMiA3LjYtMzYuNSAxLjMtNS40IDMuMy0xMi4yIDUuOS0yMC45LjYtMS42IDEuNS0xLjUgMTEuNC44eicvPjwvZGVmcz48dXNlIHhsaW5rOmhyZWY9JyNhJyB4PScxMCcvPjx1c2UgdHJhbnNmb3JtPSdyb3RhdGUoMTUpJyB4bGluazpocmVmPScjYScgeD0nNTAnIHk9JzEwMCcvPjx1c2UgdHJhbnNmb3JtPSdyb3RhdGUoMzApJyB4bGluazpocmVmPScjYScgeD0nODAnIHk9JzIwJy8+PHVzZSB0cmFuc2Zvcm09J3JvdGF0ZSgtMTUpJyB4bGluazpocmVmPScjYScgeD0nMTIwJyB5PSc1MCcvPjx1c2UgdHJhbnNmb3JtPSdyb3RhdGUoLTUwKScgeGxpbms6aHJlZj0nI2EnIHg9Jy01MCcgeT0nMTgwJy8+PC9zdmc+");
@@ -15,6 +15,8 @@
         .hidden { display: none; }
         .navbar-brand { color: #fff !important; }
         .box-shadow { box-shadow: 0 .25rem .75rem rgba(0, 0, 0, .05); }
+        .custom-switch label, .custom-checkbox label { cursor: pointer; }
+        .btn-submit-invisible { visibility: hidden; position: absolute; }
 
         #login { color: #fff; }
 
@@ -90,16 +92,15 @@
         {{/.}}
     </script>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/mustache.js/3.1.0/mustache.min.js" integrity="sha256-MPgtcamIpCPKRRm1ppJHkvtNBAuE71xcOM+MmQytXi8=" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootbox.js/5.3.2/bootbox.min.js" integrity="sha256-s87nschhfp/x1/4+QUtIa99el2ot5IMQLrumROuHZbc=" crossorigin="anonymous"></script>
+    <script src="/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="></script>
+    <script src="/popper-1.14.7.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"></script>
+    <script src="/bootstrap-4.3.1.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"></script>
+    <script src="/mustache-3.1.0.min.js" integrity="sha256-MPgtcamIpCPKRRm1ppJHkvtNBAuE71xcOM+MmQytXi8="></script>
+    <script src="/bootbox-5.3.2.min.js" integrity="sha256-s87nschhfp/x1/4+QUtIa99el2ot5IMQLrumROuHZbc="></script>
 
     <script>
         let checkLogin = () => {
             var match = document.cookie.match(/(?:^|;)\s*lgn=([^;]+)/);
-            console.log(match);
             if(!match) {
                 $("#login").text("");
                 $(".btn-sign").show();
@@ -123,7 +124,7 @@
             }).fail(xhr => {
                 checkLogin();
                 let template = $("#template").html();
-                let html = Mustache.to_html(template, [{text: xhr && xhr.responseText || xhr && ("HTTP " + xhr.status)}]);
+                let html = Mustache.to_html(template, [{text: xhr && xhr.responseText || xhr && xhr.status && ("HTTP " + xhr.status) || "Unknown error"}]);
                 $("#results").html(html);
             });
             return false;
@@ -137,16 +138,19 @@
             bootbox.dialog({
                 title: "Add new note",
                 message:
-`<p><form>
+`<p><form class="form-addnote">
     <input type="text" name="title" class="form-control" placeholder="Title" maxlength="128" required/>
-    <textarea type="text" name="text" class="form-control" placeholder="Note text" maxlength="1024" required></textarea>
+    <textarea type="text" name="text" class="form-control mt-2" placeholder="Note text" maxlength="1024" required></textarea>
     <div class="custom-control custom-checkbox text-right mt-2">
       <input type="checkbox" class="custom-control-input" id="isPrivate" name="isPrivate">
       <label class="custom-control-label" for="isPrivate">Is private note</label>
+      <input type="submit" class="btn-submit-invisible"/>
     </div>
     <div class="alert alert-danger mt-4 hidden" role="alert"></div>
     <div class="alert alert-success mt-4 hidden" role="alert">OK</div>
 </form></p>`,
+                onEscape: true,
+                backdrop: true,
                 buttons: {
                     add: {
                         label: "add",
@@ -159,7 +163,7 @@
                                 $form.find(".alert-success").stop(true, true).fadeIn().queue(() =>  bootbox.hideAll());
                             }).fail(xhr => {
                                 checkLogin();
-                                $form.find(".alert-danger").text(xhr && xhr.responseText || xhr && ("HTTP " + xhr.status)).stop(true, true).fadeIn();
+                                $form.find(".alert-danger").text(xhr && xhr.responseText || xhr && xhr.status && ("HTTP " + xhr.status) || "Unknown error").stop(true, true).fadeIn();
                             });
                             return false;
                         }
@@ -178,10 +182,13 @@
                 message:
 `<p><form class="form-signin">
     <input type="text" name="login" class="form-control" placeholder="Login" maxlength="20" pattern="[a-zA-Z0-9_]{3,20}" required/>
-    <input type="password" name="password" class="form-control" placeholder="Password" maxlength="64" required/>
+    <input type="password" name="password" class="form-control mt-2" placeholder="Password" maxlength="64" required/>
+    <input type="submit" class="btn-submit-invisible"/>
     <div class="alert alert-danger mt-4 hidden" role="alert"></div>
     <div class="alert alert-success mt-4 hidden" role="alert">OK</div>
 </form></p>`,
+                onEscape: true,
+                backdrop: true,
                 buttons: {
                     add: {
                         label: "Sign in",
@@ -194,7 +201,7 @@
                                 $form.find(".alert-success").stop(true, true).fadeIn().queue(() =>  bootbox.hideAll());
                             }).fail(xhr => {
                                 checkLogin();
-                                $form.find(".alert-danger").text(xhr && xhr.responseText || xhr && ("HTTP " + xhr.status)).stop(true, true).fadeIn();
+                                $form.find(".alert-danger").text(xhr && xhr.responseText || xhr && xhr.status && ("HTTP " + xhr.status) || "Unknown error").stop(true, true).fadeIn();
                             });
                             return false;
                         }
@@ -213,11 +220,14 @@
                 message:
 `<p><form class="form-signup">
     <input type="text" name="login" class="form-control" placeholder="Login" maxlength="20" pattern="[a-zA-Z0-9_]{3,20}" required/>
-    <input type="text" name="name" class="form-control" placeholder="Your name" maxlength="64"/>
-    <input type="password" name="password" class="form-control" placeholder="Password" maxlength="64" required/>
+    <input type="text" name="name" class="form-control mt-2" placeholder="Your name" maxlength="64"/>
+    <input type="password" name="password" class="form-control mt-2" placeholder="Password" maxlength="64" required/>
+    <input type="submit" class="btn-submit-invisible"/>
     <div class="alert alert-danger mt-4 hidden" role="alert"></div>
     <div class="alert alert-success mt-4 hidden" role="alert">OK</div>
 </form></p>`,
+                onEscape: true,
+                backdrop: true,
                 buttons: {
                     add: {
                         label: "Sign up",
@@ -230,7 +240,7 @@
                                 $form.find(".alert-success").stop(true, true).fadeIn().queue(() =>  bootbox.hideAll());
                             }).fail(xhr => {
                                 checkLogin();
-                                $form.find(".alert-danger").text(xhr && xhr.responseText || xhr && ("HTTP " + xhr.status)).stop(true, true).fadeIn();
+                                $form.find(".alert-danger").text(xhr && xhr.responseText || xhr && xhr.status && ("HTTP " + xhr.status) || "Unknown error").stop(true, true).fadeIn();
                             });
                             return false;
                         }
@@ -241,6 +251,11 @@
                     }
                 }
             });
+        });
+
+        $(document).on("submit", ".bootbox form", function(e) {
+            e.preventDefault();
+            $(".bootbox .btn-primary").click();
         });
     </script>
 </body>
