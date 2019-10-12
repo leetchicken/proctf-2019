@@ -146,11 +146,6 @@ fun Application.module(testing: Boolean = false) {
             val userService = UserService(BCryptPasswordEncoder())
 
             route("/users") {
-                // TODO: удалить
-                get("") {
-                    call.respond(OkResponse(UsersListResponse(userService.getUsers())))
-                }
-
                 post("") {
                     val request: CreateUserRequest
                     try {
