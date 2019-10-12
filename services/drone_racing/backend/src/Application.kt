@@ -9,7 +9,6 @@ import io.ktor.application.*
 import io.ktor.content.TextContent
 import io.ktor.features.*
 import io.ktor.freemarker.*
-import io.ktor.gson.GsonConverter
 import io.ktor.gson.gson
 import io.ktor.html.respondHtml
 import io.ktor.http.*
@@ -18,14 +17,10 @@ import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.routing.*
 import io.ktor.sessions.*
-import io.ktor.util.ConversionService
 import io.ktor.util.KtorExperimentalAPI
 import io.ktor.util.date.GMTDate
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import kotlinx.css.*
 import kotlinx.html.*
-import org.jetbrains.exposed.sql.transactions.transaction
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import java.nio.file.*
 import java.text.DateFormat
@@ -253,6 +248,21 @@ fun Application.module(testing: Boolean = false) {
                     return@get
                 }
 
+                get("{id}") {
+                    val levelId = call.parameters["id"]?.toInt()
+                    if (levelId == null) {
+                        call.respond(HttpStatusCode.BadRequest, ErrorResponse("Invalid level id"))
+                        return@get
+                    }
+                    val level = levelService.findLevelById(levelId)
+                    if (level == null) {
+                        call.respond(HttpStatusCode.NotFound, ErrorResponse("Invalid level id"))
+                        return@get
+                    }
+                    call.respond(OkResponse(LevelResponse(level)))
+                    return@get
+                }
+
                 post {
                     val request: CreateLevelRequest
                     try {
@@ -306,7 +316,7 @@ fun Application.module(testing: Boolean = false) {
 
                     try {
                         val program = programService.createProgram(authenticatedUser!!, level, request.title, request.sourceCode)
-                        call.respond(OkResponse(ProgramResponse(program.id.value)))
+                        call.respond(OkResponse(ProgramIdResponse(program.id.value)))
                     } catch (e: Throwable) {
                         e.printStackTrace()
                         call.respond(HttpStatusCode.BadRequest, ErrorResponse("Invalid request: ${e.message}"))
@@ -328,6 +338,29 @@ fun Application.module(testing: Boolean = false) {
                     dbQuery {
                         val programs = programService.findUserPrograms(authenticatedUser!!, level)
                         result = gson.toJson(OkResponse(ProgramsResponse(programs)))
+                    }
+                    call.respond(TextContent(result!!, ContentType.Application.Json))
+                }
+
+                get("{id}") {
+                    val programId = call.parameters["id"]?.toInt()
+                    val program: Program?;
+                    try {
+                        checkNotNull(programId) { "invalid program id" }
+                        program = programService.findProgramById(programId)
+                        checkNotNull(program) { "unknown program id" }
+                        dbQuery {
+                            check(program.author.id == authenticatedUser?.id) { "it's not your program, sorry" }
+                        }
+                    } catch (e: Throwable) {
+                        e.printStackTrace()
+                        call.respond(HttpStatusCode.BadRequest, ErrorResponse("Invalid request: ${e.message}"))
+                        return@get
+                    }
+
+                    var result: String? = null
+                    dbQuery {
+                        result = gson.toJson(OkResponse(ProgramResponse(program)))
                     }
                     call.respond(TextContent(result!!, ContentType.Application.Json))
                 }
@@ -368,7 +401,7 @@ fun Application.module(testing: Boolean = false) {
                         program = programService.findProgramById(request.programId)
                         checkNotNull(program) { "unknown program id" }
                         dbQuery {
-                            check(program.author != authenticatedUser) { "it's not your program, sorry" }
+                            check(program.author.id == authenticatedUser?.id) { "it's not your program, sorry" }
                         }
                         dbQuery {
                             level = program.level

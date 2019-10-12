@@ -9,7 +9,6 @@ import Grid from '@material-ui/core/Grid';
 import LockOutlinedIcon from '@material-ui/icons/LockOutlined';
 import Typography from '@material-ui/core/Typography';
 import { makeStyles } from '@material-ui/core/styles';
-import {authenticate} from "../api/users";
 import {Link as RouterLink} from "react-router-dom"
 
 const useStyles = makeStyles(theme => ({
@@ -44,14 +43,7 @@ const useStyles = makeStyles(theme => ({
 let loginInput;
 let passwordInput;
 
-async function onLoginButtonClick() {
-    let login = loginInput.value;
-    let password = passwordInput.value;
-    let response = await authenticate(login, password);
-    console.log(response);
-}
-
-export default function LoginPage() {
+export default function LoginPage(props) {
     const classes = useStyles();
 
     return (
@@ -100,7 +92,7 @@ export default function LoginPage() {
                             variant="contained"
                             color="primary"
                             className={classes.submit}
-                            onClick={onLoginButtonClick}
+                            onClick={() => props.onLoginButtonClick(loginInput.value, passwordInput.value)}
                         >
                             Login
                         </Button>

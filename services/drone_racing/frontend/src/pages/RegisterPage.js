@@ -45,13 +45,6 @@ let nameInput;
 let loginInput;
 let passwordInput;
 
-async function onSignInButtonClick() {
-    let login = loginInput.value;
-    let password = passwordInput.value;
-    let response = await authenticate(login, password);
-    console.log(response);
-}
-
 export default function RegisterPage() {
     const classes = useStyles();
 
@@ -115,7 +108,6 @@ export default function RegisterPage() {
                             variant="contained"
                             color="primary"
                             className={classes.submit}
-                            onClick={onSignInButtonClick}
                         >
                             Register
                         </Button>
