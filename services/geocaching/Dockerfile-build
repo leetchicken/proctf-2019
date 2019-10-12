@@ -1,0 +1,7 @@
+FROM alpine
+
+COPY ./src /app
+
+RUN apk add --no-cache autoconf automake libtool curl make g++ unzip pkgconfig libssl1.1 sqlite sqlite-libs protobuf-c protobuf-c-dev
+
+CMD ["bash", "-c", "cd /app && make"]

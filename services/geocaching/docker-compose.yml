@@ -1,0 +1,13 @@
+version: '3'
+services:
+  geocacher:
+    image: proctf/geocacher
+    container_name: geocacher
+    restart: unless-stopped
+    build: .
+    ports:
+      - 5555:5555
+    expose:
+      - "5555"
+    volumes:
+      - ./data:/app/data
