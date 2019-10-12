@@ -80,14 +80,18 @@ class Client:
     def receive_key(self):
         key_raw = self.sock.recv(BUFFER_SIZE)
         if len(key_raw) != 1:
-            raise Exception("Unexpected key size")
+            raise Exception("Unexpected key size: {}".format(len(key_raw)))
         return key_raw[0]
 
     def query_raw(self, obj):
         raw_bytes = msgpack.packb(obj)
         raw_bytes = bytes(b ^ ((self.key + i) & 0xFF) for i, b in enumerate(raw_bytes))
+        logging.debug("Request size: %d bytes", len(raw_bytes))
         self.sock.send(raw_bytes)
-        return msgpack.unpackb(self.sock.recv(BUFFER_SIZE), raw=False)
+
+        raw_bytes = self.sock.recv(BUFFER_SIZE)
+        logging.debug("Response size: %d bytes", len(raw_bytes))
+        return msgpack.unpackb(raw_bytes, raw=False)
 
 
 class ExitCode:
@@ -170,6 +174,9 @@ def check(ip):
     except ConnectionError as e:
         logging.exception(e)
         return ExitCode.FAIL
+    except Exception:
+        logging.exception("Unexpected error")
+        raise
 
     return ExitCode.OK
 
@@ -193,13 +200,15 @@ def put(ip, id, flag, *args):
         token = client.query(Request.TRACKER_ADD, secret, "foo", expect=Response.OK)
         logging.info("Add tracker succeeded, token: %r", token)
 
-        points = []
+        # points = []
         for char in flag:
             lat = random.uniform(-10, 10)  # FIXME
             lon = random.uniform(-10, 10)
-            points.append((lat, lon, char))
-        logging.info("Add points %r ...", points)
-        client.query(Request.POINT_ADD_BATCH, token, points, expect=Response.OK)
+            # points.append((lat, lon, char))
+            # BUG: long packets are not NAT-ed! (thus, POINT_ADD_BATCH is broken when NAT is active)
+            logging.info("Add points %r, %r, %s ...", lat, lon, char)
+            client.query(Request.POINT_ADD, token, lat, lon, char, expect=Response.OK)
+        # client.query(Request.POINT_ADD_BATCH, token, points, expect=Response.OK)
         logging.info("Add points succeeded")
 
     except AssertionError as e:
@@ -208,6 +217,9 @@ def put(ip, id, flag, *args):
     except ConnectionError as e:
         logging.exception(e)
         return ExitCode.FAIL
+    except Exception:
+        logging.exception("Unexpected error")
+        raise
 
     return ExitCode.OK
 
@@ -251,6 +263,9 @@ def get(ip, id, flag, *args):
     except ConnectionError as e:
         logging.exception(e)
         return ExitCode.FAIL
+    except Exception:
+        logging.exception("Unexpected error")
+        raise
 
 
 def configure_logging(ip):
@@ -270,6 +285,7 @@ def main():
     args = sys.argv[2:]
 
     configure_logging(ip=sys.argv[2])
+    logging.info("*** *** *** *** ***")
     logging.info("Started with arguments: %r", sys.argv)
 
     if mode == "check":
