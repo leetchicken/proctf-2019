@@ -16,6 +16,8 @@
         .navbar-brand { color: #fff !important; }
         .box-shadow { box-shadow: 0 .25rem .75rem rgba(0, 0, 0, .05); }
 
+        #login { color: #fff; }
+
         .note {
             display: flex;
             flex-flow: row wrap;
@@ -53,8 +55,9 @@
         <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav mr-auto"></ul>
             <input class="btn btn-outline-success mt-2 mt-md-0" type="button" id="add" value="🖉"/>
-            <input class="btn btn-outline-success mt-2 mt-md-0" type="button" id="signin" value="Login"/>
-            <input class="btn btn-outline-success mt-2 mt-md-0" type="button" id="signup" value="Register"/>
+            <input class="btn btn-outline-success mt-2 mt-md-0 ml-2 btn-sign" type="button" id="signin" value="Login"/>
+            <input class="btn btn-outline-success mt-2 mt-md-0 ml-2 btn-sign" type="button" id="signup" value="Register"/>
+            <span id="login" class="ml-4"></span>
         </div>
     </nav>
 
@@ -94,8 +97,23 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootbox.js/5.3.2/bootbox.min.js" integrity="sha256-s87nschhfp/x1/4+QUtIa99el2ot5IMQLrumROuHZbc=" crossorigin="anonymous"></script>
 
     <script>
-        $("#find").submit(function() {
+        let checkLogin = () => {
+            var match = document.cookie.match(/(?:^|;)\s*lgn=([^;]+)/);
+            console.log(match);
+            if(!match) {
+                $("#login").text("");
+                $(".btn-sign").show();
+            } else {
+                $("#login").text(match[1]);
+                $(".btn-sign").hide();
+            }
+        }
+
+        checkLogin();
+
+        $("#find").submit(function () {
             $.get("/notes/search", $(this).serialize()).done((data) => {
+                checkLogin();
                 if(!data || !data.length)
                     data = [{text: "Nothing found"}];
                 data.forEach(i => i.time && (i.time = new Date(i.time).toLocaleTimeString(undefined, {hour:"2-digit", minute:"2-digit", hour12:false})));
@@ -103,6 +121,7 @@
                 let html = Mustache.to_html(template, data);
                 $("#results").html(html);
             }).fail(xhr => {
+                checkLogin();
                 let template = $("#template").html();
                 let html = Mustache.to_html(template, [{text: xhr && xhr.responseText || xhr && ("HTTP " + xhr.status)}]);
                 $("#results").html(html);
@@ -135,9 +154,11 @@
                         callback: function() {
                             let $form = $(this).find("form");
                             $.post("/notes/add?" + $form.serialize()).done(() => {
+                                checkLogin();
                                 $form.find(".alert-danger").hide();
                                 $form.find(".alert-success").stop(true, true).fadeIn().queue(() =>  bootbox.hideAll());
                             }).fail(xhr => {
+                                checkLogin();
                                 $form.find(".alert-danger").text(xhr && xhr.responseText || xhr && ("HTTP " + xhr.status)).stop(true, true).fadeIn();
                             });
                             return false;
@@ -168,9 +189,11 @@
                         callback: function() {
                             let $form = $(this).find("form");
                             $.post("/auth/signin?" + $form.serialize()).done(() => {
+                                checkLogin();
                                 $form.find(".alert-danger").hide();
                                 $form.find(".alert-success").stop(true, true).fadeIn().queue(() =>  bootbox.hideAll());
                             }).fail(xhr => {
+                                checkLogin();
                                 $form.find(".alert-danger").text(xhr && xhr.responseText || xhr && ("HTTP " + xhr.status)).stop(true, true).fadeIn();
                             });
                             return false;
@@ -202,9 +225,11 @@
                         callback: function() {
                             let $form = $(this).find("form");
                             $.post("/auth/signup?" + $form.serialize()).done(() => {
+                                checkLogin();
                                 $form.find(".alert-danger").hide();
                                 $form.find(".alert-success").stop(true, true).fadeIn().queue(() =>  bootbox.hideAll());
                             }).fail(xhr => {
+                                checkLogin();
                                 $form.find(".alert-danger").text(xhr && xhr.responseText || xhr && ("HTTP " + xhr.status)).stop(true, true).fadeIn();
                             });
                             return false;

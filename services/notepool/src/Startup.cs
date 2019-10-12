@@ -34,6 +34,7 @@ namespace notepool
 				.UseDefaultFiles(new DefaultFilesOptions {DefaultFileNames = new List<string> {"index.html"}, FileProvider = provider})
 				.UseStaticFiles(new StaticFileOptions {FileProvider = provider})
 				.UseAuthentication()
+				.UseMiddleware<AuthHelperMiddleware>()
 				.UseRouting()
 				.UseEndpoints(endpoints => endpoints.MapControllers())
 				.Run(async context =>

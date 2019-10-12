@@ -88,6 +88,7 @@ namespace notepool.controllers
 		{
 			var principal = new ClaimsPrincipal(new ClaimsIdentity(new List<Claim>{new Claim(ClaimTypes.Name, login)}, CookieAuthenticationDefaults.AuthenticationScheme));
 			await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
+			AuthHelperMiddleware.UpdateCookie(HttpContext, login);
 		}
 
 		private const int MaxFieldLength = 64;
