@@ -1,8 +1,7 @@
-using System;
 using System.IO;
-using System.Net;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
+using Uploader.Extensions;
 using Uploader.Storages;
 using Uploader.Unpackers;
 
@@ -21,40 +20,20 @@ namespace Uploader.Handlers
         
         public async Task HandleRequest(HttpContext context)
         {
-            // todo c# 8 pattern matching 
-            switch (context.Request.Method)
-            {
-                case "POST" when context.Request.Path == "/playlist":
-                    await TrySavePlaylist(context);
-                    break;
-                case "GET" when context.Request.Path == "/playlist":
-                    await TryGetPlaylist(context);
-                    break;
-            }
-        }
-
-        private static async Task TryGetPlaylist(HttpContext context)
-        {
-            context.Response.StatusCode = (int) HttpStatusCode.OK;
-            await context.Response.WriteAsync("OK");
-        }
-
-        private async Task TrySavePlaylist(HttpContext context)
-        {
-            //Console.WriteLine(context.Request.ContentLength.Value);
-            var archive_bytes = new byte[context.Request.ContentLength.Value];
-            await context.Request.Body.ReadAsync(archive_bytes);
-
-            var unpacked = unpacker.Unpack(new MemoryStream(archive_bytes));
-            if (unpacked == null)
-            {
-                context.Response.StatusCode = (int) HttpStatusCode.BadRequest;
-                await context.Response.WriteAsync("Bad formatting!");
-            }
+            var bodyStream = new MemoryStream();
+            await context.Request.Body.CopyToAsync(bodyStream);
             
-            storage.Store(unpacked);
-            context.Response.StatusCode = (int) HttpStatusCode.OK;
-            await context.Response.WriteAsync("saved!");
+            if (!unpacker.TryUnpack(out var unpacked, bodyStream))
+            {
+                await context.SendTextResponse(
+                    StatusCodes.Status400BadRequest, 
+                    "Bad archive formatting");
+            }
+            else
+            {
+                storage.Store(unpacked);
+                await context.SendOK("Success!");
+            }
         }
     }
 }
