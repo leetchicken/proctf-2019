@@ -5,6 +5,7 @@ import logging
 import os
 import random
 import string
+import time
 
 import msgpack
 import base64
@@ -200,16 +201,19 @@ def put(ip, id, flag, *args):
         token = client.query(Request.TRACKER_ADD, secret, "foo", expect=Response.OK)
         logging.info("Add tracker succeeded, token: %r", token)
 
-        # points = []
-        for char in flag:
-            lat = random.uniform(-10, 10)  # FIXME
-            lon = random.uniform(-10, 10)
-            # points.append((lat, lon, char))
-            # BUG: long packets are not NAT-ed! (thus, POINT_ADD_BATCH is broken when NAT is active)
-            logging.info("Add points %r, %r, %s ...", lat, lon, char)
-            client.query(Request.POINT_ADD, token, lat, lon, char, expect=Response.OK)
-        # client.query(Request.POINT_ADD_BATCH, token, points, expect=Response.OK)
-        logging.info("Add points succeeded")
+        for i in range(0, len(flag), 8):
+            # BUG: long packets are not NAT-ed!
+            chunk = flag[i:i + 8]
+            points = []
+            for char in chunk:
+                lat = random.uniform(-10, 10)  # FIXME
+                lon = random.uniform(-10, 10)
+                points.append((lat, lon, char))
+            logging.info("Add points %r for chunk %r ...", points, chunk)
+            # client.query(Request.POINT_ADD, token, lat, lon, char, expect=Response.OK)
+            client.query(Request.POINT_ADD_BATCH, token, points, expect=Response.OK)
+            logging.info("Add points succeeded")
+            time.sleep(3)
 
     except AssertionError as e:
         logging.exception(e)
@@ -239,23 +243,24 @@ def get(ip, id, flag, *args):
         tracks = client.query(Request.TRACK_LIST, secret, expect=Response.OK)
         logging.info("Get tracks succeeded, they are: %r", tracks)
 
-        flag_found = False
-
+        retrieved_flag = ""
         for track in tracks:
             track_id = track[0]
             logging.info("Get track %r ...", track_id)
             points = client.query(Request.TRACK_GET, secret, track_id, expect=Response.OK)
             logging.info("Get track succeeded: %r", points)
 
-            retrieved_flag = "".join([meta for ts, lat, lon, meta in points])
-            logging.info("Retrieved flag: %r", retrieved_flag)
+            chunk = "".join([meta for ts, lat, lon, meta in points])
+            logging.info("Retrieved chunk: %r", retrieved_flag)
 
-            if retrieved_flag == flag:
-                logging.info("Flag FOUND!")
-                flag_found = True
-                break
+            retrieved_flag += chunk
 
-        return ExitCode.OK if flag_found else ExitCode.CORRUPT
+        if retrieved_flag == flag:
+            logging.info("Flag MATCHES!")
+            return ExitCode.OK
+
+        logging.warning("Flag DOES NOT match: %r.", retrieved_flag)
+        return ExitCode.CORRUPT
 
     except AssertionError as e:
         logging.exception(e)
