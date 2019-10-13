@@ -22,6 +22,7 @@ services:
     restart: unless-stopped
     depends_on:
       - database
+    mem_limit: 1000m
 volumes:
   h2-data:
   programs:

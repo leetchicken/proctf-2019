@@ -27,11 +27,11 @@ class DroneRacingChecker(checklib.http.HttpChecker):
         self._register_user(name, login, password)
         self._login(login, password)
 
-        level_title = checklib.random.string(string.ascii_lowercase + " ", 20, True)
+        level_title = checklib.random.english_word().capitalize() + " " + checklib.random.english_word()
         map = checklib.random.from_collection("map")
         level_id = self._upload_level(level_title, map)
 
-        program_title = checklib.random.string(string.ascii_lowercase, 30, True)
+        program_title = checklib.random.english_word().capitalize() + " " + checklib.random.english_word()
         source_code, params = self._generate_program_for_map(map, flag)
         program_id = self._upload_program(program_title, source_code, level_id)
 
@@ -111,12 +111,12 @@ class DroneRacingChecker(checklib.http.HttpChecker):
         level_id = int(r['level']['id'])
         logging.info('Success. Level id is %d' % level_id)
 
-        logging.info('Check that level exists in levels list (/api/levels)')
-        r = self._parse_json_response(self.try_http_get("/api/levels"))
-        levels = r['levels']
+        logging.info('Check that level exists (/api/levels/:id)')
+        r = self._parse_json_response(self.try_http_get("/api/levels/" + str(level_id)))
+        level = r['level']
         self.mumble_if_false(
-            level_id in [l['id'] for l in levels if 'id' in l],
-            "Can't find just created level in a list at /api/levels"
+            level['id'] == level_id,
+            "Can't find just created level in a list at /api/levels/:id"
         )
 
         return level_id
