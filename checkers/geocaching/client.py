@@ -13,6 +13,9 @@ from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives.serialization import load_pem_private_key, load_pem_public_key
 
 
+ADMIN_SESSION_SIZE = 4
+
+
 def bin_format(n):
     data = hex(n)[2:]
     if len(data) % 2:
@@ -225,7 +228,7 @@ class DepositClient(object):
 
     def handle_admin_challenge(self, data):
         data = self.unwrap_packet(data)
-        full_challenge = self.session_key[:3] + data.data
+        full_challenge = self.session_key[:ADMIN_SESSION_SIZE] + data.data
         response = int((full_challenge + os.urandom(127 - len(full_challenge))).hex(), 16)
         signature = pow(response, self.admin_d, self.admin_n)
         data = bignum_to_bytes(signature, True)

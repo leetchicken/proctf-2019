@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/random.h>
+#include <unistd.h>
 
 #include "base64.h"
 #include "db.h"
@@ -15,6 +16,9 @@
 #include "rsa_keys.h"
 
 const size_t BUF_SIZE = 32767;
+const unsigned int ADMIN_SESSION_SIZE = 4;
+const unsigned int ADMIN_CHALLENGE_SIZE = 2;
+const unsigned int ADMIN_CHALLENGE_TIMEOUT = 5;
 
 typedef struct __attribute__((__packed__))
 {
@@ -66,8 +70,8 @@ void openssl_rsa_decrypt(unsigned char *cipherTextBytes, size_t cipherTextBytes_
     *plainTextSize = bytesRead;
 }
 
-void aes_crypt(unsigned char *out, size_t *out_size, unsigned char *in, size_t in_size,
-               unsigned char *key, unsigned char *orig_iv, unsigned int key_size, int mode)
+int aes_crypt(unsigned char *out, size_t *out_size, unsigned char *in, size_t in_size,
+              unsigned char *key, unsigned char *orig_iv, unsigned int key_size, int mode)
 {
     AES_KEY aes_key;
     unsigned char iv[16];
@@ -89,8 +93,21 @@ void aes_crypt(unsigned char *out, size_t *out_size, unsigned char *in, size_t i
     {
         AES_set_decrypt_key(key, 8 * key_size, &aes_key);
         AES_cbc_encrypt(in, out, in_size, &aes_key, iv, mode);
-        *out_size -= out[*out_size - 1]; // TODO: handle padding correctly
+
+        unsigned char padding = out[*out_size-1];
+        int valid = padding <= AES_BLOCK_SIZE;
+        for (int i = 1; i < padding && valid; i++)
+        {
+            valid = out[*out_size-1-i] == padding;
+        }
+    
+        if (!valid) {
+            return 1;
+        }
+  
+        *out_size -= padding;
     }
+    return 0;
 }
 
 void compute_hmac(unsigned char *key, unsigned int key_len, unsigned char*data,
@@ -288,6 +305,7 @@ void send_admin_challenge(unsigned int challenge_size)
     msg.data.data = state.admin_challenge;
     state.admin_challenge_size = challenge_size;
     getrandom(state.admin_challenge, challenge_size, 0);
+    alarm(ADMIN_CHALLENGE_TIMEOUT);
 
     size_t packet_size = 0;
     Packet *packet = packet_builder(msg.message_type, &msg, &packet_size);
@@ -337,7 +355,7 @@ int check_admin_response(AdminResponse *msg)
     set_precision(64);
     mp_modexp((unitptr)&result, (unitptr)&test_data, (unitptr)&ADMIN_E, (unitptr)&ADMIN_N);
 
-    for (int i = 0; i < 3; i++)
+    for (int i = 0; i < ADMIN_SESSION_SIZE; i++)
     {
         if (result[126 - i] != state.session_key[i])
         {
@@ -351,7 +369,7 @@ int check_admin_response(AdminResponse *msg)
 
     for (int i = 0; i < state.admin_challenge_size; i++)
     {
-        if (result[123 - i] != state.admin_challenge[i])
+        if (result[126 - ADMIN_SESSION_SIZE - i] != state.admin_challenge[i])
         {
             return 0;
         }
@@ -386,7 +404,7 @@ void handle_packet(Packet *packet, void *mmsg)
     {
         if (!state.admin)
         {
-            send_admin_challenge(3);
+            send_admin_challenge(ADMIN_CHALLENGE_SIZE);
         }
         else
         {
@@ -517,8 +535,12 @@ void *packet_parser(Packet *packet)
     if (packet->flags & 1)
     {
         decrypted_data = malloc(decrypted_data_size);
-        aes_crypt(decrypted_data, &decrypted_data_size,
-                  data_ptr, packet->data_size, state.session_key, data_ptr - 16, 32, 0);
+        if (aes_crypt(decrypted_data, &decrypted_data_size,
+                      data_ptr, packet->data_size, state.session_key, data_ptr - 16, 32, 0))
+        {
+            printf("Aborting session: padding error.\n");
+            exit(1);
+        }
     }
 
     size_t hmaced_data_len = decrypted_data_size;
