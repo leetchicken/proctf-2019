@@ -119,7 +119,7 @@ function LevelPageLayout(props) {
                                 <TableRow>
                                     <TableCell>AUTHOR</TableCell>
                                     <TableCell>PROGRAM</TableCell>
-                                    <TableCell>MOVES</TableCell>
+                                    <TableCell align="right">MOVES</TableCell>
                                 </TableRow>
                             </TableHead>
                             <TableBody>
