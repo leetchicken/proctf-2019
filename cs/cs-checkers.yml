@@ -83,6 +83,11 @@
         - pillow
         - msgpack
         - cssselect
+        - pydub
+        - pypng
+        - cryptography
+        - protobuf
+        - pwntools
 
   - name: build binder
     command: ./build.sh

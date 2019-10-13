@@ -62,7 +62,9 @@ services: |
   {name => 'tracker',        path => 'checkers/tracker/checker.py',        timeout => 30, host_suffix => '15'},
   {name => 'notepool',       path => 'checkers/notepool/checker.sh',       timeout => 30, host_suffix => '16'},
   {name => 'Spaceships',     path => 'checkers/Spaceships/checker.py',     timeout => 30, host_suffix => '17'},
-  {name => 'sql_demo',       path => 'checkers/sql_demo/sql_demo.checker.py',         timeout => 30, host_suffix => '18'},
+  {name => 'sql_demo',       path => 'checkers/sql_demo/sql_demo.checker.py', timeout => 30, host_suffix => '18'},
+  {name => 'geocaching',     path => 'checkers/geocaching/checker.py',    timeout => 30, host_suffix => '19'},
+  {name => 'dotFm',          path => 'checkers/dotFm/checker.py',         timeout => 30, host_suffix => '20', active => ['2019-11-01 00:00:00', '2019-11-10 00:00:00']},
 
 queues: |
   {'*' => {ca => 'checker1', gallery => 'checker2', deer => 'checker1'}}
