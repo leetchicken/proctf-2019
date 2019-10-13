@@ -48,7 +48,7 @@ def check(host):
         conn.sendline(client.handle_admin_challenge(conn.recvuntil(b'> ')))
         results = client.parse_response(conn.recvuntil(b'> '))
     except Exception as e:
-        verdict(MUMBLE, "Check failed", "Something doesn't work ¯\\_(ツ)_/¯")
+        verdict(MUMBLE, "Check failed", traceback.format_exc())
 
     verdict(OK)
 
@@ -61,7 +61,7 @@ def put(host, flag_id, flag, vuln):
         response = client.parse_response(conn.recvuntil(b'> '))
         password = response.key
     except Exception as e:
-        verdict(MUMBLE, "Failed to put flag", "Something doesn't work ¯\\_(ツ)_/¯")
+        verdict(MUMBLE, "Failed to put flag", traceback.format_exc())
 
     flag_id = base64.b64encode(struct.pack("II", *location) + password).decode()
     verdict(OK, flag_id)
@@ -77,10 +77,10 @@ def get(host, flag_id, flag, vuln):
         response = client.parse_response(conn.recvuntil(b'> '))
         svc_flag = response.secret
     except Exception as e:
-        verdict(MUMBLE, "Failed to get flag", "Mumble-huyambl ¯\\_(ツ)_/¯")
+        verdict(MUMBLE, "Failed to get flag", traceback.format_exc())
 
     if bytes(flag, "ascii") != svc_flag:
-        verdict(CORRUPT, "No flag to be seen")
+        verdict(CORRUPT, "No flag to be seen", str(svc_flag))
     
     verdict(OK)
 
@@ -113,5 +113,3 @@ def main(args):
 
 if __name__ == "__main__":
     main(args=sys.argv[1:])
-
-# '172.16.86.130'
