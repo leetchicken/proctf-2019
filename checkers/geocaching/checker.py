@@ -6,7 +6,8 @@ import struct
 import base64
 import traceback
 
-from pwn import *
+import nclib
+
 from client import DepositClient
 
 OK, CORRUPT, MUMBLE, DOWN, CHECKER_ERROR = 101, 102, 103, 104, 110
@@ -16,16 +17,14 @@ TIMEOUT = 3
 
 
 def create_session(host):
-    context.log_console=open('/dev/null', 'w')
-    context.timeout = TIMEOUT
     client = DepositClient()
 
-    conn = remote(host, PORT)
-    conn.recvuntil('> ')
+    conn = nclib.Netcat((host, PORT))
+    conn.recvuntil(b'> ')
     conn.sendline(client.handshake())
-    response = conn.recvuntil('> ', drop=True)
+    response = conn.recvuntil(b'> ')
     conn.sendline(client.handshake_response(response))
-    response = conn.recvuntil('> ', drop=True)
+    response = conn.recvuntil(b'> ')
 
     return conn, client
 
@@ -46,8 +45,8 @@ def check(host):
     try:
         conn, client = create_session(host)
         conn.sendline(client.list_busy_cells())
-        conn.sendline(client.handle_admin_challenge(conn.recvuntil('> ', drop=True)))
-        results = client.parse_response(conn.recvuntil('> ', drop=True))
+        conn.sendline(client.handle_admin_challenge(conn.recvuntil(b'> ')))
+        results = client.parse_response(conn.recvuntil(b'> '))
     except Exception as e:
         verdict(MUMBLE, "Check failed", "Something doesn't work ¯\\_(ツ)_/¯")
 
@@ -59,7 +58,7 @@ def put(host, flag_id, flag, vuln):
         conn, client = create_session(host)
         location = client.pick_location(rce_flag=int(vuln) == 1)
         conn.sendline(client.store_secret(bytes(flag, "ascii"), location))
-        response = client.parse_response(conn.recvuntil('> ', drop=True))
+        response = client.parse_response(conn.recvuntil(b'> '))
         password = response.key
     except Exception as e:
         verdict(MUMBLE, "Failed to put flag", "Something doesn't work ¯\\_(ツ)_/¯")
@@ -75,7 +74,7 @@ def get(host, flag_id, flag, vuln):
         password = temp[8:]
         location = struct.unpack("II", temp[:8])
         conn.sendline(client.get_secret(location, password))
-        response = client.parse_response(conn.recvuntil('> ', drop=True))
+        response = client.parse_response(conn.recvuntil(b'> '))
         svc_flag = response.secret
     except Exception as e:
         verdict(MUMBLE, "Failed to get flag", "Mumble-huyambl ¯\\_(ツ)_/¯")
@@ -107,8 +106,6 @@ def main(args):
 
     try:
         handler(*args)
-    except pwnlib.exception.PwnlibException as E:
-        verdict(DOWN, "Connect error", "Connect error: %s" % E)
     except Exception as E:
         verdict(CHECKER_ERROR, "Checker error", "Checker error: %s" % traceback.format_exc())
     verdict(CHECKER_ERROR, "Checker error", "No verdict")
