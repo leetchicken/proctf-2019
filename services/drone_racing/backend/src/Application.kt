@@ -113,9 +113,9 @@ fun Application.module(testing: Boolean = false) {
                     val request: CreateUserRequest
                     try {
                         request = call.receive()
-                        checkNotNull(request.name) { "Please specify the name"}
-                        checkNotNull(request.login) { "Please specify the login" }
-                        checkNotNull(request.password) { "Please specify the password" }
+                        checkNotNull(request.name) { "please specify the name"}
+                        checkNotNull(request.login) { "please specify the login" }
+                        checkNotNull(request.password) { "please specify the password" }
                     } catch (e: Throwable) {
                         e.printStackTrace()
                         call.respond(HttpStatusCode.BadRequest, ErrorResponse("Invalid request: ${e.message}"))
@@ -123,6 +123,7 @@ fun Application.module(testing: Boolean = false) {
                     }
 
                     try {
+                        check(userService.findUserByLogin(request.login) == null) { "user with same login already exists"}
                         val user = userService.createUser(request.name, request.login, request.password)
                         call.respond(OkResponse(UserResponse(user)))
                     } catch (e: Throwable) {
@@ -136,8 +137,8 @@ fun Application.module(testing: Boolean = false) {
                     val request: LoginRequest
                     try {
                         request = call.receive()
-                        checkNotNull(request.login) { "Please specify the login" }
-                        checkNotNull(request.password) { "Please specify the password" }
+                        checkNotNull(request.login) { "please specify the login" }
+                        checkNotNull(request.password) { "please specify the password" }
                     } catch (e: Throwable) {
                         e.printStackTrace()
                         call.respond(HttpStatusCode.BadRequest, ErrorResponse("Invalid request: ${e.message}"))
@@ -225,8 +226,8 @@ fun Application.module(testing: Boolean = false) {
                     val request: CreateLevelRequest
                     try {
                         request = call.receive()
-                        checkNotNull(request.title) { "Please specify the title" }
-                        checkNotNull(request.map) { "Please specify the map" }
+                        checkNotNull(request.title) { "please specify the title" }
+                        checkNotNull(request.map) { "please specify the map" }
                     } catch (e: Throwable) {
                         e.printStackTrace()
                         call.respond(HttpStatusCode.BadRequest, ErrorResponse("Invalid request: ${e.message}"))
@@ -237,9 +238,9 @@ fun Application.module(testing: Boolean = false) {
                     try {
                         with (request) {
                             val size = getMapSizeFromString(request.map)
-                            check(map.length == size * size) { "Map length should be a square "}
-                            check(size in 1..LEVEL_MAX_SIZE) { "Map's size should be more than 0 and less than $LEVEL_MAX_SIZE"}
-                            check(map.all { it in ".*" }) { "Map should contain only '.' and '*' chars "}
+                            check(map.length == size * size) { "map length should be a square "}
+                            check(size in 1..LEVEL_MAX_SIZE) { "map's size should be more than 0 and less than $LEVEL_MAX_SIZE"}
+                            check(map.all { it in ".*" }) { "map should contain only '.' and '*' chars "}
                             level = levelService.createLevel(authenticatedUser!!, title, map)
                         }
                     } catch (e: Throwable) {
