@@ -2,6 +2,7 @@
 import json
 import logging
 import string
+import pprint
 
 import checklib
 import checklib.http
@@ -95,7 +96,7 @@ class DroneRacingChecker(checklib.http.HttpChecker):
         })
 
         logging.info('Cookies are %s' % r.cookies)
-        self.mumble_if_false('session' in r.cookies, 'Can\'t find cookie "session" in response')
+        self.mumble_if_false('session' in r.cookies, 'Can\'t authenticate as existing user')
 
         self._parse_json_response(r)
 
