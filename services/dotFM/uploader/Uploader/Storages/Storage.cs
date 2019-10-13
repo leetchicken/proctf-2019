@@ -1,29 +1,27 @@
+using System;
 using System.Collections.Concurrent;
 using System.IO;
+using Uploader.Extensions;
 using Uploader.Models;
-using Uploader.Storages;
 
-namespace Uploader
+
+namespace Uploader.Storages
 {
     public class Storage: IStorage
     {
         private ConcurrentDictionary<string, string> MusicCache;
+        private readonly string workingPath;
 
-        public Storage()
+        public Storage(string workingPath)
         {
-            Utils.CreateDirectoryIfNotExists(Constants.PlaylistsPath);
-            Utils.CreateDirectoryIfNotExists(Constants.MusicPath);
-            Utils.CreateDirectoryIfNotExists(Constants.ImagesPaths);
+            this.workingPath = workingPath;
         }
 
         private void CreateImages(Playlist playlist)
         {
             foreach (var (_, value) in playlist.AudioFiles)
             {
-                var imagePath = Path.Combine(
-                    Constants.ImagesPaths, 
-                    value.GetTrackIdentity() + ".png");
-                using var fs = new FileStream(imagePath, FileMode.Create);
+                using var fs = CreateFileStream(Path.Combine(Constants.ImagesPaths, value.GetFileIdentity() + ".png"));
                 fs.Write(value.GetImage());
             }
         }
@@ -32,20 +30,35 @@ namespace Uploader
         {
             foreach (var (key, value) in playlist.AudioFiles)
             {
-                var audioPath = Path.Combine(
-                    Constants.MusicPath, 
-                    key + ".mp3"
-                );
-                using var fs = new FileStream(audioPath, FileMode.Create);
+                using var fs = CreateFileStream(Path.Combine(Constants.MusicPath, key));
                 fs.Write(value.GetContent());
             }
+        }
+        
+        private Stream CreateFileStream(string path) => 
+            new FileStream(Path.Join(workingPath, path), FileMode.CreateNew);
+
+        private Playlist CreateUniquePlaylist()
+        {
+            return null;
         }
 
         public void Store(Playlist playlist)
         {
+            CreateDirsIfNotExists();
+            
+            var playlistId = Guid.NewGuid();
+            
             CreateImages(playlist);
             CreateTracks(playlist);
             //todo create playlist file 
+        }
+
+        private static void CreateDirsIfNotExists()
+        {
+            Utils.CreateDirectoryIfNotExists(Constants.PlaylistsPath);
+            Utils.CreateDirectoryIfNotExists(Constants.MusicPath);
+            Utils.CreateDirectoryIfNotExists(Constants.ImagesPaths);
         }
 
         public Playlist Get(int id)

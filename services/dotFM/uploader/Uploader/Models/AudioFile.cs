@@ -1,4 +1,3 @@
-using System;
 using System.IO;
 using System.Linq;
 using IdSharp.Tagging.ID3v2;
@@ -26,12 +25,5 @@ namespace Uploader.Models
         }
 
         public byte[] GetContent() => content;
-
-        public string GetTrackIdentity()
-        {
-            var tag = new ID3v2Tag(new MemoryStream(content));
-            var identity = tag.Artist + tag.Album;
-            return identity == "" ? Guid.NewGuid().ToString() : identity;
-        }
     }
 }

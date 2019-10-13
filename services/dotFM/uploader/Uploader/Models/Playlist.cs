@@ -9,6 +9,7 @@ namespace Uploader.Models
         public Dictionary<string, string> Tracks { get; }
         public Dictionary<string, AudioFile> AudioFiles { get; }
         private const string M3UINFOHeader = "#EXTINF";
+        private const string M3UIdentity = "#EXTM3U";
 
         private Playlist(int size)
         {
@@ -16,13 +17,9 @@ namespace Uploader.Models
             AudioFiles = new Dictionary<string, AudioFile>(size);
         }
 
-        private void AddTrack(string trackName, string trackPath) => 
-            Tracks[trackName] = trackPath;
-
         public override string ToString() => 
-            string.Join(", ", Tracks.Select(x => $"{x.Key}: {x.Value}"));
-
-
+            $"{M3UIdentity}\n\n{string.Join("\n\n", Tracks.Select(x => $"{M3UINFOHeader}:42, {x.Key}\n{x.Value}"))}";
+        
         public static Playlist FromM3U(string m3uContent)
         {
             var m3uLines = m3uContent.Split('\n', StringSplitOptions.RemoveEmptyEntries);
@@ -46,7 +43,7 @@ namespace Uploader.Models
                     throw new ArgumentException("Could not find track info");
                 }
                 
-                playlist.AddTrack(trackName[1].Trim(' '), link);
+                playlist.Tracks[trackName[1].Trim(' ')] =  link;
             }
 
             return playlist;

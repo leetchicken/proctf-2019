@@ -23,16 +23,16 @@ namespace Uploader.Handlers
             var bodyStream = new MemoryStream();
             await context.Request.Body.CopyToAsync(bodyStream);
             
-            if (!unpacker.TryUnpack(out var unpacked, bodyStream))
+            if (unpacker.TryUnpack(out var unpacked, bodyStream))
+            {
+                storage.Store(unpacked);
+                await context.SendOK("Success!");
+            }
+            else
             {
                 await context.SendTextResponse(
                     StatusCodes.Status400BadRequest, 
                     "Bad archive formatting");
-            }
-            else
-            {
-                storage.Store(unpacked);
-                await context.SendOK("Success!");
             }
         }
     }

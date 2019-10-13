@@ -6,6 +6,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <Folder Include="playlists" />
         <Folder Include="wwwroot\" />
     </ItemGroup>
 

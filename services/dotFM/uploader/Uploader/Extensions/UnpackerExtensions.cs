@@ -11,7 +11,7 @@ namespace Uploader.Extensions
         {
             try
             {
-                return (playlist = unpacker.Unpack(playlistStream)) == null;
+                return (playlist = unpacker.Unpack(playlistStream)) != null;
             }
             catch (Exception e)
             {

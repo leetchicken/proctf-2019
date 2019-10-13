@@ -1,12 +1,9 @@
-﻿using System;
-using System.Net.Http;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Builder;
+﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
-using Uploader.Extensions;
 using Uploader.Handlers;
+using Uploader.Storages;
 using Uploader.Unpackers;
 
 namespace Uploader
@@ -22,10 +19,8 @@ namespace Uploader
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
-            Console.WriteLine(env.WebRootPath);
-            
             var unpacker = new Unpacker();
-            var storage = new Storage();
+            var storage = new Storage(env.ContentRootPath);
 
             IHandler playlistUnpacker = new PlaylistUnpacker(unpacker, storage);
             IHandler otherRequestsHandler = new OtherRequestsHandler();
