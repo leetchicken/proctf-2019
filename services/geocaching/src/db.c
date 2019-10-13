@@ -7,6 +7,8 @@
 
 #define FAST_STORAGE_SIZE 10
 
+const int SQLITE_TIMEOUT = 4000;
+
 typedef struct __attribute__((__packed__))
 {
     unsigned int lat;
@@ -225,6 +227,8 @@ int  db_connect()
 #else
     int rc = sqlite3_open("data/secrets.db", &db);
 #endif
+
+    sqlite3_busy_timeout(db, SQLITE_TIMEOUT);
     if ( rc )
     {
         LOG("Can't open database: %s\n", sqlite3_errmsg(db));

@@ -13,7 +13,7 @@ release: CXXFLAGS += -O3
 release: geocacher
 
 geocacher: $(SOURCES)
-	$(CC) $(SOURCES) --std=gnu99  $(CXXFLAGS) -I/usr/local/include -L/usr/local/lib $(LDFLAGS) -o geocacher
+	$(CC) -s $(SOURCES) --std=gnu99  $(CXXFLAGS) -I/usr/local/include -L/usr/local/lib $(LDFLAGS) -o geocacher
 
 geocacher-debug: $(DEBUG_SOURCES)
 	$(CC) $(DEBUG_SOURCES) --std=gnu99  $(CXXFLAGS) -I/usr/local/include -L/usr/local/lib $(LDFLAGS) -o geocacher-debug
