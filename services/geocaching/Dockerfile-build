@@ -2,6 +2,6 @@ FROM alpine
 
 COPY ./src /app
 
-RUN apk add --no-cache autoconf automake libtool curl make g++ unzip pkgconfig libssl1.1 sqlite sqlite-libs protobuf-c protobuf-c-dev
+RUN apk add --no-cache make g++ sqlite-dev openssl-dev protobuf-c-dev
 
-CMD ["bash", "-c", "cd /app && make"]
+CMD ["sh", "-c", "cd /app && make && mv geocacher out/"]

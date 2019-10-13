@@ -1,5 +1,6 @@
 /* Prototypes for __malloc_hook, __free_hook */
 #include <malloc.h>
+#include <stdio.h>
 
 static void *(* volatile old_malloc_hook)(size_t, const void*);
 static void (* volatile old_free_hook)(void*, const void*);

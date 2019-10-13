@@ -220,7 +220,11 @@ int  db_connect()
     {
         return 0;
     }
+#ifdef DEBUG
     int rc = sqlite3_open("secrets.db", &db);
+#else
+    int rc = sqlite3_open("data/secrets.db", &db);
+#endif
     if ( rc )
     {
         LOG("Can't open database: %s\n", sqlite3_errmsg(db));
