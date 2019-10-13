@@ -123,6 +123,14 @@ services/gallery/./models/
 services/gallery/./static/
 EOF
     ;;
+    "geocaching")
+    cat <<EOF
+services/geocaching/./docker-compose.yml
+services/geocaching/./Dockerfile
+services/geocaching/./start.sh
+services/geocaching/./out/
+EOF
+    ;;
     "drone_racing")
     cat <<EOF
 services/drone_racing/./docker-compose.yml
