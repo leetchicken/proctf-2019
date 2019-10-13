@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -19,7 +20,7 @@ namespace Uploader.Storages
             this.workingPath = workingPath;
             this.expirationTime = expirationTime;
             
-            var cleanupTask = new TaskFactory().StartNew(async () =>
+            new TaskFactory().StartNew(async () =>
             {
                 while (true)
                 {
@@ -75,17 +76,16 @@ namespace Uploader.Storages
             Utils.CreateDirectoryIfNotExists(Constants.ImagesPaths);
         }
 
-        public Playlist Get(Guid guid)
+        public List<string> Get(Guid guid)
         {
             string file;
             try
             {
                 file = Directory
-                    .GetFiles(Constants.PlaylistsPath)
-                    .Select(x => x.Split("/")[^1])
-                    .First(x => x.Split(".")[0].ToLower() == guid.ToString().ToLower());
+                    .GetFiles(Constants.PlaylistsPath).Select(x => x.Split("/")[^1])
+                    .First(x => x.Split(".").First().ToLower() == guid.ToString().ToLower());
             }
-            catch (InvalidOperationException e)
+            catch (InvalidOperationException)
             {
                 return null;
             }
@@ -93,15 +93,11 @@ namespace Uploader.Storages
             using var fs = new FileStream(Path.Combine(Constants.PlaylistsPath, file), FileMode.Open);
             var fileBytes = new byte[fs.Length];
             fs.Read(new Span<byte>(fileBytes));
-            return Playlist.FromM3U(Encoding.UTF8.GetString(fileBytes));
+            var ps = Playlist.FromM3U(Encoding.UTF8.GetString(fileBytes));
+            return ps.TrackPaths.Select(x => Path.Join(workingPath, Constants.PlaylistsPath, x.Value)).ToList();
         }
 
-        public bool Link(Guid source, Guid target)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Cleanup()
+        private void Cleanup()
         {
             var filesForCleanup = Directory
                 .GetFiles(Constants.RootPath, "*.mp3", SearchOption.AllDirectories)
