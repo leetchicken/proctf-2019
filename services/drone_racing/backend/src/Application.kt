@@ -13,15 +13,19 @@ import io.ktor.features.*
 import io.ktor.gson.gson
 import io.ktor.http.*
 import io.ktor.http.content.CachingOptions
+import io.ktor.http.content.resolveResource
 import io.ktor.request.path
 import io.ktor.request.receive
 import io.ktor.request.uri
 import io.ktor.response.respond
+import io.ktor.response.respondFile
+import io.ktor.response.respondText
 import io.ktor.routing.*
 import io.ktor.sessions.*
 import io.ktor.util.KtorExperimentalAPI
 import io.ktor.util.date.GMTDate
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
+import java.io.File
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.text.DateFormat
@@ -262,6 +266,7 @@ fun Application.module(testing: Boolean = false) {
                         checkNotNull(request.sourceCode) { "please specify the source code" }
                         level = levelService.findLevelById(request.levelId) ?: throw IllegalStateException("unknown level id")
                         check(request.sourceCode.length in 1..PROGRAM_MAX_SIZE) { "source code size should by more than 0 bytes and not more than $PROGRAM_MAX_SIZE bytes" }
+                        check(request.title.length in 1..PROGRAM_TITLE_MAX_SIZE) { "title should be not empty and not longer than $PROGRAM_TITLE_MAX_SIZE chars" }
                     } catch (e: Throwable) {
                         e.printStackTrace()
                         call.respond(HttpStatusCode.BadRequest, ErrorResponse("Invalid request: ${e.message}"))
@@ -394,6 +399,9 @@ fun Application.module(testing: Boolean = false) {
             }
         }
 
+        get("/") {
+            call.respond(call.resolveResource("wwwroot/index.html")!!)
+        }
     }
 }
 

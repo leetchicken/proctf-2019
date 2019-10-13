@@ -11,8 +11,6 @@ docker run -v "$PWD/frontend":/home/frontend -v /home/frontend/node_modules dron
 mkdir -p backend/resources/wwwroot
 cp -R frontend/build/* backend/resources/wwwroot/
 
-exit 0
-
 # Build the docker container for building the application
 docker build -f backend/Dockerfile.build --tag drone_racing_backend_build .
 # Build our application!
