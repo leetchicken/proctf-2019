@@ -23,12 +23,14 @@ namespace Uploader
             var storage = new Storage(env.ContentRootPath);
 
             IHandler playlistUnpacker = new PlaylistUnpacker(unpacker, storage);
+            IHandler playlistGetter = new GetPlaylistHandler(storage);
             IHandler otherRequestsHandler = new OtherRequestsHandler();
 
             var router = new Router(tuple =>
                 (tuple.method.ToUpper(), tuple.path.ToLower()) switch
                 {
                     ("POST", "/playlist") => playlistUnpacker,
+                    ("GET", "/playlist") => playlistGetter,
                     _ => otherRequestsHandler
                 });
 

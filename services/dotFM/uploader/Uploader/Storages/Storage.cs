@@ -1,13 +1,15 @@
 using System;
 using System.Collections.Concurrent;
 using System.IO;
+using System.Linq;
+using System.Text;
 using Uploader.Extensions;
 using Uploader.Models;
 
 
 namespace Uploader.Storages
 {
-    public class Storage: IStorage
+    public class Storage : IStorage
     {
         private readonly string workingPath;
 
@@ -41,14 +43,14 @@ namespace Uploader.Storages
             streamWriter.Write(playlist.ToString().AsSpan());
             return playlistId;
         }
-        
-        private Stream CreateFileStream(string path) => 
+
+        private Stream CreateFileStream(string path) =>
             new FileStream(Path.Join(workingPath, path), FileMode.Create);
 
         public Guid Store(Playlist playlist)
         {
             CreateDirsIfNotExists();
-            
+
             CreateImages(playlist);
             CreateTracks(playlist);
             return CreatePlaylistFile(playlist);
@@ -62,9 +64,16 @@ namespace Uploader.Storages
             Utils.CreateDirectoryIfNotExists(Constants.ImagesPaths);
         }
 
-        public Playlist Get(int id)
+        public Playlist Get(Guid guid)
         {
-            throw new System.NotImplementedException();
+            var file = Directory
+                .GetFiles(Constants.PlaylistsPath)
+                .Select(x => x.Split("/")[^1])
+                .First(x => x.Split(".")[0].ToLower() == guid.ToString().ToLower());
+            using var fs = new FileStream(Path.Combine(Constants.PlaylistsPath, file), FileMode.Open);
+            var fileBytes = new byte[fs.Length];
+            fs.Read(new Span<byte>(fileBytes));
+            return Playlist.FromM3U(Encoding.UTF8.GetString(fileBytes));
         }
     }
 }
