@@ -85,9 +85,11 @@
         - cssselect
         - pydub
         - pypng
-        - cryptography
-        - protobuf
-        - pwntools
+
+  - name: geocaching deps
+    pip:
+      executable: pip3
+      requirements: "{{cs_dir}}/checkers/geocaching/requirements.txt"
 
   - name: build binder
     command: ./build.sh
