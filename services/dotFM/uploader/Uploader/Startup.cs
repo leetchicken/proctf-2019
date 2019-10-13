@@ -33,10 +33,8 @@ namespace Uploader
                     ("GET", "/playlist") => playlistGetter,
                     _ => otherRequestsHandler
                 });
-
-
-            var requestDelegate = new RequestDelegate(router.HandleRequest);
-            app.Run(requestDelegate);
+            
+            app.Run(new RequestDelegate(router.HandleRequest));
         }
     }
 }

@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Concurrent;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -66,10 +65,19 @@ namespace Uploader.Storages
 
         public Playlist Get(Guid guid)
         {
-            var file = Directory
-                .GetFiles(Constants.PlaylistsPath)
-                .Select(x => x.Split("/")[^1])
-                .First(x => x.Split(".")[0].ToLower() == guid.ToString().ToLower());
+            string file;
+            try
+            {
+                file = Directory
+                    .GetFiles(Constants.PlaylistsPath)
+                    .Select(x => x.Split("/")[^1])
+                    .First(x => x.Split(".")[0].ToLower() == guid.ToString().ToLower());
+            }
+            catch (InvalidOperationException e)
+            {
+                return null;
+            }
+            
             using var fs = new FileStream(Path.Combine(Constants.PlaylistsPath, file), FileMode.Open);
             var fileBytes = new byte[fs.Length];
             fs.Read(new Span<byte>(fileBytes));

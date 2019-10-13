@@ -8,10 +8,8 @@ namespace Uploader.Handlers
     {
         private readonly Func<(string, string), IHandler> routeFunc;
         
-        public Router(Func<(string method, string path), IHandler> routeFunc)
-        {
-            this.routeFunc = routeFunc;
-        }
+        public Router(Func<(string method, string path), IHandler> routeFunc) 
+            => this.routeFunc = routeFunc;
 
         public Task HandleRequest(HttpContext context)
             => routeFunc((context.Request.Method, context.Request.Path)).HandleRequest(context);

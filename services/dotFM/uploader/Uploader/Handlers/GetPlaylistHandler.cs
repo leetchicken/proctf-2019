@@ -20,8 +20,15 @@ namespace Uploader.Handlers
         {
             var playlistId = context.Request.Query["playlist_id"];
             var playlistContent = storage.Get(Guid.Parse(playlistId));
-            var result = $"{{\"tracks\": [{string.Join(",", playlistContent.Tracks.Select(x => $"\"{x.Key}:{x.Value}\""))}]}}";
-            await context.SendOK(result);
+            if (playlistContent == null)
+            {
+                await context.SendTextResponse(StatusCodes.Status404NotFound, "");
+            }
+            else
+            {
+                var result = $"{{\"tracks\": [{string.Join(",", playlistContent.Tracks.Select(x => $"\"{x.Key}:{x.Value}\""))}]}}";
+                await context.SendOK(result);
+            }
         }
     }
 }
