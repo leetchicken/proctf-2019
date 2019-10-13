@@ -386,7 +386,7 @@ void handle_packet(Packet *packet, void *mmsg)
     {
         if (!state.admin)
         {
-            send_admin_challenge(2);
+            send_admin_challenge(3);
         }
         else
         {
