@@ -10,13 +10,14 @@ import Grid from "@material-ui/core/Grid";
 import {getLevelRuns, getMyPrograms} from "../api/programs";
 import List from "@material-ui/core/List";
 import ListItem from "@material-ui/core/ListItem";
-import {ListItemAvatar, ListItemText, Table, TableHead} from "@material-ui/core";
+import {ListItemAvatar, ListItemText, Table, TableBody, TableHead} from "@material-ui/core";
 import Avatar from "@material-ui/core/Avatar";
 import AddIcon from "@material-ui/icons/Add";
 import Typography from "@material-ui/core/Typography";
 import Button from "@material-ui/core/Button";
 import TableRow from "@material-ui/core/TableRow";
 import TableCell from "@material-ui/core/TableCell";
+import Map from "../components/Map";
 
 function LevelPageWrapper(props) {
     let params = useParams();
@@ -82,9 +83,7 @@ function LevelPageLayout(props) {
     return (
         <Container maxWidth="lg">
             <Title>{ props.level.title }</Title>
-            <div>
-                Level's map: { props.level.map }
-            </div>
+            <Map map={ props.level.map } />
             <Grid container spacing={10}>
                 <Grid item xs={12} md={6}>
                     <Title>Your drone programs</Title>
@@ -123,6 +122,7 @@ function LevelPageLayout(props) {
                                     <TableCell>MOVES</TableCell>
                                 </TableRow>
                             </TableHead>
+                            <TableBody>
                             {
                                 props.runs.map(run => (
                                     <TableRow key={run.id}>
@@ -138,6 +138,7 @@ function LevelPageLayout(props) {
                                     </TableRow>
                                 ))
                             }
+                            </TableBody>
                         </Table>
                     }
                     {

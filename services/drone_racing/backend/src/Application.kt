@@ -379,7 +379,7 @@ fun Application.module(testing: Boolean = false) {
 
                     var result: String? = null
                     dbQuery {
-                        val runs = runService.findRunsOnLevel(level)
+                        val runs = runService.findSuccessRunsOnLevel(level)
                         result = gson.toJson(OkResponse(RunsResponse(runs)))
                     }
                     call.respond(TextContent(result!!, ContentType.Application.Json))

@@ -7,12 +7,8 @@ import LargeLoader from "../components/LargeLoader";
 import Container from "@material-ui/core/Container";
 import Title from "../components/Title";
 import Grid from "@material-ui/core/Grid";
-import {getLevelRuns, getMyPrograms, getProgram, runProgram} from "../api/programs";
-import List from "@material-ui/core/List";
-import ListItem from "@material-ui/core/ListItem";
-import {ListItemAvatar, ListItemText, Table, TableHead, TextField} from "@material-ui/core";
-import Avatar from "@material-ui/core/Avatar";
-import AddIcon from "@material-ui/icons/Add";
+import {getProgram, runProgram} from "../api/programs";
+import {Table, TableBody, TableHead, TextField} from "@material-ui/core";
 import Typography from "@material-ui/core/Typography";
 import Button from "@material-ui/core/Button";
 import TableRow from "@material-ui/core/TableRow";
@@ -63,6 +59,7 @@ class ProgramPage extends Component {
             runErrorMessage: "",
             output: "",
             score: null,
+            success: null,
         });
     }
 
@@ -91,6 +88,7 @@ class ProgramPage extends Component {
                 runErrorMessage: response.errorMessage,
                 output: "",
                 score: null,
+                success: null,
             });
             return;
         }
@@ -99,6 +97,7 @@ class ProgramPage extends Component {
             runErrorMessage: response.errorMessage,
             output: response.output,
             score: response.run.score,
+            success: response.run.success,
         });
     }
 
@@ -106,7 +105,7 @@ class ProgramPage extends Component {
         if (! this.state.isLoaded)
             return <LargeLoader/>;
         return <ProgramPageLayout level={this.state.level} program={this.state.program} params={this.state.params} runErrorMessage={this.state.runErrorMessage} output={this.state.output}
-                                  score={this.state.score}
+                                  score={this.state.score} success={this.state.success}
                                   onChangeParam={this.onChangeParam} onRunProgram={this.onRunProgram}/>
     }
 
@@ -121,7 +120,6 @@ function ProgramPageLayout(props) {
     return (
         <Container maxWidth="lg">
             <Title>
-                <Link to={"/levels/" + props.level.id }>←</Link>
                 { props.program.title }
             </Title>
             <Grid container spacing={10}>
@@ -136,6 +134,7 @@ function ProgramPageLayout(props) {
                                 <TableCell>VALUE</TableCell>
                             </TableRow>
                         </TableHead>
+                        <TableBody>
                         {
                             props.params.map((param, index) => (
                                 <TableRow key={index}>
@@ -156,6 +155,7 @@ function ProgramPageLayout(props) {
                                 </TableRow>
                             ))
                         }
+                        </TableBody>
                     </Table>
                 </Grid>
                 <Grid item xs={12} md={6}>
@@ -166,10 +166,16 @@ function ProgramPageLayout(props) {
                         </Typography>
                     }
                     {
-                        props.score !== null &&
+                        props.success === false &&
+                            <Typography color="error" variant="h4">
+                                Your drone did not reach the finish :-(
+                            </Typography>
+                    }
+                    {
+                        props.success === true &&
                             <React.Fragment>
                                 <Typography color="textPrimary" variant="h4">
-                                    Your program has done { props.score} moves!
+                                    Your program did { props.score} moves!
                                 </Typography>
                                 <Typography color="textSecondary" variant="body1" paragraph>
                                     Return back to <Link to={"/levels/" + props.level.id}>other programs</Link>.

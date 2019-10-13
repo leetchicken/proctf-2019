@@ -9,7 +9,6 @@ import Grid from '@material-ui/core/Grid';
 import LockOutlinedIcon from '@material-ui/icons/LockOutlined';
 import Typography from '@material-ui/core/Typography';
 import { makeStyles } from '@material-ui/core/styles';
-import {authenticate} from "../api/users";
 import {Link as RouterLink} from "react-router-dom";
 
 const useStyles = makeStyles(theme => ({
@@ -45,7 +44,7 @@ let nameInput;
 let loginInput;
 let passwordInput;
 
-export default function RegisterPage() {
+export default function RegistrationPage(props) {
     const classes = useStyles();
 
     return (
@@ -84,7 +83,6 @@ export default function RegisterPage() {
                             label="Login"
                             name="login"
                             autoComplete="login"
-                            autoFocus
                             InputProps={{
                                 inputRef: node => loginInput = node
                             }}
@@ -108,13 +106,14 @@ export default function RegisterPage() {
                             variant="contained"
                             color="primary"
                             className={classes.submit}
+                            onClick={() => props.onRegistrationButtonClick(nameInput.value, loginInput.value, passwordInput.value)}
                         >
                             Register
                         </Button>
                         <Grid container>
                             <Grid item>
                                 <Link variant="body2" component={({ className, children }) => (
-                                    <RouterLink className={className} to="/users/login">
+                                    <RouterLink className={className} to="/login">
                                         {children}
                                     </RouterLink>)}>
                                     {"Already have an account? Login"}

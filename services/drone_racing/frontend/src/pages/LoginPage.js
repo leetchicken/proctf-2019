@@ -99,7 +99,7 @@ export default function LoginPage(props) {
                         <Grid container>
                             <Grid item>
                                 <Link variant="body2" component={({ className, children }) => (
-                                    <RouterLink className={className} to="/users/register">
+                                    <RouterLink className={className} to="/registration">
                                         {children}
                                     </RouterLink>)}>
                                     {"Don't have an account? Register"}
