@@ -9,7 +9,6 @@ import ListItem from "@material-ui/core/ListItem";
 import {Link} from "react-router-dom";
 import AddIcon from "@material-ui/icons/Add"
 import Avatar from "@material-ui/core/Avatar";
-import Paper from "@material-ui/core/Paper";
 import Container from "@material-ui/core/Container";
 import Title from "../components/Title";
 
@@ -40,12 +39,6 @@ class LevelsPage extends Component {
         return (
             <LevelsPageLayout levels={this.state.levels} />
         )
-    }
-
-    static mapStateToProps(state) {
-        return {
-
-        }
     }
 
     static mapDispatchToProps(dispatch) {
@@ -80,4 +73,4 @@ function LevelsPageLayout(props) {
     );
 }
 
-export default connect(LevelsPage.mapStateToProps, LevelsPage.mapDispatchToProps)(LevelsPage)
+export default connect(null, LevelsPage.mapDispatchToProps)(LevelsPage)

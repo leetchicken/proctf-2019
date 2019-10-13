@@ -14,7 +14,7 @@ import {Typography} from "@material-ui/core";
 
 function CreateProgramPageWrapper(props) {
     let params = useParams();
-    let ComponentWithConnect = connect(CreateProgramPage.mapStateToProps, CreateProgramPage.mapDispatchToProps)(CreateProgramPage);
+    let ComponentWithConnect = connect(null, CreateProgramPage.mapDispatchToProps)(CreateProgramPage);
     let ComponentWithRouter = withRouter(({ history }) => (<ComponentWithConnect params={params} history={history} {...props}/>));
     return <ComponentWithRouter/>
 }

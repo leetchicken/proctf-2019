@@ -4,25 +4,26 @@ import ae.hitb.proctf.drone_racing.api.*
 import ae.hitb.proctf.drone_racing.dao.*
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
-import freemarker.cache.ClassTemplateLoader
-import io.ktor.application.*
+import io.ktor.application.Application
+import io.ktor.application.ApplicationCallPipeline
+import io.ktor.application.call
+import io.ktor.application.install
 import io.ktor.content.TextContent
 import io.ktor.features.*
-import io.ktor.freemarker.*
 import io.ktor.gson.gson
-import io.ktor.html.respondHtml
 import io.ktor.http.*
-import io.ktor.http.content.*
-import io.ktor.request.*
-import io.ktor.response.*
+import io.ktor.http.content.CachingOptions
+import io.ktor.request.path
+import io.ktor.request.receive
+import io.ktor.request.uri
+import io.ktor.response.respond
 import io.ktor.routing.*
 import io.ktor.sessions.*
 import io.ktor.util.KtorExperimentalAPI
 import io.ktor.util.date.GMTDate
-import kotlinx.css.*
-import kotlinx.html.*
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
-import java.nio.file.*
+import java.nio.file.Files
+import java.nio.file.Paths
 import java.text.DateFormat
 import kotlin.collections.*
 import kotlin.random.Random
@@ -36,10 +37,6 @@ val gson: Gson = GsonBuilder().setPrettyPrinting().setDateFormat(DateFormat.LONG
 @Suppress("unused") // Referenced in application.conf
 @kotlin.jvm.JvmOverloads
 fun Application.module(testing: Boolean = false) {
-    install(FreeMarker) {
-        templateLoader = ClassTemplateLoader(this::class.java.classLoader, "templates")
-    }
-
     install(Sessions) {
         val sessionKey = readOrGenerateSessionKey()
         cookie<Session>("session") {
@@ -96,52 +93,14 @@ fun Application.module(testing: Boolean = false) {
         }
     }
 
+    install(SinglePageApplication) {
+        defaultPage = "index.html"
+        folderPath = "wwwroot"
+    }
+
     DatabaseFactory().init()
 
     routing {
-        get("/") {
-            call.respondText("HELLO WORLD!", contentType = ContentType.Text.Plain)
-        }
-
-        get("/html-dsl") {
-            call.respondHtml {
-                body {
-                    h1 { +"HTML" }
-                    ul {
-                        for (n in 1..10) {
-                            li { +"$n" }
-                        }
-                    }
-                }
-            }
-        }
-
-        get("/styles.css") {
-            call.respondCss {
-                body {
-                    backgroundColor = Color.red
-                }
-                p {
-                    fontSize = 2.em
-                }
-                rule("p.myclass") {
-                    color = Color.blue
-                }
-            }
-        }
-
-        get("/html-freemarker") {
-            call.respond(FreeMarkerContent("index.ftl", mapOf("data" to IndexData(listOf(1, 2, 3))), ""))
-        }
-
-        static("/static") {
-            resources("static")
-        }
-
-        get("/json/gson") {
-            call.respond(mapOf("hello" to "world"))
-        }
-
         route("/api") {
             val userService = UserService(BCryptPasswordEncoder())
 
@@ -434,26 +393,11 @@ fun Application.module(testing: Boolean = false) {
                 }
             }
         }
+
     }
 }
-
-data class IndexData(val items: List<Int>)
 
 data class Session(val userId: Int = -1)
-
-fun FlowOrMetaDataContent.styleCss(builder: CSSBuilder.() -> Unit) {
-    style(type = ContentType.Text.CSS.toString()) {
-        +CSSBuilder().apply(builder).toString()
-    }
-}
-
-fun CommonAttributeGroupFacade.style(builder: CSSBuilder.() -> Unit) {
-    this.style = CSSBuilder().apply(builder).toString().trim()
-}
-
-suspend inline fun ApplicationCall.respondCss(builder: CSSBuilder.() -> Unit) {
-    this.respondText(CSSBuilder().apply(builder).toString(), ContentType.Text.CSS)
-}
 
 fun readOrGenerateSessionKey() : ByteArray {
     val path = Paths.get("session.key")

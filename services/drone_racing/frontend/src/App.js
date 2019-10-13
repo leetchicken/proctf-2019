@@ -83,9 +83,9 @@ class App extends Component {
 
         return (
                 <React.Fragment>
-                    {this.props.is_authenticated && <Header user={this.props.user} onLogoutButtonClick={this.onLogoutButtonClick}/>}
-                    {!this.props.is_authenticated && this.renderLayoutForNonAuthenticated()}
-                    {this.props.is_authenticated && this.renderLayoutForAuthenticated()}
+                    {this.props.isAuthenticated && <Header user={this.props.user} onLogoutButtonClick={this.onLogoutButtonClick}/>}
+                    {!this.props.isAuthenticated && this.renderLayoutForNonAuthenticated()}
+                    {this.props.isAuthenticated && this.renderLayoutForAuthenticated()}
                     <Snackbar
                             anchorOrigin={{
                                 vertical: 'bottom',
@@ -156,7 +156,7 @@ class App extends Component {
 
     static mapStateToProps(state) {
         return {
-            is_authenticated: state.is_authenticated,
+            isAuthenticated: state.isAuthenticated,
             user: state.user,
             message: state.message,
         }

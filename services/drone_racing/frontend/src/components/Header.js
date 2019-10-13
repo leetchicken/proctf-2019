@@ -50,7 +50,7 @@ export default function Header(props) {
             <AppBar position="static">
                 <Toolbar>
                     <Typography variant="h6" className={classes.title}>
-                        <a href="/" className={classes.titleLink}>Drone racing</a>
+                        <Link to="/" className={classes.titleLink}>Drone racing</Link>
                     </Typography>
                     <div style={{"position": "relative"}}>
                         <div className={classes.usernameContainer}>

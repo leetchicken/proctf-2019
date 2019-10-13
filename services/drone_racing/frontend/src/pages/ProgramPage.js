@@ -196,4 +196,4 @@ function ProgramPageLayout(props) {
     );
 }
 
-export default connect(ProgramPage.mapStateToProps, ProgramPage.mapDispatchToProps)(ProgramPageWrapper)
+export default connect(null, ProgramPage.mapDispatchToProps)(ProgramPageWrapper)

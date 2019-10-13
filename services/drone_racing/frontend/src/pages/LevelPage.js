@@ -153,4 +153,4 @@ function LevelPageLayout(props) {
     );
 }
 
-export default connect(LevelPage.mapStateToProps, LevelPage.mapDispatchToProps)(LevelPageWrapper)
+export default connect(null, LevelPage.mapDispatchToProps)(LevelPageWrapper)

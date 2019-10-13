@@ -38,7 +38,6 @@ dependencies {
     implementation "io.ktor:ktor-server-core:$ktor_version"
     implementation "io.ktor:ktor-html-builder:$ktor_version"
     implementation "org.jetbrains:kotlin-css-jvm:1.0.0-pre.31-kotlin-1.2.41"
-    implementation "io.ktor:ktor-freemarker:$ktor_version"
     implementation "io.ktor:ktor-server-host-common:$ktor_version"
     implementation "io.ktor:ktor-server-sessions:$ktor_version"
     implementation "io.ktor:ktor-gson:$ktor_version"
@@ -49,8 +48,8 @@ dependencies {
     implementation "org.springframework.security:spring-security-core:5.1.6.RELEASE"
     implementation "com.github.h0tk3y.betterParse:better-parse-jvm:0.4.0-alpha-3"
     implementation "org.ow2.asm:asm:7.1"
-
     implementation "com.github.rnett:exposedgson:$exposedgson_version"
+
     testImplementation "io.ktor:ktor-server-tests:$ktor_version"
 }
 

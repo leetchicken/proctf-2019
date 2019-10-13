@@ -1,7 +1,7 @@
 import {LOGIN, LOGOUT, SHOW_MESSAGE} from "./actions"
 
 export const initialState = {
-    is_authenticated: false,
+    isAuthenticated: false,
     user: {},
     message: ""
 };
@@ -11,13 +11,13 @@ export function reduce(state = initialState, action) {
         case LOGIN:
             return {
                 ...state,
-                is_authenticated: true,
+                isAuthenticated: true,
                 user: action.user,
             };
         case LOGOUT:
             return {
                 ...state,
-                is_authenticated: false,
+                isAuthenticated: false,
                 user: {},
             };
         case SHOW_MESSAGE:

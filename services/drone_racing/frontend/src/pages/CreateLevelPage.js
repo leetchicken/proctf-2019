@@ -10,7 +10,7 @@ import {SHOW_MESSAGE} from "../redux/actions";
 import {withRouter} from "react-router-dom";
 
 function CreateLevelPageWrapper(props) {
-    let ComponentWithConnect = connect(CreateLevelPage.mapStateToProps, CreateLevelPage.mapDispatchToProps)(CreateLevelPage);
+    let ComponentWithConnect = connect(null, CreateLevelPage.mapDispatchToProps)(CreateLevelPage);
     let ComponentWithRouter = withRouter(({ history }) => (<ComponentWithConnect history={history} {...props}/>));
     return <ComponentWithRouter/>
 }
@@ -19,6 +19,10 @@ class CreateLevelPage extends Component {
     constructor(props) {
         super(props);
         this.onCreateLevelButtonClick = this.onCreateLevelButtonClick.bind(this);
+    }
+
+    shouldComponentUpdate(nextProps, nextState, nextContext) {
+        return false;
     }
 
     async onCreateLevelButtonClick(title, map) {
@@ -33,12 +37,6 @@ class CreateLevelPage extends Component {
 
     render() {
         return <CreateLevelPageLayout onCreateLevelButtonClick={this.onCreateLevelButtonClick}/>
-    }
-
-    static mapStateToProps(state) {
-        return {
-
-        }
     }
 
     static mapDispatchToProps(dispatch) {
