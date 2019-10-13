@@ -7,14 +7,15 @@ import TextField from "@material-ui/core/TextField";
 import Button from "@material-ui/core/Button";
 import {getLevel} from "../api/levels";
 import {SHOW_MESSAGE} from "../redux/actions";
-import {Link, useParams, withRouter} from "react-router-dom"
+import {useParams, withRouter} from "react-router-dom"
 import LargeLoader from "../components/LargeLoader";
 import {createProgram} from "../api/programs";
 import {Typography} from "@material-ui/core";
 
 function CreateProgramPageWrapper(props) {
     let params = useParams();
-    let ComponentWithRouter = withRouter(({ history }) => (<CreateProgramPage params={params} history={history} {...props}/>));
+    let ComponentWithConnect = connect(CreateProgramPage.mapStateToProps, CreateProgramPage.mapDispatchToProps)(CreateProgramPage);
+    let ComponentWithRouter = withRouter(({ history }) => (<ComponentWithConnect params={params} history={history} {...props}/>));
     return <ComponentWithRouter/>
 }
 
@@ -59,12 +60,6 @@ class CreateProgramPage extends Component {
         if (!this.state.isLoaded)
             return <LargeLoader/>;
         return <CreateProgramPageLayout level={this.state.level} compilationError={this.state.compilationError} onCreateProgramButtonClick={this.onCreateProgramButtonClick}/>
-    }
-
-    static mapStateToProps(state) {
-        return {
-
-        }
     }
 
     static mapDispatchToProps(dispatch) {
@@ -132,4 +127,4 @@ function CreateProgramPageLayout(props) {
     )
 }
 
-export default connect(CreateProgramPage.mapStateToProps, CreateProgramPage.mapDispatchToProps)(CreateProgramPageWrapper)
+export default CreateProgramPageWrapper;

@@ -42,36 +42,36 @@ open class StaticSharedMazeWalker {
 class MazeWalker(private val maze: Maze, var x: Int = 0, var y: Int = 0, var movesCount: Int = 0, var output: String = "") {
     fun goUp() {
         if (x == 0)
-            throw BadMove("Can't go left!")
+            throw BadMove("Can't go up!")
         if (maze.map[x - 1][y])
-            throw BadMove("Can't go left: it's wall there!")
+            throw BadMove("Can't go up: it's wall there!")
         x -= 1
         movesCount += 1
     }
 
     fun goDown() {
         if (x == maze.size - 1)
-            throw BadMove("Can't go right!")
+            throw BadMove("Can't go down!")
         if (maze.map[x + 1][y])
-            throw BadMove("Can't go right: it's wall there!")
+            throw BadMove("Can't go down: it's wall there!")
         x += 1
         movesCount += 1
     }
 
     fun goLeft() {
         if (y == 0)
-            throw BadMove("Can't go down!")
+            throw BadMove("Can't go left!")
         if (maze.map[x][y - 1])
-            throw BadMove("Can't go down: it's wall there!")
+            throw BadMove("Can't go left: it's wall there!")
         y -= 1
         movesCount += 1
     }
 
     fun goRight() {
         if (y == maze.size - 1)
-            throw BadMove("Can't go up!")
+            throw BadMove("Can't go right!")
         if (maze.map[x][y + 1])
-            throw BadMove("Can't go up: it's wall there!")
+            throw BadMove("Can't go right: it's wall there!")
         y += 1
         movesCount += 1
     }
