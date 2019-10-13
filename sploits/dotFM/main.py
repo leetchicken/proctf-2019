@@ -1,9 +1,8 @@
 import os.path
 import shutil
-import sys
-from PIL import Image
 import eyed3
 import eyed3.plugins
+from PIL import Image
 from PIL.PngImagePlugin import PngInfo
 
 

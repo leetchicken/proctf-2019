@@ -1,7 +1,6 @@
 ﻿using System;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Uploader.Handlers;
 using Uploader.Storages;
@@ -25,7 +24,7 @@ namespace Uploader
 
             IHandler playlistUnpacker = new PlaylistUnpacker(unpacker, storage);
             IHandler playlistGetter = new GetPlaylistHandler(storage);
-            IHandler playlistsConnector = new PlaylistsConnector(storage);
+
             IHandler otherRequestsHandler = new OtherRequestsHandler();
 
             var router = new Router(tuple =>
@@ -33,7 +32,6 @@ namespace Uploader
                 {
                     ("POST", "/playlist") => playlistUnpacker,
                     ("GET", "/playlist") => playlistGetter,
-                    ("CONNECT", "/playlist") => playlistsConnector,
                     _ => otherRequestsHandler
                 });
             
