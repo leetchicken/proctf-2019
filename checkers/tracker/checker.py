@@ -263,6 +263,9 @@ def put(ip, id, flag, *args):
 
 @handle_exceptions
 def get(ip, id, flag, *args):
+    login = id
+    password = create_password(login)
+
     client = Client(ip)
 
     logging.info("Log in user %r with password %r ...", login, password)
