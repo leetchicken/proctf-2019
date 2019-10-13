@@ -5,7 +5,6 @@ import java.util.concurrent.ConcurrentMap
 
 open class StaticSharedMazeWalker {
     companion object {
-        // TODO: удалять старые
         private val states: ConcurrentMap<Thread, MazeWalker> = ConcurrentHashMap<Thread, MazeWalker>()
 
         @JvmStatic
