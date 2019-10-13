@@ -47,6 +47,13 @@ let passwordInput;
 export default function RegistrationPage(props) {
     const classes = useStyles();
 
+    function onKeyPress(event) {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            props.onRegistrationButtonClick(nameInput.value, loginInput.value, passwordInput.value);
+        }
+    }
+
     return (
         <Grid container component="main" className={classes.root}>
             <CssBaseline />
@@ -70,6 +77,7 @@ export default function RegistrationPage(props) {
                             name="name"
                             autoComplete="name"
                             autoFocus
+                            onKeyPress={onKeyPress}
                             InputProps={{
                                 inputRef: node => nameInput = node
                             }}
@@ -83,6 +91,7 @@ export default function RegistrationPage(props) {
                             label="Login"
                             name="login"
                             autoComplete="login"
+                            onKeyPress={onKeyPress}
                             InputProps={{
                                 inputRef: node => loginInput = node
                             }}
@@ -97,6 +106,7 @@ export default function RegistrationPage(props) {
                             type="password"
                             id="password"
                             autoComplete="current-password"
+                            onKeyPress={onKeyPress}
                             InputProps={{
                                 inputRef: node => passwordInput = node
                             }}

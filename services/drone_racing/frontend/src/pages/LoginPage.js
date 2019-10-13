@@ -46,6 +46,13 @@ let passwordInput;
 export default function LoginPage(props) {
     const classes = useStyles();
 
+    function onKeyPress(event) {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            props.onLoginButtonClick(loginInput.value, passwordInput.value);
+        }
+    }
+
     return (
         <Grid container component="main" className={classes.root}>
             <CssBaseline />
@@ -58,7 +65,7 @@ export default function LoginPage(props) {
                     <Typography component="h1" variant="h5">
                         Login to drone race
                     </Typography>
-                    <form className={classes.form} noValidate>
+                    <form className={classes.form}>
                         <TextField
                             variant="outlined"
                             margin="normal"
@@ -69,6 +76,7 @@ export default function LoginPage(props) {
                             name="login"
                             autoComplete="login"
                             autoFocus
+                            onKeyPress={onKeyPress}
                             InputProps={{
                                 inputRef: node => loginInput = node
                             }}
@@ -83,6 +91,7 @@ export default function LoginPage(props) {
                             type="password"
                             id="password"
                             autoComplete="current-password"
+                            onKeyPress={onKeyPress}
                             InputProps={{
                                 inputRef: node => passwordInput = node
                             }}

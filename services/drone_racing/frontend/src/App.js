@@ -18,7 +18,6 @@ import CreateProgramPage from "./pages/CreateProgramPage";
 import ProgramPage from "./pages/ProgramPage";
 
 function AppWrapper(props) {
-    console.log('AppWrapper()');
     let AppWithConnect = connect(App.mapStateToProps, App.mapDispatchToProps)(App);
     let AppWithRouter = withRouter(({ history }) => (<AppWithConnect history={history} {...props}/>));
     return <AppWithRouter/>
@@ -27,7 +26,6 @@ function AppWrapper(props) {
 class App extends Component {
     constructor(props) {
         super(props);
-        console.log('App.constructor()');
         this.state = {
             isLoaded: false,
         };
@@ -38,7 +36,6 @@ class App extends Component {
     }
 
     async componentDidMount() {
-        console.log('App.componentDidMount()');
         let response = await isAuthenticated();
         if (response.success) {
             this.props.setUser(response.user);

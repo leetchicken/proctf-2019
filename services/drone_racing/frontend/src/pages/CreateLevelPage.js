@@ -7,6 +7,13 @@ import TextField from "@material-ui/core/TextField";
 import Button from "@material-ui/core/Button";
 import {createLevel} from "../api/levels";
 import {SHOW_MESSAGE} from "../redux/actions";
+import {withRouter} from "react-router-dom";
+
+function CreateLevelPageWrapper(props) {
+    let ComponentWithConnect = connect(CreateLevelPage.mapStateToProps, CreateLevelPage.mapDispatchToProps)(CreateLevelPage);
+    let ComponentWithRouter = withRouter(({ history }) => (<ComponentWithConnect history={history} {...props}/>));
+    return <ComponentWithRouter/>
+}
 
 class CreateLevelPage extends Component {
     constructor(props) {
@@ -21,6 +28,7 @@ class CreateLevelPage extends Component {
             return;
         }
         let levelId = response.level.id;
+        this.props.history.push("/levels/" + levelId);
     }
 
     render() {
@@ -89,4 +97,4 @@ function CreateLevelPageLayout(props) {
     )
 }
 
-export default connect(CreateLevelPage.mapStateToProps, CreateLevelPage.mapDispatchToProps)(CreateLevelPage)
+export default CreateLevelPageWrapper;

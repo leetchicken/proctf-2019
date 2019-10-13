@@ -53,7 +53,7 @@ class CreateProgramPage extends Component {
             return;
         }
         let programId = response.programId;
-        this.props.history.push("/levels/" + levelId);
+        this.props.history.push("/levels/" + levelId + "/programs/" + programId);
     }
 
     render() {
