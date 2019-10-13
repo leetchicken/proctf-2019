@@ -43,7 +43,7 @@ namespace Uploader.Models
                     throw new ArgumentException("Could not find track info");
                 }
                 
-                playlist.Tracks[trackName[1].Trim(' ')] =  link;
+                playlist.Tracks[trackName[1].Trim(' ')] = link;
             }
 
             return playlist;

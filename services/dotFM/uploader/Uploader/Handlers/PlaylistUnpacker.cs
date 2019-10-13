@@ -25,8 +25,8 @@ namespace Uploader.Handlers
             
             if (unpacker.TryUnpack(out var unpacked, bodyStream))
             {
-                storage.Store(unpacked);
-                await context.SendOK("Success!");
+                var result = storage.Store(unpacked);
+                await context.SendOK($"{{\"created\": \"{result}\"}}");
             }
             else
             {

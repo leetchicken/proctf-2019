@@ -9,7 +9,6 @@ namespace Uploader.Storages
 {
     public class Storage: IStorage
     {
-        private ConcurrentDictionary<string, string> MusicCache;
         private readonly string workingPath;
 
         public Storage(string workingPath)
@@ -34,28 +33,30 @@ namespace Uploader.Storages
                 fs.Write(value.GetContent());
             }
         }
+
+        private Guid CreatePlaylistFile(Playlist playlist)
+        {
+            var playlistId = Guid.NewGuid();
+            using var streamWriter = File.CreateText(Path.Combine(Constants.PlaylistsPath, playlistId + ".m3u"));
+            streamWriter.Write(playlist.ToString().AsSpan());
+            return playlistId;
+        }
         
         private Stream CreateFileStream(string path) => 
-            new FileStream(Path.Join(workingPath, path), FileMode.CreateNew);
+            new FileStream(Path.Join(workingPath, path), FileMode.Create);
 
-        private Playlist CreateUniquePlaylist()
-        {
-            return null;
-        }
-
-        public void Store(Playlist playlist)
+        public Guid Store(Playlist playlist)
         {
             CreateDirsIfNotExists();
             
-            var playlistId = Guid.NewGuid();
-            
             CreateImages(playlist);
             CreateTracks(playlist);
-            //todo create playlist file 
+            return CreatePlaylistFile(playlist);
         }
 
         private static void CreateDirsIfNotExists()
         {
+            Utils.CreateDirectoryIfNotExists(Constants.RootPath);
             Utils.CreateDirectoryIfNotExists(Constants.PlaylistsPath);
             Utils.CreateDirectoryIfNotExists(Constants.MusicPath);
             Utils.CreateDirectoryIfNotExists(Constants.ImagesPaths);

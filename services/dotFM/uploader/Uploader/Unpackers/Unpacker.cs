@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using Uploader.Extensions;
 using Uploader.Models;
@@ -17,9 +18,12 @@ namespace Uploader.Unpackers
         public Playlist Unpack(Stream compressedFile)
         {
             var archive = new ZipArchive(compressedFile);
-            var archiveDescriptionFile = archive.Entries.First(x => x.FullName == PlaylistDescriptionFile);
-
-            if (archiveDescriptionFile == null)
+            ZipArchiveEntry archiveDescriptionFile;
+            try
+            {
+                 archiveDescriptionFile = archive.Entries.First(x => x.FullName == PlaylistDescriptionFile);
+            }
+            catch (InvalidOperationException e)
             {
                 return null;
             }
@@ -58,8 +62,15 @@ namespace Uploader.Unpackers
                         var trackBytes = new byte[entry.Length];
                         using var fs = entry.Open();
                         fs.Read(trackBytes);
-                        playlist.AudioFiles[entry.FullName.CleanupFromBadPathSymbols()] 
-                            = new AudioFile(trackBytes);
+                        var newTrackName = string.Concat(
+                            new SHA1Managed()
+                                .ComputeHash(trackBytes)
+                                .Select(x => x.ToString("x2"))
+                            ) + ".mp3";
+                        playlist.AudioFiles[newTrackName] = new AudioFile(trackBytes);
+                        foreach (var (key, value) in playlist.Tracks.ToList())
+                            if (value == entry.FullName)
+                                playlist.Tracks[key] = newTrackName;
                     }
                 }
             }
