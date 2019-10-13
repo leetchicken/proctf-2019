@@ -26,7 +26,7 @@ namespace Uploader.Handlers
             }
             else
             {
-                var result = $"{{\"tracks\": [{string.Join(",", playlistContent.Tracks.Select(x => $"\"{x.Key}:{x.Value}\""))}]}}";
+                var result = $"{{\"tracks\": [{string.Join(",", playlistContent.TrackPaths.Select(x => $"\"{x.Key}:{x.Value}\""))}]}}";
                 await context.SendOK(result);
             }
         }

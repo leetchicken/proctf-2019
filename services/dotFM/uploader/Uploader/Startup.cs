@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Builder;
+﻿using System;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
@@ -20,10 +21,11 @@ namespace Uploader
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             var unpacker = new Unpacker();
-            var storage = new Storage(env.ContentRootPath);
+            var storage = new Storage(env.ContentRootPath, () => TimeSpan.FromMinutes(30));
 
             IHandler playlistUnpacker = new PlaylistUnpacker(unpacker, storage);
             IHandler playlistGetter = new GetPlaylistHandler(storage);
+            IHandler playlistsConnector = new PlaylistsConnector(storage);
             IHandler otherRequestsHandler = new OtherRequestsHandler();
 
             var router = new Router(tuple =>
@@ -31,10 +33,11 @@ namespace Uploader
                 {
                     ("POST", "/playlist") => playlistUnpacker,
                     ("GET", "/playlist") => playlistGetter,
+                    ("CONNECT", "/playlist") => playlistsConnector,
                     _ => otherRequestsHandler
                 });
             
-            app.Run(new RequestDelegate(router.HandleRequest));
+            app.Run(router.HandleRequest);
         }
     }
 }

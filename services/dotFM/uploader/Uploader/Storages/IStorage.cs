@@ -7,5 +7,6 @@ namespace Uploader.Storages
     {
         Guid Store(Playlist playlist);
         Playlist Get(Guid guid);
+        bool Link(Guid source, Guid target);
     }
 }

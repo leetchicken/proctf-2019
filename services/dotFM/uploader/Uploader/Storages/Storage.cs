@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using Uploader.Extensions;
 using Uploader.Models;
 
@@ -11,15 +12,26 @@ namespace Uploader.Storages
     public class Storage : IStorage
     {
         private readonly string workingPath;
+        private readonly Func<TimeSpan> expirationTime;
 
-        public Storage(string workingPath)
+        public Storage(string workingPath, Func<TimeSpan> expirationTime)
         {
             this.workingPath = workingPath;
+            this.expirationTime = expirationTime;
+            
+            var cleanupTask = new TaskFactory().StartNew(async () =>
+            {
+                while (true)
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(30));
+                    Cleanup();
+                }
+            });
         }
 
         private void CreateImages(Playlist playlist)
         {
-            foreach (var (_, value) in playlist.AudioFiles)
+            foreach (var (_, value) in playlist.TrackFiles)
             {
                 using var fs = CreateFileStream(Path.Combine(Constants.ImagesPaths, value.GetFileIdentity() + ".png"));
                 fs.Write(value.GetImage());
@@ -28,7 +40,7 @@ namespace Uploader.Storages
 
         private void CreateTracks(Playlist playlist)
         {
-            foreach (var (key, value) in playlist.AudioFiles)
+            foreach (var (key, value) in playlist.TrackFiles)
             {
                 using var fs = CreateFileStream(Path.Combine(Constants.MusicPath, key));
                 fs.Write(value.GetContent());
@@ -82,6 +94,20 @@ namespace Uploader.Storages
             var fileBytes = new byte[fs.Length];
             fs.Read(new Span<byte>(fileBytes));
             return Playlist.FromM3U(Encoding.UTF8.GetString(fileBytes));
+        }
+
+        public bool Link(Guid source, Guid target)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Cleanup()
+        {
+            var filesForCleanup = Directory
+                .GetFiles(Constants.RootPath, "*.mp3", SearchOption.AllDirectories)
+                .Where(x => File.GetCreationTime(x) + expirationTime() < DateTime.Now).ToList();
+
+            foreach (var file in filesForCleanup) File.Delete(file);
         }
     }
 }

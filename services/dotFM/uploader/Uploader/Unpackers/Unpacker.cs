@@ -55,7 +55,7 @@ namespace Uploader.Unpackers
 
             foreach (var entry in archive.Entries)
             {
-                if (playlist.Tracks.ContainsValue(entry.FullName))
+                if (playlist.TrackPaths.ContainsValue(entry.FullName))
                 {
                     if (entry.Length < EntryMaxLimit)
                     {
@@ -67,10 +67,10 @@ namespace Uploader.Unpackers
                                 .ComputeHash(trackBytes)
                                 .Select(x => x.ToString("x2"))
                             ) + ".mp3";
-                        playlist.AudioFiles[newTrackName] = new AudioFile(trackBytes);
-                        foreach (var (key, value) in playlist.Tracks.ToList())
+                        playlist.TrackFiles[newTrackName] = new AudioFile(trackBytes);
+                        foreach (var (key, value) in playlist.TrackPaths.ToList())
                             if (value == entry.FullName)
-                                playlist.Tracks[key] = newTrackName;
+                                playlist.TrackPaths[key] = newTrackName;
                     }
                 }
             }
