@@ -1,11 +1,22 @@
 version: '2'
 services:
-
-  drone_racing:
+  database:
+    image: oscarfonts/h2
+    hostname: 'database'
+    volumes:
+      - h2-data:/opt/h2-data
+    ports:
+      - "1521:1521"
+  web:
     build: "backend"
     ports:
-      - "0.0.0.0:8080:8080"
+      - "0.0.0.0:80:80"
+    environment:
+      - PORT=80
+      - CONNETION_STRING=jdbc:h2:tcp://localhost/~/drone_racing
 #    volumes:
 #      - ./data/database.h2.mv.db:/home/drone_racing/database.h2.mv.db
 #      - ./data/database.h2.trace.db:/home/drone_racing/database.h2.trace.db
 #      - ./data/session.key:/home/drone_racing/session.key
+volumes:
+  h2-data:

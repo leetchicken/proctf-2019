@@ -10,31 +10,14 @@ import program_generator
 
 
 class DroneRacingChecker(checklib.http.HttpChecker):
-    port = 8080
+    port = 80
 
     def info(self):
         print('vulns: 1')
         self.exit(checklib.StatusCode.OK)
 
     def check(self, address):
-        name = checklib.random.from_collection("firstname") + " " + checklib.random.from_collection("lastname")
-        login = checklib.random.string(string.ascii_lowercase, 10)
-        password = checklib.random.string(string.ascii_lowercase, 10)
-        self._register_user(name, login, password)
-        self._login(login, password)
-
-        level_title = checklib.random.string(string.ascii_lowercase + " ", 20, True)
-        map = checklib.random.from_collection("map")
-        level_id = self._upload_level(level_title, map)
-
-        program_title = checklib.random.string(string.ascii_lowercase, 30, True)
-        source_code, params = self._generate_program_for_map(map)
-        program_id = self._upload_program(program_title, source_code, level_id)
-
-        run, output = self._run_program(program_id, params)
-        logging.info("Program finished at %d milliseconds" % (run["finishTime"] - run["startTime"]))
-
-        self.mumble_if_false(run["success"], "Program should successfully pass the maze")
+        self._check_main_page()
 
     def put(self, address, flag_id, flag, vuln):
         name = checklib.random.from_collection("firstname") + " " + checklib.random.from_collection("lastname")
@@ -87,6 +70,10 @@ class DroneRacingChecker(checklib.http.HttpChecker):
     @staticmethod
     def _generate_program_for_map(map, flag=None):
         return program_generator.generate_program(program_generator.generate_moves_sequence(map), flag)
+
+    def _check_main_page(self):
+        response = self.try_http_get(self.main_url)
+        self.check_page_content(response, ['Drone racing'])
 
     def _register_user(self, name, login, password):
         logging.info('Try to register user "%s" with login "%s" and password "%s"' % (name, login, password))
@@ -180,7 +167,7 @@ class DroneRacingChecker(checklib.http.HttpChecker):
             self.exit(checklib.StatusCode.MUMBLE, "Invalid json in response")
             return
 
-        logging.debug('Parsing JSON response: %s' % json)
+        logging.debug('Parsing JSON response: %s' % pprint.pformat(json))
         self.mumble_if_false(
             json['status'] == 'ok',
             'Bad response from %s: status = %s' % (r.url, json['status'])

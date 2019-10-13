@@ -255,11 +255,11 @@ def generate_params():
 
 
 def generate_id():
-    return checklib.random.string(ID_CHARS, random.randint(3, 10))
+    return checklib.random.english_word() + "_" + checklib.random.english_word() + "_" + checklib.random.english_word()
 
 
 def generate_random_string_literal():
-    return checklib.random.string(string.ascii_letters + " ", random.randint(3, 40))
+    return checklib.random.english_word() + " " + checklib.random.english_word()
 
 
 if __name__ == "__main__":

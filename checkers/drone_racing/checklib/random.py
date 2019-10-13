@@ -54,3 +54,7 @@ def lastname():
 
 def useragent():
     return from_collection('useragent')
+
+
+def english_word():
+    return from_collection('english_word')
