@@ -53,7 +53,7 @@ namespace notepool.controllers
 		}
 
 		private const int MaxTitleLength = 128;
-		private const int MaxTextLength = 1024;
+		private const int MaxTextLength = 512;
 
 		private const int MaxQueryLength = 128;
 		private const int LastMinutesToSearch = 30;

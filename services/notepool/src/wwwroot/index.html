@@ -140,7 +140,7 @@
                 message:
 `<p><form class="form-addnote">
     <input type="text" name="title" class="form-control" placeholder="Title" maxlength="128" required/>
-    <textarea type="text" name="text" class="form-control mt-2" placeholder="Note text" maxlength="1024" required></textarea>
+    <textarea type="text" name="text" class="form-control mt-2" placeholder="Note text" maxlength="512" required></textarea>
     <div class="custom-control custom-checkbox text-right mt-2">
       <input type="checkbox" class="custom-control-input" id="isPrivate" name="isPrivate">
       <label class="custom-control-label" for="isPrivate">Is private note</label>
@@ -150,7 +150,6 @@
     <div class="alert alert-success mt-4 hidden" role="alert">OK</div>
 </form></p>`,
                 onEscape: true,
-                backdrop: true,
                 buttons: {
                     add: {
                         label: "add",
@@ -188,7 +187,6 @@
     <div class="alert alert-success mt-4 hidden" role="alert">OK</div>
 </form></p>`,
                 onEscape: true,
-                backdrop: true,
                 buttons: {
                     add: {
                         label: "Sign in",
@@ -227,7 +225,6 @@
     <div class="alert alert-success mt-4 hidden" role="alert">OK</div>
 </form></p>`,
                 onEscape: true,
-                backdrop: true,
                 buttons: {
                     add: {
                         label: "Sign up",
