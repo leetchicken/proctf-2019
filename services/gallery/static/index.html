@@ -7,6 +7,7 @@
         body {
             background: url('wall.jpg');
             text-align: center;
+            overflow: overlay;
         }
         #gallery {
             display: flex;
@@ -35,21 +36,46 @@
             image-rendering: pixelated;
             box-shadow: 0 0 5px black;
         }
+        #upload-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(233, 233, 233, 0.9);
+            display: none;
+        }
+        @supports ((-webkit-backdrop-filter: blur(2em)) or (backdrop-filter: blur(2em))) {
+            #upload-overlay {
+                background-color: rgba(255, 255, 255, .5);
+                -webkit-backdrop-filter: blur(1em);
+                backdrop-filter: blur(1em);
+            }
+        }
         #upload {
-            width: 300px;
+            width: 190px;
             height: 200px;
             top: 50%;
             left: 50%;
-            background: #fff;
-            margin-left: -150px;
+            margin-left: -95px;
             margin-top: -100px;
-            position: absolute;
+            position: fixed;
             z-index: 100;
-            border: 1px dashed gray;
-            border-radius: 20px;
-            display: none;
             line-height: 200px;
             text-align: center;
+        }
+        #upload .img {
+            white-space: pre;
+            line-height: 1;
+        }
+        #upload .img div {
+            display: table-cell;
+            width: 128px;
+            height: 128px;
+            box-shadow: 0 0 5px black;
+            white-space: pre;
+            vertical-align: middle;
+            font-size: 12px;
         }
     </style>
 </head>
@@ -59,14 +85,12 @@
 <div id="gallery"></div>
 <h2 id="paging"><a id="prev" href>&lt;&nbsp;prev</a>&emsp;<span id="page"></span>&emsp;<a id="next" href>next&nbsp;&gt;</a></h2>
 
-
 <template id="imgtemplate">
     <div class="img"><img/></div>
 </template>
 
-<div id="upload">
-    Drop replica here to get your reward
-</div>
+<div id="upload-overlay"><div id="upload"><div class="img"><div>Drop replica here
+to get your reward</div></div></div></div>
 
 <script>
     let $ = (selector) => { return document.querySelector(selector); }
@@ -77,7 +101,7 @@
 
     let clear = () => {
         do {
-            var img = $(".img");
+            var img = $("#gallery .img");
             if (!!img) img.remove();
         } while (!!img);
     };
@@ -110,7 +134,17 @@
         sendFile(e.dataTransfer.files[0]);
     }
 
-    $("body").onclick = () => dropbox.style = "display:none";
+    let showOverlay = () => {
+        overlay.style = "display:block";
+        $("body").style = "overflow:hidden";
+    }
+    let hideOverlay = () => {
+        overlay.style = "display:none";
+        $("body").style = "overflow:overlay";
+    }
+
+    let overlay = $("#upload-overlay");
+    $("body").onclick = () => hideOverlay();
     function sendFile(file) {
         var uri = "/replica?id=" + window.rid;
         fetch(uri, {
@@ -118,9 +152,8 @@
             body: file
         }).then(response => response.text().then(text => {
             error(text);
-            dropbox.style = "display:none";
-        }
-        ));
+            hideOverlay();
+        }));
     }
 
     let render = () => {
@@ -145,10 +178,10 @@
                         var clone = document.importNode(t.content, true);
                         gallery.appendChild(clone);
                     }
-                    gallery.querySelectorAll("img").forEach(i => {
+                    gallery.querySelectorAll("#gallery img").forEach(i => {
                         i.onclick = e => {
                             window.rid = i.title;
-                            dropbox.style = "display:block";
+                            showOverlay();
                             e.stopImmediatePropagation();
                             e.preventDefault();
                         }
