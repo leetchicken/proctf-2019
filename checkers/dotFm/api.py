@@ -1,5 +1,5 @@
 import aiohttp
-from networking.masking_connector import MaskingConnector
+from networking.masking_connector import get_agent
 from aiohttp.client import ClientTimeout
 
 PORT = 1012
@@ -8,7 +8,7 @@ PORT = 1012
 class Api:
     def __init__(self, hostname: str):
         self.hostname = hostname
-        self.session = aiohttp.ClientSession(connector=MaskingConnector(), timeout=ClientTimeout(total=10))
+        self.session = aiohttp.ClientSession(timeout=ClientTimeout(total=10), headers={"User-Agent": get_agent()})
 
     async def upload_playlist(self, path) -> dict:
         with open(path, mode="rb") as archive_descriptor:
