@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 from api import Api
 from chklib import Checker, Verdict, \
     CheckRequest, PutRequest, GetRequest, utils
