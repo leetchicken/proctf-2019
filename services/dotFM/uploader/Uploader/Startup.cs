@@ -20,7 +20,7 @@ namespace Uploader
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             var unpacker = new Unpacker();
-            var storage = new Storage(env.ContentRootPath, () => TimeSpan.FromMinutes(30));
+            var storage = new Storage("/app/", () => TimeSpan.FromMinutes(30));
 
             IHandler playlistUnpacker = new PlaylistUnpacker(unpacker, storage);
             IHandler playlistGetter = new GetPlaylistHandler(storage);

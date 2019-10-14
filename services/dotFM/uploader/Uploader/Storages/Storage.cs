@@ -94,7 +94,7 @@ namespace Uploader.Storages
             var fileBytes = new byte[fs.Length];
             fs.Read(new Span<byte>(fileBytes));
             var ps = Playlist.FromM3U(Encoding.UTF8.GetString(fileBytes));
-            return ps.TrackPaths.Select(x => Path.Join(workingPath, Constants.PlaylistsPath, x.Value)).ToList();
+            return ps.TrackPaths.Select(x => Path.Join(workingPath, Constants.MusicPath, x.Value)).ToList();
         }
 
         private void Cleanup()
