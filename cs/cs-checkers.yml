@@ -2,6 +2,7 @@
   tasks:
   - name: sync catalog
     synchronize: src="../checkers" dest="{{cs_dir}}"
+    tags: sync
 
   - name: checkers owner
     file:
@@ -9,6 +10,7 @@
       owner: "{{cs_user}}"
       group: "{{cs_user}}"
       recurse: yes
+    tags: sync
 
   - name: dccp module (for tracker)
     copy:
@@ -67,6 +69,7 @@
     apt:
       name:
         - python3-pip
+        - python3-setuptools
         - libgdiplus
         - libssl-dev
         - swig
@@ -94,7 +97,7 @@
   - name: build binder
     command: ./build.sh
     args:
-      chdir: "{{cs_dir}}/checkers/Binder"
+      chdir: "{{cs_dir}}/checkers/Binder/checker_remote"
     become: yes
     become_user: "{{cs_user}}"
     tags: binder

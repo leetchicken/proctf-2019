@@ -61,7 +61,7 @@ teams: |
 
 services: |
   {name => 'fraud_detector', path => 'checkers/fraud_detector/checker.py', timeout => 30, host_suffix => '1'},
-  {name => 'binder',         path => 'checkers/Binder/check.sh',           timeout => 30, host_suffix => '2'},
+  {name => 'binder',         path => 'checkers/Binder/checker_remote/check.sh', timeout => 30, host_suffix => '2'},
   {name => 'SePtoN',         path => 'checkers/SePtoN/checker.sh',         timeout => 30, host_suffix => '3'},
   {name => 'rubik',          path => 'checkers/rubik/checker.sh',          timeout => 30, host_suffix => '4'},
   {name => 'deer',           path => 'checkers/deer/deer.checker.py',      timeout => 30, host_suffix => '5'},
