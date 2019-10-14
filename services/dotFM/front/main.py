@@ -47,6 +47,12 @@ async def create_channel(request: Request):
     return json(result)
 
 
+@app.get("/image")
+async def get_music_image(request: Request):
+    args = dict(request.query_args)
+    artist, album = args.get("artist", None), args.get("album", None)
+
+
 # noinspection PyUnresolvedReferences
 @app.get("/channel")
 async def get_channel(request: Request):
@@ -64,7 +70,7 @@ async def get_channel(request: Request):
     files = [x for x in glob.glob("/app/storage/music/**")
              if x.endswith(result["tracks"][track_number % len(result["tracks"])])]
     if len(files) == 0:
-        return text("Tracks has been deleted!", 404)
+        return text("Track has been deleted!", 404)
 
     return await file_stream(files[0])
 
