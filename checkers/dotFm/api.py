@@ -1,13 +1,14 @@
 import aiohttp
-from masking_connector import MaskingConnector
+from networking.masking_connector import get_agent
+from aiohttp.client import ClientTimeout
 
-PORT = 8081
+PORT = 1012
 
 
 class Api:
     def __init__(self, hostname: str):
         self.hostname = hostname
-        self.session = aiohttp.ClientSession(connector=MaskingConnector(), timeout=5)
+        self.session = aiohttp.ClientSession(timeout=ClientTimeout(total=10), headers={"User-Agent": get_agent()})
 
     async def upload_playlist(self, path) -> dict:
         with open(path, mode="rb") as archive_descriptor:
@@ -18,3 +19,9 @@ class Api:
     async def download_music(self, playlist_id, track_number) -> bytes:
         async with self.session.get(f"http://{self.hostname}:{PORT}/channel?id={playlist_id}&num={track_number}") as resp:
             return await resp.content.read()
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        await self.session.close()

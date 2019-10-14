@@ -2,17 +2,15 @@ from pydub import AudioSegment
 from random import randint, choice, sample
 import glob
 import os.path
-import datetime
 
-start = datetime.datetime.now()
-
-SEGMENTS_PATH = "/Users/ximik/Desktop/music/musicradar-eighties-samples"
-paths = glob.glob(f"{SEGMENTS_PATH}/**/*.wav", recursive=True)
+SEGMENTS_PATH = None
 drums_factor = "Beats"
 
 
 def __get_samples_paths(bpm=None):
-    track_bpm = bpm if bpm is not None else randint(1, 6)
+    paths = glob.glob(f"{SEGMENTS_PATH}/**/*.wav", recursive=True)
+    max_bpm = max({int(x.split("Kit0")[1][0]) for x in paths})
+    track_bpm = bpm if bpm is not None else randint(1, max_bpm)
     samples = {}
     for category, track in [x.split("/")[-2:] for x in paths if f"Kit0{track_bpm}" in x]:
         samples.setdefault(category, []).append([x for x in paths if x.endswith(track)][0])
