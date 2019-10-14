@@ -19,7 +19,7 @@ namespace notepool.controllers
 				return await UserManager.FindAsync(login);
 		}
 
-		protected readonly AsyncLockPool AsyncLockPool = new AsyncLockPool();
+		protected static readonly AsyncLockPool AsyncLockPool = new AsyncLockPool();
 		protected readonly UserManager UserManager;
 	}
 }
