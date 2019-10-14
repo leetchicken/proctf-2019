@@ -55,8 +55,6 @@ def create_playlist_file(flag="") -> PlayList:
                 data = tr.read()
                 music_hashes.append(hashlib.sha1(data).hexdigest())
 
-        shutil.rmtree(str(playlist_dir))
-
         playlist = PlayList(
             image_hashes,
             music_hashes,
@@ -67,4 +65,5 @@ def create_playlist_file(flag="") -> PlayList:
     except Exception as e:
         print(f"{e}, {traceback.format_exc()}", file=sys.stderr)
     finally:
+        shutil.rmtree(str(playlist_dir))
         os.remove(str(playlist_dir) + ".zip")

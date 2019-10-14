@@ -3,11 +3,15 @@ from chklib import Checker, Verdict, \
     CheckRequest, PutRequest, GetRequest, utils
 
 from playlist_lib.playlist_creator import create_playlist_file
+from playlist_lib import track_creator
 from unacking_tools import unpack
 import eyed3
 import sys
 import hashlib
 import traceback
+import os.path
+
+track_creator.SEGMENTS_PATH = os.path.abspath(os.curdir) + "/music_files/"
 
 checker = Checker()
 
@@ -86,6 +90,8 @@ async def get_flag_from_the_service(request: GetRequest) -> Verdict:
             flag = get_comment_from_music(music)
             if flag is None:
                 return Verdict.CORRUPT("Couldn't extract flag from track!", "last stage worked bad")
+            if flag != request.flag:
+                return Verdict.CORRUPT("Bad flag found!", f"bad flags, hmm: {flag}")
 
     return Verdict.OK()
 
