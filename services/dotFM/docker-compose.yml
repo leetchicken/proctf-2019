@@ -11,8 +11,6 @@ services:
 
   uploader:
     build: ./uploader
-    ports:
-      - "8080:80"
     volumes:
       - ./data:/app/storage
     restart: unless-stopped
