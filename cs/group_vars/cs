@@ -38,8 +38,26 @@ cs_checkers_hostname_cb: |
   sub { my ($team, $service) = @_; $service->{host_suffix} ? "$team->{host_prefix}$service->{host_suffix}" : "$team->{host}" }
 
 teams: |
-  {name => 't1', network => '10.60.10.0/24', host => '10.60.10.1', host_prefix => '10.60.10.', token => '124978e9-b2f8-487b-8f75-9472e516f7ea'},
-  {name => 't2', network => '10.60.11.0/24', host => '10.60.11.1', host_prefix => '10.60.11.'},
+  {name => 't1', network => '10.60.1.0/24', host => '10.60.1.1', host_prefix => '10.60.1.'},
+  {name => 't2', network => '10.60.2.0/24', host => '10.60.2.1', host_prefix => '10.60.2.'},
+  {name => 't3', network => '10.60.3.0/24', host => '10.60.3.1', host_prefix => '10.60.3.'},
+  {name => 't4', network => '10.60.4.0/24', host => '10.60.4.1', host_prefix => '10.60.4.'},
+  {name => 't5', network => '10.60.5.0/24', host => '10.60.5.1', host_prefix => '10.60.5.'},
+  {name => 't6', network => '10.60.6.0/24', host => '10.60.6.1', host_prefix => '10.60.6.'},
+  {name => 't7', network => '10.60.7.0/24', host => '10.60.7.1', host_prefix => '10.60.7.'},
+  {name => 't8', network => '10.60.8.0/24', host => '10.60.8.1', host_prefix => '10.60.8.'},
+  {name => 't9', network => '10.60.9.0/24', host => '10.60.9.1', host_prefix => '10.60.9.'},
+  {name => 't10', network => '10.60.10.0/24', host => '10.60.10.1', host_prefix => '10.60.10.'},
+  {name => 't11', network => '10.60.11.0/24', host => '10.60.11.1', host_prefix => '10.60.11.'},
+  {name => 't12', network => '10.60.12.0/24', host => '10.60.12.1', host_prefix => '10.60.12.'},
+  {name => 't13', network => '10.60.13.0/24', host => '10.60.13.1', host_prefix => '10.60.13.'},
+  {name => 't14', network => '10.60.14.0/24', host => '10.60.14.1', host_prefix => '10.60.14.'},
+  {name => 't15', network => '10.60.15.0/24', host => '10.60.15.1', host_prefix => '10.60.15.'},
+  {name => 't16', network => '10.60.16.0/24', host => '10.60.16.1', host_prefix => '10.60.16.'},
+  {name => 't17', network => '10.60.17.0/24', host => '10.60.17.1', host_prefix => '10.60.17.'},
+  {name => 't18', network => '10.60.18.0/24', host => '10.60.18.1', host_prefix => '10.60.18.'},
+  {name => 't19', network => '10.60.19.0/24', host => '10.60.19.1', host_prefix => '10.60.19.'},
+  {name => 't20', network => '10.60.20.0/24', host => '10.60.20.1', host_prefix => '10.60.20.'},
 
 services: |
   {name => 'fraud_detector', path => 'checkers/fraud_detector/checker.py', timeout => 30, host_suffix => '1'},
