@@ -1,15 +1,11 @@
-FROM python:3.7-alpine
+FROM python:3.7-slim-stretch
 
 COPY . /app
 WORKDIR /app
-
-RUN apk --update add python py-pip openssl ca-certificates py-openssl wget
-RUN apk --update add --virtual build-dependencies libffi-dev openssl-dev python-dev py-pip build-base \
-  && pip install --upgrade pip \
-  && pip install -r requirements.txt \
-  && apk del build-dependencies
-
-COPY . /app
+RUN apt-get update
+RUN apt-get -y install gcc
+COPY requirements.txt /tmp
+RUN pip install -r /tmp/requirements.txt
 
 
 CMD ["python", "main.py"]

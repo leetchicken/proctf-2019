@@ -1,9 +1,8 @@
 import os.path
 import shutil
-import sys
-from PIL import Image
 import eyed3
 import eyed3.plugins
+from PIL import Image
 from PIL.PngImagePlugin import PngInfo
 
 
@@ -54,5 +53,5 @@ def create_playlist_file(path_for_playlist):
 
 
 create_playlist_file(
-    sys.argv[1],
+    "/storage/playlists/3d364811-dda5-4e0f-b3da-32f222dda726.m3u",
 )
