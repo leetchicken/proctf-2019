@@ -5,6 +5,7 @@ import os
 import sys
 import random
 import string
+import traceback
 
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes, padding, hmac
@@ -44,8 +45,15 @@ def aes_decryption(input, key, iv):
     unpadder = padding.PKCS7(128).unpadder()
     decryptor = Cipher(algorithms.AES(key), modes.CBC(iv), backend=default_backend()).decryptor()
 
-    data = decryptor.update(input) + decryptor.finalize()
-    data = unpadder.update(data) + unpadder.finalize()
+    try:
+        data = decryptor.update(input) + decryptor.finalize()
+    except Exception as e:
+        raise DepositClientError("Corrupt data: AES decryption error " + traceback.format_exc())
+
+    try:
+        data = unpadder.update(data) + unpadder.finalize()
+    except Exception as e:
+        raise DepositClientError("Corrupt data: AES padding error " + traceback.format_exc())
 
     return data
 
@@ -74,6 +82,10 @@ protobuf_messages = {
     16: "AuthResponse",
     17: "AuthResult"
 }
+
+
+class DepositClientError(Exception):
+    pass
 
 
 class DepositClient(object):
@@ -131,31 +143,53 @@ class DepositClient(object):
         result += serialized_data
         return result
 
-    def deserialize_message(self, packet):
-        msg_id, seq_id, flags, data_len = struct.unpack("<IIBI", packet[:13])
+    def deserialize_message(self, packet, assert_message=None):
+        try:
+            msg_id, seq_id, flags, data_len = struct.unpack("<IIBI", packet[:13])
+        except struct.error:
+            raise DepositClientError("Corrupt packet: not enough data to parse")
+
         curr = 13
 
         if flags & 1:
             iv = packet[curr:curr + 16]
+            if len(iv) != 16:
+                raise DepositClientError("Corrupt packet: not enough data to parse")
             curr += 16
             data_len = data_len - (data_len & 0xF) + 16
 
         proto_data = packet[curr:curr+data_len]
 
-        assert len(proto_data) == data_len
+        if len(proto_data) != data_len:
+            raise DepositClientError("Corrupt packet: data_len mismatch")
 
         if flags & 1:
             proto_data = aes_decryption(proto_data, self.session_key, iv)
 
         protobuf_message = getattr(geocacher_pb2, protobuf_messages[msg_id])()
-        protobuf_message.ParseFromString(proto_data)
+        if assert_message and not isinstance(protobuf_message, assert_message):
+            raise DepositClientError("Packet type mismatch: wanted %s, got %s" % (assert_message, type(protobuf_message)))
+
+        try:
+            protobuf_message.ParseFromString(proto_data)
+        except Exception as e:
+            raise DepositClientError("Corrupt packet: unable to parse protobuf: " + traceback.format_exc())
+
+        if protobuf_message.message_type != msg_id:
+            raise DepositClientError("Packet type mismatch: declared %d, factual %d" % (msg_id, protobuf_message.message_type))
+
         return protobuf_message
 
     def wrap_packet(self, packet):
         return base64.b64encode(self.serialize_message(packet))
 
-    def unwrap_packet(self, data):
-        return self.deserialize_message(base64.b64decode(data))
+    def unwrap_packet(self, data, assert_message=None):
+        try:
+            data = base64.b64decode(data)
+        except binascii.Error:
+            raise DepositClientError("Corrupt packet: unable to decode base64")
+
+        return self.deserialize_message(data, assert_message)
 
     def handshake(self):
         self.client_A = os.urandom(16)
@@ -169,7 +203,7 @@ class DepositClient(object):
         return self.wrap_packet(req)
 
     def handshake_response(self, data):
-        message = self.unwrap_packet(data)
+        message = self.parse_response(data, geocacher_pb2.AuthResponse)
         authkey = message.auth_key
         ciphertext = authkey[:-16]
         iv = authkey[-16:]
@@ -178,8 +212,8 @@ class DepositClient(object):
             req.message_type = 17
             req.status = geocacher_pb2.OK
             result = self.wrap_packet(req)
-            self.hmac1 = hmacsha256(b"1" * 32, self.client_A)
-            self.session_key = hmacsha256(b"2" * 32, self.client_A)
+            self.hmac1 = hmacsha256(b"1" * 32, self.client_A + iv)
+            self.session_key = hmacsha256(b"2" * 32, self.client_A + iv)
             self.sequence_id = 0
 
         else:
@@ -206,17 +240,16 @@ class DepositClient(object):
 
         return self.wrap_packet(req)
 
-    def discard_secret(self):
+    def discard_secret(self, location, key):
         req = geocacher_pb2.DiscardSecretRequest()
         req.message_type = 6
-        req.coordinates.lat = 1234
-        req.coordinates.lon = 5678
-        req.key = b"\x00\x01\x02\x03\x04\x05\x06\x07"
+        req.coordinates.lat, req.coordinates.lon = location
+        req.key = key
 
         return self.wrap_packet(req)
 
-    def parse_response(self, data):
-        return self.unwrap_packet(data)
+    def parse_response(self, data, assert_message=None):
+        return self.unwrap_packet(data, assert_message)
 
     def handle_response(self, data):
         print(self.parse_response(data))
@@ -227,7 +260,7 @@ class DepositClient(object):
         return self.wrap_packet(req)
 
     def handle_admin_challenge(self, data):
-        data = self.unwrap_packet(data)
+        data = self.parse_response(data, geocacher_pb2.AdminChallenge)
         full_challenge = self.session_key[:ADMIN_SESSION_SIZE] + data.data
         response = int((full_challenge + os.urandom(127 - len(full_challenge))).hex(), 16)
         signature = pow(response, self.admin_d, self.admin_n)

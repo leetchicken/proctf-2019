@@ -3,24 +3,15 @@ services:
   front_proxy:
     build: ./front
     ports:
-     - "8000:8000"
-    links:
-      - mongodb
+     - "1012:8000"
+    volumes:
+      - ./data:/app/storage
+    restart: unless-stopped
 
   uploader:
-    build: ./uploader
-    ports:
-      - "5000:80"
-
-  mongodb:
-    image: "mongo:latest"
-    container_name: "mongodb"
-    environment:
-      - MONGO_DATA_DIR=/data/db
-      - MONGO_LOG_DIR=/dev/null
-    restart: always
-    ports:
-      - "27017:1020"
+    build:
+      context: .
+      dockerfile: Dockerfile
     volumes:
-      - ./data/db:/data/db
-    command: mongod --smallfiles --logpath=/dev/null # --quiet
+      - ./data:/app/storage
+    restart: unless-stopped

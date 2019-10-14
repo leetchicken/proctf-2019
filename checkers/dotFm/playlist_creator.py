@@ -14,13 +14,12 @@ PLAYLIST_INFO_HEADER = "#EXTINF"
 
 def create_playlist_file(flag="", playlist_name=None):
     amount_of_tracks = 2
-    flags = [flag[:16], flag[16:]]
     tags = []
     for i in range(amount_of_tracks):
         tags.append({
             "album": f"0x{uuid4().hex[:8]}",
             "artist": f"CPU_0x{uuid4().hex[:8]}",
-            "comment": f"{flags[i] if flag else '(c)' + str(random.randint(1900, 2019))}",
+            "comment": f"{flag if flag else '(c)' + str(random.randint(1900, 2019))}",
             "title": f"0x_0x{uuid4().hex[:8]}"
         })
 

@@ -192,7 +192,7 @@ Status delete_flag(DiscardSecretRequest *msg)
     sqlite3_stmt *pStmt;
     int rc;
 
-    char *sql = "DELETE data FROM secrets where lat = ? and lon = ? and key = ?";
+    char *sql = "DELETE FROM secrets where lat = ? and lon = ? and key = ?";
     rc = sqlite3_prepare(db, sql, -1, &pStmt, 0);
 
     if (rc != SQLITE_OK) {
@@ -302,6 +302,7 @@ Status list_flags(ListAllBusyCellsResponse *msg)
 
     if (rc != SQLITE_OK) {
         LOG("Cannot prepare statement: %s\n", sqlite3_errmsg(db));
+        msg->n_cells = 0;
         return STATUS__FAIL;
     }
 
@@ -321,10 +322,12 @@ Status list_flags(ListAllBusyCellsResponse *msg)
             msg->cells[i]->coordinates->lat = sqlite3_column_int(pStmt, 1);
             msg->cells[i]->coordinates->lon = sqlite3_column_int(pStmt, 2);
         } else if (rc == SQLITE_DONE) {
+            msg->n_cells = i;
             break;
         } else {
             LOG("execution failed: %s", sqlite3_errmsg(db));
             sqlite3_finalize(pStmt);
+            msg->n_cells = i;
             return STATUS__FAIL;
         }
     }
