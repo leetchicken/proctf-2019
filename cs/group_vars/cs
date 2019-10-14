@@ -28,7 +28,7 @@ cs_base_url: http://10.10.10.10/
 cs_admin_auth: root:naom7aiTi9ta
 cs_ctf_name: PRO CTF 2019
 cs_flags_secret: geis3aiHee9d
-cs_round_length: 60
+cs_round_length: 30
 cs_flag_life_time: 15
 cs_time: "['2019-10-14 01:00:00', '2019-10-15 06:00:00'], ['2019-10-15 07:00:00', '2019-10-15 17:00:00'], ['2019-10-16 07:00:00', '2019-10-16 17:00:00'], ['2019-10-17 07:00:00', '2019-10-17 17:00:00']"
 
@@ -82,4 +82,4 @@ services: |
   {name => 'dotFm',          path => 'checkers/dotFm/checker.py',         timeout => 30, host_suffix => '20', active => ['2019-11-01 00:00:00', '2019-11-10 00:00:00']},
 
 queues: |
-  {'*' => {ca => 'checker1', gallery => 'checker2', deer => 'checker1'}}
+  {'*' => {ca => 'checker2', gallery => 'checker1', deer => 'checker1'}}
