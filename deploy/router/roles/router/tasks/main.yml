@@ -1,14 +1,39 @@
+- hostname:
+    name: router
+
+- name: install packages
+  apt: 
+    update_cache: yes
+    name:
+      - ifupdown
+      - isc-dhcp-server
+
+- name: remove packages
+  apt:
+    name:
+      - netplan.io
+    state: absent
+
+- name: copy interfaces
+  copy: src=interfaces dest=/etc/network/interfaces
+
+- name: copy dhcpd config
+  copy: src=dhcpd.conf dest=/etc/dhcp/dhcpd.conf
+  notify: enable and restart dhcpd
+
 - name: install packages
   apt: name={{item}} state=latest
   with_items:
     - fping
     - python3-requests
+    - conntrack
 
 - name: create users
   user: name={{item}} shell=/bin/false
   with_items:
     - networkclosed
     - antidos
+    - connectmon
 
 - name: create cloud user
   user: name=cloud shell=/bin/bash
@@ -21,6 +46,10 @@
     - snat
     - trafdump
     - cloud
+    
+# create connectmon symlink
+#- name: create connectmon symlink
+#  file: path=/home/connectmon state=link
 
 - name: copy sudo_cloud
   copy: src=cloud/sudo_cloud dest=/etc/sudoers.d/ mode=0640
@@ -43,6 +72,19 @@
     group: networkclosed
     mode: 0755
   notify: enable and restart networkclosed
+
+- name: copy connectmon systemd service
+  copy: src=connectmon/connectmon.service dest=/etc/systemd/system/connectmon.service
+  notify: enable and restart connectmon
+
+- name: copy connectmon service
+  copy: 
+    src: connectmon/connectmon.py
+    dest: /home/connectmon/connectmon.py
+    owner: connectmon
+    group: connectmon
+    mode: 0755
+  notify: enable and restart connectmon
 
 - name: copy open-close network scripts
   copy: src=networkclosed/{{item}} dest=/root/openclosenetwork/{{item}} mode=0755

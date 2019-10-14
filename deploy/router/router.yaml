@@ -1,0 +1,10 @@
+- hosts: router
+  pre_tasks:
+   - name: 'Apt update'
+     raw: apt update
+     changed_when: False
+   - name: 'Install python2'
+     raw: apt -y install python-simplejson
+     changed_when: False
+  roles:
+   - router
