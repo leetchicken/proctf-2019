@@ -1,0 +1,10 @@
+version: '3'
+services:
+  dotfm_build:
+    image: proctf/dotfm-build
+    container_name: dotfm-build
+    build:
+      context: .
+      dockerfile: dockerfile-build
+    volumes:
+      - ./out:/app/out
