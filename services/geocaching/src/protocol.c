@@ -38,7 +38,7 @@ typedef struct __attribute__((__packed__))
 
 typedef struct
 {
-    unsigned char aes_key[16];
+    unsigned char master_secret[32];
     unsigned int sequence_id;
     unsigned char hmac1[32];
     unsigned char session_key[32];
@@ -449,7 +449,8 @@ void handle_packet(Packet *packet, void *mmsg)
         memcpy(real_response, response, response_size);
         memcpy(real_response + response_size, iv, 16);
 
-        memcpy(state.aes_key, decrypted, 16);
+        memcpy(state.master_secret, decrypted, 16);
+        memcpy(state.master_secret + 16, iv, 16);
 
         send_auth_response(real_response, response_size + 16);
         free(real_response);
@@ -464,9 +465,9 @@ void handle_packet(Packet *packet, void *mmsg)
         }
         unsigned int key1_size = 0;
         unsigned int key2_size = 0;
-        compute_hmac(state.aes_key, 16, "11111111111111111111111111111111", 32,
+        compute_hmac(state.master_secret, 32, "11111111111111111111111111111111", 32,
                      state.hmac1, &key1_size);
-        compute_hmac(state.aes_key, 16, "22222222222222222222222222222222", 32,
+        compute_hmac(state.master_secret, 32, "22222222222222222222222222222222", 32,
                      state.session_key, &key2_size);
         state.sequence_id = 1;
     }

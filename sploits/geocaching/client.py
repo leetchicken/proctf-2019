@@ -212,8 +212,8 @@ class DepositClient(object):
             req.message_type = 17
             req.status = geocacher_pb2.OK
             result = self.wrap_packet(req)
-            self.hmac1 = hmacsha256(b"1" * 32, self.client_A)
-            self.session_key = hmacsha256(b"2" * 32, self.client_A)
+            self.hmac1 = hmacsha256(b"1" * 32, self.client_A + iv)
+            self.session_key = hmacsha256(b"2" * 32, self.client_A + iv)
             self.sequence_id = 0
 
         else:
