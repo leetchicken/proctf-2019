@@ -1,3 +1,0 @@
-Image states: NOT_STARTED -> RUNNING
-
-Network states: OPEN <-> ISOLATED
