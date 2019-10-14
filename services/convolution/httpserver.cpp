@@ -125,6 +125,7 @@ int HttpServer::HandleRequest(void* param,
 	}
 
 	SendResponse(connection, HttpResponse(MHD_HTTP_NOT_IMPLEMENTED));
+	return MHD_YES;
 }
 
 void HttpServer::PostProcessRequest(void* param,
@@ -260,7 +261,7 @@ HttpRequest::HttpRequest()
 	this->url = NULL;
 	this->method = NULL;
 	this->connection = NULL;
-};
+}
 
 HttpRequest::HttpRequest(const char* url,
                          const char* method,
@@ -277,7 +278,7 @@ HttpRequest::HttpRequest(const char* url,
 	sockaddr* addr = MHD_get_connection_info(connection, MHD_CONNECTION_INFO_CLIENT_ADDRESS)->client_addr;
 	sockaddr_in* addr4 = (sockaddr_in*)addr;
 	clientIp = addr4->sin_addr;
-};
+}
 
 HttpResponse::HttpResponse() : HttpResponse(0, NULL, 0, Headers())
 {

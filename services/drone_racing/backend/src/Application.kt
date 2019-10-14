@@ -4,30 +4,30 @@ import ae.hitb.proctf.drone_racing.api.*
 import ae.hitb.proctf.drone_racing.dao.*
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
-import freemarker.cache.ClassTemplateLoader
-import io.ktor.application.*
+import io.ktor.application.Application
+import io.ktor.application.ApplicationCallPipeline
+import io.ktor.application.call
+import io.ktor.application.install
 import io.ktor.content.TextContent
 import io.ktor.features.*
-import io.ktor.freemarker.*
-import io.ktor.gson.GsonConverter
 import io.ktor.gson.gson
-import io.ktor.html.respondHtml
 import io.ktor.http.*
-import io.ktor.http.content.*
-import io.ktor.request.*
-import io.ktor.response.*
+import io.ktor.http.content.CachingOptions
+import io.ktor.http.content.resolveResource
+import io.ktor.request.path
+import io.ktor.request.receive
+import io.ktor.request.uri
+import io.ktor.response.respond
+import io.ktor.response.respondFile
+import io.ktor.response.respondText
 import io.ktor.routing.*
 import io.ktor.sessions.*
-import io.ktor.util.ConversionService
 import io.ktor.util.KtorExperimentalAPI
 import io.ktor.util.date.GMTDate
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import kotlinx.css.*
-import kotlinx.html.*
-import org.jetbrains.exposed.sql.transactions.transaction
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
-import java.nio.file.*
+import java.io.File
+import java.nio.file.Files
+import java.nio.file.Paths
 import java.text.DateFormat
 import kotlin.collections.*
 import kotlin.random.Random
@@ -41,10 +41,6 @@ val gson: Gson = GsonBuilder().setPrettyPrinting().setDateFormat(DateFormat.LONG
 @Suppress("unused") // Referenced in application.conf
 @kotlin.jvm.JvmOverloads
 fun Application.module(testing: Boolean = false) {
-    install(FreeMarker) {
-        templateLoader = ClassTemplateLoader(this::class.java.classLoader, "templates")
-    }
-
     install(Sessions) {
         val sessionKey = readOrGenerateSessionKey()
         cookie<Session>("session") {
@@ -74,17 +70,6 @@ fun Application.module(testing: Boolean = false) {
 
     install(ConditionalHeaders)
 
-    install(CORS) {
-        method(HttpMethod.Options)
-        method(HttpMethod.Put)
-        method(HttpMethod.Delete)
-        method(HttpMethod.Patch)
-        header(HttpHeaders.Authorization)
-        header("MyCustomHeader")
-        allowCredentials = true
-        anyHost() // @TODO: Don't do this in production if possible. Try to limit it.
-    }
-
     install(CachingHeaders) {
         options { outgoingContent ->
             when (outgoingContent.contentType?.withoutParameters()) {
@@ -101,68 +86,25 @@ fun Application.module(testing: Boolean = false) {
         }
     }
 
+    install(SinglePageApplication) {
+        defaultPage = "index.html"
+        folderPath = "wwwroot"
+    }
+
     DatabaseFactory().init()
 
     routing {
-        get("/") {
-            call.respondText("HELLO WORLD!", contentType = ContentType.Text.Plain)
-        }
-
-        get("/html-dsl") {
-            call.respondHtml {
-                body {
-                    h1 { +"HTML" }
-                    ul {
-                        for (n in 1..10) {
-                            li { +"$n" }
-                        }
-                    }
-                }
-            }
-        }
-
-        get("/styles.css") {
-            call.respondCss {
-                body {
-                    backgroundColor = Color.red
-                }
-                p {
-                    fontSize = 2.em
-                }
-                rule("p.myclass") {
-                    color = Color.blue
-                }
-            }
-        }
-
-        get("/html-freemarker") {
-            call.respond(FreeMarkerContent("index.ftl", mapOf("data" to IndexData(listOf(1, 2, 3))), ""))
-        }
-
-        static("/static") {
-            resources("static")
-        }
-
-        get("/json/gson") {
-            call.respond(mapOf("hello" to "world"))
-        }
-
         route("/api") {
             val userService = UserService(BCryptPasswordEncoder())
 
             route("/users") {
-                // TODO: удалить
-                get("") {
-                    call.respond(OkResponse(UsersListResponse(userService.getUsers())))
-                }
-
                 post("") {
                     val request: CreateUserRequest
                     try {
                         request = call.receive()
-                        checkNotNull(request.name) { "Please specify the name"}
-                        checkNotNull(request.login) { "Please specify the login" }
-                        checkNotNull(request.password) { "Please specify the password" }
+                        checkNotNull(request.name) { "please specify the name"}
+                        checkNotNull(request.login) { "please specify the login" }
+                        checkNotNull(request.password) { "please specify the password" }
                     } catch (e: Throwable) {
                         e.printStackTrace()
                         call.respond(HttpStatusCode.BadRequest, ErrorResponse("Invalid request: ${e.message}"))
@@ -170,6 +112,7 @@ fun Application.module(testing: Boolean = false) {
                     }
 
                     try {
+                        check(userService.findUserByLogin(request.login) == null) { "user with same login already exists"}
                         val user = userService.createUser(request.name, request.login, request.password)
                         call.respond(OkResponse(UserResponse(user)))
                     } catch (e: Throwable) {
@@ -183,8 +126,8 @@ fun Application.module(testing: Boolean = false) {
                     val request: LoginRequest
                     try {
                         request = call.receive()
-                        checkNotNull(request.login) { "Please specify the login" }
-                        checkNotNull(request.password) { "Please specify the password" }
+                        checkNotNull(request.login) { "please specify the login" }
+                        checkNotNull(request.password) { "please specify the password" }
                     } catch (e: Throwable) {
                         e.printStackTrace()
                         call.respond(HttpStatusCode.BadRequest, ErrorResponse("Invalid request: ${e.message}"))
@@ -253,12 +196,27 @@ fun Application.module(testing: Boolean = false) {
                     return@get
                 }
 
+                get("{id}") {
+                    val levelId = call.parameters["id"]?.toInt()
+                    if (levelId == null) {
+                        call.respond(HttpStatusCode.BadRequest, ErrorResponse("Invalid level id"))
+                        return@get
+                    }
+                    val level = levelService.findLevelById(levelId)
+                    if (level == null) {
+                        call.respond(HttpStatusCode.NotFound, ErrorResponse("Invalid level id"))
+                        return@get
+                    }
+                    call.respond(OkResponse(LevelResponse(level)))
+                    return@get
+                }
+
                 post {
                     val request: CreateLevelRequest
                     try {
                         request = call.receive()
-                        checkNotNull(request.title) { "Please specify the title" }
-                        checkNotNull(request.map) { "Please specify the map" }
+                        checkNotNull(request.title) { "please specify the title" }
+                        checkNotNull(request.map) { "please specify the map" }
                     } catch (e: Throwable) {
                         e.printStackTrace()
                         call.respond(HttpStatusCode.BadRequest, ErrorResponse("Invalid request: ${e.message}"))
@@ -269,9 +227,9 @@ fun Application.module(testing: Boolean = false) {
                     try {
                         with (request) {
                             val size = getMapSizeFromString(request.map)
-                            check(map.length == size * size) { "Map length should be a square "}
-                            check(size in 1..LEVEL_MAX_SIZE) { "Map's size should be more than 0 and less than $LEVEL_MAX_SIZE"}
-                            check(map.all { it in ".*" }) { "Map should contain only '.' and '*' chars "}
+                            check(map.length == size * size) { "map length should be a square "}
+                            check(size in 1..LEVEL_MAX_SIZE) { "map's size should be more than 0 and less than $LEVEL_MAX_SIZE"}
+                            check(map.all { it in ".*" }) { "map should contain only '.' and '*' chars "}
                             level = levelService.createLevel(authenticatedUser!!, title, map)
                         }
                     } catch (e: Throwable) {
@@ -298,6 +256,7 @@ fun Application.module(testing: Boolean = false) {
                         checkNotNull(request.sourceCode) { "please specify the source code" }
                         level = levelService.findLevelById(request.levelId) ?: throw IllegalStateException("unknown level id")
                         check(request.sourceCode.length in 1..PROGRAM_MAX_SIZE) { "source code size should by more than 0 bytes and not more than $PROGRAM_MAX_SIZE bytes" }
+                        check(request.title.length in 1..PROGRAM_TITLE_MAX_SIZE) { "title should be not empty and not longer than $PROGRAM_TITLE_MAX_SIZE chars" }
                     } catch (e: Throwable) {
                         e.printStackTrace()
                         call.respond(HttpStatusCode.BadRequest, ErrorResponse("Invalid request: ${e.message}"))
@@ -306,7 +265,7 @@ fun Application.module(testing: Boolean = false) {
 
                     try {
                         val program = programService.createProgram(authenticatedUser!!, level, request.title, request.sourceCode)
-                        call.respond(OkResponse(ProgramResponse(program.id.value)))
+                        call.respond(OkResponse(ProgramIdResponse(program.id.value)))
                     } catch (e: Throwable) {
                         e.printStackTrace()
                         call.respond(HttpStatusCode.BadRequest, ErrorResponse("Invalid request: ${e.message}"))
@@ -331,6 +290,29 @@ fun Application.module(testing: Boolean = false) {
                     }
                     call.respond(TextContent(result!!, ContentType.Application.Json))
                 }
+
+                get("{id}") {
+                    val programId = call.parameters["id"]?.toInt()
+                    val program: Program?;
+                    try {
+                        checkNotNull(programId) { "invalid program id" }
+                        program = programService.findProgramById(programId)
+                        checkNotNull(program) { "unknown program id" }
+                        dbQuery {
+                            check(program.author.id == authenticatedUser?.id) { "it's not your program, sorry" }
+                        }
+                    } catch (e: Throwable) {
+                        e.printStackTrace()
+                        call.respond(HttpStatusCode.BadRequest, ErrorResponse("Invalid request: ${e.message}"))
+                        return@get
+                    }
+
+                    var result: String? = null
+                    dbQuery {
+                        result = gson.toJson(OkResponse(ProgramResponse(program)))
+                    }
+                    call.respond(TextContent(result!!, ContentType.Application.Json))
+                }
             }
 
             route("/runs") {
@@ -351,7 +333,7 @@ fun Application.module(testing: Boolean = false) {
 
                     var result: String? = null
                     dbQuery {
-                        val runs = runService.findRunsOnLevel(level)
+                        val runs = runService.findSuccessRunsOnLevel(level)
                         result = gson.toJson(OkResponse(RunsResponse(runs)))
                     }
                     call.respond(TextContent(result!!, ContentType.Application.Json))
@@ -368,7 +350,7 @@ fun Application.module(testing: Boolean = false) {
                         program = programService.findProgramById(request.programId)
                         checkNotNull(program) { "unknown program id" }
                         dbQuery {
-                            check(program.author != authenticatedUser) { "it's not your program, sorry" }
+                            check(program.author.id == authenticatedUser?.id) { "it's not your program, sorry" }
                         }
                         dbQuery {
                             level = program.level
@@ -406,26 +388,14 @@ fun Application.module(testing: Boolean = false) {
                 }
             }
         }
+
+        get("/") {
+            call.respond(call.resolveResource("wwwroot/index.html")!!)
+        }
     }
 }
-
-data class IndexData(val items: List<Int>)
 
 data class Session(val userId: Int = -1)
-
-fun FlowOrMetaDataContent.styleCss(builder: CSSBuilder.() -> Unit) {
-    style(type = ContentType.Text.CSS.toString()) {
-        +CSSBuilder().apply(builder).toString()
-    }
-}
-
-fun CommonAttributeGroupFacade.style(builder: CSSBuilder.() -> Unit) {
-    this.style = CSSBuilder().apply(builder).toString().trim()
-}
-
-suspend inline fun ApplicationCall.respondCss(builder: CSSBuilder.() -> Unit) {
-    this.respondText(CSSBuilder().apply(builder).toString(), ContentType.Text.CSS)
-}
 
 fun readOrGenerateSessionKey() : ByteArray {
     val path = Paths.get("session.key")

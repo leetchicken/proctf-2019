@@ -9,5 +9,6 @@ namespace checker.notepool
 		[JsonPropertyName("title")] public string Title { get; set; }
 		[JsonPropertyName("text")] public string Text { get; set; }
 		[JsonPropertyName("time")] public DateTime Time { get; set; }
+		[JsonIgnore] public bool IsPrivate { get; set; }
 	}
 }

@@ -94,7 +94,7 @@ def build_log_message(log_line):
     return json.dumps(data)
 
 def info():
-    verdict(OK, "vulns: 1:4")
+    verdict(OK, "vulns: 1:6")
 
 def check(args):
     if len(args) != 1:

@@ -29,11 +29,12 @@ async function processResponse(response, url) {
 
     response = await response.json();
 
-    if (response["status"] === "error") {
+    if (response.status === "error") {
         // Show bubble with response["message"]
-        return false;
+        return { success: false, message: "message" in response ? response.message : "" };
     }
 
-    return response["response"];
+    response = "response" in response ? response.response : response;
+    return { success: true, ...response }
 }
 

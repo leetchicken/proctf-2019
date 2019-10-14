@@ -9,7 +9,6 @@ import ae.hitb.proctf.drone_racing.programming.languageUtils.resolveCalls
 import ae.hitb.proctf.drone_racing.programming.language.*
 
 object ProgramGrammar : Grammar<Program>() {
-
     private val LPAR by token("\\(")
     private val RPAR by token("\\)")
 
@@ -48,9 +47,6 @@ object ProgramGrammar : Grammar<Program>() {
     private val DO by token("do\\b")
 
     private val PASS by token("pass\\b")
-
-    private val REPEAT by token("repeat\\b")
-    private val UNTIL by token("until\\b")
 
     private val BEGIN by token("begin\\b")
     private val END by token("end\\b")
@@ -167,10 +163,6 @@ object ProgramGrammar : Grammar<Program>() {
     private val whileStatement: Parser<WhileStatement> by (-WHILE * expression * -DO * -BEGIN * parser { statementsChain } * -END)
             .map { (cond, body) -> WhileStatement(cond, body) }
 
-    private val repeatStatement: Parser<ChainStatement> by (-REPEAT * parser { statementsChain } * -UNTIL * expression).map { (body, cond) ->
-        ChainStatement(body, WhileStatement(UnaryOperation(cond, Not), body))
-    }
-
     private val returnStatement: Parser<ReturnStatement> by -RETURN * expression map { ReturnStatement(it) }
 
     private val statement: Parser<Statement> by passStatement or
@@ -179,7 +171,6 @@ object ProgramGrammar : Grammar<Program>() {
             ifStatement or
             whileStatement or
             forStatement or
-            repeatStatement or
             returnStatement
 
     private val typeName: Parser<FunctionType> by (INTEGER_TYPE map { FunctionType.INTEGER }) or (STRING_TYPE map { FunctionType.STRING })

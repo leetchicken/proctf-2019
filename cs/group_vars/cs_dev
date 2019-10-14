@@ -1,0 +1,70 @@
+cs_user: cs
+cs_dir:  /home/cs/checksystem
+
+pg_cs_user: cs
+pg_cs_pass: oquuh1ohNgee
+pg_cs_db: cs
+pg_cs_host: 127.0.0.1
+pg_cs_port: 5432
+pg_max_connections: 512
+pg_shared_buffers: 512MB
+pg_work_mem: 256MB
+
+cs_limit_nofile: 10000
+
+cs_worker_default_jobs: 4
+cs_worker_checkers_jobs: 32
+cs_worker_checkers_queues: -q checker -q checker1 -q checker2
+cs_worker_instance: 1
+
+cs_hypnotoad_listen: 127.0.0.1:8080
+cs_hypnotoad_flags_listen: 127.0.0.1:8080
+cs_hypnotoad_workers: 4
+cs_hypnotoad_accepts: 1024
+cs_nginx_upstream_keepalive: 32
+cs_nginx_listen: 10.60.3.1:80
+
+cs_base_url: https://ructf.org/
+cs_admin_auth: root:lee1puW7zeej
+cs_ctf_name: ProCTF 2019 Dev
+cs_flags_secret: Ai0Eebuge9wa
+cs_round_length: 30
+cs_flag_life_time: 15
+cs_time: "['2019-07-01 02:00:00', '2019-11-03 14:00:00']"
+
+cs_static_path: '/home/cs/ctf-scoreboard-client/scoreboard/build'
+
+cs_checkers_hostname_cb: |
+  sub { my ($team, $service) = @_; $service->{host_suffix} ? "$team->{host_prefix}$service->{host_suffix}" : "$team->{host}" }
+
+teams: |
+  {name => 'vbteam10', network => '10.60.10.0/24', host => '10.60.10.1', host_prefix => '10.60.10.', token => '324978e8-b2f8-487b-8f75-9772e516f7ea'},
+  {name => 'vbteam11', network => '10.60.11.0/24', host => '10.60.11.1', host_prefix => '10.60.11.', token => 'adf4d8f7-3967-4a57-9765-bb1398aa4b00'},
+  {name => 'bot1', network => '10.60.3.0/24', host => '10.60.3.1', host_prefix => '10.60.3.', token => '334c7b3f-f709-46b0-ada6-228d86a552ee', bot => [{sla => 0.95, attack => 0.5, defense => 0.3}, {sla => 0.97, attack => 0.6, defense => 0.6}, {sla => 0.9, attack => 0.4, defense => 0.4}]},
+  {name => 'bot2', network => '10.60.4.0/24', host => '10.60.4.1', host_prefix => '10.60.4.', token => '5656f9f5-4c6f-4892-9137-3c37bad75902', bot => [{sla => 0.85, attack => 0.75, defense => 0.7}, {sla => 0.92, attack => 0.3, defense => 0.3}, {sla => 0.88, attack => 0.5, defense => 0.8}]},
+  {name => 'bot3', network => '10.60.5.0/24', host => '10.60.5.1', host_prefix => '10.60.5.', token => '787bb101-09f4-468b-8697-32c27436140f', bot => [{sla => 0.65, attack => 0.95, defense => 0.9}, {sla => 0.73, attack => 0.9, defense => 0.9}, {sla => 0.6, attack => 0.8, defense => 0.8}]},
+
+services: |
+  {name => 'fraud_detector', path => 'checkers/fraud_detector/checker.py', timeout => 30, host_suffix => '1'},
+  {name => 'binder',         path => 'checkers/Binder/check.sh',           timeout => 30, host_suffix => '2'},
+  {name => 'SePtoN',         path => 'checkers/SePtoN/checker.sh',         timeout => 30, host_suffix => '3'},
+  {name => 'rubik',          path => 'checkers/rubik/checker.sh',          timeout => 30, host_suffix => '4'},
+  {name => 'deer',           path => 'checkers/deer/deer.checker.py',      timeout => 30, host_suffix => '5'},
+  {name => 'bb',             path => 'checkers/bb/bb.checker.pl',          timeout => 30, host_suffix => '6'},
+  {name => 'game_console',   path => 'checkers/game_console/checker.py',   timeout => 30, host_suffix => '7'},
+  {name => 'polyfill',       path => 'checkers/polyfill/checker.py',       timeout => 30, host_suffix => '8'},
+  {name => 'convolution',    path => 'checkers/convolution/checker.py',    timeout => 30, host_suffix => '9'},
+  {name => 'handy',          path => 'checkers/handy/handy.checker.py',    timeout => 30, host_suffix => '10'},
+  {name => 'gallery',        path => 'checkers/gallery/checker.py',        timeout => 30, host_suffix => '11'},
+  {name => 'ca',             path => 'checkers/ca/ca.checker.pl',          timeout => 30, host_suffix => '12'},
+  {name => 'drone_racing',   path => 'checkers/drone_racing/drone_racing.checker.py', timeout => 30, host_suffix => '13'},
+  {name => 'startup',        path => 'checkers/startup/checker.py',        timeout => 30, host_suffix => '14'},
+  {name => 'tracker',        path => 'checkers/tracker/checker.py',        timeout => 30, host_suffix => '15'},
+  {name => 'notepool',       path => 'checkers/notepool/checker.sh',       timeout => 30, host_suffix => '16'},
+  {name => 'Spaceships',     path => 'checkers/Spaceships/checker.py',     timeout => 30, host_suffix => '17'},
+  {name => 'sql_demo',       path => 'checkers/sql_demo/sql_demo.checker.py', timeout => 30, host_suffix => '18'},
+  {name => 'geocaching',     path => 'checkers/geocaching/checker.py',    timeout => 30, host_suffix => '19'},
+  {name => 'dotFm',          path => 'checkers/dotFm/checker.py',         timeout => 30, host_suffix => '20', active => ['2019-11-01 00:00:00', '2019-11-10 00:00:00']},
+
+queues: |
+  {'*' => {ca => 'checker1', gallery => 'checker2', deer => 'checker1'}}

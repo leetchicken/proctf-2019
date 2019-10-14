@@ -11,7 +11,7 @@ import json
 
 SERVICE_NAME = "game_console"
 OK, CORRUPT, MUMBLE, DOWN, CHECKER_ERROR = 101, 102, 103, 104, 110
-SERVER_ADDR = "10.60.3.2"
+SERVER_ADDR = "10.10.10.101"
 
 
 def close(code, public="", private=""):
@@ -41,7 +41,7 @@ def check(*args):
 
 	except Exception as e:
 		 close(CHECKER_ERROR, "HTTP Error", "HTTP error: %s" % e)
-	
+
 	close(OK)
 
 

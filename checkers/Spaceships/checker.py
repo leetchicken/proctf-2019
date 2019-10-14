@@ -4,6 +4,7 @@ import subprocess as sp,sys,time,re
 import string,random
 from socket import *
 from struct import *
+import traceback
 idx_read = 0
 DEBUG = 0
 def id_gen(size=8, chars=string.ascii_uppercase + string.digits):
@@ -177,8 +178,14 @@ if sys.argv[1] == "info":
     exit(101)
 #proc = sp.Popen("./serv12",shell=True,stdin=sp.PIPE,stdout=sp.PIPE)
 proc = socket(AF_INET,SOCK_STREAM)
-proc.connect((sys.argv[2],3777))
-
+try:
+    proc.connect((sys.argv[2],3777))
+except OSError as e:
+    traceback.print_tb(e.__traceback__)
+    exit(104)
+except Exception as e:
+    traceback.print_tb(e.__traceback__)
+    exit(104)
 res = read_until(proc,b"\n")
 res = read_until(proc,b">")
 

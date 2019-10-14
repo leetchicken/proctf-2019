@@ -288,6 +288,19 @@ namespace checker.rnd
 			{"SM", new Tuple<string, string>("A", "")}
 		};
 
+		public static string RandomText(int n)
+		{
+			var builder = new StringBuilder(n);
+			while(builder.Length < n)
+			{
+				builder.Append(RandomWord(RndUtil.GetInt(2, 10)));
+				builder.Append(' ');
+			}
+			builder.Length = n;
+			builder[0] = char.ToUpper(builder[0]);
+			return builder.ToString();
+		}
+
 		public static string RandomWord(int n)
 		{
 			var lookup = new char[2];
@@ -325,12 +338,16 @@ namespace checker.rnd
 			return new string(chars);
 		}
 
+		public static string RandomUmlauts(this string value)
+			=> RandomChangeByDict(value, Umlauts, 16);
 		public static string RandomLeet(this string value)
+			=> RandomChangeByDict(value, Leet, 4);
+		public static string RandomChangeByDict(this string value, Dictionary<char, char> dict, int share)
 		{
 			var chars = value.ToCharArray();
 			for(int i = 0; i < chars.Length; i++)
 			{
-				if(Leet.TryGetValue(chars[i], out var c) && RndUtil.ThreadStaticRnd.Next(4) == 0)
+				if(dict.TryGetValue(chars[i], out var c) && RndUtil.ThreadStaticRnd.Next(share) == 0)
 					chars[i] = c;
 			}
 			return new string(chars);
@@ -342,6 +359,18 @@ namespace checker.rnd
 			{'l', '1'},
 			{'e', '3'},
 			{'t', '7'},
+		};
+
+		private static readonly Dictionary<char, char> Umlauts = new Dictionary<char, char>
+		{
+			{'s', 'ß'},
+			{'o', 'ö'},
+			{'u', 'ü'},
+			{'e', 'ë'},
+			{'a', 'â'},
+			{'z', 'ž'},
+			{'n', 'ň'},
+			{'y', 'ý'},
 		};
 	}
 }

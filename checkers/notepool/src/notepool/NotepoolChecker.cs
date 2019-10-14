@@ -26,8 +26,8 @@ namespace checker.notepool
 
 			await RndUtil.RndDelay(MaxDelay).ConfigureAwait(false);
 
-			var query = RndText.RandomWord(RndUtil.GetInt(2, 10));
-			result = await client.DoRequestAsync(HttpMethod.Get, ApiNotesSearch + "?query=" + WebUtility.UrlEncode(query), null, NetworkOpTimeout, MaxHttpBodySize).ConfigureAwait(false);
+			var query = "?query=" + WebUtility.UrlEncode(RndText.RandomWord(RndUtil.GetInt(2, 10)));
+			result = await client.DoRequestAsync(HttpMethod.Get, ApiNotesSearch + query, null, NetworkOpTimeout, MaxHttpBodySize).ConfigureAwait(false);
 			if(result.StatusCode != HttpStatusCode.OK)
 				throw new CheckerException(result.StatusCode.ToExitCode(), $"get {ApiNotesSearch} failed");
 
@@ -42,7 +42,7 @@ namespace checker.notepool
 		{
 			var client = new AsyncHttpClient(GetBaseUri(host), true);
 
-			var login = RndText.RandomWord(RndUtil.GetInt(MinRandomFieldLength, MaxRandomFieldLength)).RandomLeet()/*.RandomUpperCase()*/;
+			var login = RndText.RandomWord(RndUtil.GetInt(MinRandomFieldLength, MaxRandomFieldLength)).RandomLeet().RandomUpperCase();
 			var name = RndText.RandomWord(RndUtil.GetInt(MinRandomFieldLength, MaxRandomFieldLength)).RandomLeet().RandomUpperCase();
 			var pass = RndText.RandomWord(RndUtil.GetInt(MinRandomFieldLength, MaxRandomFieldLength)).RandomLeet().RandomUpperCase();
 
@@ -55,68 +55,60 @@ namespace checker.notepool
 
 			await RndUtil.RndDelay(MaxDelay).ConfigureAwait(false);
 
-			var title1 = RndText.RandomWord(RndUtil.GetInt(MinRandomFieldLength, MaxRandomFieldLength));
-			var text1 = RndText.RandomWord(RndUtil.GetInt(MinRandomFieldLength, MaxRandomFieldLength));
-			await Console.Error.WriteLineAsync($"title '{title1}', text '{text1}'").ConfigureAwait(false);
+			var items = Enumerable.Range(0, RndUtil.GetInt(1, 3)).Select(i => new Note {
+				Title = RndText.RandomText(RndUtil.GetInt(MinRandomTitleLength, MaxRandomTitleLength)).RandomUmlauts(),
+				Text = RndText.RandomText(RndUtil.GetInt(MinRandomTextLength, MaxRandomTextLength)).RandomUmlauts()
+			}).ToArray();
 
-			var query1 = $"?title={WebUtility.UrlEncode(title1)}&text={WebUtility.UrlEncode(text1)}";
-			result = await client.DoRequestAsync(HttpMethod.Post, ApiNotesAdd + query1, null, NetworkOpTimeout).ConfigureAwait(false);
-			if(result.StatusCode != HttpStatusCode.OK)
-				throw new CheckerException(result.StatusCode.ToExitCode(), $"post {ApiNotesAdd} failed");
+			var itemWithFlag = RndUtil.Choice(items);
+			if(RndUtil.GetInt(0, 2) == 0)
+				itemWithFlag.Text = flag;
+			else
+				itemWithFlag.Title = flag;
+			itemWithFlag.IsPrivate = true;
 
-			await RndUtil.RndDelay(MaxDelay).ConfigureAwait(false);
+			foreach(var item in items)
+			{
+				await Console.Error.WriteLineAsync($"title '{item.Title}', text '{item.Text}', isPrivate '{item.IsPrivate}'").ConfigureAwait(false);
 
-			var title2 = RndText.RandomWord(RndUtil.GetInt(MinRandomFieldLength, MaxRandomFieldLength));
-			var text2 = flag;
-			await Console.Error.WriteLineAsync($"title '{title2}', text '{text2}'").ConfigureAwait(false);
+				var q = $"?title={WebUtility.UrlEncode(item.Title)}&text={WebUtility.UrlEncode(item.Text)}" + (item.IsPrivate ? "&isPrivate=on" : null);
+				result = await client.DoRequestAsync(HttpMethod.Post, ApiNotesAdd + q, null, NetworkOpTimeout).ConfigureAwait(false);
+				if(result.StatusCode != HttpStatusCode.OK)
+					throw new CheckerException(result.StatusCode.ToExitCode(), $"post {ApiNotesAdd} failed");
 
-			var query2 = $"?title={WebUtility.UrlEncode(title2)}&text={WebUtility.UrlEncode(text2)}&isPrivate=on";
-			result = await client.DoRequestAsync(HttpMethod.Post, ApiNotesAdd + query2, null, NetworkOpTimeout).ConfigureAwait(false);
-			if(result.StatusCode != HttpStatusCode.OK)
-				throw new CheckerException(result.StatusCode.ToExitCode(), $"post {ApiNotesAdd} failed");
+				await RndUtil.RndDelay(MaxDelay).ConfigureAwait(false);
+			}
 
-			await RndUtil.RndDelay(MaxDelay).ConfigureAwait(false);
+			var query = GetRandomQuery(itemWithFlag);
+			if(query.Trim('\"', ' ').Length <= 4) //NOTE: too low entropy
+				query = flag;
 
-			var query = flag;
-			result = await client.DoRequestAsync(HttpMethod.Get, ApiNotesSearch + "?query=" + query, null, NetworkOpTimeout, MaxHttpBodySize).ConfigureAwait(false);
-			if(result.StatusCode != HttpStatusCode.OK)
-				throw new CheckerException(result.StatusCode.ToExitCode(), $"get {ApiNotesSearch} failed");
-
-			var notes = DoIt.TryOrDefault(() => JsonSerializer.Deserialize<List<Note>>(result.BodyAsString));
-			if(notes == default)
-				throw new CheckerException(ExitCode.MUMBLE, $"invalid {ApiNotesSearch} response");
-
-			await Console.Error.WriteLineAsync($"found '{notes.Count}' notes by query '{query}'").ConfigureAwait(false);
-
-			if(notes.Count > 1)
-				throw new CheckerException(ExitCode.MUMBLE, $"invalid {ApiNotesSearch} response");
-
-			if(notes.Count == 0 || !notes.Any(note => note.Author.Contains(flag) || note.Title.Contains(flag) || note.Text.Contains(flag)))
-				throw new CheckerException(ExitCode.CORRUPT, "flag not found");
+			await Console.Error.WriteLineAsync($"random query '{query}'").ConfigureAwait(false);
 
 			var cookie = client.Cookies.GetCookieHeader(GetBaseUri(host));
 			await Console.Error.WriteLineAsync($"cookie '{cookie}'").ConfigureAwait(false);
 
 			var bytes = DoIt.TryOrDefault(() => Encoding.UTF8.GetBytes(cookie));
 			if(bytes == null || bytes.Length > 1024)
-				throw new CheckerException(result.StatusCode.ToExitCode(), $"invalid {ApiNotesSearch} response: cookies");
+				throw new CheckerException(result.StatusCode.ToExitCode(), "too large or invalid cookies");
 
-			return $"{login}:{pass}:{Convert.ToBase64String(bytes)}";
+			return $"{login}:{pass}:{Convert.ToBase64String(bytes)}:{WebUtility.UrlEncode(query)}";
 		}
 
 		public async Task Get(string host, string id, string flag, int vuln)
 		{
-			var parts = id.Split(':');
-			if(parts.Length != 3)
+			var parts = id.Split(':', 4);
+			if(parts.Length != 4)
 				throw new Exception($"Invalid flag id '{id}'");
 
 			var login = parts[0];
 			var pass = parts[1];
 			var cookie = Encoding.UTF8.GetString(Convert.FromBase64String(parts[2]));
+			var encodedQuery = parts[3];
 
 			var client = new AsyncHttpClient(GetBaseUri(host), true);
 
-			if(RndUtil.Choice(1, 2) == 1)
+			if(RndUtil.GetInt(0, 2) == 0)
 			{
 				await Console.Error.WriteLineAsync($"login by cookie '{cookie}'").ConfigureAwait(false);
 				client.Cookies.SetCookies(GetBaseUri(host), cookie);
@@ -135,7 +127,9 @@ namespace checker.notepool
 				await RndUtil.RndDelay(MaxDelay).ConfigureAwait(false);
 			}
 
-			var result = await client.DoRequestAsync(HttpMethod.Get, ApiNotesSearch + "?query=&myOnly=on", null, NetworkOpTimeout, MaxHttpBodySize).ConfigureAwait(false);
+			var query = RndUtil.Choice("?query=&myOnly=on", "?query=" + encodedQuery);
+
+			var result = await client.DoRequestAsync(HttpMethod.Get, ApiNotesSearch + query, null, NetworkOpTimeout, MaxHttpBodySize).ConfigureAwait(false);
 			if(result.StatusCode != HttpStatusCode.OK)
 				throw new CheckerException(result.StatusCode.ToExitCode(), $"get {ApiNotesSearch} failed");
 
@@ -143,10 +137,55 @@ namespace checker.notepool
 			if(notes == default)
 				throw new CheckerException(ExitCode.MUMBLE, $"invalid {ApiNotesSearch} response");
 
-			await Console.Error.WriteLineAsync($"found '{notes.Count}' myOnly notes").ConfigureAwait(false);
+			await Console.Error.WriteLineAsync($"found '{notes.Count}' notes by query '{query}'").ConfigureAwait(false);
 
-			if(notes.Count == 0 || !notes.Any(note => note.Author.Contains(flag) || note.Title.Contains(flag) || note.Text.Contains(flag)))
+			var note = notes.FirstOrDefault(note => note.Author.Contains(flag) || note.Title.Contains(flag) || note.Text.Contains(flag));
+			if(note == null)
 				throw new CheckerException(ExitCode.CORRUPT, "flag not found");
+
+			//NOTE: Also check phrase query
+
+			if(!query.StartsWith("?query=%22") || !query.EndsWith("%22"))
+				return;
+
+			var words = WebUtility.UrlDecode(encodedQuery).Trim('"', ' ').Split().Where(word => !string.IsNullOrWhiteSpace(word)).Distinct().ToArray();
+			if(words.Length < 2)
+				return;
+
+			query = string.Join(' ', words.Reverse());
+			if(note.Author.Contains(query, StringComparison.InvariantCultureIgnoreCase) || note.Title.Contains(query, StringComparison.InvariantCultureIgnoreCase) || note.Text.Contains(query, StringComparison.InvariantCultureIgnoreCase))
+				return;
+
+			query = "?query=" + WebUtility.UrlEncode('"' + query + '"');
+			await Console.Error.WriteLineAsync($"check phrase query reversed '{query}'").ConfigureAwait(false);
+
+			result = await client.DoRequestAsync(HttpMethod.Get, ApiNotesSearch + query, null, NetworkOpTimeout, MaxHttpBodySize).ConfigureAwait(false);
+			if(result.StatusCode != HttpStatusCode.OK)
+				throw new CheckerException(result.StatusCode.ToExitCode(), $"get {ApiNotesSearch} failed");
+
+			notes = DoIt.TryOrDefault(() => JsonSerializer.Deserialize<List<Note>>(result.BodyAsString));
+			if(notes == default)
+				throw new CheckerException(ExitCode.MUMBLE, $"invalid {ApiNotesSearch} response");
+
+			await Console.Error.WriteLineAsync($"found '{notes.Count}' notes by query '{query}'").ConfigureAwait(false);
+
+			if(notes.Any(note => note.Author.Contains(flag) || note.Title.Contains(flag) || note.Text.Contains(flag)))
+				throw new CheckerException(ExitCode.MUMBLE, $"invalid {ApiNotesSearch} response: phrase query");
+		}
+
+		private string GetRandomQuery(Note note)
+		{
+			var titleWords = note.Title.Split();
+			var textWords = note.Text.Split();
+
+			var allWords = titleWords.Concat(textWords).ToArray();
+			var randomQuery = string.Join(' ', Enumerable.Range(0, RndUtil.GetInt(2, 4)).Select(i => RndUtil.Choice(allWords)).Distinct());
+
+			var words = RndUtil.Choice(note.Title, note.Text).Split();
+			var skip = RndUtil.GetInt(0, Math.Max(0, words.Length - 2));
+			var randomPhraseQuery = '\"' + string.Join(' ', words.Skip(skip).Take(RndUtil.GetInt(2, 6))) + '\"';
+
+			return RndUtil.Choice(randomQuery, randomPhraseQuery);
 		}
 
 		private const int Port = 5073;
@@ -158,6 +197,10 @@ namespace checker.notepool
 
 		private const int MinRandomFieldLength = 10;
 		private const int MaxRandomFieldLength = 16;
+		private const int MinRandomTitleLength = 5;
+		private const int MaxRandomTitleLength = 64;
+		private const int MinRandomTextLength = 16;
+		private const int MaxRandomTextLength = 256;
 
 		private static Uri GetBaseUri(string host) => new Uri($"http://{host}:{Port}/");
 
@@ -165,8 +208,5 @@ namespace checker.notepool
 		private const string ApiAuthSignIn = "/auth/signin";
 		private const string ApiNotesAdd = "/notes/add";
 		private const string ApiNotesSearch = "/notes/search";
-
-		private const string AuthCookieName = "usr";
-		private const string GenCookieName = "usr";
 	}
 }

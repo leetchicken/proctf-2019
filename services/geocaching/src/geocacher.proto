@@ -1,0 +1,93 @@
+syntax = "proto2";
+
+message Coordinate {
+    required uint32 lat = 1;
+    required uint32 lon = 2;
+}
+
+enum Status {
+    OK = 0;
+    FAIL = 1;
+    NOT_FOUND = 2;
+    TIMEOUT = 3;
+}
+
+message Cell {
+    required Coordinate coordinates = 1;
+    required bytes secret = 2;
+}
+
+message StoreSecretRequest {
+    required int32 message_type = 1 [default = 2];
+    required Coordinate coordinates = 2;
+    required bytes secret = 3;
+}
+
+message StoreSecretResponse {
+    required int32 message_type = 1 [default = 3];
+    required Status status = 2;
+    required bytes key = 3;
+}
+
+message GetSecretRequest {
+    required int32 message_type = 1 [default = 4];
+    required Coordinate coordinates = 2;
+    required bytes key = 3;
+}
+
+message GetSecretResponse {
+    required int32 message_type = 1 [default = 5];
+    required Status status = 2;
+    required bytes secret = 3;
+}
+
+message DiscardSecretRequest {
+    required int32 message_type = 1 [default = 6];
+    required Coordinate coordinates = 2;
+    required bytes key = 3;
+}
+
+message DiscardSecretResponse {
+    required int32 message_type = 1 [default = 7];
+    required Status status = 2;
+}
+
+message ListAllBusyCellsRequest {
+    required int32 message_type = 1 [default = 10];
+}
+
+message ListAllBusyCellsResponse {
+    required int32 message_type = 1 [default = 11];
+    required Status status = 2;
+    repeated Cell cells = 3;
+}
+
+message AdminChallenge {
+    required int32 message_type = 1 [default = 12];
+    required bytes data = 2;
+}
+
+message AdminResponse {
+    required int32 message_type = 1 [default = 13];
+    required bytes data = 2;
+}
+
+message UnknownMessage {
+    required int32 message_type = 1 [default = 14];
+    required bytes data = 2;
+}
+
+message AuthRequest {
+    required int32 message_type = 1 [default = 15];
+    required bytes data = 2;
+}
+
+message AuthResponse {
+    required int32 message_type = 1 [default = 16];
+    required bytes auth_key = 2;
+}
+
+message AuthResult {
+    required int32 message_type = 1 [default = 17];
+    required Status status = 2;
+}

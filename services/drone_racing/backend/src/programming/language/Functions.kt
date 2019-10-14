@@ -34,7 +34,6 @@ sealed class Intrinsic(name: String, parameterNames: List<Variable>, parameterTy
     object STRCMP : Intrinsic("strcmp", listOf(Variable("S1"), Variable("S2")), listOf(FunctionType.STRING, FunctionType.STRING), FunctionType.INTEGER)
     object STRGET : Intrinsic("strget", listOf(Variable("S"), Variable("i")), listOf(FunctionType.STRING, FunctionType.INTEGER), FunctionType.INTEGER)
     object STRDUP : Intrinsic("strdup", listOf(Variable("S")), listOf(FunctionType.STRING), FunctionType.STRING)
-    object STRSET : Intrinsic("strset", listOf(Variable("S"), Variable("i"), Variable("c")), listOf(FunctionType.STRING, FunctionType.INTEGER, FunctionType.INTEGER), FunctionType.VOID)
     object STRCAT : Intrinsic("strcat", listOf(Variable("S1"), Variable("S2")), listOf(FunctionType.STRING, FunctionType.STRING), FunctionType.STRING)
     object STRSUB : Intrinsic("strsub", listOf(Variable("S"), Variable("i"), Variable("j")), listOf(FunctionType.STRING, FunctionType.INTEGER, FunctionType.INTEGER), FunctionType.STRING)
     object STRLEN : Intrinsic("strlen", listOf(Variable("S")), listOf(FunctionType.STRING), FunctionType.INTEGER)
@@ -42,7 +41,7 @@ sealed class Intrinsic(name: String, parameterNames: List<Variable>, parameterTy
     companion object {
         val resolvable by lazy {
             listOf(
-                TO_STRING, STRMAKE, STRCMP, STRGET, STRDUP, STRSET, STRCAT, STRSUB, STRLEN
+                TO_STRING, STRMAKE, STRCMP, STRGET, STRDUP, STRCAT, STRSUB, STRLEN
             )
         }
     }

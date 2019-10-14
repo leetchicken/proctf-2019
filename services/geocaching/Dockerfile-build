@@ -1,0 +1,7 @@
+FROM alpine
+
+COPY ./src /app
+
+RUN apk add --no-cache make g++ sqlite-dev openssl-dev protobuf-c-dev
+
+CMD ["sh", "-c", "cd /app && make && mv geocacher out/"]

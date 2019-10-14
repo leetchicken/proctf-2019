@@ -1,0 +1,10 @@
+version: '3'
+services:
+  geocacher_build:
+    image: proctf/geocacher-build
+    container_name: geocacher-build
+    build:
+      context: .
+      dockerfile: Dockerfile-build
+    volumes:
+      - ./out:/app/out

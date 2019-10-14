@@ -7,6 +7,10 @@ popd
 # Build frontend!
 docker run -v "$PWD/frontend":/home/frontend -v /home/frontend/node_modules drone_racing_frontend_build
 
+# Copy built frontend to backend folder
+mkdir -p backend/resources/wwwroot
+cp -R frontend/build/* backend/resources/wwwroot/
+
 # Build the docker container for building the application
 docker build -f backend/Dockerfile.build --tag drone_racing_backend_build .
 # Build our application!

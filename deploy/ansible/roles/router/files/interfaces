@@ -1,0 +1,217 @@
+# This file describes the network interfaces available on your system
+# and how to activate them. For more information, see interfaces(5).
+
+source /etc/network/interfaces.d/*
+
+# The loopback network interface
+auto lo
+iface lo inet loopback
+
+# The primary network interface
+auto eth0
+allow-hotplug eth0
+iface eth0 inet static
+        address 192.168.36.1
+        netmask 255.255.255.0
+
+auto eth0.101
+iface eth0.101 inet static
+address 10.60.1.254
+netmask 255.255.255.0
+vlan_raw_device eth0
+    
+auto eth0.102
+iface eth0.102 inet static
+address 10.60.2.254
+netmask 255.255.255.0
+vlan_raw_device eth0
+    
+auto eth0.103
+iface eth0.103 inet static
+address 10.60.3.254
+netmask 255.255.255.0
+vlan_raw_device eth0
+    
+auto eth0.104
+iface eth0.104 inet static
+address 10.60.4.254
+netmask 255.255.255.0
+vlan_raw_device eth0
+    
+auto eth0.105
+iface eth0.105 inet static
+address 10.60.5.254
+netmask 255.255.255.0
+vlan_raw_device eth0
+    
+auto eth0.106
+iface eth0.106 inet static
+address 10.60.6.254
+netmask 255.255.255.0
+vlan_raw_device eth0
+    
+auto eth0.107
+iface eth0.107 inet static
+address 10.60.7.254
+netmask 255.255.255.0
+vlan_raw_device eth0
+    
+auto eth0.108
+iface eth0.108 inet static
+address 10.60.8.254
+netmask 255.255.255.0
+vlan_raw_device eth0
+    
+auto eth0.109
+iface eth0.109 inet static
+address 10.60.9.254
+netmask 255.255.255.0
+vlan_raw_device eth0
+    
+auto eth0.110
+iface eth0.110 inet static
+address 10.60.10.254
+netmask 255.255.255.0
+vlan_raw_device eth0
+    
+auto eth0.111
+iface eth0.111 inet static
+address 10.60.11.254
+netmask 255.255.255.0
+vlan_raw_device eth0
+    
+auto eth0.112
+iface eth0.112 inet static
+address 10.60.12.254
+netmask 255.255.255.0
+vlan_raw_device eth0
+    
+auto eth0.113
+iface eth0.113 inet static
+address 10.60.13.254
+netmask 255.255.255.0
+vlan_raw_device eth0
+    
+auto eth0.114
+iface eth0.114 inet static
+address 10.60.14.254
+netmask 255.255.255.0
+vlan_raw_device eth0
+    
+auto eth0.115
+iface eth0.115 inet static
+address 10.60.15.254
+netmask 255.255.255.0
+vlan_raw_device eth0
+    
+auto eth0.116
+iface eth0.116 inet static
+address 10.60.16.254
+netmask 255.255.255.0
+vlan_raw_device eth0
+    
+auto eth0.117
+iface eth0.117 inet static
+address 10.60.17.254
+netmask 255.255.255.0
+vlan_raw_device eth0
+    
+auto eth0.118
+iface eth0.118 inet static
+address 10.60.18.254
+netmask 255.255.255.0
+vlan_raw_device eth0
+    
+auto eth0.119
+iface eth0.119 inet static
+address 10.60.19.254
+netmask 255.255.255.0
+vlan_raw_device eth0
+    
+auto eth0.120
+iface eth0.120 inet static
+address 10.60.20.254
+netmask 255.255.255.0
+vlan_raw_device eth0
+    
+auto eth0.121
+iface eth0.121 inet static
+address 10.60.21.254
+netmask 255.255.255.0
+vlan_raw_device eth0
+    
+auto eth0.122
+iface eth0.122 inet static
+address 10.60.22.254
+netmask 255.255.255.0
+vlan_raw_device eth0
+    
+auto eth0.123
+iface eth0.123 inet static
+address 10.60.23.254
+netmask 255.255.255.0
+vlan_raw_device eth0
+    
+auto eth0.124
+iface eth0.124 inet static
+address 10.60.24.254
+netmask 255.255.255.0
+vlan_raw_device eth0
+    
+auto eth0.125
+iface eth0.125 inet static
+address 10.60.25.254
+netmask 255.255.255.0
+vlan_raw_device eth0
+    
+auto eth0.126
+iface eth0.126 inet static
+address 10.60.26.254
+netmask 255.255.255.0
+vlan_raw_device eth0
+    
+auto eth0.127
+iface eth0.127 inet static
+address 10.60.27.254
+netmask 255.255.255.0
+vlan_raw_device eth0
+    
+auto eth0.128
+iface eth0.128 inet static
+address 10.60.28.254
+netmask 255.255.255.0
+vlan_raw_device eth0
+    
+auto eth0.129
+iface eth0.129 inet static
+address 10.60.29.254
+netmask 255.255.255.0
+vlan_raw_device eth0
+    
+auto eth0.130
+iface eth0.130 inet static
+address 10.60.30.254
+netmask 255.255.255.0
+vlan_raw_device eth0
+    
+auto eth0.131
+iface eth0.131 inet static
+address 10.60.31.254
+netmask 255.255.255.0
+vlan_raw_device eth0
+    
+auto eth0.132
+iface eth0.132 inet static
+address 10.60.32.254
+netmask 255.255.255.0
+vlan_raw_device eth0
+    
+auto eth0.200
+iface eth0.200 inet static
+address 10.10.10.254
+netmask 255.255.255.0
+vlan_raw_device eth0
+
+auto eth0.300
+iface eth0.300 inet dhcp
+

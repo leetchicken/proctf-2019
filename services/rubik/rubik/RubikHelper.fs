@@ -40,7 +40,7 @@ type RubikHelper() =
                 use hmac = new HMACSHA1(key.ToByteArray())
                 let raw = data.Slice(0, sizeof<UInt16> + sizeof<UInt64> + sizeof<Guid> + Rubik.Size)
                 match hmac.TryComputeHash(raw.AsReadOnly(), hash), hash.AsReadOnly().ConstantTimeEquals(data.Slice(data.Length - HmacSize).AsReadOnly(), fun c -> int(c)) with
-                | (true, _), true -> new Rubik(Raw = raw.Slice(sizeof<UInt16> + sizeof<UInt64> + sizeof<Guid>), Created = new DateTime(BitConverter.ToInt64(data.Slice(sizeof<UInt16>).AsReadOnly())), Id = new Guid(data.Slice(sizeof<UInt16> + sizeof<UInt64>, sizeof<Guid>).AsReadOnly()))
+                | (true, _), true -> new Rubik(Created = new DateTime(BitConverter.ToInt64(data.Slice(sizeof<UInt16>).AsReadOnly())), Id = new Guid(data.Slice(sizeof<UInt16> + sizeof<UInt64>, sizeof<Guid>).AsReadOnly()), Raw = raw.Slice(sizeof<UInt16> + sizeof<UInt64> + sizeof<Guid>))
                 | _ -> Rubik.Empty
 
         | _ -> Rubik.Empty

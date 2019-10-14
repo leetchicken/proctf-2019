@@ -33,6 +33,10 @@ while True:
         libsqlite.sqlite3_close(db);
         sys.exit(0);
 
+    if sql == '.thumbprint':
+        print(db.value ^ ctypes.cast(libsqlite.sqlite3_exec, ctypes.c_void_p).value)
+        continue
+
     rc = libsqlite.sqlite3_exec(db, sql, callback, 0, ctypes.byref(err_msg))
     if rc != SQLITE_OK:
         print("E! %s" % err_msg.value);

@@ -495,7 +495,7 @@ int main(int argc, char* argv[])
     RequestHandler handler;
     HttpServer server(&handler);
 
-    server.Start(8081);
+    server.Start(80);
 
     while (1)
         sleep(1);

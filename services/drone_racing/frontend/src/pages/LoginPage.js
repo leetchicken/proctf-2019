@@ -9,15 +9,15 @@ import Grid from '@material-ui/core/Grid';
 import LockOutlinedIcon from '@material-ui/icons/LockOutlined';
 import Typography from '@material-ui/core/Typography';
 import { makeStyles } from '@material-ui/core/styles';
-import {authenticate} from "../api/users";
 import {Link as RouterLink} from "react-router-dom"
+import DroneImage from "./drone.jpg"
 
 const useStyles = makeStyles(theme => ({
     root: {
         height: '100vh',
     },
     image: {
-        backgroundImage: 'url(https://source.unsplash.com/random)',
+        backgroundImage: `url(${DroneImage})`,
         backgroundRepeat: 'no-repeat',
         backgroundSize: 'cover',
         backgroundPosition: 'center',
@@ -44,15 +44,15 @@ const useStyles = makeStyles(theme => ({
 let loginInput;
 let passwordInput;
 
-async function onLoginButtonClick() {
-    let login = loginInput.value;
-    let password = passwordInput.value;
-    let response = await authenticate(login, password);
-    console.log(response);
-}
-
-export default function LoginPage() {
+export default function LoginPage(props) {
     const classes = useStyles();
+
+    function onKeyPress(event) {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            props.onLoginButtonClick(loginInput.value, passwordInput.value);
+        }
+    }
 
     return (
         <Grid container component="main" className={classes.root}>
@@ -66,7 +66,7 @@ export default function LoginPage() {
                     <Typography component="h1" variant="h5">
                         Login to drone race
                     </Typography>
-                    <form className={classes.form} noValidate>
+                    <form className={classes.form}>
                         <TextField
                             variant="outlined"
                             margin="normal"
@@ -77,6 +77,7 @@ export default function LoginPage() {
                             name="login"
                             autoComplete="login"
                             autoFocus
+                            onKeyPress={onKeyPress}
                             InputProps={{
                                 inputRef: node => loginInput = node
                             }}
@@ -91,6 +92,7 @@ export default function LoginPage() {
                             type="password"
                             id="password"
                             autoComplete="current-password"
+                            onKeyPress={onKeyPress}
                             InputProps={{
                                 inputRef: node => passwordInput = node
                             }}
@@ -100,14 +102,14 @@ export default function LoginPage() {
                             variant="contained"
                             color="primary"
                             className={classes.submit}
-                            onClick={onLoginButtonClick}
+                            onClick={() => props.onLoginButtonClick(loginInput.value, passwordInput.value)}
                         >
                             Login
                         </Button>
                         <Grid container>
                             <Grid item>
                                 <Link variant="body2" component={({ className, children }) => (
-                                    <RouterLink className={className} to="/users/register">
+                                    <RouterLink className={className} to="/registration">
                                         {children}
                                     </RouterLink>)}>
                                     {"Don't have an account? Register"}

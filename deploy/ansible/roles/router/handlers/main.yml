@@ -1,0 +1,14 @@
+- name: enable and restart dhcpd
+  systemd: name=isc-dhcp-server enabled=yes state=restarted daemon_reload=yes
+
+- name: enable and restart teamcheck
+  service: name=teamcheck enabled=yes state=restarted
+
+- name: enable and restart networkclosed
+  service: name=networkclosed enabled=yes state=restarted
+
+- name: enable and restart connectmon
+  service: name=connectmon enabled=yes state=restarted
+
+- name: enable and restart antidos
+  service: name=antidos enabled=yes state=restarted

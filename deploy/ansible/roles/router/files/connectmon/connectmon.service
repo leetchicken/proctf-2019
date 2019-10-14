@@ -1,0 +1,16 @@
+[Unit]
+    Description=Network closed
+    After=network.target
+
+[Service]
+    ExecStart=/home/connectmon/connectmon.py
+    WorkingDirectory=/home/connectmon
+    User=connectmon
+    Group=connectmon
+    Restart=on-failure
+    RestartSec=3s
+    CPUQuota=100%
+    MemoryLimit=2000M
+
+[Install]
+    WantedBy=multi-user.target

@@ -83,7 +83,6 @@ class ProgramService {
             return bytes.take(startIndex).toByteArray() + newBytes + bytes.drop(startIndex + newBytes.size)
         }
 
-        check(newClassName.length in 1..currentClassName.length) { "Title should be not empty and not longer than ${currentClassName.length} chars" }
         var className = newClassName
         while (className.length < currentClassName.length)
             className += " "

@@ -40,7 +40,7 @@ def close(code, public="", private=""):
 def check(*args):
 	addr = args[0]
 
-	url = 'http://%s:8081/list' % (addr)
+	url = 'http://%s/list' % (addr)
 	try:
 		r = requests.get(url, headers={'User-Agent' : UserAgents.get()})
 	except Exception as e:
@@ -83,7 +83,7 @@ def check(*args):
 
 	# ask service to process generated images
 	sign = (random.randint(0, 256) % 8) == 0
-	url = 'http://%s:8081/process?kernel-id=%s' % (addr, kernel_id)
+	url = 'http://%s/process?kernel-id=%s' % (addr, kernel_id)
 	try:
 		headers={'User-Agent' : UserAgents.get()}
 		if sign:
@@ -134,7 +134,7 @@ def check(*args):
 
 	if sign:
 		signatureBase64 = gen_signature(kernel_id)
-		url = 'http://%s:8081/get-kernel?kernel-id=%s' % (addr, kernel_id)
+		url = 'http://%s/get-kernel?kernel-id=%s' % (addr, kernel_id)
 		try:
 			r = requests.get(url, headers={'signature': signatureBase64, 'User-Agent' : UserAgents.get()})
 			if r.status_code == 404:
@@ -151,7 +151,7 @@ def check(*args):
 		# verify that convolution works well
 		for name, sourceImage in images.items():
 			signatureBase64 = gen_signature(name)
-			url = 'http://%s:8081/get-image?name=%s' % (addr, name)
+			url = 'http://%s/get-image?name=%s' % (addr, name)
 			try:
 				r = requests.get(url, headers={'User-Agent' : UserAgents.get(), 'signature' : signatureBase64})
 			except Exception as e:
@@ -222,7 +222,7 @@ def put(*args):
 	flag = args[2]
 
 	signatureBase64 = gen_signature(flag_id)
-	url = 'http://%s:8081/add-kernel?kernel-id=%s&kernel=%s' % (addr, flag_id, flag)
+	url = 'http://%s/add-kernel?kernel-id=%s&kernel=%s' % (addr, flag_id, flag)
 	try:
 		r = requests.post(url, headers={'signature': signatureBase64, 'User-Agent' : UserAgents.get()})
 		if r.status_code == 404:
@@ -241,7 +241,7 @@ def get(*args):
 	flag_id = args[1]
 	flag = args[2]
 
-	url = 'http://%s:8081/list' % (addr)
+	url = 'http://%s/list' % (addr)
 	try:
 		r = requests.get(url, headers={'User-Agent' : UserAgents.get()})
 	except Exception as e:
@@ -256,7 +256,7 @@ def get(*args):
 		close(CORRUPT, "There is no kernel with id '%s'" % flag_id)
 
 	signatureBase64 = gen_signature(flag_id)
-	url = 'http://%s:8081/get-kernel?kernel-id=%s' % (addr, flag_id)
+	url = 'http://%s/get-kernel?kernel-id=%s' % (addr, flag_id)
 	try:
 		r = requests.get(url, headers={'signature': signatureBase64, 'User-Agent' : UserAgents.get()})
 		if r.status_code == 404:

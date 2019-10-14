@@ -123,6 +123,14 @@ services/gallery/./models/
 services/gallery/./static/
 EOF
     ;;
+    "geocaching")
+    cat <<EOF
+services/geocaching/./docker-compose.yml
+services/geocaching/./Dockerfile
+services/geocaching/./start.sh
+services/geocaching/./out/
+EOF
+    ;;
     "drone_racing")
     cat <<EOF
 services/drone_racing/./docker-compose.yml
@@ -209,6 +217,14 @@ EOF
 services/Spaceships/./docker-compose.yml
 services/Spaceships/./Dockerfile
 services/Spaceships/./service/
+EOF
+    ;;
+    "dotfm")
+    cat <<EOF
+services/dotFM/./docker-compose.yml
+services/dotFM/./Dockerfile
+services/dotFM/./front/
+services/dotFM/./out/
 EOF
     ;;
     *) echo "No such service" >&2; exit 1;;

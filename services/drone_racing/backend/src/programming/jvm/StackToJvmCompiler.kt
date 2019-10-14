@@ -141,17 +141,36 @@ class StackToJvmCompiler : Compiler<StackProgram, ByteArray> {
                             Intrinsic.TO_STRING -> {
                                 visitMethodInsn(INVOKESTATIC, "java/lang/String", "valueOf", "(I)Ljava/lang/String;", false)
                             }
-                            Intrinsic.STRMAKE -> TODO()
+                            Intrinsic.STRMAKE -> {
+                                visitMethodInsn(INVOKESTATIC, "java/lang/String", "valueOf", "(C)Ljava/lang/String;", false)
+                                visitMethodInsn(INVOKESTATIC, "java/util/Collections", "nCopies", "(ILjava/lang/Object;)Ljava/util/List;", false)
+                                visitLdcInsn("")
+                                visitInsn(SWAP)
+                                visitMethodInsn(INVOKESTATIC, "java/lang/String", "join", "(Ljava/lang/CharSequence;Ljava/lang/Iterable;)Ljava/lang/String;", false)
+                            }
                             Intrinsic.STRCMP -> {
                                 visitMethodInsn(INVOKEVIRTUAL, "java/lang/String", "compareTo","(Ljava/lang/String;)I", false);
                             }
-                            Intrinsic.STRGET -> TODO()
+                            Intrinsic.STRGET -> {
+                                visitMethodInsn(INVOKEVIRTUAL, "java/lang/String", "charAt", "(I)C", false)
+                            }
                             Intrinsic.STRDUP -> {
                                 // NOP
                             }
-                            Intrinsic.STRSET -> TODO()
-                            Intrinsic.STRCAT -> TODO()
-                            Intrinsic.STRSUB -> TODO()
+                            Intrinsic.STRCAT -> {
+                                visitInsn(SWAP)
+                                visitTypeInsn(NEW, "java/lang/StringBuilder")
+                                visitInsn(DUP)
+                                visitMethodInsn(INVOKESPECIAL, "java/lang/StringBuilder", "<init>", "()V", false);
+                                visitInsn(SWAP)
+                                visitMethodInsn(INVOKEVIRTUAL, "java/lang/StringBuilder", "append", "(Ljava/lang/String;)Ljava/lang/StringBuilder;", false)
+                                visitInsn(SWAP)
+                                visitMethodInsn(INVOKEVIRTUAL, "java/lang/StringBuilder", "append", "(Ljava/lang/String;)Ljava/lang/StringBuilder;", false)
+                                visitMethodInsn(INVOKEVIRTUAL, "java/lang/StringBuilder", "toString", "()Ljava/lang/String;", false)
+                            }
+                            Intrinsic.STRSUB -> {
+                                visitMethodInsn(INVOKEVIRTUAL, "java/lang/String", "substring", "(II)Ljava/lang/String;", false)
+                            }
                             Intrinsic.STRLEN -> visitMethodInsn(INVOKEVIRTUAL, "java/lang/String", "length", "()I", false)
                         }
                         else -> {

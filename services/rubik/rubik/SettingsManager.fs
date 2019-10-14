@@ -47,5 +47,6 @@ type SettingsManager() =
         match SettingsManager.current.Key = Guid.Empty with
         | true ->
             let settings = if File.Exists(SettingsFilename) then File.ReadAllText(SettingsFilename) else "[Settings]\n"
-            File.WriteAllText(SettingsFilename, Regex.Replace(settings, @"^\s*Key\s*=.*$", "Key = " + Guid.NewGuid().ToString(), RegexOptions.Multiline))
+            SettingsManager.current.Key <- Guid.NewGuid()
+            File.WriteAllText(SettingsFilename, Regex.Replace(settings, @"^\s*Key\s*=.*$", "Key = " + SettingsManager.current.Key.ToString(), RegexOptions.Multiline))
         | _ -> ignore()

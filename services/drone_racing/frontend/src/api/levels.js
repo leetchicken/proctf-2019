@@ -1,14 +1,16 @@
 import {get, post} from "./http";
 
-export async function create_level(title, map) {
-    let response = await post("/api/levels", {
+export async function createLevel(title, map) {
+    return await post("/api/levels", {
         title: title,
         map: map
     });
-    return response ? response["level"] : false;
 }
 
-export async function get_levels() {
-    let response = await get("/api/levels");
-    return response ? response["levels"] : false;
+export async function getLevels() {
+    return await get("/api/levels");
+}
+
+export async function getLevel(levelId) {
+    return await get("/api/levels/" + levelId)
 }
