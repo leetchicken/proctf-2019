@@ -27,7 +27,7 @@ namespace checker.rubik
 
 			await RndUtil.RndDelay(MaxDelay).ConfigureAwait(false);
 
-			result = await client.DoRequestAsync(HttpMethod.Get, ApiGenerate).ConfigureAwait(false);
+			result = await client.DoRequestAsync(HttpMethod.Get, ApiGenerate, null, NetworkOpTimeout, MaxHttpBodySize).ConfigureAwait(false);
 			if(result.StatusCode != HttpStatusCode.OK)
 				throw new CheckerException(result.StatusCode.ToExitCode(), $"get {ApiGenerate} failed");
 
@@ -54,7 +54,7 @@ namespace checker.rubik
 
 			await RndUtil.RndDelay(MaxDelay).ConfigureAwait(false);
 
-			result = await client.DoRequestAsync(HttpMethod.Get, ApiAuth).ConfigureAwait(false);
+			result = await client.DoRequestAsync(HttpMethod.Get, ApiAuth, null, NetworkOpTimeout, MaxHttpBodySize).ConfigureAwait(false);
 			if(result.StatusCode != HttpStatusCode.OK)
 				throw new CheckerException(result.StatusCode.ToExitCode(), $"get {ApiAuth} failed");
 
@@ -67,7 +67,7 @@ namespace checker.rubik
 		{
 			var client = new AsyncHttpClient(GetBaseUri(host), true);
 
-			var result = await client.DoRequestAsync(HttpMethod.Get, ApiGenerate).ConfigureAwait(false);
+			var result = await client.DoRequestAsync(HttpMethod.Get, ApiGenerate, null, NetworkOpTimeout, MaxHttpBodySize).ConfigureAwait(false);
 			if(result.StatusCode != HttpStatusCode.OK)
 				throw new CheckerException(result.StatusCode.ToExitCode(), $"get {ApiGenerate} failed");
 
@@ -109,9 +109,11 @@ namespace checker.rubik
 
 			await Console.Error.WriteLineAsync($"solution '{solution}'").ConfigureAwait(false);
 
-			var cookie = DoIt.TryOrDefault(() => WebUtility.UrlDecode(client.Cookies?.GetCookies(GetBaseUri(host))[AuthCookieName]?.Value));
-			if(string.IsNullOrEmpty(cookie) || cookie.Length > 256)
-				throw new CheckerException(result.StatusCode.ToExitCode(), $"invalid {ApiSolve} response: {AuthCookieName} cookie");
+			var cookie = client.Cookies.GetCookieHeader(GetBaseUri(host));
+			await Console.Error.WriteLineAsync($"cookie '{cookie}'").ConfigureAwait(false);
+
+			if(string.IsNullOrEmpty(cookie) || cookie.Length > 512)
+				throw new CheckerException(result.StatusCode.ToExitCode(), $"invalid {ApiSolve} response: cookies");
 
 			return $"{login}:{pass}:{Convert.ToBase64String(Encoding.UTF8.GetBytes(cookie))}";
 		}
@@ -128,7 +130,7 @@ namespace checker.rubik
 
 			var client = new AsyncHttpClient(GetBaseUri(host), true);
 
-			var result = await client.DoRequestAsync(HttpMethod.Get, ApiScoreboard).ConfigureAwait(false);
+			var result = await client.DoRequestAsync(HttpMethod.Get, ApiScoreboard, null, NetworkOpTimeout, MaxHttpBodySize).ConfigureAwait(false);
 			if(result.StatusCode != HttpStatusCode.OK)
 				throw new CheckerException(result.StatusCode.ToExitCode(), $"get {ApiScoreboard} failed");
 
@@ -139,9 +141,9 @@ namespace checker.rubik
 			await RndUtil.RndDelay(MaxDelay).ConfigureAwait(false);
 
 			client = new AsyncHttpClient(GetBaseUri(host), true);
-			client.Cookies.Add(GetBaseUri(host), new Cookie(AuthCookieName, cookie, "/"));
+			client.Cookies.SetCookies(GetBaseUri(host), cookie);
 
-			result = await client.DoRequestAsync(HttpMethod.Get, ApiAuth).ConfigureAwait(false);
+			result = await client.DoRequestAsync(HttpMethod.Get, ApiAuth, null, NetworkOpTimeout, MaxHttpBodySize).ConfigureAwait(false);
 			if(result.StatusCode != HttpStatusCode.OK)
 				throw new CheckerException(result.StatusCode.ToExitCode(), $"get {ApiAuth} failed");
 
@@ -169,7 +171,5 @@ namespace checker.rubik
 		private const string ApiGenerate = "/api/generate";
 		private const string ApiSolve = "/api/solve";
 		private const string ApiAuth = "/api/auth";
-
-		private const string AuthCookieName = "AUTH";
 	}
 }
