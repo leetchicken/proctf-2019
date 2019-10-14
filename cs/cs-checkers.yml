@@ -68,6 +68,7 @@
   - name: install sys deps
     apt:
       name:
+        - ffmpeg
         - python3.7
         - python3.7-dev
         - python3-pip
@@ -91,6 +92,7 @@
         - cssselect
         - pydub
         - pypng
+        - aiohttp
 
   - name: geocaching deps
     pip:
