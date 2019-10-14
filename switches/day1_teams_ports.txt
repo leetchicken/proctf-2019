@@ -1,0 +1,22 @@
+                                                      Switch Ports
+VLAN    Team                        Cables (Table)  Table   Notebook
+------------------------------------------------------------------------
+101     1 — Eat Sleep Pwn Repeat    19, 20           1       2
+102     2 — RedRocket               35, 36           3       4
+103     3 — Hack.ERS                21, 22           5       6
+104     4 — dotRA                   37, 38           7       8
+105     5 — True0xA3                25, 26           9      10
+106     6 — TokyoWesterns           27, 28          11      12
+107     7 — Tower of Hanoi           7,  8          13      14
+108     8 — saarsec                 31, 32          15      16
+109     9 — Bushwhackers             5,  6          17      18
+110     10 — Dragon Sector           3,  4          19      20
+111     11 — r3kapig                29, 30          21      22
+112     12 — LC↯BC                   9, 10          23      24
+113     13 — PDKT                   17, 18          25      26
+114     14 — r3billions             39, 40          27      28
+115     15 — Enigma (CBOE Winner)   11, 12          29      30
+116     16 — mHackeroni             13, 14          31      32
+117     17 — H3X VI5ION             23, 24          33      34
+118     18 — 4horsemen              33, 34          35      36
+119     19 — root4fun               15, 16          37      38
