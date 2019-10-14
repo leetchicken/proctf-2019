@@ -1,4 +1,4 @@
-- hosts: checkers
+- hosts: checkers, master
   tasks:
   - name: sync catalog
     synchronize: src="../checkers" dest="{{cs_dir}}"
@@ -30,12 +30,12 @@
     tags: docker
 
   - name: install docker repo key
-    apt_key: url=https://download.docker.com/linux/debian/gpg
+    apt_key: url=https://download.docker.com/linux/{{ ansible_distribution | lower }}/gpg
     tags: docker
 
   - name: add docker repo
     apt_repository:
-      repo: deb [arch=amd64] https://download.docker.com/linux/debian {{ ansible_distribution_release }} stable
+      repo: deb [arch=amd64] https://download.docker.com/linux/{{ ansible_distribution | lower }} {{ ansible_distribution_release }} stable
       filename: docker
     tags: docker
 
@@ -68,6 +68,8 @@
   - name: install sys deps
     apt:
       name:
+        - python3.7
+        - python3.7-dev
         - python3-pip
         - python3-setuptools
         - libgdiplus
@@ -82,6 +84,7 @@
         - lxml
         - elasticsearch
         - pika
+        - pycrypto
         - m2crypto
         - pillow
         - msgpack
