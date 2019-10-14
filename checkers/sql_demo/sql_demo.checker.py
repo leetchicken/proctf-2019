@@ -42,6 +42,11 @@ def put(args):
         verdict(DOWN, "Connection error", "Connection refused")
     except socket.timeout:
         verdict(DOWN, "Timeout", "Connection timeout")
+    except OSError as e:
+        if 'No route to host' in str(e):
+            verdict(DOWN, "No route to host", "No route to host")
+        else:
+            raise
 
     trace("Waiting for `> `")
 
@@ -89,6 +94,11 @@ def get(args):
         verdict(DOWN, "Connection error", "Connection refused")
     except socket.timeout:
         verdict(DOWN, "Timeout", "Connection timeout")
+    except OSError as e:
+        if 'No route to host' in str(e):
+            verdict(DOWN, "No route to host", "No route to host")
+        else:
+            raise
 
     trace("Waiting for `> `")
 
