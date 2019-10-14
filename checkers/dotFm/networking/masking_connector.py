@@ -6,7 +6,7 @@ from aiohttp.client_proto import ResponseHandler
 from aiohttp.client import ClientRequest, ClientTimeout, Trace, TCPConnector
 from random import choice
 
-with open("user-agents") as user_agents:
+with open("networking/user-agents") as user_agents:
     AGENTS = [x.strip() for x in user_agents.readlines()]
 
 

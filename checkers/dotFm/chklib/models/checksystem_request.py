@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from models.action_names import CHECK, PUT, GET
+from ..models.action_names import CHECK, PUT, GET
 
 
 @dataclass(frozen=True)
