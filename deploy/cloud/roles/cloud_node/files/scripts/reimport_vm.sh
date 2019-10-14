@@ -21,7 +21,7 @@ done
 
 VBoxManage import "$vm_path" --vsys 0 --vmname "$vm"
 VBoxManage modifyvm "$vm" --cpus=2
-VBoxManage modifyvm "$vm" --bridgeadapter1 "tap0"
+VBoxManage modifyvm "$vm" --bridgeadapter1 "eth0"
 VBoxManage modifyvm "$vm" --nic1 bridged
 VBoxManage modifyvm "$vm" --usbehci off
 vboxmanage snapshot "$vm" take initial

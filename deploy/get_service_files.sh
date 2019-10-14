@@ -219,5 +219,13 @@ services/Spaceships/./Dockerfile
 services/Spaceships/./service/
 EOF
     ;;
+    "dotfm")
+    cat <<EOF
+services/dotFM/./docker-compose.yml
+services/dotFM/./Dockerfile
+services/dotFM/./front/
+services/dotFM/./out/
+EOF
+    ;;
     *) echo "No such service" >&2; exit 1;;
 esac

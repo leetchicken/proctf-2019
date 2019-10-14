@@ -26,7 +26,7 @@ if ! VBoxManage showvminfo "$vm" &>/dev/null; then
 fi
 
 if ! VBoxManage list runningvms | grep -qP "\W${vm}\W"; then
-  VBoxManage modifyvm "$vm" --bridgeadapter1 "tap0"
+  VBoxManage modifyvm "$vm" --bridgeadapter1 "eth0"
 fi
 
 VBoxManage guestproperty set "$vm" team "${TEAM}"
