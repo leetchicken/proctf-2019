@@ -8,6 +8,7 @@ import io
 import json
 import lxml.html
 import requests
+import names
 
 from urllib.parse import urlencode
 from traceback import print_exc
@@ -27,9 +28,23 @@ MASTER_SCARCITY_FACTOR = 20
 PASSWORD_HASH_SALT = 'PLFRQPMMVACNIOUOKEOUNFBZUWUBMBQUYOLVNIUBAIIMSFEAZRAZZSFQZZRJWCGB'
 USERNAME_MIN_LEN = 10
 USERNAME_MAX_LEN = 15
+MASTER_NAMES_COUNT = 100
 
 PRIVATE_KEY_PATH = 'handy.private_key'
 PRIVATE_KEY = None
+
+TASK_TITLE_OPTIONS = [
+    ['PLEASE', '', '[URGENT]', '[VERY IMPORTANT]', '[PLEASE]', '!!!!!!', '!', 'RE:', 'PLS', 'PLZ', '$$$'],
+    ['Need help', 'HELP', 'HEOP', 'Help needed', 'Details inside', 'Open me', 'Subject', '<empty>', 'AAAAAAAAAA', 'you are NEEDED'],
+]
+
+TASK_DESCRIPTION_OPTIONS = [
+    ['Kill', 'Find', 'Obtain', 'Dig up', 'Sell to me', 'Destroy', 'Incinerate', 'Obliviate', 'Wipe from existence', 'Clean', 'Build', 'Fix'],
+    ['2', '100500', 'huge pile of', 'A LOT of', 'tons of', '3', '666', 'unimaginable number of', 'no less than 10', 'as much as you can', 'seven', 'six'],
+    ['robot roaches', 'hackers', 'electro rats', 'GIANT ROBOTS', 'killer robots from Mars', 'Teslas', 'small habitable planets', 'pirates', 'government officials', 'birds WHICH ARE SPYING ON US', 'spawns of Hell', 'bird houses', 'spoons', 'mugs with kitten pictures'],
+    ['please', 'please-please', 'please-please-please', 'in the name of the Emperor', 'for some quick cash', 'to be a hero', 'because why not', 'jff', 'j4l', 'just for l00lz', 'because I say so', 'or else you know what happens', 'n00b'],
+    ['!', '!!', '!!!', ')', '))', ')))', '!)', '!!!)))', '...', '.', ' :)', ' =)', '. :)', '! :O'],
+]
 
 def LoadPrivateKey(path):
     with open(path, "rb") as key_file:
@@ -40,13 +55,11 @@ def LoadPrivateKey(path):
         )
 
 
-# TODO: Something more clever
 def GenerateTaskTitle():
-    return 'A Task'
+    return ' '.join(random.choice(options) for options in TASK_TITLE_OPTIONS)
 
-# TODO: Something more clever
 def GenerateTaskDescription():
-    return 'Some information'
+    return ' '.join(random.choice(options) for options in TASK_DESCRIPTION_OPTIONS)
 
 
 def GeneratePassword(username):
@@ -54,14 +67,32 @@ def GeneratePassword(username):
 
 
 def GenerateUsername():
-    username_len = random.randint(USERNAME_MIN_LEN, USERNAME_MAX_LEN)
-    return ''.join(random.choice(string.ascii_lowercase) for i in range(username_len))
+    return names.get_full_name()
+
+
+def GenerateMasterUsernames(addr):
+    seed = int(sha256((addr).encode('utf-8')).hexdigest(), 16) % (int(10 ** 9) + 7)
+    random.seed(seed)
+
+    with open(names.FILES['first:female']) as f:
+        first_names = [ line.split()[0].capitalize() for line in f ]
+    with open(names.FILES['last']) as f:
+        last_names = [ line.split()[0].capitalize() for line in f ]
+
+    result = [
+        random.choice(first_names) + ' ' + random.choice(last_names)
+        for i in range(MASTER_NAMES_COUNT)
+    ]
+
+    random.seed()
+    return result
 
 
 class HandyApi:
     def __init__(self, addr):
         self.addr = addr
         self.session = requests.Session()
+        self.master_usernames = GenerateMasterUsernames(addr)
 
     def Register(self, master=False):
         """Register a new user.
@@ -74,7 +105,7 @@ class HandyApi:
         """
         code = requests.codes.conflict
         while code == requests.codes.conflict:
-            username = GenerateUsername()
+            username = GenerateUsername() if not master else random.choice(self.master_usernames)
             html, code = self._LoadUrl('register')
             Assert(code == requests.codes.ok, 'GET /register returned %d' % code)
             data = {
@@ -104,7 +135,6 @@ class HandyApi:
 
     def AddTask(self, payload):
         """Creates new task for some master."""
-        # TODO: Only use checker-created masters
         available_masters = self._GetMasters()
         if len(available_masters) == 0:
             new_api = HandyApi(self.addr)
@@ -192,7 +222,12 @@ class HandyApi:
         try:
             html = lxml.html.fromstring(html_string)
             links = html.cssselect('.masters-table a')
-            return [ { 'id': link.get('href')[-36:], } for link in links ]
+            return [
+                { 'id': link.get('href')[-36:], }
+                for link in links
+                # Only take masters that were generated for this team
+                if link.text_content() in self.master_usernames
+            ]
         except Exception as e:
             close(MUMBLE, private='Failed to parse get masters response: %s' % e)
 
