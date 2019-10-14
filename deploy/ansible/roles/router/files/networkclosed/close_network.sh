@@ -3,6 +3,14 @@
 # go to script dir 
 cd "$( dirname "${BASH_SOURCE[0]}" )"
 
+if ! iptables -C FORWARD -s 10.60.0.0/17 -d 10.60.31.0/24 -j ACCEPT &> /dev/null; then
+    iptables -I FORWARD 1 -s 10.60.0.0/17 -d 10.60.31.0/24 -j ACCEPT
+fi
+
+if ! iptables -I FORWARD -s 10.60.31.0/24 -d 10.60.0.0/17 -j ACCEPT &> /dev/null; then
+    iptables -I FORWARD 1 -s 10.60.31.0/24 -d 10.60.0.0/17 -j ACCEPT
+fi
+
 if ! iptables -C FORWARD -s 10.60.0.0/17 -d 10.60.0.0/17 -j DROP &> /dev/null; then
     iptables -I FORWARD 1 -s 10.60.0.0/17 -d 10.60.0.0/17 -j DROP
 fi

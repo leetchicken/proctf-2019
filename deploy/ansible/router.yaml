@@ -7,4 +7,5 @@
      raw: apt -y install python-simplejson
      changed_when: False
   roles:
+   - common
    - router
