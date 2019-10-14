@@ -43,7 +43,7 @@ USER_AGENTS = ["Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KH
 ua = random.choice(USER_AGENTS)
 cmd = sys.argv[1]
 if cmd == "info":
-    print("vulns: 1:1")
+    print("vulns: 1:5")
     exit(101)
 ip=sys.argv[2]
 url = "http://"+ip+":3010/"
