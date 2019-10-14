@@ -5,7 +5,7 @@ from . import remote_runner
 
 class Generator:
     def __init__(self):
-        self.runner = remote_runner.RemoteVerifier("localhost",3011,"test","sfdkjfds45a")
+        self.runner = remote_runner.RemoteVerifier("10.10.10.102",3011,"test","sfdkjfds45a")
 
     def Generate(self,password,message,out_path,debug=False):
 
