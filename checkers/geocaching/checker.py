@@ -79,7 +79,7 @@ def get(host, flag_id, flag, vuln):
     except Exception as e:
         verdict(MUMBLE, "Failed to get flag", traceback.format_exc())
 
-    if bytes(flag, "ascii") != svc_flag:
+    if bytes(flag, "ascii") != svc_flag[:32]:
         verdict(CORRUPT, "No flag to be seen", str(svc_flag))
     
     verdict(OK)
