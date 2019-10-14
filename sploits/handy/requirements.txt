@@ -1,0 +1,2 @@
+requests==2.20.1
+protobuf==3.10.0

