@@ -1,54 +1,72 @@
 from sanic import Sanic
-from sanic.response import json
-from response_helpers.helpers import ok, bad_request
-from uuid import UUID
-from db_operations.db_ops import Storage
-import motor.motor_asyncio
-
+from sanic.request import Request
+from sanic.response import json, text, file_stream
+import glob
+import aiohttp
 
 app = Sanic(__name__)
+data = {}
+
+
+async def upload(session: aiohttp.ClientSession, body_data):
+    async with session.post("http://uploader:80/playlist", data=body_data) as result:
+        if result.status != 200:
+            return {"created": None}
+        else:
+            return await result.json(content_type="")
+
+
+async def find(session: aiohttp.ClientSession, guid):
+    async with session.get(f"http://uploader:80/playlist?playlist_id={guid}") as result:
+        if result.status != 200:
+            return {"tracks": []}
+        else:
+            return await result.json(content_type="")
 
 
 @app.listener('before_server_start')
-async def setup_db(application, loop):
-    application.db = motor.motor_asyncio.AsyncIOMotorClient("localhost", 27017)
+async def init(application, loop):
+    application.aio_http_session = aiohttp.ClientSession(loop=loop)
 
 
-@app.route('/')
-async def test(request):
-    return json({'hello': 'world'})
+@app.listener('after_server_stop')
+async def finish(application, loop):
+    loop.run_until_complete(application.aio_http_session.close())
+    loop.close()
 
 
+# noinspection PyUnresolvedReferences
 @app.post("/channel")
-async def create_channel(request):
-    storage_client = Storage(request.app.db)
-    # todo create channel in db
-    parsed_request = request.json
-    channel = "channel"
-    if channel not in parsed_request:
-        return bad_request(f"'{channel}' property not found in json")
+async def create_channel(request: Request):
+    x, y = map(int, request.headers.get("Position", "0,0").split(","))
+    some_data = request.body
 
-    try:
-        parsed_channel_uuid = UUID(parsed_request[channel])
-    except ValueError as e:
-        return bad_request(str(e))
-
-    insert_id = await storage_client.add_new_channel(parsed_channel_uuid)
-
-    # scenarios: by name, merge, by content, etc (guid + guid == new channel)
-    return ok(f'Inserted document with {insert_id} id.')
+    result = await upload(app.aio_http_session, some_data)
+    if "created" in result:
+        data[(x, y)] = result["created"]
+    return json(result)
 
 
+# noinspection PyUnresolvedReferences
 @app.get("/channel")
-async def get_channel(request):
-    # todo get channel guid from db (by freq + name)
-    return json({"status": "not found"}, 404)
+async def get_channel(request: Request):
+    args = dict(request.query_args)
+    playlist_id = args.get("id")
+    if playlist_id is None:
+        return text("No playlists found", 404)
 
+    track_number = int(args.get("num", 0))
 
-@app.put("/channel")
-async def put_audio_file(request):
-    # todo put new audio content
-    return json({"status": "too big or another shit"}, 400)
+    result: dict = await find(app.aio_http_session, playlist_id)
+    if len(result["tracks"]) == 0:
+        return text("No tracks were found!", 404)
+
+    files = [x for x in glob.glob("/app/storage/music/**")
+             if x.endswith(result["tracks"][track_number % len(result["tracks"])])]
+    if len(files) == 0:
+        return text("Tracks has been deleted!", 404)
+
+    return await file_stream(files[0])
 
 
 if __name__ == '__main__':

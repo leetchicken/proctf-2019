@@ -1,10 +1,12 @@
+using System;
+using System.Collections.Generic;
 using Uploader.Models;
 
 namespace Uploader.Storages
 {
     public interface IStorage
     {
-        void Store(Playlist playlist);
-        Playlist Get(int id);
+        Guid Store(Playlist playlist);
+        List<string> Get(Guid guid);
     }
 }

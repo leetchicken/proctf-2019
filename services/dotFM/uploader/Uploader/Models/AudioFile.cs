@@ -5,7 +5,7 @@ using IdSharp.Tagging.ID3v2;
 
 namespace Uploader.Models
 {
-    public class AudioFile
+    public class AudioFile: IEquatable<AudioFile>
     {
         private readonly byte[] content;
 
@@ -27,11 +27,23 @@ namespace Uploader.Models
 
         public byte[] GetContent() => content;
 
-        public string GetTrackIdentity()
+
+        public bool Equals(AudioFile other)
         {
-            var tag = new ID3v2Tag(new MemoryStream(content));
-            var identity = tag.Artist + tag.Album;
-            return identity == "" ? Guid.NewGuid().ToString() : identity;
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return Equals(content, other.content);
         }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != GetType()) return false;
+            return Equals((AudioFile) obj);
+        }
+
+        public override int GetHashCode()
+            => (content != null ? content.GetHashCode() : 0);
     }
 }
