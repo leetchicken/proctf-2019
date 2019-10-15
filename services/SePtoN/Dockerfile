@@ -15,7 +15,4 @@ COPY ./start.sh .
 
 RUN adduser --system --home /home/SePtoN --shell /usr/sbin/nologin --no-create-home --disabled-password SePtoN
 
-RUN mkdir -p /home/SePtoN/data
-VOLUME /home/SePtoN/data
-
 CMD ["./start.sh"]
