@@ -2,6 +2,7 @@ from sanic import Sanic
 from sanic.request import Request
 from sanic.response import json, text, file_stream
 import glob
+import random
 import aiohttp
 
 app = Sanic(__name__)
@@ -52,6 +53,15 @@ async def get_music_image(request: Request):
     args = dict(request.query_args)
     artist, album = args.get("artist", None), args.get("album", None)
 
+    if artist is None or album is None:
+        return text("Bad parameters provided!", 400)
+    return #todo img lookup
+
+
+@app.get("/images")
+async def get_random_images(request):
+    return random.choices(get_files_lookup("images", ".png"), k=10)
+
 
 # noinspection PyUnresolvedReferences
 @app.get("/channel")
@@ -67,12 +77,18 @@ async def get_channel(request: Request):
     if len(result["tracks"]) == 0:
         return text("No tracks were found!", 404)
 
-    files = [x for x in glob.glob("/app/storage/music/**")
-             if x.endswith(result["tracks"][track_number % len(result["tracks"])])]
+    files = get_files_lookup(
+        "music",
+        result["tracks"][track_number % len(result["tracks"])]
+    )
     if len(files) == 0:
         return text("Track has been deleted!", 404)
 
     return await file_stream(files[0])
+
+
+def get_files_lookup(folder: str, ending_rule: str):
+    return [x for x in glob.glob(f"/app/storage/{folder}/**") if x.endswith(ending_rule)]
 
 
 if __name__ == '__main__':
