@@ -94,6 +94,7 @@ sub get {
   $url->path_query('/?own=1');
   $_ = _check_http_response($ua->get($url));
   my $link = $_->dom->find('a.thread')->first;
+  _mumble "Invalid link" unless $link;
   my $link_text = trim $link->all_text;
   $log->info("Got link [link:$link_text]");
   _mumble "Invalid thread link" unless $link_text =~ qr/$login2/;
