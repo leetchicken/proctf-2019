@@ -1,7 +1,8 @@
-FROM alpine
+FROM ubuntu:19.04
 
 COPY ./src /app
 
-RUN apk add --no-cache make g++ sqlite-dev openssl-dev protobuf-c-dev
+RUN apt update
+RUN apt install -y make g++ libsqlite3-dev libssl-dev protobuf-c-compiler protobuf-compiler libprotobuf-c-dev
 
 CMD ["sh", "-c", "cd /app && make && mv geocacher out/"]
