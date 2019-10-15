@@ -23,8 +23,14 @@ namespace Uploader.Storages
             {
                 while (true)
                 {
-                    await Task.Delay(TimeSpan.FromSeconds(30));
-                    Cleanup();
+                    try
+                    {
+                        Cleanup();
+                    }
+                    finally
+                    {
+                        await Task.Delay(TimeSpan.FromSeconds(30));
+                    }
                 }
             });
         }
@@ -33,10 +39,10 @@ namespace Uploader.Storages
         {
             foreach (var (key, value) in playlist.TrackFiles)
             {
-                using (var musFs = CreateFileStream(Path.Combine(Constants.MusicPath, key)))
+                using (var musFs = CreateFileStream(Path.Combine(Constants.MusicPath, key + ".mp3")))
                     musFs.Write(value.GetContent());
 
-                using (var imgFs = CreateFileStream(Path.Combine(Constants.ImagesPaths, value.Identity + ".png")))
+                using (var imgFs = CreateFileStream(Path.Combine(Constants.ImagesPaths, value + ".png")))
                     imgFs.Write(value.GetImage());
             }
         }
@@ -49,8 +55,7 @@ namespace Uploader.Storages
             return playlistId;
         }
 
-        private Stream CreateFileStream(string path) =>
-            new FileStream(Path.Join(workingPath, path), FileMode.Create);
+        private Stream CreateFileStream(string path) => new FileStream(Path.Join(workingPath, path), FileMode.Create);
 
         public Guid Store(Playlist playlist)
         {

