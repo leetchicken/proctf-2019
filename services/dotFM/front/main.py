@@ -55,12 +55,12 @@ async def get_music_image(request: Request):
 
     if artist is None or album is None:
         return text("Bad parameters provided!", 400)
-    return #todo img lookup
+    return  # todo img lookup
 
 
 @app.get("/images")
 async def get_random_images(request):
-    return random.choices(get_files_lookup("images", ".png"), k=10)
+    return json((x.split("/")[-1] for x in random.choices(get_files_lookup("images", ".png"), k=10)))
 
 
 # noinspection PyUnresolvedReferences
@@ -88,7 +88,8 @@ async def get_channel(request: Request):
 
 
 def get_files_lookup(folder: str, ending_rule: str):
-    return [x for x in glob.glob(f"/app/storage/{folder}/**") if x.endswith(ending_rule)]
+    return [x for x in glob.glob(f"/app/storage/{folder}/**")
+            if x.endswith(ending_rule)]
 
 
 if __name__ == '__main__':

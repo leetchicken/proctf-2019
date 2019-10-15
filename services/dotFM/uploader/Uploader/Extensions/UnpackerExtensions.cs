@@ -15,7 +15,6 @@ namespace Uploader.Extensions
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
                 playlist = null;
                 return false;
             }

@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Uploader.Extensions;
 using Uploader.Models;
 
 
@@ -30,21 +29,15 @@ namespace Uploader.Storages
             });
         }
 
-        private void CreateImages(Playlist playlist)
-        {
-            foreach (var (_, value) in playlist.TrackFiles)
-            {
-                using var fs = CreateFileStream(Path.Combine(Constants.ImagesPaths, value.GetFileIdentity() + ".png"));
-                fs.Write(value.GetImage());
-            }
-        }
-
         private void CreateTracks(Playlist playlist)
         {
             foreach (var (key, value) in playlist.TrackFiles)
             {
-                using var fs = CreateFileStream(Path.Combine(Constants.MusicPath, key));
-                fs.Write(value.GetContent());
+                using (var musFs = CreateFileStream(Path.Combine(Constants.MusicPath, key)))
+                    musFs.Write(value.GetContent());
+
+                using (var imgFs = CreateFileStream(Path.Combine(Constants.ImagesPaths, value.Identity + ".png")))
+                    imgFs.Write(value.GetImage());
             }
         }
 
@@ -62,8 +55,6 @@ namespace Uploader.Storages
         public Guid Store(Playlist playlist)
         {
             CreateDirsIfNotExists();
-
-            CreateImages(playlist);
             CreateTracks(playlist);
             return CreatePlaylistFile(playlist);
         }
@@ -83,7 +74,11 @@ namespace Uploader.Storages
             {
                 file = Directory
                     .GetFiles(Constants.PlaylistsPath).Select(x => x.Split("/")[^1])
-                    .First(x => x.Split(".").First().ToLower() == guid.ToString().ToLower());
+                    .First(x =>
+                    {
+                        Guid.TryParse(x.Split(".").First(), out var parsedGuid);
+                        return parsedGuid == guid;
+                    });
             }
             catch (InvalidOperationException)
             {
