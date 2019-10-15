@@ -11,12 +11,12 @@ if ! iptables -C FORWARD -s 10.60.0.0/17 -d 10.60.0.0/17 -p tcp --dport 22 -j DR
     iptables -I FORWARD 1 -s 10.60.0.0/17 -d 10.60.0.0/17 -p tcp --dport 22 -j DROP
 fi
 
-if ! iptables -C FORWARD -s 10.60.0.0/17 -d 10.60.31.0/24 -j ACCEPT &> /dev/null; then
-    iptables -I FORWARD 1 -s 10.60.0.0/17 -d 10.60.31.0/24 -j ACCEPT
+if ! iptables -C FORWARD -s 10.60.0.0/17 -d 10.60.31.50/32 -j ACCEPT &> /dev/null; then
+    iptables -I FORWARD 1 -s 10.60.0.0/17 -d 10.60.31.50/32 -j ACCEPT
 fi
 
-if ! iptables -C FORWARD -s 10.60.31.0/24 -d 10.60.0.0/17 -j ACCEPT &> /dev/null; then
-    iptables -I FORWARD 1 -s 10.60.31.0/24 -d 10.60.0.0/17 -j ACCEPT
+if ! iptables -C FORWARD -s 10.60.31.50/32 -d 10.60.0.0/17 -j ACCEPT &> /dev/null; then
+    iptables -I FORWARD 1 -s 10.60.31.50/32 -d 10.60.0.0/17 -j ACCEPT
 fi
 
 
