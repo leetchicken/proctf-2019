@@ -224,13 +224,15 @@ class DepositClient(object):
 
         return result
 
-    def store_secret(self, flag, location, size_hint=None):
+    def store_secret(self, flag, location, size_hint=None, key=None):
         req = geocacher_pb2.StoreSecretRequest()
         req.message_type = 2
         req.coordinates.lat, req.coordinates.lon = location
         req.secret = flag
         if size_hint:
             req.size_hint = size_hint
+        if key is not None:
+            req.key = key
 
         return self.wrap_packet(req)
 

@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sqlite3.h>
+#include <stdio.h>
 
 #include "db.h"
 #include "debug.h"
@@ -69,6 +70,11 @@ Status put_flag(StoreSecretRequest *msg, unsigned char *password)
         if (alloc_size < msg->secret.len)
         {
             alloc_size = msg->secret.len;
+        }
+
+        if (msg->has_key)
+        {
+            memcpy(password, msg->key.data, STORAGE_PASSWORD_LENGTH);
         }
 
         // BUG: Allocated memory is 1 byte shorter than it should be

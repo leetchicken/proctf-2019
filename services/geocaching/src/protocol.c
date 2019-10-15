@@ -19,7 +19,7 @@
 #define malloc my_malloc
 #define free my_free
 
-const size_t BUF_SIZE = 32767;
+const size_t BUF_SIZE = 2048;
 const unsigned int ADMIN_SESSION_SIZE = 4;
 const unsigned int ADMIN_CHALLENGE_SIZE = 2;
 const unsigned int ADMIN_CHALLENGE_TIMEOUT = 5;
@@ -727,7 +727,7 @@ void handle_request()
     init_custom_malloc();
     prompt();
 
-    if (!fgets(buf, BUF_SIZE, stdin))  // read until \n or until BUF_SIZE
+    if (!fgets(buf, BUF_SIZE - 1, stdin))  // read until \n or until BUF_SIZE
     {
         dump_fast_storage();
         exit(0);

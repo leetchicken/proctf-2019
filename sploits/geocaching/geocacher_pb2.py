@@ -21,7 +21,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   package='',
   syntax='proto2',
   serialized_options=None,
-  serialized_pb=_b('\n\x1eproctf_service/geocacher.proto\"&\n\nCoordinate\x12\x0b\n\x03lat\x18\x01 \x02(\r\x12\x0b\n\x03lon\x18\x02 \x02(\r\"8\n\x04\x43\x65ll\x12 \n\x0b\x63oordinates\x18\x01 \x02(\x0b\x32\x0b.Coordinate\x12\x0e\n\x06secret\x18\x02 \x02(\x0c\"r\n\x12StoreSecretRequest\x12\x17\n\x0cmessage_type\x18\x01 \x02(\x05:\x01\x32\x12 \n\x0b\x63oordinates\x18\x02 \x02(\x0b\x32\x0b.Coordinate\x12\x0e\n\x06secret\x18\x03 \x02(\x0c\x12\x11\n\tsize_hint\x18\x04 \x01(\r\"T\n\x13StoreSecretResponse\x12\x17\n\x0cmessage_type\x18\x01 \x02(\x05:\x01\x33\x12\x17\n\x06status\x18\x02 \x02(\x0e\x32\x07.Status\x12\x0b\n\x03key\x18\x03 \x02(\x0c\"Z\n\x10GetSecretRequest\x12\x17\n\x0cmessage_type\x18\x01 \x02(\x05:\x01\x34\x12 \n\x0b\x63oordinates\x18\x02 \x02(\x0b\x32\x0b.Coordinate\x12\x0b\n\x03key\x18\x03 \x02(\x0c\"U\n\x11GetSecretResponse\x12\x17\n\x0cmessage_type\x18\x01 \x02(\x05:\x01\x35\x12\x17\n\x06status\x18\x02 \x02(\x0e\x32\x07.Status\x12\x0e\n\x06secret\x18\x03 \x02(\x0c\"^\n\x14\x44iscardSecretRequest\x12\x17\n\x0cmessage_type\x18\x01 \x02(\x05:\x01\x36\x12 \n\x0b\x63oordinates\x18\x02 \x02(\x0b\x32\x0b.Coordinate\x12\x0b\n\x03key\x18\x03 \x02(\x0c\"I\n\x15\x44iscardSecretResponse\x12\x17\n\x0cmessage_type\x18\x01 \x02(\x05:\x01\x37\x12\x17\n\x06status\x18\x02 \x02(\x0e\x32\x07.Status\"3\n\x17ListAllBusyCellsRequest\x12\x18\n\x0cmessage_type\x18\x01 \x02(\x05:\x02\x31\x30\"c\n\x18ListAllBusyCellsResponse\x12\x18\n\x0cmessage_type\x18\x01 \x02(\x05:\x02\x31\x31\x12\x17\n\x06status\x18\x02 \x02(\x0e\x32\x07.Status\x12\x14\n\x05\x63\x65lls\x18\x03 \x03(\x0b\x32\x05.Cell\"8\n\x0e\x41\x64minChallenge\x12\x18\n\x0cmessage_type\x18\x01 \x02(\x05:\x02\x31\x32\x12\x0c\n\x04\x64\x61ta\x18\x02 \x02(\x0c\"7\n\rAdminResponse\x12\x18\n\x0cmessage_type\x18\x01 \x02(\x05:\x02\x31\x33\x12\x0c\n\x04\x64\x61ta\x18\x02 \x02(\x0c\"8\n\x0eUnknownMessage\x12\x18\n\x0cmessage_type\x18\x01 \x02(\x05:\x02\x31\x34\x12\x0c\n\x04\x64\x61ta\x18\x02 \x02(\x0c\"5\n\x0b\x41uthRequest\x12\x18\n\x0cmessage_type\x18\x01 \x02(\x05:\x02\x31\x35\x12\x0c\n\x04\x64\x61ta\x18\x02 \x02(\x0c\":\n\x0c\x41uthResponse\x12\x18\n\x0cmessage_type\x18\x01 \x02(\x05:\x02\x31\x36\x12\x10\n\x08\x61uth_key\x18\x02 \x02(\x0c\"?\n\nAuthResult\x12\x18\n\x0cmessage_type\x18\x01 \x02(\x05:\x02\x31\x37\x12\x17\n\x06status\x18\x02 \x02(\x0e\x32\x07.Status*6\n\x06Status\x12\x06\n\x02OK\x10\x00\x12\x08\n\x04\x46\x41IL\x10\x01\x12\r\n\tNOT_FOUND\x10\x02\x12\x0b\n\x07TIMEOUT\x10\x03')
+  serialized_pb=_b('\n\x1eproctf_service/geocacher.proto\"&\n\nCoordinate\x12\x0b\n\x03lat\x18\x01 \x02(\r\x12\x0b\n\x03lon\x18\x02 \x02(\r\"8\n\x04\x43\x65ll\x12 \n\x0b\x63oordinates\x18\x01 \x02(\x0b\x32\x0b.Coordinate\x12\x0e\n\x06secret\x18\x02 \x02(\x0c\"\x7f\n\x12StoreSecretRequest\x12\x17\n\x0cmessage_type\x18\x01 \x02(\x05:\x01\x32\x12 \n\x0b\x63oordinates\x18\x02 \x02(\x0b\x32\x0b.Coordinate\x12\x0e\n\x06secret\x18\x03 \x02(\x0c\x12\x0b\n\x03key\x18\x04 \x01(\x0c\x12\x11\n\tsize_hint\x18\x05 \x01(\r\"T\n\x13StoreSecretResponse\x12\x17\n\x0cmessage_type\x18\x01 \x02(\x05:\x01\x33\x12\x17\n\x06status\x18\x02 \x02(\x0e\x32\x07.Status\x12\x0b\n\x03key\x18\x03 \x02(\x0c\"Z\n\x10GetSecretRequest\x12\x17\n\x0cmessage_type\x18\x01 \x02(\x05:\x01\x34\x12 \n\x0b\x63oordinates\x18\x02 \x02(\x0b\x32\x0b.Coordinate\x12\x0b\n\x03key\x18\x03 \x02(\x0c\"U\n\x11GetSecretResponse\x12\x17\n\x0cmessage_type\x18\x01 \x02(\x05:\x01\x35\x12\x17\n\x06status\x18\x02 \x02(\x0e\x32\x07.Status\x12\x0e\n\x06secret\x18\x03 \x02(\x0c\"^\n\x14\x44iscardSecretRequest\x12\x17\n\x0cmessage_type\x18\x01 \x02(\x05:\x01\x36\x12 \n\x0b\x63oordinates\x18\x02 \x02(\x0b\x32\x0b.Coordinate\x12\x0b\n\x03key\x18\x03 \x02(\x0c\"I\n\x15\x44iscardSecretResponse\x12\x17\n\x0cmessage_type\x18\x01 \x02(\x05:\x01\x37\x12\x17\n\x06status\x18\x02 \x02(\x0e\x32\x07.Status\"3\n\x17ListAllBusyCellsRequest\x12\x18\n\x0cmessage_type\x18\x01 \x02(\x05:\x02\x31\x30\"c\n\x18ListAllBusyCellsResponse\x12\x18\n\x0cmessage_type\x18\x01 \x02(\x05:\x02\x31\x31\x12\x17\n\x06status\x18\x02 \x02(\x0e\x32\x07.Status\x12\x14\n\x05\x63\x65lls\x18\x03 \x03(\x0b\x32\x05.Cell\"8\n\x0e\x41\x64minChallenge\x12\x18\n\x0cmessage_type\x18\x01 \x02(\x05:\x02\x31\x32\x12\x0c\n\x04\x64\x61ta\x18\x02 \x02(\x0c\"7\n\rAdminResponse\x12\x18\n\x0cmessage_type\x18\x01 \x02(\x05:\x02\x31\x33\x12\x0c\n\x04\x64\x61ta\x18\x02 \x02(\x0c\"8\n\x0eUnknownMessage\x12\x18\n\x0cmessage_type\x18\x01 \x02(\x05:\x02\x31\x34\x12\x0c\n\x04\x64\x61ta\x18\x02 \x02(\x0c\"5\n\x0b\x41uthRequest\x12\x18\n\x0cmessage_type\x18\x01 \x02(\x05:\x02\x31\x35\x12\x0c\n\x04\x64\x61ta\x18\x02 \x02(\x0c\":\n\x0c\x41uthResponse\x12\x18\n\x0cmessage_type\x18\x01 \x02(\x05:\x02\x31\x36\x12\x10\n\x08\x61uth_key\x18\x02 \x02(\x0c\"?\n\nAuthResult\x12\x18\n\x0cmessage_type\x18\x01 \x02(\x05:\x02\x31\x37\x12\x17\n\x06status\x18\x02 \x02(\x0e\x32\x07.Status*6\n\x06Status\x12\x06\n\x02OK\x10\x00\x12\x08\n\x04\x46\x41IL\x10\x01\x12\r\n\tNOT_FOUND\x10\x02\x12\x0b\n\x07TIMEOUT\x10\x03')
 )
 
 _STATUS = _descriptor.EnumDescriptor(
@@ -49,8 +49,8 @@ _STATUS = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=1191,
-  serialized_end=1245,
+  serialized_start=1204,
+  serialized_end=1258,
 )
 _sym_db.RegisterEnumDescriptor(_STATUS)
 
@@ -167,8 +167,15 @@ _STORESECRETREQUEST = _descriptor.Descriptor(
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='size_hint', full_name='StoreSecretRequest.size_hint', index=3,
-      number=4, type=13, cpp_type=3, label=1,
+      name='key', full_name='StoreSecretRequest.key', index=3,
+      number=4, type=12, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b(""),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='size_hint', full_name='StoreSecretRequest.size_hint', index=4,
+      number=5, type=13, cpp_type=3, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
@@ -186,7 +193,7 @@ _STORESECRETREQUEST = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=132,
-  serialized_end=246,
+  serialized_end=259,
 )
 
 
@@ -230,8 +237,8 @@ _STORESECRETRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=248,
-  serialized_end=332,
+  serialized_start=261,
+  serialized_end=345,
 )
 
 
@@ -275,8 +282,8 @@ _GETSECRETREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=334,
-  serialized_end=424,
+  serialized_start=347,
+  serialized_end=437,
 )
 
 
@@ -320,8 +327,8 @@ _GETSECRETRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=426,
-  serialized_end=511,
+  serialized_start=439,
+  serialized_end=524,
 )
 
 
@@ -365,8 +372,8 @@ _DISCARDSECRETREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=513,
-  serialized_end=607,
+  serialized_start=526,
+  serialized_end=620,
 )
 
 
@@ -403,8 +410,8 @@ _DISCARDSECRETRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=609,
-  serialized_end=682,
+  serialized_start=622,
+  serialized_end=695,
 )
 
 
@@ -434,8 +441,8 @@ _LISTALLBUSYCELLSREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=684,
-  serialized_end=735,
+  serialized_start=697,
+  serialized_end=748,
 )
 
 
@@ -479,8 +486,8 @@ _LISTALLBUSYCELLSRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=737,
-  serialized_end=836,
+  serialized_start=750,
+  serialized_end=849,
 )
 
 
@@ -517,8 +524,8 @@ _ADMINCHALLENGE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=838,
-  serialized_end=894,
+  serialized_start=851,
+  serialized_end=907,
 )
 
 
@@ -555,8 +562,8 @@ _ADMINRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=896,
-  serialized_end=951,
+  serialized_start=909,
+  serialized_end=964,
 )
 
 
@@ -593,8 +600,8 @@ _UNKNOWNMESSAGE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=953,
-  serialized_end=1009,
+  serialized_start=966,
+  serialized_end=1022,
 )
 
 
@@ -631,8 +638,8 @@ _AUTHREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1011,
-  serialized_end=1064,
+  serialized_start=1024,
+  serialized_end=1077,
 )
 
 
@@ -669,8 +676,8 @@ _AUTHRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1066,
-  serialized_end=1124,
+  serialized_start=1079,
+  serialized_end=1137,
 )
 
 
@@ -707,8 +714,8 @@ _AUTHRESULT = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1126,
-  serialized_end=1189,
+  serialized_start=1139,
+  serialized_end=1202,
 )
 
 _CELL.fields_by_name['coordinates'].message_type = _COORDINATE
