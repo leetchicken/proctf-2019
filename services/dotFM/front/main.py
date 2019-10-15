@@ -1,6 +1,7 @@
 from sanic import Sanic
 from sanic.request import Request
 from sanic.response import json, text, file_stream
+import uuid
 import glob
 import random
 import aiohttp
@@ -67,19 +68,26 @@ async def get_random_images(request):
 @app.get("/channel")
 async def get_channel(request: Request):
     args = dict(request.query_args)
-    playlist_id = args.get("id")
-    if playlist_id is None:
+    given_id = args.get("id")
+    if given_id is None:
         return text("No playlists found", 404)
 
-    track_number = int(args.get("num", 0))
+    try:
+        playlist_id = uuid.UUID(given_id, version=4)
+    except ValueError:
+        return text("Invalid UUID provided!")
+
+    track_number = abs(int(args.get("num", 0)))
 
     result: dict = await find(app.aio_http_session, playlist_id)
     if len(result["tracks"]) == 0:
         return text("No tracks were found!", 404)
 
+    circuited_number = track_number % len(result["tracks"])
+
     files = get_files_lookup(
         "music",
-        result["tracks"][track_number % len(result["tracks"])]
+        f"{result['tracks'][circuited_number]}.mp3"
     )
     if len(files) == 0:
         return text("Track has been deleted!", 404)

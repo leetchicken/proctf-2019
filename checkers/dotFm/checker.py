@@ -5,7 +5,7 @@ from chklib import Checker, Verdict, \
 
 from playlist_lib.playlist_creator import create_playlist_file
 from playlist_lib import track_creator
-from unacking_tools import unpack
+from unpacking_tools import unpack
 import eyed3
 import sys
 import hashlib
