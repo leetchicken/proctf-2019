@@ -182,6 +182,17 @@ Team* FindTeam(in_addr ipAddr, bool showError)
 }
 
 
+Team* FindTeam(int idx)
+{
+    for(auto& iter : GTeams)
+    {
+        if(iter.second.number == idx)
+            return &iter.second;
+    }
+    return nullptr;
+}
+
+
 void GetTeams(std::vector<Team*>& teams)
 {
     teams.reserve(GTeams.size());

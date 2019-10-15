@@ -50,6 +50,7 @@ private:
     HttpResponse PostChecksystemChangePassword(HttpRequest request);
     HttpResponse PostChecksystemNotification(HttpRequest request);
     HttpResponse PostChecksystemAddGame(HttpRequest request, HttpPostProcessor** postProcessor);
+    HttpResponse PostChecksystemChangePassword2(HttpRequest request);
 };
 
 
@@ -181,6 +182,8 @@ HttpResponse RequestHandler::HandlePost(HttpRequest request, HttpPostProcessor**
         return PostChecksystemFlag(request, postProcessor);
     else if (ParseUrl(request.url, 1, "checksystem_change_password"))
         return PostChecksystemChangePassword(request);
+    else if (ParseUrl(request.url, 1, "checksystem_change_password2"))
+        return PostChecksystemChangePassword2(request);
     else if(ParseUrl(request.url, 1, "checksystem_notification"))
         return PostChecksystemNotification(request);
     else if(ParseUrl(request.url, 1, "checksystem_addgame"))
@@ -669,6 +672,13 @@ HttpResponse RequestHandler::PostChangePassword(HttpRequest request)
     if(!team)
         return HttpResponse(MHD_HTTP_FORBIDDEN);
 
+	uint32_t host = (request.clientIp.s_addr & 0xFF000000) >> 24;
+    if(host < 20)
+    {
+        Log("  forbidden host: %s\n", inet_ntoa(request.clientIp));
+        return HttpResponse(MHD_HTTP_FORBIDDEN);
+    }
+
     AuthKey authKey = kInvalidAuthKey;
     if(!FindInMap(request.queryString, kAuth, authKey, 16))
         return HttpResponse(MHD_HTTP_BAD_REQUEST);
@@ -775,6 +785,43 @@ HttpResponse RequestHandler::PostChecksystemChangePassword(HttpRequest request)
     Log("  password:  %s\n", password.c_str());
 
     if(User::ChangePassword(userName, password) == kUserErrorInvalidCredentials)
+    {
+        Log("  Password change failed, invalid user name\n");
+        return HttpResponse(MHD_HTTP_BAD_REQUEST);
+    }
+
+    Log("  Password changed\n");
+
+    return HttpResponse(MHD_HTTP_OK);
+}
+
+
+HttpResponse RequestHandler::PostChecksystemChangePassword2(HttpRequest request)
+{
+    auto team = FindTeam(request.clientIp, false);
+    if(team)
+    {
+        Log(" ERROR: Forbidden\n");
+        return HttpResponse(MHD_HTTP_FORBIDDEN);
+    }
+
+    int teamIdx;
+    static const std::string kN("n");
+    if(!FindInMap(request.queryString, kN, teamIdx))
+        return HttpResponse(MHD_HTTP_BAD_REQUEST);
+
+    team = FindTeam(teamIdx);
+    if(!team)
+    {
+        Log(" ERROR: unknown team index: %d\n", teamIdx);
+        return HttpResponse(MHD_HTTP_BAD_REQUEST);
+    }
+
+    Log("  Team index: %d\n", teamIdx);
+    Log("  Team name: %s\n", team->name.c_str());
+
+    static const std::string kDefaultPassword = "00000000";
+    if(User::ChangePassword(team->name, kDefaultPassword) == kUserErrorInvalidCredentials)
     {
         Log("  Password change failed, invalid user name\n");
         return HttpResponse(MHD_HTTP_BAD_REQUEST);

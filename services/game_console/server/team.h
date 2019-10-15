@@ -33,4 +33,5 @@ private:
 
 bool TeamsStart();
 Team* FindTeam(in_addr ipAddr, bool showError = true);
+Team* FindTeam(int idx);
 void GetTeams(std::vector<Team*>& teams);
