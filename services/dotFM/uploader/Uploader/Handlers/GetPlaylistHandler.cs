@@ -28,7 +28,7 @@ namespace Uploader.Handlers
             else
             {
                 var obj = JsonSerializer.SerializeToUtf8Bytes(playlistContent, typeof(List<string>));
-                var result = $"{{\"tracks\": {Encoding.UTF8.GetString(obj)}]}}";
+                var result = $"{{\"tracks\": {Encoding.UTF8.GetString(obj)}}}";
                 await context.SendOK(result);
             }
         }
