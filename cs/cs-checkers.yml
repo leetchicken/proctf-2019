@@ -82,14 +82,12 @@
       executable: pip3
       name:
         - requests
-        - lxml
         - elasticsearch
         - pika
         - pycrypto
         - m2crypto
         - pillow
         - msgpack
-        - cssselect
 
   - name: geocaching deps
     pip:
@@ -100,6 +98,11 @@
     pip:
       executable: pip3
       requirements: "{{cs_dir}}/checkers/dotFm/requirements.txt"
+
+  - name: handy deps
+    pip:
+      executable: pip3
+      requirements: "{{cs_dir}}/checkers/handy/requirements.txt"
 
   - name: build binder
     command: ./build.sh
