@@ -11,6 +11,8 @@ import sys
 import hashlib
 import traceback
 import os.path
+import random
+
 
 track_creator.SEGMENTS_PATH = os.path.abspath(os.curdir) + "/music_files/"
 
@@ -67,18 +69,19 @@ async def put_flag_into_the_service(request: PutRequest) -> Verdict:
 async def get_flag_from_the_service(request: GetRequest) -> Verdict:
     music_id, *hashes = request.flag_id.split(":")
     music_hashes = hashes[:2]
-    image_hashes = hashes[2:4]
+    images_hashes = hashes[2:4]
     async with Api(request.hostname) as api:
 
         downloaded_music = []
-        for i, _ in enumerate(music_hashes):
+        for i in range(len(music_hashes)):
             try:
-                music = await api.download_music(music_id, i)
+                track_id = random.choice(range(i, 100, 2))
+                music = await api.download_music(music_id, track_id)
             except Exception as e:
-                return Verdict.DOWN(str(e), traceback.format_exc())
+                return Verdict.DOWN("Couldn't connect to api", traceback.format_exc())
 
             if hashlib.sha1(music).hexdigest() not in music_hashes:
-                return Verdict.MUMBLE("Broken format", "Digests mismatch!")
+                return Verdict.MUMBLE("Broken track", "Digests mismatch!")
             downloaded_music.append(music)
 
     with unpack() as session:
