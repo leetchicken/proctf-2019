@@ -21,11 +21,15 @@ def log_stderr(*params):
 
 def main():
     try:
-        resp = requests.post("http://10.10.10.101/checksystem_change_password?n=%d" % TEAM)
-        log_stderr("OK" if resp.status_code == 200 else "NOT_OK")
+        resp = requests.post("http://10.10.10.101/checksystem_change_password2?n=%d" % TEAM)
+        if resp.status_code == 200:
+            print("msg: OK")
+        else:
+            print("msg: NOT_OK")
+        log_stderr()
     except Exception:
-        log_stderr("ERR")
-    return 1
+        print("msg: ERR")
+    return 0
 
 
 if __name__ == "__main__":

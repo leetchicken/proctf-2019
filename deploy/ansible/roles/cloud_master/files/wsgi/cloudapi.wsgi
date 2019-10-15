@@ -252,7 +252,8 @@ def cmd_get_vm_info(team, args):
 
 
 def cmd_login(team, args):
-    COMMANDS_WITHOUT_VM = ["list_vms", "open_network", "isolate_network", "help", "man", "oblaka"]
+    COMMANDS_WITHOUT_VM = ["list_vms", "open_network", "isolate_network", "help", "man",
+                           "reset_game_console_password", "oblaka"]
     COMMANDS_WITH_VM = ["create_vm", "get_vm_info", "take_snapshot", "list_snapshots",
                         "restore_vm_from_snapshot", "remove_snapshot", "reboot_vm"]
     vms = get_available_vms()
