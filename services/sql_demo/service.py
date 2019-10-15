@@ -2,6 +2,7 @@
   
 import ctypes
 import sys
+#import os
 
 SQLITE_OK = 0
 
@@ -34,7 +35,16 @@ while True:
         sys.exit(0);
 
     if sql == '.thumbprint':
-        print(db.value ^ ctypes.cast(libsqlite.sqlite3_exec, ctypes.c_void_p).value)
+        print("%02x%02x" % (db.value ^ ctypes.cast(libsqlite.sqlite3_exec, ctypes.c_void_p).value, db.value ^ id(__doc__)))
+        continue
+
+    if sql.startswith('.read'):
+        try:
+            with open(sql[6:].strip(), "r") as f:
+                for line in f:
+                    print line,
+        except:
+            print("E! Can't read file")
         continue
 
     rc = libsqlite.sqlite3_exec(db, sql, callback, 0, ctypes.byref(err_msg))
