@@ -1,6 +1,11 @@
 #include <string.h>
 #include <stdlib.h>
 
+#include "custom_malloc.h"
+
+#define malloc my_malloc
+#define free my_free
+
 static const unsigned char base64_table[65] =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 

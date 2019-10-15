@@ -14,6 +14,10 @@
 #include "mpilib.h"
 
 #include "rsa_keys.h"
+#include "custom_malloc.h"
+
+#define malloc my_malloc
+#define free my_free
 
 const size_t BUF_SIZE = 32767;
 const unsigned int ADMIN_SESSION_SIZE = 4;
@@ -62,7 +66,8 @@ void openssl_rsa_decrypt(unsigned char *cipherTextBytes, size_t cipherTextBytes_
                                         RSA_PKCS1_OAEP_PADDING);
     if (bytesRead == -1)
     {
-        exit(12031203);
+        printf("Aborting session: unable to get client session data.\n");
+        exit(1);
     }
 
     RSA_free(privkey);
@@ -477,31 +482,31 @@ void cleanup_packet(Packet *packet, void *msg)
 {
     if (packet->msg_id == 2)
     {
-        store_secret_request__free_unpacked(msg, NULL);
+        store_secret_request__free_unpacked(msg, &protobuf_custom__allocator);
     }
     else if (packet->msg_id == 4)
     {
-        get_secret_request__free_unpacked(msg, NULL);
+        get_secret_request__free_unpacked(msg, &protobuf_custom__allocator);
     }
     else if (packet->msg_id == 6)
     {
-        discard_secret_request__free_unpacked(msg, NULL);
+        discard_secret_request__free_unpacked(msg, &protobuf_custom__allocator);
     }
     else if (packet->msg_id == 10)
     {
-        list_all_busy_cells_request__free_unpacked(msg, NULL);
+        list_all_busy_cells_request__free_unpacked(msg, &protobuf_custom__allocator);
     }
     else if (packet->msg_id == 13)
     {
-        admin_response__free_unpacked(msg, NULL);
+        admin_response__free_unpacked(msg, &protobuf_custom__allocator);
     }
     else if (packet->msg_id == 15)
     {
-        auth_request__free_unpacked(msg, NULL);
+        auth_request__free_unpacked(msg, &protobuf_custom__allocator);
     }
     else if (packet->msg_id == 17)
     {
-        auth_result__free_unpacked(msg, NULL);
+        auth_result__free_unpacked(msg, &protobuf_custom__allocator);
     }
 
     free(packet);
@@ -587,37 +592,37 @@ void *packet_parser(Packet *packet)
     if (packet->msg_id == 2)
     {
         LOG("Unpacking StoreSecretRequest\n");
-        msg = (void *)store_secret_request__unpack(NULL, decrypted_data_size, decrypted_data);
+        msg = (void *)store_secret_request__unpack(&protobuf_custom__allocator, decrypted_data_size, decrypted_data);
     }
     else if (packet->msg_id == 4)
     {
         LOG("Unpacking GetSecretRequest\n");
-        msg = (void *)get_secret_request__unpack(NULL, decrypted_data_size, decrypted_data);
+        msg = (void *)get_secret_request__unpack(&protobuf_custom__allocator, decrypted_data_size, decrypted_data);
     }
     else if (packet->msg_id == 6)
     {
         LOG("Unpacking DiscardSecretRequest\n");
-        msg = (void *)discard_secret_request__unpack(NULL, decrypted_data_size, decrypted_data);
+        msg = (void *)discard_secret_request__unpack(&protobuf_custom__allocator, decrypted_data_size, decrypted_data);
     }
     else if (packet->msg_id == 10)
     {
         LOG("Unpacking ListAllBusyCellsRequest\n");
-        msg = (void *)list_all_busy_cells_request__unpack(NULL, decrypted_data_size, decrypted_data);
+        msg = (void *)list_all_busy_cells_request__unpack(&protobuf_custom__allocator, decrypted_data_size, decrypted_data);
     }
     else if (packet->msg_id == 13)
     {
         LOG("Unpacking AdminResponse\n");
-        msg = (void *)admin_response__unpack(NULL, decrypted_data_size, decrypted_data);
+        msg = (void *)admin_response__unpack(&protobuf_custom__allocator, decrypted_data_size, decrypted_data);
     }
     else if (packet->msg_id == 15)
     {
         LOG("Unpacking AuthRequest\n");
-        msg = (void *)auth_request__unpack(NULL, decrypted_data_size, decrypted_data);
+        msg = (void *)auth_request__unpack(&protobuf_custom__allocator, decrypted_data_size, decrypted_data);
     }
     else if (packet->msg_id == 17)
     {
         LOG("Unpacking AuthResult\n");
-        msg = (void *)auth_result__unpack(NULL, decrypted_data_size, decrypted_data);
+        msg = (void *)auth_result__unpack(&protobuf_custom__allocator, decrypted_data_size, decrypted_data);
     }
     else
     {
@@ -719,6 +724,7 @@ void handle_request()
 {
     char buf[BUF_SIZE];
 
+    init_custom_malloc();
     prompt();
 
     if (!fgets(buf, BUF_SIZE, stdin))  // read until \n or until BUF_SIZE

@@ -89,7 +89,7 @@ class DepositClientError(Exception):
 
 
 class DepositClient(object):
-    def __init__(self):
+    def __init__(self, sign=True):
         with open("service_public.pem", "rb") as f:
             self.pub_key = load_pem_public_key(f.read(), backend=default_backend())
 
@@ -101,6 +101,7 @@ class DepositClient(object):
         self.key_3 = bytes([0] * 32)
         self.hmac1 = bytes([0] * 32)
         self.sequence_id = 0
+        self.sign = sign
 
     def print_rsa_key_for_C(self):
         print(f"unsigned char D[] = {{{bin_format(self.rsa_key.private_numbers().d)}}};")
@@ -109,7 +110,7 @@ class DepositClient(object):
 
     def serialize_message(self, msg):
         msg_id = msg.message_type
-        flags = 2
+        flags = 2 if self.sign else 0
         if msg_id not in (15, 16, 17):
             flags |= 1
         serialized_data = msg.SerializeToString()
@@ -131,12 +132,11 @@ class DepositClient(object):
 
         if flags & 2:
             hmac_output = hmacsha256(hmac_input, self.hmac1)
+            result = struct.pack("<IIBI32s", msg_id, sequence_id, flags,
+                                 serialized_data_len, hmac_output)
 
         else:
-            hmac_output = hmacsha256(hmac_input, self.key_3)
-
-        result = struct.pack("<IIBI32s", msg_id, sequence_id, flags,
-                             serialized_data_len, hmac_output)
+            result = struct.pack("<IIBI", msg_id, sequence_id, flags, serialized_data_len)
 
         if flags & 1:
             result += aes_iv
@@ -224,11 +224,13 @@ class DepositClient(object):
 
         return result
 
-    def store_secret(self, flag, location):
+    def store_secret(self, flag, location, size_hint=None):
         req = geocacher_pb2.StoreSecretRequest()
         req.message_type = 2
         req.coordinates.lat, req.coordinates.lon = location
         req.secret = flag
+        if size_hint:
+            req.size_hint = size_hint
 
         return self.wrap_packet(req)
 

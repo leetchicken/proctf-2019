@@ -69,7 +69,7 @@ void test_db_connection()
 int main(int argc, char **argv)
 {
 #ifdef DEBUG
-    // setup_malloc_hook();
+    setup_malloc_hook();
 #endif
 
     signal(SIGCHLD, SIG_IGN);
