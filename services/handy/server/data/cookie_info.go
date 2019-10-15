@@ -2,10 +2,15 @@ package data
 
 import (
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"hash/crc32"
 
 	"github.com/golang/protobuf/proto"
+)
+
+var (
+	errInvalidCookie = errors.New("invalid cookie")
 )
 
 type CookieInfo struct {
@@ -75,13 +80,13 @@ func (ci *CookieInfo) deserialize() error {
 	expectedHash := binary.BigEndian.Uint32(ci.serializedInfo[:4])
 	hash := crc32.ChecksumIEEE(ci.serializedInfo[4:])
 	if hash != expectedHash {
-		return fmt.Errorf("cookie malformed, expected hash %d, found %d", expectedHash, hash)
+		return errInvalidCookie
 	}
 
 	ui := &LocalUserInfo{}
 	err := proto.Unmarshal(ci.serializedInfo[4:], ui)
 	if err != nil {
-		return fmt.Errorf("failed to deserialize LocalUserInfo: %s", err)
+		return errInvalidCookie
 	}
 	ci.ui = ui
 	ci.deserialized = true
