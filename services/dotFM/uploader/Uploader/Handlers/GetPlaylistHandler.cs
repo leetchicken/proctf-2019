@@ -11,10 +11,8 @@ namespace Uploader.Handlers
     {
         private readonly IStorage storage;
 
-        public GetPlaylistHandler(IStorage storage)
-        {
+        public GetPlaylistHandler(IStorage storage) => 
             this.storage = storage;
-        }
 
         public async Task HandleRequest(HttpContext context)
         {
