@@ -147,7 +147,6 @@ EOF
     ;;
     "tracker")
     cat <<EOF
-services/tracker/./Dockerfile
 services/tracker/./kernel/kernel-headers-4.18.0-80.7.1.el8.dccp.x86_64.rpm
 services/tracker/./kernel/kernel-cross-headers-4.18.0-80.7.1.el8.dccp.x86_64.rpm
 services/tracker/./kernel/kernel-tools-libs-devel-4.18.0-80.7.1.el8.dccp.x86_64.rpm
