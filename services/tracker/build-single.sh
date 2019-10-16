@@ -12,6 +12,7 @@ add() {
 cd "$(dirname $0)"
 
 echo "#!/usr/bin/env python3" > $DST
+chmod +x $DST
 
 echo "Merging files:"
 add app/config.py
