@@ -6,6 +6,7 @@ import sys
 import random
 import string
 import traceback
+import logging
 
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes, padding, hmac
@@ -89,7 +90,7 @@ class DepositClientError(Exception):
 
 
 class DepositClient(object):
-    def __init__(self, sign=True):
+    def __init__(self, log=False, sign=True):
         with open("service_public.pem", "rb") as f:
             self.pub_key = load_pem_public_key(f.read(), backend=default_backend())
 
@@ -102,6 +103,9 @@ class DepositClient(object):
         self.hmac1 = bytes([0] * 32)
         self.sequence_id = 0
         self.sign = sign
+        self.log = log
+        if self.log:
+            logging.basicConfig(level=logging.INFO)
 
     def print_rsa_key_for_C(self):
         print(f"unsigned char D[] = {{{bin_format(self.rsa_key.private_numbers().d)}}};")
@@ -181,15 +185,27 @@ class DepositClient(object):
         return protobuf_message
 
     def wrap_packet(self, packet):
-        return base64.b64encode(self.serialize_message(packet))
+        if self.log:
+            logging.info("Sending message %s", str(packet).replace("\n", "; "))
+        temp = base64.b64encode(self.serialize_message(packet))
+        if self.log:
+            logging.info("Outgoing wire data %s", temp)
+
+        return temp
 
     def unwrap_packet(self, data, assert_message=None):
+        if self.log:
+            logging.info("Incoming wire data %s", data)
         try:
             data = base64.b64decode(data)
         except binascii.Error:
             raise DepositClientError("Corrupt packet: unable to decode base64")
 
-        return self.deserialize_message(data, assert_message)
+        temp = self.deserialize_message(data, assert_message)
+        if self.log:
+            logging.info("Received message %s", str(temp).replace("\n", "; "))
+
+        return temp
 
     def handshake(self):
         self.client_A = os.urandom(16)
