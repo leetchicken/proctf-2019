@@ -1,71 +1,98 @@
 # Game Console
-Service is a game console with public available SDK. Service consists of hardware game console, each team has one, and server which serves all consoles. 
-Console interacts with server by HTTP to register user, to authenticate, to request games list, game code and assets, notifications. 
 
-## HTTP methods:
+The service is a game console with a public SDK. The service consists of a piece of hardware, the console itself, given to each team and one server on the jury side serving HTTP API for all consoles.
 
-### GET /register?u=\<user name\>&p=\<password\>
-Register user on the server. This is first request on console's startup. User name and password are stored in the files on Quad SPI Flash. User name has to match team name, defaut password is '00000000'
+Teams can play games on the console and even write their own games using [the public SDK](/services/game_console/SDK.md.html).
 
+## Server HTTP API
 
-### GET /auth?u=\<user name\>&p=\<password\>
-Authenticates user on the server. In response server sends 4 bytes long authentication key, which used in all other HTTP requests
+### `GET /register?u=\<user name\>&p=\<password\>`
 
+Registers a new user. When the console starts this is the first request it sends to the server. Username and password are stored on Quad SPI Flash. Username has to match the team's name, the default password is `00000000`.
 
-### POST /change_password?auth=\<auth key\>&p=\<new password\>
-Changes password for authenticated user
+### `GET /auth?u=\<user name\>&p=\<password\>`
 
+Authenticates a user. Response contains 4 bytes long authentication key.
 
-### GET /list?auth=\<auth key\>
-Requests games list. List is an array of structures:
-~~~~
+### `POST /change_password?auth=\<auth key\>&p=\<new password\>`
+
+Changes the password for an authenticated user.
+
+### `GET /list?auth=\<auth key\>`
+
+Returns game list. List is an array of the following structs:
+
+```c++
 struct 
 {
     uint32_t gameId;
     uint32_t numberOfAssets;
-    <variable length string> gameName;
+    <variable_length_string> gameName;
 };
-~~~~
+```
 
-### GET /icon?auth=\<auth key\>&id=\<game id\>
-Requests icon for game with specified id
+### `GET /icon?auth=\<auth key\>&id=\<game id\>`
 
-### GET /asset?auth=\<auth key\>&id=\<game id\>&index=\<asset index\>
-Request asset with specified index for game with specified id. Asset index must be less that 'numberOfAssets'
+Returns an icon for a game with the specified id.
 
-### GET /code?auth=\<auth key\>&id=\<game id\>
-Requests code for game with specified id
+### `GET /asset?auth=\<auth key\>&id=\<game id\>&index=\<asset index\>`
 
-### GET /notification?auth=\<auth key\>
-Requests notification available for this console. Notification sent by server in binary form:
-~~~~
+Returns an asset with the specified index for a game with the specified id. Asset index must be less that the value of the `numberOfAssets` field in the corresponding structure.
+
+### `GET /code?auth=\<auth key\>&id=\<game id\>`
+
+Returns the executable file for a game with the specified id.
+
+### `GET /notification?auth=\<auth key\>`
+
+Returns the next notification available for this console. A notification is a following struct:
+
+```c++
 struct 
 {
     uint32_t userNameLength;
-    <variable length string> userName;
+    <variable_length_string> userName;
     uint32_t messageLength;
-    <variable length string> message;
+    <variable_length_string> message;
 };
-~~~~
+```
 
-### POST /notification?auth=\<auth key\>
-Console can send notification to server by using this request. Server broadcasts this notification to all other consoles.
+### `POST /notification?auth=\<auth key\>`
 
+Sends a notification to other consoles.
 
 ## TCP Connections
-Besides HTTP there are 2 raw TCP connections between each console and server. Both of them established on console's startup and kept in connected state in runtime. 
+
+There are 2 raw TCP connections between the console and the server. Console establishes these connection upon startup and then keeps them alive. The server uses the first TPC connection on port 8001 to provide the information about incoming notifications to the console. Checksystem uses the second connection on port 8002 to identify the console.
 
 ### Notifications
-First TCP connection(port 8001) server use to notificate console that there notifications available for this console on the server. Server sends 16 bytes, first 4 bytes contains number of notifications available. Next 12 bytes is just a random(we use it just to make reverse harder). Console on response sends another 16 bytes. This 16 bytes is a result of some bytes juggling of 16 bytes from the server, again, just to make reverse harder. If the number of available notifications is not zero, console requests them one by one using GET /notification and draw them one by one on the screen.
 
-### Checksystem
-Another TCP connection(port 8002) is a part of checksystem. We use it to identify hardware console
+Server periodically sends 16 bytes with the information about incoming notifications. First 4 bytes contain the number of notifications available. Next 12 bytes are random to make reverse engineering harder. In response the console sends back 16 bytes which are the permutation of the bytes received from the server, similarly to make reverse engineering harder.
 
-## Console architecture
-Console is based on STM32F746G Discovery kit and Mbed OS. Binary in the internal flash memory contains Mbed OS, implementaion of API and thread that maintance checksystem's TCP connection. Binary is about 200KB in size. It was expected that teams wont reverse it because of its size, and will take a look to Quad-SPI Flash. Quad-SPI Flash memory contains FAT file system. On this filesystem there are few bmp files, files contains user name and password, and code.bin. code.bin is binary which contains code of 'Main screen application'. This application is built like an ordinary game, ie uses API for operation. Its responsible for interacting with server by HTTP and TCP, its renders main screen, loads icons, game code and assets and manages game execution, manages notifications. Vuln is hidden in it.
+If the number of available notifications is not zero, console fetches them one by one using HTTP API and draws them on the screen.
+
+## Console
+
+The console is based on STM32F746G Discovery kit and Mbed OS. An executable in the internal flash memory contains Mbed OS and some auxiliary code. This executable is about 200KB in size. It's expected that due to the size of the executable, teams won't be reversing it and will look at the Quad-SPI Flash memory instead.
+
+Quad-SPI Flash memory contains FAT file system. On the file system, there are files with username and password, few images and `code.bin` executable with the main screen application.
+
+Main screen application is built using the same public SDK for writing games and its responsibilities include:
+
+- Rendering main screen
+- Interacting with the server
+- Loading games, icons and assets from the server
+- Managing game execution
+- Managing notifications
 
 ## Vuln
-vulnerability is in notification system. Because of the lack of stack and code memory randomization, boundary checks there are buffer overflow followed by RCE is possible. This is happen while processing response of GET /notification. Notification must be 280 bytes long to overwrite return address. To make the hack process easier, console prints some useful addresses on startup. Also 'sp' register value might be useful. It can be retrived by using debugger. Our exploit loads shell. This shell steals auth key and send it to specified server by TCP. See exploit for more information
 
-### How to defend
-For some reason developer write something strange in GET /notification response processing. First he copies response data in to temporary memory on stack without boundary checks, and right after that copies from temporary to permanent. So to patch you just need to remove redudant copy to temporary buffer and copy response data to permanent memory.
+The vulnerability is hidden in the main screen application, in the notification system. There are no boundary checks for the notification message size. Because of this, during processing the response of the `GET /notification` request, if the notification message size is 280 or greater, the message overflows the dedicated buffer and overrides the return address of the current function on the stack.
+
+Exploiting this vulnerability is made easier by the fact that Mbed OS doesn't have memory randomization. Additionally, some debug information is written to the console on startup. This information can be used to put together an exploit. To get even more information, a hacker can use a debugger to peek at the `sp` register value.
+
+In order to use the vulnerability to steal flags, hacker can for example [as presented in this repository](/sploits/game_console) load a shell which reads the authentication key and sends it to a remote server.
+
+### Fixing
+
+The main screen application doesn't actually need to store the message on the stack: the message is immediately written to permanent memory after being written to the stack. Removing redundant writing message to the stack fixes the vulnerability.
