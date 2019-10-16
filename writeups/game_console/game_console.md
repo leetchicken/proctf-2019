@@ -20,7 +20,7 @@ Changes the password for an authenticated user.
 
 ### `GET /list?auth=\<auth key\>`
 
-Returns game list. List is an array of the following structs:
+Returns game list as an array of the following structs:
 
 ```c++
 struct 
