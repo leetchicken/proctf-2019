@@ -6,7 +6,8 @@ DST="tracker.py"
 add() {
     name="$1"
     echo "  $name"
-    echo -e "############################## $name ##############################\n" >> $DST
+    echo "############################## $name ##############################" >> $DST
+    echo >> $DST
     cat "$name" | grep -v "^from app" | grep -v "^import app" | grep -v "^#!" >> $DST
 }
 

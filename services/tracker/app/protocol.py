@@ -9,7 +9,6 @@ from app.enums import Response
 
 MESSAGE_SIZE = 1024
 
-log = logging.getLogger()
 handlers = {}
 
 
@@ -24,11 +23,11 @@ def register_handlers():
                 if hasattr(obj, "request_id"):
                     request_id = func.request_id
                     if request_id in handlers:
-                        log.warning("Handler with request_id %d already registered, %s/%s skipped.",
-                                    request_id, module_name, obj_name)
+                        logging.warning("Handler with request_id %d already registered, %s/%s skipped.",
+                                        request_id, module_name, obj_name)
                         continue
                     handlers[func.request_id] = func
-                    log.debug("Registered handler: %s/%s", module_name, obj_name)
+                    logging.debug("Registered handler: %s/%s", module_name, obj_name)
 
 
 class Client:
@@ -39,11 +38,11 @@ class Client:
 
     def __enter__(self):
         self.host_port = self.client_sock.getpeername()
-        log.info("Client connected: %s:%d", *self.host_port)
+        logging.info("Client connected: %s:%d", *self.host_port)
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        log.info("Client disconnected: %s:%d", *self.host_port)
+        logging.info("Client disconnected: %s:%d", *self.host_port)
         self.client_sock.close()
 
     async def recv(self):
@@ -52,20 +51,20 @@ class Client:
             # Probably client disconnected
             return None
         if len(raw_request) >= MESSAGE_SIZE:
-            log.warning(" <=  [Too big: %d bytes]", len(raw_request))
+            logging.warning(" <=  [Too big: %d bytes]", len(raw_request))
             await self.send((Response.BAD_REQUEST, "Too big request."))
             return None
 
         raw_request = bytes(b ^ ((self.key + i) & 0xFF) for i, b in enumerate(raw_request))
         request = msgpack.unpackb(raw_request, raw=False)
-        log.debug(" <=  %s", request)
+        logging.debug(" <=  %s", request)
         return request
 
     async def send_key(self):
         await self.loop.sock_sendall(self.client_sock, bytes([self.key]))
 
     async def send(self, response):
-        log.debug(" =>  %s", response)
+        logging.debug(" =>  %s", response)
         raw_response = msgpack.packb(response)
         await self.loop.sock_sendall(self.client_sock, raw_response)
 
@@ -102,7 +101,7 @@ async def handle_client(client_sock, loop):
                 response = await handle_request(request)
                 await client.send(response)
             except Exception as e:
-                log.exception("Exception while handling client request")
+                logging.exception("Exception while handling client request")
                 try:
                     await client.send([Response.INTERNAL_ERROR])
                 except Exception as e:
