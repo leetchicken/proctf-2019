@@ -5,6 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
     <link type="text/css" rel="stylesheet" href="static/main.css">
+    <script src="static/jquery-3.4.1.slim.js"></script>
     <style>
         #overlay {
             position: absolute;
@@ -61,11 +62,9 @@
 
     let lastRequest;
 
-    function check_location(x, y){
-        $.get("lookup")
-    }
+    let guids = {};
 
-    let camera, controls, scene, renderer, light;
+    var camera, controls, scene, renderer, light;
 
     let material1, material2, material3;
 
@@ -75,6 +74,23 @@
 
     const startButton = document.getElementById('startButton');
     startButton.addEventListener( 'click', init );
+
+    function check_location(){
+        var x = camera.position.x;
+        var z = camera.position.z;
+        console.log(x, z);
+
+        $.ajax({
+            url: "/lookup",
+            headers: {"Postition": x + "," + z},
+            type: "GET",
+            success: function (result) {
+                console.log(result)
+            }
+        })
+    }
+
+
 
     function init() {
 
@@ -194,6 +210,7 @@
 
         window.addEventListener( 'resize', onWindowResize, false );
 
+        setTimeout(check_location, 1000);
         animate();
 
     }
