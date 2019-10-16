@@ -5,12 +5,14 @@ from chklib import Checker, Verdict, \
 
 from playlist_lib.playlist_creator import create_playlist_file
 from playlist_lib import track_creator
-from unacking_tools import unpack
+from unpacking_tools import unpack
 import eyed3
 import sys
 import hashlib
 import traceback
 import os.path
+import random
+
 
 track_creator.SEGMENTS_PATH = os.path.abspath(os.curdir) + "/music_files/"
 
@@ -24,24 +26,29 @@ async def check_service(request: CheckRequest) -> Verdict:
         with create_playlist_file(data) as playlist:
             try:
                 downloaded_json = (await api.upload_playlist(playlist.playlist_name))
-                if "created" not in downloaded_json:
-                    return Verdict.MUMBLE("Bad json", "'created' not in answer")
-                music_id = downloaded_json["created"]
             except Exception as e:
                 return Verdict.DOWN(str(e), traceback.format_exc())
-            music_hashes = set(playlist.music_hashes)
-            image_hashes = set(playlist.image_hashes)
 
-        downloaded_music = []
+        if "created" not in downloaded_json:
+            return Verdict.MUMBLE("Bad json", "'created' not in answer")
+        music_id = downloaded_json["created"]
+
+        music_hashes = set(playlist.music_hashes)
+        image_hashes = set(playlist.image_hashes)
+        preprocessed_tags = ["_".join((x["artist"], x["title"], x["album"])) for x in playlist.tags]
+
         for i, _ in enumerate(music_hashes):
             try:
                 music = await api.download_music(music_id, i)
+                image = await api.download_image(preprocessed_tags[i])
             except Exception as e:
                 return Verdict.DOWN(str(e), traceback.format_exc())
 
+            if hashlib.sha1(image).hexdigest() not in image_hashes:
+                return Verdict.MUMBLE("Broken img", "Digests mismatch!")
+
             if hashlib.sha1(music).hexdigest() not in music_hashes:
                 return Verdict.MUMBLE("Broken format", "Digests mismatch!")
-            downloaded_music.append(music)
 
     return Verdict.OK()
 
@@ -52,33 +59,43 @@ async def put_flag_into_the_service(request: PutRequest) -> Verdict:
         with create_playlist_file(request.flag) as playlist:
             try:
                 downloaded_json = (await api.upload_playlist(playlist.playlist_name))
-                if "created" not in downloaded_json:
-                    return Verdict.MUMBLE("Bad json", "'created' not in answer")
-                music_id = downloaded_json["created"]
             except Exception as e:
-                return Verdict.DOWN(str(e), traceback.format_exc())
-            music_hashes = set(playlist.music_hashes)
-            image_hashes = set(playlist.image_hashes)
+                return Verdict.DOWN("Couldn't connect to the API", traceback.format_exc())
 
-    return Verdict.OK(f'{music_id}:{":".join(music_hashes)}:{":".join(image_hashes)}')
+    if "created" not in downloaded_json:
+        return Verdict.MUMBLE("Bad json", "'created' not in answer")
+    music_id = downloaded_json["created"]
+
+    music_hashes = set(playlist.music_hashes)
+    image_hashes = set(playlist.image_hashes)
+    preprocessed_tags = ["_".join((x["artist"], x["title"], x["album"])) for x in playlist.tags]
+
+    return Verdict.OK(f'{music_id}:{":".join(music_hashes)}:{":".join(image_hashes)}:{":".join(preprocessed_tags)}')
 
 
 @checker.define_get(vuln_num=1)
 async def get_flag_from_the_service(request: GetRequest) -> Verdict:
+
     music_id, *hashes = request.flag_id.split(":")
     music_hashes = hashes[:2]
-    image_hashes = hashes[2:4]
-    async with Api(request.hostname) as api:
+    images_hashes = hashes[2:4]
+    preprocessed_tags = hashes[4:6]
 
+    async with Api(request.hostname) as api:
         downloaded_music = []
-        for i, _ in enumerate(music_hashes):
+        for i in range(len(music_hashes)):
             try:
-                music = await api.download_music(music_id, i)
+                track_id = random.choice(range(i, 100, 2))
+                music = await api.download_music(music_id, track_id)
+                image = await api.download_image(preprocessed_tags[i])
             except Exception as e:
-                return Verdict.DOWN(str(e), traceback.format_exc())
+                return Verdict.DOWN("Couldn't connect to api", traceback.format_exc())
+
+            if hashlib.sha1(image).hexdigest() not in images_hashes:
+                return Verdict.MUMBLE("Broken img", "Digests mismatch!")
 
             if hashlib.sha1(music).hexdigest() not in music_hashes:
-                return Verdict.MUMBLE("Broken format", "Digests mismatch!")
+                return Verdict.CORRUPT("Broken track", "Digests mismatch!")
             downloaded_music.append(music)
 
     with unpack() as session:

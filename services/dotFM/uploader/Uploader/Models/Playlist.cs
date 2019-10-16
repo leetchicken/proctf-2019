@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace Uploader.Models
 {
-    public class Playlist: IEquatable<Playlist>
+    public class Playlist
     {
         public Dictionary<string, string> TrackPaths { get; }
         public Dictionary<string, AudioFile> TrackFiles { get; }
@@ -47,29 +47,6 @@ namespace Uploader.Models
             }
 
             return playlist;
-        }
-
-        public bool Equals(Playlist other)
-        {
-            if (ReferenceEquals(null, other)) return false;
-            if (ReferenceEquals(this, other)) return true;
-            return Equals(TrackPaths, other.TrackPaths) && Equals(TrackFiles, other.TrackFiles);
-        }
-
-        public override bool Equals(object obj)
-        {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != this.GetType()) return false;
-            return Equals((Playlist) obj);
-        }
-
-        public override int GetHashCode()
-        {
-            unchecked
-            {
-                return ((TrackPaths != null ? TrackPaths.GetHashCode() : 0) * 397) ^ (TrackFiles != null ? TrackFiles.GetHashCode() : 0);
-            }
         }
     }
 }
