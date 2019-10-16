@@ -11,7 +11,7 @@ app_root = "/app/storage"
 data = {}
 
 app.config["REQUEST_MAX_SIZE"] = 2000000
-app.config["ACCESS_LOG"] = False
+app.config["ACCESS_LOG"] = True
 app.config["REQUEST_TIMEOUT"] = 10
 
 
@@ -81,9 +81,9 @@ async def get_music_image(_, image_name: str):
 async def lookup_for_points(request: Request):
     rad = 40
     try:
-        x, y = map(int, request.headers.get("Position", "0,0").split(","))
+        x, y = map(lambda z: int(z.split(".")[0]), request.headers.get("Position", "0,0").split(","))
     except ValueError:
-        return text("Bad request!")
+        return text("Bad request!", 400)
 
     found = [{"pos": [x, y], "id": data[(x1, y1)]} for x1, y1 in data.keys() if ((x - x1) ** 2 + (y - y1) ** 2) <= rad ** 2]
     return json(found, 200)
