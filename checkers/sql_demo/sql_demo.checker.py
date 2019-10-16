@@ -111,6 +111,95 @@ def check(args):
     if count != 0:
         verdict(MUMBLE, "Unexpected query result", "Unexpected count query result: `%s`" % count)
 
+    sql = """
+    CREATE TABLE x(id integer primary key, a TEXT NULL);
+    INSERT INTO x (a) VALUES ('first');
+    CREATE TABLE tempx(id integer primary key, a TEXT NULL);
+    INSERT INTO tempx (a) VALUES ('t-first');
+    CREATE VIEW tv1 AS SELECT x.id, tx.id FROM x JOIN tempx tx ON tx.id=x.id;
+    CREATE VIEW tv1b AS SELECT x.id, tx.id FROM x JOIN tempx tx on tx.id=x.id;
+    CREATE VIEW tv2 AS SELECT * FROM tv1 UNION SELECT * FROM tv1b;
+    SELECT * FROM tv2;
+    """
+    exec_sql(s, sql)
+    r = recv(s)
+    if r != '|1|1|':
+        verdict(MUMBLE, "Unexpected query result", "Unexpected query 1 result: `%s`" % r)
+
+    sql = """
+    create temp table t1(x);
+    insert into t1 values('amx');
+    insert into t1 values('anx');
+    insert into t1 values('amy');
+    insert into t1 values('bmy');
+    select * from t1 where x like 'a__'
+      intersect select * from t1 where x like '_m_'
+      intersect select * from t1 where x like '__x';
+    """
+    exec_sql(s, sql)
+    r = recv(s)
+    if r != '|amx|':
+        verdict(MUMBLE, "Unexpected query result", "Unexpected query 2 result: `%s`" % r)
+
+    sql = """
+    CREATE TABLE t01(x, y);
+    CREATE TABLE t02(x, y);
+    """
+    exec_sql(s, sql)
+    r = recv(s)
+    if r != '':
+        verdict(MUMBLE, "Unexpected query result", "Unexpected query 3 result: `%s`" % r)
+
+    sql = """
+    CREATE VIEW v0 as SELECT x, y FROM t01 UNION SELECT x FROM t02;
+    EXPLAIN QUERY PLAN SELECT * FROM v0 WHERE x='0' OR y;
+    """
+    exec_sql(s, sql)
+    r = recv(s)
+    if r != 'E! SELECTs to the left and right of UNION do not have the same number of result columns':
+        verdict(MUMBLE, "Unexpected query result", "Unexpected query 4 result: `%s`" % r)
+
+    sql = "SELECT X'01020k304', 100;"
+    exec_sql(s, sql)
+    r = recv(s)
+    if r != "E! unrecognized token: \"X'01020k304'\"":
+        verdict(MUMBLE, "Unexpected query result", "Unexpected query 5 result: `%s`" % r)
+
+    sql = """
+    CREATE TABLE j2(id INTEGER PRIMARY KEY, json, src);
+    INSERT INTO j2(id,json,src)
+    VALUES(1,'{
+      "firstName": "John",
+      "lastName": "Smith",
+      "isAlive": true,
+      "age": 25,
+      "address": {
+        "streetAddress": "21 2nd Street",
+        "city": "New York",
+        "state": "NY",
+        "postalCode": "10021-3100"
+      },
+      "phoneNumbers": [
+        {
+          "type": "home",
+          "number": "212 555-1234"
+        },
+        {
+          "type": "office",
+          "number": "646 555-4567"
+        }
+      ],
+      "children": [],
+      "spouse": null
+    }','https://en.wikipedia.org/wiki/JSON');
+
+    SELECT count(*) FROM j2;
+    """
+    exec_sql(s, sql)
+    r = recv(s)
+    if r != '|1|':
+        verdict(MUMBLE, "Unexpected query result", "Unexpected query 6 result: `%s`" % r)
+
     random_text = get_random_text()
     random_word = get_random_word(random_text)
 
