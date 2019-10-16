@@ -1,6 +1,7 @@
 import aiohttp
 from networking.masking_connector import get_agent
 from aiohttp.client import ClientTimeout
+from random import randint
 
 PORT = 1012
 
@@ -13,7 +14,8 @@ class Api:
     async def upload_playlist(self, path: str) -> dict:
         with open(path, mode="rb") as archive_descriptor:
             archive_bytes = archive_descriptor.read()
-        async with self.session.post(f"http://{self.hostname}:{PORT}/channel", data=archive_bytes) as resp:
+        x, y = randint(-1 * 10 ** 20, 10 ** 20), randint(-1 * 10 ** 20, 10 ** 20)
+        async with self.session.post(f"http://{self.hostname}:{PORT}/channel", data=archive_bytes, headers={"Position": f"{x},{y}"}) as resp:
             return await resp.json()
 
     async def download_music(self, playlist_id, track_number) -> bytes:
