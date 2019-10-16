@@ -170,8 +170,8 @@ def main():
             logging.info("  hack FAILED!")
             break
         logging.info("  => %s", Response.to_str(status))
-        if status == Response.NOT_FOUND:
-            break
+        #if status == Response.NOT_FOUND:
+        #    break
 
     logging.info("Found %d flags", flags_count)
 

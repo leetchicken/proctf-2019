@@ -71,7 +71,7 @@ async def track_request_share(db, secret, track_id):
         return Response.FORBIDDEN
 
     await db.fetchrow("UPDATE track SET access=$1 WHERE id=$2", TrackAccess.PENDING, track_id)
-    return Response.OK
+    return Response.OK, user_id
 
 
 async def track_share(db, secret, track_id):
