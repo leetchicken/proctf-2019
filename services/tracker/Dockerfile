@@ -1,14 +1,25 @@
-FROM python:3.7.3-alpine3.9
+FROM python:3.7.3-alpine3.9 as build
 
-WORKDIR /home/tracker
+WORKDIR /build
+
+COPY . ./
+
+RUN ./merge_and_compile.sh
+
+
+
+FROM python:3.7.3-alpine3.9 as runtime
+
+RUN apk add --update alpine-sdk
 
 RUN adduser tracker -u 10000 -D
+WORKDIR /home/tracker
 
-COPY requirements.txt /home/tracker/
-RUN apk add --update alpine-sdk
+COPY requirements.txt .
 RUN pip3 install -r requirements.txt
 
-COPY db /home/tracker/db
-COPY single.py /home/tracker/
+COPY db ./db
+COPY --from=build /build/tracker.bin .
+COPY execute.py .
 
-CMD ["./single.py"]
+CMD ["./execute.py", "tracker.bin"]

@@ -1,0 +1,6 @@
+version: '3'
+services:
+  tracker_build:
+    image: proctf/tracker-build
+    container_name: tracker-build
+    build: .

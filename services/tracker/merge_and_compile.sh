@@ -1,6 +1,7 @@
-#!/bin/bash
+#!/bin/sh
+set -e
 
-DST="single.py"
+DST="tracker.py"
 
 add() {
     name="$1"
@@ -26,5 +27,8 @@ add app/api/tracker.py
 add app/api/user.py
 add main.py
 
-echo -en "Result:\n  "
+echo -en "Result of merge:\n  "
 wc -l $DST
+
+echo -en "Compiling:\n  "
+./compile.py tracker.py tracker.bin
