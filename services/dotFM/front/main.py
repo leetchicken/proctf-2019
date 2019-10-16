@@ -6,12 +6,14 @@ import glob
 import random
 import aiohttp
 
+
 app = Sanic(__name__)
+app_root = "/app/storage"
 data = {}
 
 
 async def upload(session: aiohttp.ClientSession, body_data):
-    async with session.post("http://uploader:80/playlist", data=body_data) as result:
+    async with session.post("http://uploader/playlist", data=body_data) as result:
         if result.status != 200:
             return {"created": None}
         else:
@@ -19,7 +21,7 @@ async def upload(session: aiohttp.ClientSession, body_data):
 
 
 async def find(session: aiohttp.ClientSession, guid):
-    async with session.get(f"http://uploader:80/playlist?playlist_id={guid}") as result:
+    async with session.get(f"http://uploader/playlist?playlist_id={guid}") as result:
         if result.status != 200:
             return {"tracks": []}
         else:
@@ -49,14 +51,20 @@ async def create_channel(request: Request):
     return json(result)
 
 
-@app.get("/image")
-async def get_music_image(request: Request):
-    args = dict(request.query_args)
-    artist, album = args.get("artist", None), args.get("album", None)
+@app.get("/image/<image_name:string>")
+async def get_music_image(_, image_name: str):
+    try:
+        return await file_stream(get_files_lookup("images", f"/{image_name}.png")[0])
+    except:
+        return text("Not found!", 404)
 
-    if artist is None or album is None:
-        return text("Bad parameters provided!", 400)
-    return  # todo img lookup
+
+@app.get("/lookup")
+async def lookup_for_points(request: Request):
+    rad = 40
+    x, y = map(int, request.headers.get("Position", "0,0").split(","))
+    found = [data[(x1, y1)] for x1, y1 in data.keys() if ((x - x1) ** 2 + (y - y1) ** 2) <= rad ** 2]
+    return json(found, 200)
 
 
 @app.get("/images")
@@ -85,18 +93,14 @@ async def get_channel(request: Request):
 
     circuited_number = track_number % len(result["tracks"])
 
-    files = get_files_lookup(
-        "music",
-        f"{result['tracks'][circuited_number]}.mp3"
-    )
-    if len(files) == 0:
+    try:
+        return await file_stream(get_files_lookup("music", f"{result['tracks'][circuited_number]}.mp3")[0])
+    except:
         return text("Track has been deleted!", 404)
-
-    return await file_stream(files[0])
 
 
 def get_files_lookup(folder: str, ending_rule: str):
-    return [x for x in glob.glob(f"/app/storage/{folder}/**")
+    return [x for x in glob.glob(f"{app_root}/{folder}/**")
             if x.endswith(ending_rule)]
 
 

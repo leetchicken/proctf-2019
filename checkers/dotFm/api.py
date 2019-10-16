@@ -10,7 +10,7 @@ class Api:
         self.hostname = hostname
         self.session = aiohttp.ClientSession(timeout=ClientTimeout(total=10), headers={"User-Agent": get_agent()})
 
-    async def upload_playlist(self, path) -> dict:
+    async def upload_playlist(self, path: str) -> dict:
         with open(path, mode="rb") as archive_descriptor:
             archive_bytes = archive_descriptor.read()
         async with self.session.post(f"http://{self.hostname}:{PORT}/channel", data=archive_bytes) as resp:
@@ -18,6 +18,10 @@ class Api:
 
     async def download_music(self, playlist_id, track_number) -> bytes:
         async with self.session.get(f"http://{self.hostname}:{PORT}/channel?id={playlist_id}&num={track_number}") as resp:
+            return await resp.content.read()
+
+    async def download_image(self, image_name: str) -> bytes:
+        async with self.session.get(f"http://{self.hostname}:{PORT}/image/{image_name}") as resp:
             return await resp.content.read()
 
     async def __aenter__(self):
