@@ -19,7 +19,7 @@ import fraud_detector
 OK, CORRUPT, MUMBLE, DOWN, CHECKER_ERROR = 101, 102, 103, 104, 110
 
 PORT = 10000
-TIMEOUT = 3
+TIMEOUT = 10
 
 SCRIPT_PATH = pathlib.Path(__file__).parent
 USERS = json.load(open(SCRIPT_PATH / "users.json"))
