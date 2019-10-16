@@ -96,46 +96,49 @@ def check(args):
     exec_sql(s, sql)
     thumbprint = recv(s)
 
+    trace("Checking sqlite3_exec")
+    exec_sql(s, "CREATE TABLE t(a INT);BEGIN;")
+    r = recv(s)
+    if r != '':
+        verdict(MUMBLE, "Unexpected query result", "Unexpected create table result: `%s`" % r)
+    exec_sql(s, "INSERT INTO t VALUES(%s); ROLLBACK;SELECT COUNT(*) FROM t;" % randint(0, 6555663))
+
+    try:
+        count = int(recv(s).strip('|'))
+    except:
+        verdict(MUMBLE, "Unexpected query result", "Exception while parse count")
+
+    if count != 0:
+        verdict(MUMBLE, "Unexpected query result", "Unexpected count query result: `%s`" % count)
+
     random_text = get_random_text()
     random_word = get_random_word(random_text)
 
-    sql = "SELECT hex(fts3_tokenizer('t', fts3_tokenizer('simple')));CREATE VIRTUAL TABLE text USING fts3(tokenize=t);"
+    sql = "CREATE VIRTUAL TABLE messages USING fts5(body);"
     trace("Executing `%s`" % sql)
     exec_sql(s, sql)
+    r = recv(s)
+    if r != '':
+        verdict(MUMBLE, "Unexpected query result", "Unexpected create fts table result: `%s`" % r)
 
-    try:
-        simple_tokenizer_addr = int.from_bytes(unhexlify(recv(s).strip('|')), byteorder='little')
-    except:
-        verdict(MUMBLE, "Unexpected query result", "Unexpected fts3_tokenizer query result: `%s`" % result)
-
-    trace("Got simple tokenizer struct addr: %s" % hex(simple_tokenizer_addr))
-
-    sql = "INSERT INTO text VALUES('%s');" % random_text
+    sql = "INSERT INTO messages VALUES('%s');" % random_text
     trace("Executing `%s`" % sql)
     exec_sql(s, sql)
-    recv(s)
+    r = recv(s)
+    if r != '':
+        verdict(MUMBLE, "Unexpected query result", "Unexpected insert result: `%s`" % r)
 
-    sql = "SELECT * FROM text WHERE text MATCH '%s';" % random_word
+    sql = "SELECT * FROM messages WHERE body MATCH '%s';" % random_word
     trace("Executing `%s`" % sql)
     exec_sql(s, sql)
     result = recv(s).strip('|')
     if result != random_text:
          verdict(MUMBLE, "Unexpected query result", "Unexpected fts-query result: `%s`" % result)
 
-    trace("Checking `/proc/self/maps` content")
-
-    sql = ".read /proc/self/maps"
+    sql = ".read /etc/passwd"
     trace("Executing `%s`" % sql)
     exec_sql(s, sql)
-    maps = recv(s)
-
-    sqlite_base_addr = int([l for l in maps.splitlines() if 'libsqlite' in l and 'r-xp' in l][0][:12], 16)
-
-    # host - ubuntu bionic
-    #if simple_tokenizer_addr - sqlite_base_addr != 0x111000:
-    if simple_tokenizer_addr - sqlite_base_addr != 0x110040:
-        #verdict(MUMBLE, "Unexpected file content", "Unexpected `/proc/self/maps` file content, expected libsqlite3 base addr: %s, actual libsqlite3 base addr: %s" % (hex(simple_tokenizer_addr - 0x111000), hex(sqlite_base_addr)))
-        trace("Unexpected `/proc/self/maps` file content, expected libsqlite3 base addr: %s, actual libsqlite3 base addr: %s" % (hex(simple_tokenizer_addr - 0x110040), hex(sqlite_base_addr)))
+    recv(s)
 
     exec_sql(s, ".quit")
     s.close()
