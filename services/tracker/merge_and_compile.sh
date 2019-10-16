@@ -21,11 +21,11 @@ add app/config.py
 add app/common.py
 add app/enums.py
 add app/network.py
-add app/protocol.py
 add app/api/point.py
 add app/api/track.py
 add app/api/tracker.py
 add app/api/user.py
+add app/protocol.py
 add main.py
 
 echo "Result of merge:"
