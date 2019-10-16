@@ -9,6 +9,8 @@ import contextlib
 import traceback
 import sys
 
+from playlist_lib.crossplatform_patch import patch_music
+
 
 PLAYLIST_DESCRIPTOR_HEADER = "#EXTM3U"
 PLAYLIST_INFO_HEADER = "#EXTINF"
@@ -32,6 +34,8 @@ def create_playlist_file(flag="") -> PlayList:
         images = [image_creator.generate_image(f"{playlist_dir}/{uuid4()}.png") for _ in range(amount_of_tracks)]
         music = [track_creator.create_track(f"{playlist_dir}/track{i + 1}.mp3", images[i], tags[i])
                  for i in range(amount_of_tracks)]
+
+        patches = [patch_music(music[i], images[i]) for i in range(amount_of_tracks)]
 
         image_hashes = []
         for image in images:
