@@ -68,9 +68,9 @@ Let's see at
 To recap, this is the outline of the exploit:
 1. Register the user and log into the service;
 2. Upload a drone program which is constructed like this:
-	a. title has non-ASCII chars to overflow the class name and change the base class to "h2/tools/Server";
-	b. `setMaze(String)` function is defined in the program, otherwise running the code will fail before start;
-	c. there's a call to `openBrowser("programs/")` somewhere in the program;
+    1. title has non-ASCII chars to overflow the class name and change the base class to "h2/tools/Server";
+    2. `setMaze(String)` function is defined in the program, otherwise running the code will fail before start;
+    3. there's a call to `openBrowser("programs/")` somewhere in the program;
 3. Run the drone program with params `"h2.browser": "tar,czf,static/classes.tar.gz,%url"`
 
 Once run, this program will archive all the class files uploaded by all participants and put the archive to static/classes.tar.gz, which is available via static file downloading.
