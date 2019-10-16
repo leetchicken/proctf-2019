@@ -94,7 +94,7 @@ def check(args):
     trace("Executing .thumbprint")
     sql = ".thumbprint"
     exec_sql(s, sql)
-    recv(s)
+    thumbprint = recv(s)
 
     random_text = get_random_text()
     random_word = get_random_word(random_text)
@@ -129,10 +129,15 @@ def check(args):
     exec_sql(s, sql)
     maps = recv(s)
 
-    sqlite_base_addr = int(maps.splitlines()[7][:12], 16)
-    if simple_tokenizer_addr - sqlite_base_addr != 1179648:
-        verdict(MUMBLE, "Unexpected file content", "Unexpected `/proc/self/maps` file content, expected libsqlite3 base addr: %s, actual libsqlite3 base addr: %s" % (hex(simple_tokenizer_addr - 1179648), hex(sqlite_base_addr)))
+    sqlite_base_addr = int([l for l in maps.splitlines() if 'libsqlite' in l and 'r-xp' in l][0][:12], 16)
 
+    # host - ubuntu bionic
+    #if simple_tokenizer_addr - sqlite_base_addr != 0x111000:
+    if simple_tokenizer_addr - sqlite_base_addr != 0x110040:
+        #verdict(MUMBLE, "Unexpected file content", "Unexpected `/proc/self/maps` file content, expected libsqlite3 base addr: %s, actual libsqlite3 base addr: %s" % (hex(simple_tokenizer_addr - 0x111000), hex(sqlite_base_addr)))
+        trace("Unexpected `/proc/self/maps` file content, expected libsqlite3 base addr: %s, actual libsqlite3 base addr: %s" % (hex(simple_tokenizer_addr - 0x110040), hex(sqlite_base_addr)))
+
+    exec_sql(s, ".quit")
     s.close()
 
     sys.exit(OK)
