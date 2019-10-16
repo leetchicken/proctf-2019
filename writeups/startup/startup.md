@@ -72,7 +72,7 @@ Content-Length: %d
 On the first request this answer is passed from the transport handler to the client handler:
 
 ```
-Url http://10.60.30.1:000000...04000/somename.php
+Url: http://10.60.30.1:000000...04000/somename.php
 Success: true
 Hashsum: d55ec508be338092ab591f3d7e4ab929
 Content-Length: 1000
@@ -82,7 +82,7 @@ Content-Length: 1000
 The client client handler interprets it as
 
 ```
-Url http://10.60.30.1:000000...04000/somename.php
+Url: http://10.60.30.1:000000...04000/somename.php
 Success: true
 Hashsum: d55ec508be338092ab591f3d7e4ab929
 Content-Length: 10
