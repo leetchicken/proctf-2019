@@ -7,3 +7,4 @@ ENV COMPlus_JitTelemetry=0 COMPlus_legacyCorruptedStateExceptionsPolicy=1 COMPlu
 RUN adduser --system --home /app --shell /usr/sbin/nologin --no-create-home --disabled-password dotfm
 
 ENTRYPOINT ["./start.sh"]
+#ENTRYPOINT ["dotnet", "Uploader.dll"]

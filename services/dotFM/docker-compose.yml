@@ -3,7 +3,7 @@ services:
   front_proxy:
     build: ./front
     ports:
-     - "1012:8000"
+     - "80:8000"
     volumes:
       - ./data:/app/storage
     restart: unless-stopped

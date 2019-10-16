@@ -22,7 +22,7 @@ app.static('/static', './static')
 
 
 async def upload(session: aiohttp.ClientSession, body_data):
-    async with session.post("http://uploader/playlist", data=body_data) as result:
+    async with session.post("http://uploader:8001/playlist", data=body_data) as result:
         if result.status != 200:
             return {"created": None}
         else:
@@ -30,7 +30,7 @@ async def upload(session: aiohttp.ClientSession, body_data):
 
 
 async def find(session: aiohttp.ClientSession, guid):
-    async with session.get(f"http://uploader/playlist?playlist_id={guid}") as result:
+    async with session.get(f"http://uploader:8001/playlist?playlist_id={guid}") as result:
         if result.status != 200:
             return {"tracks": []}
         else:

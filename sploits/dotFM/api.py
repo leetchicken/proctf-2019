@@ -2,7 +2,7 @@ import aiohttp
 from aiohttp.client import ClientTimeout
 from random import randint
 
-PORT = 1012
+PORT = 80
 
 
 class Api:
