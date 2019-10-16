@@ -154,7 +154,7 @@ static bool LoadTeamsDatabase()
         }
 		team.network = net;
         Log("  %u %s\n", team.number, team.name.c_str());
-        Log("    network: %s(%08X)\n", netStr, net);
+        Log("  network: %s(%08X)\n", netStr, net);
         team.LoadDb();
     }
 

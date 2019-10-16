@@ -10,7 +10,8 @@
 
 struct UsersStorageRecord
 {
-    IPAddr ip;
+    uint32_t teamIdx;
+    uint32_t ip;
     AuthKey authKey;
     char userName[kMaxUserNameLen];
     char password[kMaxPasswordLen];
@@ -446,6 +447,7 @@ void User::DumpStorage()
         User* u = iter.second;
         memset(&record, 0, sizeof(record));
         record.authKey = u->m_authKey;
+        record.teamIdx = u->m_team->number;
         record.ip = u->m_ipAddr;
         auto& name = u->m_name;
         auto& password = u->m_password;
@@ -479,15 +481,17 @@ void User::ReadStorage()
 				if(fread(&record, kRecordSize, 1, storage) != 1)
                 {
                     error = true;
-                    Log("Failed to read consoles storage\n");
+                    Log("Failed to read users storage\n");
                     break;
                 }
 
-                in_addr addr;
-                addr.s_addr = record.ip;
-                Team* team = FindTeam(addr);
+                uint32_t teamIdx = record.teamIdx;
+                Team* team = FindTeam(teamIdx);
                 if(!team)
+                {
+                    Log("Unknown team index %u\n", teamIdx);
                     continue;
+                }
 
                 User* user = new User(record.userName, record.password, team);
                 GUsers[record.userName] = user;
@@ -501,11 +505,11 @@ void User::ReadStorage()
         }
         else
         {
-            Log("Consoles storage is corrupted\n");
+            Log("Users storage is corrupted\n");
         }
 
         if(!error)
-            Log("Consoles storage has been read succefully\n");
+            Log("Users storage has been read succefully\n");
 
         fclose(storage);
     }
