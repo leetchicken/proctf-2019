@@ -3,7 +3,6 @@ import yaml
 from schematics.models import Model
 from schematics.types import StringType, BooleanType, IntType
 
-CONFIG_FILE = "config.yaml"
 _CONFIG = None
 
 

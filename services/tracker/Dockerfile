@@ -8,8 +8,7 @@ COPY requirements.txt /home/tracker/
 RUN apk add --update alpine-sdk
 RUN pip3 install -r requirements.txt
 
-COPY app /home/tracker/app
 COPY db /home/tracker/db
-COPY main.py /home/tracker/
+COPY single.py /home/tracker/
 
-CMD ["./main.py"]
+CMD ["./single.py"]

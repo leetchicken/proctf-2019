@@ -10,8 +10,6 @@ MAX_PASSWORD_LEN = 64
 MAX_LOGIN_LEN = 16
 MAX_ACTIVE_SESSIONS = 3
 
-log = logging.getLogger()
-
 
 @handler(Request.USER_REGISTER)
 async def user_register(db, login, password):
@@ -45,16 +43,16 @@ async def user_login(db, login, password):
 
     secrets = await db.fetch("SELECT * FROM secret WHERE user_id=$1", user_id)
     if len(secrets) >= MAX_ACTIVE_SESSIONS:
-        log.warning("Too many active secrets (%d), will remove old.", len(secrets))
+        logging.warning("Too many active secrets (%d), will remove old.", len(secrets))
         secrets_to_delete = sorted(secrets, key=lambda s: s["order"], reverse=True)[MAX_ACTIVE_SESSIONS-1:]
         for secret in secrets_to_delete:
-            log.debug("Removing secret %s", secret["value"])
+            logging.debug("Removing secret %s", secret["value"])
             await db.execute("DELETE FROM secret WHERE value=$1", secret["value"])
 
     secret = generate_secret()
     await db.execute("INSERT INTO secret(value, user_id, timestamp) VALUES($1, $2, $3)",
                      secret, user_id, time.time())
-    log.debug("Login successful.")
+    logging.debug("Login successful.")
     return Response.OK, secret
 
 

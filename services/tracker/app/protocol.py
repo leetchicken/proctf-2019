@@ -1,9 +1,9 @@
 import logging
 import random
+import sys
 
 import msgpack
 
-import app.api
 from app.common import connect_db
 from app.enums import Response
 
@@ -13,19 +13,22 @@ log = logging.getLogger()
 handlers = {}
 
 
-def register_handlers(module=app.api):
+def register_handlers():
     import inspect
-    import pkgutil
-    for _, modname, _ in pkgutil.iter_modules(module.__path__, module.__name__ + "."):
-        module = __import__(modname, fromlist=["dummy"])
-        functions = inspect.getmembers(module, inspect.isfunction)
-        for name, func in functions:
-            if hasattr(func, "request_id"):
-                request_id = func.request_id
-                if request_id in handlers:
-                    raise Exception("Handler with request_id {} already registered.".format(request_id))
-                handlers[func.request_id] = func
-                log.debug("Registered handler: %s/%s", modname, name)
+    for module_name, module in list(sys.modules.items()):
+        if module_name != "__main__" and not module_name.startswith("app.api."):
+            continue
+        for obj_name, obj in inspect.getmembers(module):
+            if inspect.isfunction(obj):
+                func = obj
+                if hasattr(obj, "request_id"):
+                    request_id = func.request_id
+                    if request_id in handlers:
+                        log.warning("Handler with request_id %d already registered, %s/%s skipped.",
+                                    request_id, module_name, obj_name)
+                        continue
+                    handlers[func.request_id] = func
+                    log.debug("Registered handler: %s/%s", module_name, obj_name)
 
 
 class Client:

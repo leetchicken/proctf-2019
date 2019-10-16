@@ -4,8 +4,6 @@ import logging
 from app.common import handler, auth_user
 from app.enums import Response, Request, TrackAccess
 
-log = logging.getLogger()
-
 
 @handler(Request.TRACK_LIST)
 async def track_list(db, secret):
@@ -34,7 +32,7 @@ async def track_get(db, secret, track_id):
     access = row["access"]
     if access is TrackAccess.PRIVATE or access is TrackAccess.PENDING:
         if user_id != row["user_id"]:
-            log.warning("Get track is forbidden for user %d (owner: %d)", user_id, row["user_id"])
+            logging.warning("Get track is forbidden for user %d (owner: %d)", user_id, row["user_id"])
             return Response.FORBIDDEN
 
     if TrackAccess.GROUP_ACCESS_MIN <= access <= TrackAccess.GROUP_ACCESS_MAX:
