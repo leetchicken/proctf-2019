@@ -1,6 +1,6 @@
 from sanic import Sanic
 from sanic.request import Request
-from sanic.response import json, text, file_stream
+from sanic.response import json, text, file_stream, html
 import uuid
 import glob
 import random
@@ -10,6 +10,11 @@ import aiohttp
 app = Sanic(__name__)
 app_root = "/app/storage"
 data = {}
+
+with open("index.html") as index:
+    INDEX = index.read()
+
+app.static('/static', './static')
 
 
 async def upload(session: aiohttp.ClientSession, body_data):
@@ -39,6 +44,11 @@ async def finish(application, loop):
     loop.close()
 
 
+@app.get("/")
+async def index(request):
+    return html(INDEX)
+
+
 # noinspection PyUnresolvedReferences
 @app.post("/channel")
 async def create_channel(request: Request):
@@ -63,7 +73,7 @@ async def get_music_image(_, image_name: str):
 async def lookup_for_points(request: Request):
     rad = 40
     x, y = map(int, request.headers.get("Position", "0,0").split(","))
-    found = [data[(x1, y1)] for x1, y1 in data.keys() if ((x - x1) ** 2 + (y - y1) ** 2) <= rad ** 2]
+    found = [{"pos": [x, y], "id": data[(x1, y1)]} for x1, y1 in data.keys() if ((x - x1) ** 2 + (y - y1) ** 2) <= rad ** 2]
     return json(found, 200)
 
 
