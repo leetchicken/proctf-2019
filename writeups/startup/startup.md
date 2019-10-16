@@ -67,7 +67,7 @@ Content-Length: %d
 %s?>""" % (len(PAYLOAD), PAYLOAD)
 ```
 
-###How it works?###
+### How it works? ###
 
 On the first request this answer is passed from the transport handler to the client handler:
 
