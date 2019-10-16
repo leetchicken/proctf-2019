@@ -28,7 +28,7 @@ case "$SERVICE" in
 esac
 
 eval `ssh-agent`
-ssh-add cloud/roles/cloud_master/files/api_srv/proctf2019_cloud_deploy
+ssh-add ansible/roles/cloud_master/files/api_srv/proctf2019_cloud_deploy
 
 echo "Copying ova to cloud master host"
 scp $SERVICE.ova root@178.62.181.92:/root/root_cloud_scripts/
@@ -43,5 +43,5 @@ done
 
 for t in 10 11; do
     echo -n "Team$t is launching on ssh root@10.60.$t.$SERVICE_NUM password:"
-    cat cloud/roles/cloud_master/files/api_srv/db/team$t/serv${SERVICE_NUM}_root_passwd.txt
+    cat ansible/roles/cloud_master/files/api_srv/db/team$t/serv${SERVICE_NUM}_root_passwd.txt
 done
