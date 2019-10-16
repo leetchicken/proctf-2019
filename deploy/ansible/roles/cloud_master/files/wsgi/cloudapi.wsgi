@@ -30,7 +30,8 @@ RATE_LIMITS = {
     "list_snapshots": 10,
     "restore_vm_from_snapshot": 30,
     "remove_snapshot": 10,
-    "reboot_vm": 10
+    "reboot_vm": 10,
+    "reset_game_console_password": 3
 }
 
 
@@ -251,7 +252,8 @@ def cmd_get_vm_info(team, args):
 
 
 def cmd_login(team, args):
-    COMMANDS_WITHOUT_VM = ["list_vms", "open_network", "isolate_network", "help", "man", "oblaka"]
+    COMMANDS_WITHOUT_VM = ["list_vms", "open_network", "isolate_network", "help", "man",
+                           "reset_game_console_password", "oblaka"]
     COMMANDS_WITH_VM = ["create_vm", "get_vm_info", "take_snapshot", "list_snapshots",
                         "restore_vm_from_snapshot", "remove_snapshot", "reboot_vm"]
     vms = get_available_vms()
@@ -268,6 +270,11 @@ def cmd_login(team, args):
 
 def cmd_open_network(team, args):
     return create_task(team, "open_network", "open_network.py", [str(team)])
+
+
+def reset_game_console_password(team, args):
+    return create_task(team, "reset_game_console_password",
+                       "reset_game_console_password.py", [str(team)])
 
 
 def cmd_isolate_network(team, args):
@@ -321,6 +328,7 @@ def cmd_help(team, args):
   reboot_vm <vm>                        - reboot vm
   isolate_network                       - isolate network from other teams and checksystem
   open_network                          - open network
+  reset_game_console_password           - reset game console password
   help                                  - help
   man                                   - instructions
 """.strip("\n")
@@ -461,6 +469,7 @@ def application(environ, start_response):
         "oblaka": (cmd_oblaka, 0, False, False),
         "login": (cmd_login, 0, False, False),
         "poll": (cmd_poll, 1, False, False),
+        "reset_game_console_password": (reset_game_console_password, 0, False, False),
     }
 
     if cmd not in CMDS:

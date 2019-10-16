@@ -8,7 +8,6 @@ import io
 import json
 import M2Crypto
 import base64
-import UserAgents
 from PIL import Image, ImageDraw
 
 # libssl-dev, swig
@@ -42,7 +41,7 @@ def check(*args):
 
 	url = 'http://%s/list' % (addr)
 	try:
-		r = requests.get(url, headers={'User-Agent' : UserAgents.get()})
+		r = requests.get(url)
 	except Exception as e:
 		 close(DOWN, "HTTP Error", "HTTP error: %s" % e)
 
@@ -85,7 +84,7 @@ def check(*args):
 	sign = (random.randint(0, 256) % 8) == 0
 	url = 'http://%s/process?kernel-id=%s' % (addr, kernel_id)
 	try:
-		headers={'User-Agent' : UserAgents.get()}
+		headers = {}
 		if sign:
 			signatureBase64 = gen_signature(kernel_id)
 			headers.update({'signature': signatureBase64})
@@ -136,7 +135,7 @@ def check(*args):
 		signatureBase64 = gen_signature(kernel_id)
 		url = 'http://%s/get-kernel?kernel-id=%s' % (addr, kernel_id)
 		try:
-			r = requests.get(url, headers={'signature': signatureBase64, 'User-Agent' : UserAgents.get()})
+			r = requests.get(url, headers={'signature': signatureBase64})
 			if r.status_code == 404:
 				close(DOWN, "Service is down, status code=%u" % r.status_code)
 			if r.status_code != 200:
@@ -153,7 +152,7 @@ def check(*args):
 			signatureBase64 = gen_signature(name)
 			url = 'http://%s/get-image?name=%s' % (addr, name)
 			try:
-				r = requests.get(url, headers={'User-Agent' : UserAgents.get(), 'signature' : signatureBase64})
+				r = requests.get(url, headers={'signature' : signatureBase64})
 			except Exception as e:
 				close(DOWN, "HTTP Error", "HTTP error: %s" % e)
 
@@ -224,7 +223,7 @@ def put(*args):
 	signatureBase64 = gen_signature(flag_id)
 	url = 'http://%s/add-kernel?kernel-id=%s&kernel=%s' % (addr, flag_id, flag)
 	try:
-		r = requests.post(url, headers={'signature': signatureBase64, 'User-Agent' : UserAgents.get()})
+		r = requests.post(url, headers={'signature': signatureBase64})
 		if r.status_code == 404:
 			close(DOWN, "Service is down, status code=%u" % r.status_code)
 		if r.status_code != 200:
@@ -243,7 +242,7 @@ def get(*args):
 
 	url = 'http://%s/list' % (addr)
 	try:
-		r = requests.get(url, headers={'User-Agent' : UserAgents.get()})
+		r = requests.get(url)
 	except Exception as e:
 		 close(DOWN, "HTTP Error", "HTTP error: %s" % e)
 
@@ -258,7 +257,7 @@ def get(*args):
 	signatureBase64 = gen_signature(flag_id)
 	url = 'http://%s/get-kernel?kernel-id=%s' % (addr, flag_id)
 	try:
-		r = requests.get(url, headers={'signature': signatureBase64, 'User-Agent' : UserAgents.get()})
+		r = requests.get(url, headers={'signature': signatureBase64})
 		if r.status_code == 404:
 			close(DOWN, "Service is down, status code=%u" % r.status_code)
 		if r.status_code != 200:

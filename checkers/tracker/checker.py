@@ -87,7 +87,7 @@ def handle_exceptions(f):
         except AssertionError as e:
             logging.exception(e)
             return ExitCode.MUMBLE
-        except ConnectionError as e:
+        except OSError as e:
             logging.exception(e)
             return ExitCode.FAIL
         except Exception:

@@ -61,6 +61,9 @@ After all the memory on the stack is as follows:
 ![stack](img/stack.png)
 
 So, by changing the length of the solution we can ensure that the memory regions of `rubik` and `key` overlap. It is necessary to take into account the alignment of memory regions. In addition, JIT can optimize compiled code that is used frequently, so the `key` offset relative to the `rubik` may change after several requests to the server.
+You can try to determine `key` offset by checking HTTP status code of `/api/auth` request. Or you can modify your own service to see relative offsets in memory:
+https://github.com/HackerDom/proctf-2019/blob/master/services/rubik/rubik/SolveHandler.fs#L60
+
 The simplest way to select the right `solution` length is to debug the service and diff the `rubik` and the `key` offsets.
 This is what the state of the puzzle looks like we'll use:
 

@@ -68,6 +68,7 @@
   - name: install sys deps
     apt:
       name:
+        - ffmpeg
         - python3.7
         - python3.7-dev
         - python3-pip
@@ -81,21 +82,27 @@
       executable: pip3
       name:
         - requests
-        - lxml
         - elasticsearch
         - pika
         - pycrypto
         - m2crypto
         - pillow
         - msgpack
-        - cssselect
-        - pydub
-        - pypng
 
   - name: geocaching deps
     pip:
       executable: pip3
       requirements: "{{cs_dir}}/checkers/geocaching/requirements.txt"
+
+  - name: dotFm deps
+    pip:
+      executable: pip3
+      requirements: "{{cs_dir}}/checkers/dotFm/requirements.txt"
+
+  - name: handy deps
+    pip:
+      executable: pip3
+      requirements: "{{cs_dir}}/checkers/handy/requirements.txt"
 
   - name: build binder
     command: ./build.sh

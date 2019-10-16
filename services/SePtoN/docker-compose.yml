@@ -1,4 +1,4 @@
-version: '3'
+version: '2'
 services:
   septon:
     image: proctf/septon
@@ -10,3 +10,4 @@ services:
       - 31338:31338    
     volumes:
       - ./data:/home/SePtoN/data
+    mem_limit: 2000M

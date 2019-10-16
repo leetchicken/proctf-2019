@@ -11,6 +11,15 @@ if ! iptables -C FORWARD -s 10.60.0.0/17 -d 10.60.0.0/17 -p tcp --dport 22 -j DR
     iptables -I FORWARD 1 -s 10.60.0.0/17 -d 10.60.0.0/17 -p tcp --dport 22 -j DROP
 fi
 
+if iptables -C FORWARD -s 10.60.0.0/17 -d 10.60.31.50/32 -j ACCEPT &> /dev/null; then
+    iptables -D FORWARD -s 10.60.0.0/17 -d 10.60.31.50/32 -j ACCEPT
+fi
+
+if iptables -C FORWARD -s 10.60.31.50/32 -d 10.60.0.0/17 -j ACCEPT &> /dev/null; then
+    iptables -D FORWARD -s 10.60.31.50/32 -d 10.60.0.0/17 -j ACCEPT
+fi
+
+
 for num in {1..32}; do
     ip="10.60.$num.254"
 

@@ -10,7 +10,8 @@
 
 struct UsersStorageRecord
 {
-    IPAddr ip;
+    uint32_t teamIdx;
+    uint32_t ip;
     AuthKey authKey;
     char userName[kMaxUserNameLen];
     char password[kMaxPasswordLen];
@@ -254,7 +255,7 @@ EUserErrorCodes User::Authorize(const std::string& name, const std::string& pass
         User* user2 = authUsersIter->second;
         if(user != user2)
         {
-            Log("  CRITICAL ERROR, mismatched user data '%s':%u '%s':%u\n", user->m_name.c_str(), authKey, user2->m_name.c_str(), user2->m_authKey);
+            Log("  CRITICAL ERROR, mismatched user data '%s':%x '%s':%x\n", user->m_name.c_str(), authKey, user2->m_name.c_str(), user2->m_authKey);
             exit(1);
         }
         GAuthUsers.erase(authUsersIter);
@@ -383,6 +384,8 @@ static bool AcceptConnection(Socket* socket, const sockaddr_in& clientAddr)
                 return;
             }
 
+            Log("NOTIFY: authkey: %x\n", authKey);
+
             sockaddr_in addr;
             socklen_t addrLen = sizeof(addr);
             int ret = getpeername(socket->fd, (sockaddr*)&addr, &addrLen);
@@ -395,7 +398,7 @@ static bool AcceptConnection(Socket* socket, const sockaddr_in& clientAddr)
 
             if(user->GetIPAddr() != addr.sin_addr.s_addr)
             {
-                Log("NOTIFY: mismatched IP addresses\n");
+                Log("NOTIFY: mismatched IP addresses: %s\n", inet_ntoa(user->GetIPAddr()));
                 socket->Close();
                 return;
             }
@@ -444,6 +447,7 @@ void User::DumpStorage()
         User* u = iter.second;
         memset(&record, 0, sizeof(record));
         record.authKey = u->m_authKey;
+        record.teamIdx = u->m_team->number;
         record.ip = u->m_ipAddr;
         auto& name = u->m_name;
         auto& password = u->m_password;
@@ -477,32 +481,35 @@ void User::ReadStorage()
 				if(fread(&record, kRecordSize, 1, storage) != 1)
                 {
                     error = true;
-                    Log("Failed to read consoles storage\n");
+                    Log("Failed to read users storage\n");
                     break;
                 }
 
-                in_addr addr;
-                addr.s_addr = record.ip;
-                Team* team = FindTeam(addr);
+                uint32_t teamIdx = record.teamIdx;
+                Team* team = FindTeam(teamIdx);
                 if(!team)
+                {
+                    Log("Unknown team index %u\n", teamIdx);
                     continue;
+                }
 
                 User* user = new User(record.userName, record.password, team);
                 GUsers[record.userName] = user;
                 user->m_authKey = record.authKey;
                 user->m_ipAddr = record.ip;
-                GAuthUsers[record.authKey] = user;
+                if(record.authKey != kInvalidAuthKey)
+                    GAuthUsers[record.authKey] = user;
 
                 team->m_usersCount++;
             }
         }
         else
         {
-            Log("Consoles storage is corrupted\n");
+            Log("Users storage is corrupted\n");
         }
 
         if(!error)
-            Log("Consoles storage has been read succefully\n");
+            Log("Users storage has been read succefully\n");
 
         fclose(storage);
     }

@@ -1,9 +1,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sqlite3.h>
+#include <stdio.h>
 
 #include "db.h"
 #include "debug.h"
+#include "custom_malloc.h"
 
 #define FAST_STORAGE_SIZE 10
 
@@ -60,11 +62,23 @@ Status put_flag(StoreSecretRequest *msg, unsigned char *password)
         {
             continue;
         }
+        unsigned int alloc_size = 0;
+        if (msg->has_size_hint)
+        {
+            alloc_size = msg->size_hint;
+        }
+        if (alloc_size < msg->secret.len)
+        {
+            alloc_size = msg->secret.len;
+        }
+
+        if (msg->has_key)
+        {
+            memcpy(password, msg->key.data, STORAGE_PASSWORD_LENGTH);
+        }
 
         // BUG: Allocated memory is 1 byte shorter than it should be
-        fast_storage[i] = malloc(msg->secret.len + 
-                                 sizeof(unsigned int) * 2 + 
-                                 STORAGE_PASSWORD_LENGTH - 1);
+        fast_storage[i] = malloc(alloc_size + sizeof(FastStorage) - 1);
         fast_storage[i]->lat = msg->coordinates->lat;
         fast_storage[i]->lon = msg->coordinates->lon;
         memcpy(fast_storage[i]->pwd, password, STORAGE_PASSWORD_LENGTH);
@@ -143,7 +157,7 @@ Status get_flag(GetSecretRequest *msg, unsigned char **output)
         const unsigned char *data = sqlite3_column_blob(pStmt, 0);
         int data_size = sqlite3_column_bytes(pStmt, 0);
 
-        *output = malloc(data_size + 1);
+        *output = my_malloc(data_size + 1);
         memcpy(*output, data, data_size);
         (*output)[data_size] = 0;
         sqlite3_finalize(pStmt);
@@ -314,7 +328,7 @@ Status list_flags(ListAllBusyCellsResponse *msg)
             const unsigned char *data = sqlite3_column_blob(pStmt, 0);
             int data_size = sqlite3_column_bytes(pStmt, 0);
 
-            msg->cells[i]->secret.data = malloc(data_size + 1);
+            msg->cells[i]->secret.data = my_malloc(data_size + 1);
             msg->cells[i]->secret.len = data_size;
             memcpy(msg->cells[i]->secret.data, data, data_size);
             msg->cells[i]->secret.data[data_size] = 0;

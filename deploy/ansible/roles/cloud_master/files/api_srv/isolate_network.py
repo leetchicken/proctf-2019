@@ -24,7 +24,7 @@ def main():
 
     if network_state == "OPEN":
         cmd = ["sudo", "/root/cloud/isolate_network.sh", str(TEAM)]
-        ret = call_unitl_zero_exit(["ssh"] + SSH_CLOUD_OPTS + [ROUTER_HOST] + cmd)
+        ret = call_unitl_zero_exit(cmd)
         if not ret:
             log_stderr("isolate_network")
             return 1

@@ -1,4 +1,3 @@
-using System;
 using System.IO;
 
 namespace Uploader
@@ -7,10 +6,7 @@ namespace Uploader
     {
         public static void CreateDirectoryIfNotExists(string path)
         {
-            if (!Directory.Exists(path))
-            {
-                Directory.CreateDirectory(path);
-            }
+            if (!Directory.Exists(path)) Directory.CreateDirectory(path);
         }
     }
 }

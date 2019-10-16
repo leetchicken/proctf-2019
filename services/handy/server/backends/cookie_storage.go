@@ -5,8 +5,8 @@ import (
 	"crypto/cipher"
 	"crypto/sha256"
 	"encoding/base64"
+	"errors"
 	"flag"
-	"fmt"
 
 	"github.com/google/uuid"
 
@@ -28,6 +28,8 @@ var (
 		"cookie-storage-hashing-salt-path",
 		"/etc/handy/cookie_storage_hashing_salt",
 		"Path to the salt used for hashing in CookieStorage")
+
+	errInvalidCookie = errors.New("invalid cookie")
 )
 
 type CookieStorage struct {
@@ -86,14 +88,14 @@ func (s *CookieStorage) CreateCookie(ci *data.CookieInfo) (string, error) {
 func (s *CookieStorage) UnpackCookie(cookie string) (*data.CookieInfo, error) {
 	ct, err := base64.StdEncoding.DecodeString(cookie)
 	if err != nil {
-		return nil, err
+		return nil, errInvalidCookie
 	}
 	if len(ct) < 16 {
-		return nil, fmt.Errorf("cookie only has %d bytes, should be at least 16 bytes", len(ct))
+		return nil, errInvalidCookie
 	}
 	id, err := uuid.FromBytes(ct[:16])
 	if err != nil {
-		return nil, err
+		return nil, errInvalidCookie
 	}
 	hash := sha256.Sum256(ct[:16])
 	nonce := hash[:cookieStorageKeySize]
@@ -104,7 +106,7 @@ func (s *CookieStorage) UnpackCookie(cookie string) (*data.CookieInfo, error) {
 	c.XORKeyStream(pt, ct)
 	pt, err = util.Pkcs7Unpad([]byte(pt), 16)
 	if err != nil {
-		return nil, err
+		return nil, errInvalidCookie
 	}
 
 	idStr, err := id.MarshalText()

@@ -1,5 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Uploader.Extensions;
@@ -11,10 +14,8 @@ namespace Uploader.Handlers
     {
         private readonly IStorage storage;
 
-        public GetPlaylistHandler(IStorage storage)
-        {
+        public GetPlaylistHandler(IStorage storage) => 
             this.storage = storage;
-        }
 
         public async Task HandleRequest(HttpContext context)
         {
@@ -26,7 +27,8 @@ namespace Uploader.Handlers
             }
             else
             {
-                var result = $"{{\"tracks\": [{string.Join(",", playlistContent.Select(x => $"\"{x}\""))}]}}";
+                var obj = JsonSerializer.SerializeToUtf8Bytes(playlistContent, typeof(List<string>));
+                var result = $"{{\"tracks\": {Encoding.UTF8.GetString(obj)}}}";
                 await context.SendOK(result);
             }
         }

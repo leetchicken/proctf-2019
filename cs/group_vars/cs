@@ -13,7 +13,7 @@ pg_work_mem: 512MB
 cs_limit_nofile: 10000
 
 cs_worker_default_jobs: 4
-cs_worker_checkers_jobs: 64
+cs_worker_checkers_jobs: 16
 cs_worker_checkers_queues: -q checker -q checker1 -q checker2
 cs_worker_instance: 1
 
@@ -28,9 +28,10 @@ cs_base_url: http://10.10.10.10/
 cs_admin_auth: root:naom7aiTi9ta
 cs_ctf_name: PRO CTF 2019
 cs_flags_secret: geis3aiHee9d
-cs_round_length: 30
+cs_round_length: 60
 cs_flag_life_time: 15
-cs_time: "['2019-10-14 01:00:00', '2019-10-15 06:00:00'], ['2019-10-15 07:00:00', '2019-10-15 17:00:00'], ['2019-10-16 07:00:00', '2019-10-16 17:00:00'], ['2019-10-17 07:00:00', '2019-10-17 17:00:00']"
+cs_disable_irrelevant_services: 1
+cs_time: "['2019-10-15 10:00:00', '2019-10-15 17:00:00'], ['2019-10-16 10:00:00', '2019-10-16 17:00:00'], ['2019-10-17 10:00:00', '2019-10-17 16:30:00']"
 
 cs_static_path: '/home/cs/ctf-scoreboard-client/scoreboard/build'
 
@@ -38,46 +39,46 @@ cs_checkers_hostname_cb: |
   sub { my ($team, $service) = @_; $service->{host_suffix} ? "$team->{host_prefix}$service->{host_suffix}" : "$team->{host}" }
 
 teams: |
-  {name => 'Eat Sleep Pwn Repeat', network => '10.60.1.0/24', host => '10.60.1.1', host_prefix => '10.60.1.', token => '1_111e886db3424fd2a9dd453e6c8a6492'},
-  {name => 'RedRocket', network => '10.60.2.0/24', host => '10.60.2.1', host_prefix => '10.60.2.', token => '2_d8a4fe6d49b44459b0a73bfdeee7d60d'},
-  {name => 'Hack.ERS', network => '10.60.3.0/24', host => '10.60.3.1', host_prefix => '10.60.3.', token => '3_f3c68f2a5e194eab921864a2fff4767e'},
-  {name => 'dotRA', network => '10.60.4.0/24', host => '10.60.4.1', host_prefix => '10.60.4.', token => '4_7352e83e72944ce48bb46125c67a2d2c'},
-  {name => 'True0xA3', network => '10.60.5.0/24', host => '10.60.5.1', host_prefix => '10.60.5.', token => '5_2414af92486241feb87e4ffdc8e2e296'},
-  {name => 'TokyoWesterns', network => '10.60.6.0/24', host => '10.60.6.1', host_prefix => '10.60.6.', token => '6_3035226b28264fb1a84a4c427e58dfd2'},
-  {name => 'Tower of Hanoi', network => '10.60.7.0/24', host => '10.60.7.1', host_prefix => '10.60.7.', token => '7_fc73ab13c1ea4f4f8eff6a2d1851c061'},
-  {name => 'saarsec', network => '10.60.8.0/24', host => '10.60.8.1', host_prefix => '10.60.8.', token => '8_ffc631d45be649e885e7b1e8681b06bf'},
-  {name => 'Bushwhackers', network => '10.60.9.0/24', host => '10.60.9.1', host_prefix => '10.60.9.', token => '9_4261b21cd024415ba4ee8aec24c8b735'},
-  {name => 'Dragon Sector', network => '10.60.10.0/24', host => '10.60.10.1', host_prefix => '10.60.10.', token => '10_22da646d58e745398e6a9bb24e17b45f'},
-  {name => 'r3kapig', network => '10.60.11.0/24', host => '10.60.11.1', host_prefix => '10.60.11.', token => '11_511ee8518f5040ec8e2ab770242964d5'},
-  {name => 'LC↯BC', network => '10.60.12.0/24', host => '10.60.12.1', host_prefix => '10.60.12.', token => '12_284b1ff02d634128bd9af1d8784eb98f'},
-  {name => 'PDKT', network => '10.60.13.0/24', host => '10.60.13.1', host_prefix => '10.60.13.', token => '13_096e4cbbc1a4484b8f569673e9af20e2'},
-  {name => 'r3billions', network => '10.60.14.0/24', host => '10.60.14.1', host_prefix => '10.60.14.', token => '14_866c36db1bb0428b85f1835f2f8a7424'},
-  {name => 'Enigma', network => '10.60.15.0/24', host => '10.60.15.1', host_prefix => '10.60.15.', token => '15_fbfaba9ef1274b7a8a5b76f8717aca7d'},
-  {name => 'mHackeroni', network => '10.60.16.0/24', host => '10.60.16.1', host_prefix => '10.60.16.', token => '16_72dd7a910641433a9f56bd083038f76a'},
-  {name => 'H3X VI5ION', network => '10.60.17.0/24', host => '10.60.17.1', host_prefix => '10.60.17.', token => '17_550cdc9de9a04dd5b4b6d2557d57c7e7'},
-  {name => '4horsemen', network => '10.60.18.0/24', host => '10.60.18.1', host_prefix => '10.60.18.', token => '18_e770908770094a05996d38da3472cf93'},
-  {name => 'root4fun', network => '10.60.19.0/24', host => '10.60.19.1', host_prefix => '10.60.19.', token => '19_3994529b396241938ea37403a87b1773'},
+  {name => 'Eat Sleep Pwn Repeat', network => '10.60.1.0/24', host => '10.60.1.0', host_prefix => '10.60.1.', token => '1_111e886db3424fd2a9dd453e6c8a6492', logo => '/logo.png'},
+  {name => 'RedRocket', network => '10.60.2.0/24', host => '10.60.2.0', host_prefix => '10.60.2.', token => '2_d8a4fe6d49b44459b0a73bfdeee7d60d', logo => '/logo.png'},
+  {name => 'Hack.ERS', network => '10.60.3.0/24', host => '10.60.3.0', host_prefix => '10.60.3.', token => '3_f3c68f2a5e194eab921864a2fff4767e', logo => '/data/03.png'},
+  {name => 'dotRA', network => '10.60.4.0/24', host => '10.60.4.0', host_prefix => '10.60.4.', token => '4_7352e83e72944ce48bb46125c67a2d2c', logo => '/data/04.png'},
+  {name => 'True0xA3', network => '10.60.5.0/24', host => '10.60.5.0', host_prefix => '10.60.5.', token => '5_2414af92486241feb87e4ffdc8e2e296', logo => '/data/05.png'},
+  {name => 'TokyoWesterns', network => '10.60.6.0/24', host => '10.60.6.0', host_prefix => '10.60.6.', token => '6_3035226b28264fb1a84a4c427e58dfd2', logo => '/data/06.png'},
+  {name => 'Tower of Hanoi', network => '10.60.7.0/24', host => '10.60.7.0', host_prefix => '10.60.7.', token => '7_fc73ab13c1ea4f4f8eff6a2d1851c061', logo => '/data/07.png'},
+  {name => 'saarsec', network => '10.60.8.0/24', host => '10.60.8.0', host_prefix => '10.60.8.', token => '8_ffc631d45be649e885e7b1e8681b06bf', logo => '/data/08v2.png'},
+  {name => 'Bushwhackers', network => '10.60.9.0/24', host => '10.60.9.0', host_prefix => '10.60.9.', token => '9_4261b21cd024415ba4ee8aec24c8b735', logo => '/data/09.png'},
+  {name => 'Dragon Sector', network => '10.60.10.0/24', host => '10.60.10.0', host_prefix => '10.60.10.', token => '10_22da646d58e745398e6a9bb24e17b45f', logo => '/data/10.png'},
+  {name => 'r3kapig', network => '10.60.11.0/24', host => '10.60.11.0', host_prefix => '10.60.11.', token => '11_511ee8518f5040ec8e2ab770242964d5', logo => '/data/11.png'},
+  {name => 'LC↯BC', network => '10.60.12.0/24', host => '10.60.12.0', host_prefix => '10.60.12.', token => '12_284b1ff02d634128bd9af1d8784eb98f', logo => '/data/12.png'},
+  {name => 'PDKT', network => '10.60.13.0/24', host => '10.60.13.0', host_prefix => '10.60.13.', token => '13_096e4cbbc1a4484b8f569673e9af20e2', logo => '/data/13.png'},
+  {name => 'r3billions', network => '10.60.14.0/24', host => '10.60.14.0', host_prefix => '10.60.14.', token => '14_866c36db1bb0428b85f1835f2f8a7424', logo => '/data/14.png'},
+  {name => 'Enigma', network => '10.60.15.0/24', host => '10.60.15.0', host_prefix => '10.60.15.', token => '15_fbfaba9ef1274b7a8a5b76f8717aca7d', logo => '/logo.png'},
+  {name => 'mHackeroni', network => '10.60.16.0/24', host => '10.60.16.0', host_prefix => '10.60.16.', token => '16_72dd7a910641433a9f56bd083038f76a', logo => '/data/16.png'},
+  {name => 'H3X VI5ION', network => '10.60.17.0/24', host => '10.60.17.0', host_prefix => '10.60.17.', token => '17_550cdc9de9a04dd5b4b6d2557d57c7e7', logo => '/logo.png'},
+  {name => '4horsemen', network => '10.60.18.0/24', host => '10.60.18.0', host_prefix => '10.60.18.', token => '18_e770908770094a05996d38da3472cf93', logo => '/logo.png'},
+  {name => 'root4fun', network => '10.60.19.0/24', host => '10.60.19.0', host_prefix => '10.60.19.', token => '19_3994529b396241938ea37403a87b1773', logo => '/logo.png'},
 
 services: |
   {name => 'fraud_detector', path => 'checkers/fraud_detector/checker.py', timeout => 30, host_suffix => '1'},
-  {name => 'binder',         path => 'checkers/Binder/checker_remote/check.sh', timeout => 30, host_suffix => '2'},
-  {name => 'SePtoN',         path => 'checkers/SePtoN/checker.sh',         timeout => 30, host_suffix => '3'},
-  {name => 'rubik',          path => 'checkers/rubik/checker.sh',          timeout => 30, host_suffix => '4'},
+  {name => 'binder',         path => 'checkers/Binder/checker_remote/check.sh', timeout => 30, host_suffix => '2', active => ['2019-11-01 00:00:00', '2019-11-10 00:00:00']},
+  {name => 'SePtoN',         path => 'checkers/SePtoN/checker.sh',         timeout => 30, host_suffix => '3', active => ['2019-11-01 00:00:00', '2019-11-10 00:00:00']},
+  {name => 'rubik',          path => 'checkers/rubik/checker.sh',          timeout => 30, host_suffix => '4', active => ['2019-11-01 00:00:00', '2019-11-10 00:00:00']},
   {name => 'deer',           path => 'checkers/deer/deer.checker.py',      timeout => 30, host_suffix => '5'},
   {name => 'bb',             path => 'checkers/bb/bb.checker.pl',          timeout => 30, host_suffix => '6'},
   {name => 'game_console',   path => 'checkers/game_console/checker.py',   timeout => 30, host_suffix => '7'},
-  {name => 'polyfill',       path => 'checkers/polyfill/checker.py',       timeout => 30, host_suffix => '8'},
-  {name => 'convolution',    path => 'checkers/convolution/checker.py',    timeout => 30, host_suffix => '9'},
+  {name => 'polyfill',       path => 'checkers/polyfill/checker.py',       timeout => 30, host_suffix => '8', active => ['2019-11-01 00:00:00', '2019-11-10 00:00:00']},
+  {name => 'convolution',    path => 'checkers/convolution/checker.py',    timeout => 30, host_suffix => '9', active => ['2019-11-01 00:00:00', '2019-11-10 00:00:00']},
   {name => 'handy',          path => 'checkers/handy/handy.checker.py',    timeout => 30, host_suffix => '10'},
   {name => 'gallery',        path => 'checkers/gallery/checker.py',        timeout => 30, host_suffix => '11'},
-  {name => 'ca',             path => 'checkers/ca/ca.checker.pl',          timeout => 30, host_suffix => '12'},
-  {name => 'drone_racing',   path => 'checkers/drone_racing/drone_racing.checker.py', timeout => 30, host_suffix => '13'},
-  {name => 'startup',        path => 'checkers/startup/checker.py',        timeout => 30, host_suffix => '14'},
-  {name => 'tracker',        path => 'checkers/tracker/checker.py',        timeout => 30, host_suffix => '15'},
+  {name => 'ca',             path => 'checkers/ca/ca.checker.pl',          timeout => 30, host_suffix => '12', active => ['2019-11-01 00:00:00', '2019-11-10 00:00:00']},
+  {name => 'drone_racing',   path => 'checkers/drone_racing/drone_racing.checker.py', timeout => 30, host_suffix => '13', active => ['2019-11-01 00:00:00', '2019-11-10 00:00:00']},
+  {name => 'startup',        path => 'checkers/startup/checker.py',        timeout => 30, host_suffix => '14', active => ['2019-11-01 00:00:00', '2019-11-10 00:00:00']},
+  {name => 'tracker',        path => 'checkers/tracker/checker.py',        timeout => 30, host_suffix => '15', active => ['2019-11-01 00:00:00', '2019-11-10 00:00:00']},
   {name => 'notepool',       path => 'checkers/notepool/checker.sh',       timeout => 30, host_suffix => '16'},
   {name => 'Spaceships',     path => 'checkers/Spaceships/checker.py',     timeout => 30, host_suffix => '17'},
-  {name => 'sql_demo',       path => 'checkers/sql_demo/sql_demo.checker.py', timeout => 30, host_suffix => '18'},
-  {name => 'geocaching',     path => 'checkers/geocaching/checker.py',    timeout => 30, host_suffix => '19'},
+  {name => 'sql_demo',       path => 'checkers/sql_demo/sql_demo.checker.py', timeout => 30, host_suffix => '18', active => ['2019-11-01 00:00:00', '2019-11-10 00:00:00']},
+  {name => 'geocaching',     path => 'checkers/geocaching/checker.py',    timeout => 30, host_suffix => '19', active => ['2019-11-01 00:00:00', '2019-11-10 00:00:00']},
   {name => 'dotFm',          path => 'checkers/dotFm/checker.py',         timeout => 30, host_suffix => '20', active => ['2019-11-01 00:00:00', '2019-11-10 00:00:00']},
 
 queues: |

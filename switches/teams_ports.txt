@@ -16,7 +16,7 @@ VLAN    Team                        Cables (Table)  Table   Notebook
 113     13 — PDKT                   17, 18          25      26
 114     14 — r3billions             39, 40          27      28
 115     15 — Enigma (CBOE Winner)   11, 12          29      30
-116     16 — mHackeroni             13, 14          31      32
+116     16 — mHackeroni             15, 16          31      32
 117     17 — H3X VI5ION             23, 24          33      34
 118     18 — 4horsemen              33, 34          35      36
-119     19 — root4fun               15, 16          37      38
+119     19 — root4fun               13, 14          37      38

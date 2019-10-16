@@ -21,6 +21,8 @@ message StoreSecretRequest {
     required int32 message_type = 1 [default = 2];
     required Coordinate coordinates = 2;
     required bytes secret = 3;
+    optional bytes key = 4;
+    optional uint32 size_hint = 5;
 }
 
 message StoreSecretResponse {
