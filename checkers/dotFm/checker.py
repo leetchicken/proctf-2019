@@ -60,7 +60,7 @@ async def put_flag_into_the_service(request: PutRequest) -> Verdict:
             try:
                 downloaded_json = (await api.upload_playlist(playlist.playlist_name))
             except Exception as e:
-                return Verdict.DOWN(str(e), traceback.format_exc())
+                return Verdict.DOWN("Couldn't connect to the API", traceback.format_exc())
 
     if "created" not in downloaded_json:
         return Verdict.MUMBLE("Bad json", "'created' not in answer")

