@@ -15,7 +15,7 @@ Other endpoints are only available for authenticated users:
 * `POST /api/runs` — run one of your programs with some params
 * `GET /api/runs` — retrieve all runs for some level, see the scoreboard of competitors
 
-Flags from the checksystem are stored in drone programs: they finish the level and print a flag to stdout.
+Flags from the checksystem are embedded into drone programs: once they finish the level, they print a flag to stdout.
 
 There are two known vulnerabilities: one of them allows to win any competition for any level, the other one allows to steal flags.
 
