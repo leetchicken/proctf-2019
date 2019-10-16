@@ -65,8 +65,7 @@ namespace Uploader.Unpackers
                         var newTrackName = string.Concat(
                             new SHA1Managed()
                                 .ComputeHash(trackBytes)
-                                .Select(x => x.ToString("x2"))
-                            ) + ".mp3";
+                                .Select(x => x.ToString("x2")));
                         playlist.TrackFiles[newTrackName] = new AudioFile(trackBytes);
                         foreach (var (key, value) in playlist.TrackPaths.ToList())
                             if (value == entry.FullName)
