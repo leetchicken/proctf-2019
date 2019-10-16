@@ -59,6 +59,12 @@
 
     import { FirstPersonControls } from './static/FirstPersonControls.js';
 
+    let lastRequest;
+
+    function check_location(x, y){
+        $.get("lookup")
+    }
+
     let camera, controls, scene, renderer, light;
 
     let material1, material2, material3;

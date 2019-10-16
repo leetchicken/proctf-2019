@@ -38,7 +38,7 @@ def create_track(track_name="music.mp3", image_path="image.png", tags=None, trac
     repeated = repeated.fade_out(len(drums_segment))
 
     repeated.export(os.path.curdir + f"/{track_name}", format="mp3", tags=tags,
-                    parameters=["-i", os.path.curdir + "/" + image_path]),
+                    parameters=["-i", os.path.abspath(os.path.curdir + "/" + image_path)]),
                     #cover=os.path.curdir + "/" + image_path) #forcefully converts to jpg, meh
 
     return track_name

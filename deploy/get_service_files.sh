@@ -211,6 +211,7 @@ EOF
 services/dotFM/./docker-compose.yml
 services/dotFM/./Dockerfile
 services/dotFM/./front/
+services/dotFM/./front/static/
 services/dotFM/./out/
 EOF
     ;;
