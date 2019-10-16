@@ -1,11 +1,8 @@
 FROM python:3.7.3-alpine3.9 as build
 
 WORKDIR /build
-
 COPY . ./
-
 RUN ./merge_and_compile.sh
-
 
 
 FROM python:3.7.3-alpine3.9 as runtime
@@ -20,6 +17,6 @@ RUN pip3 install -r requirements.txt
 
 COPY db ./db
 COPY --from=build /build/tracker.bin .
-COPY execute.py .
+COPY execute.py start.sh ./
 
-CMD ["./execute.py", "tracker.bin"]
+CMD ["./start.sh"]
