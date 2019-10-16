@@ -46,13 +46,6 @@ async def connect_db():
     return await asyncpg.connect(config.database_uri)
 
 
-def handler(request_id: int):
-    def wrapper(func):
-        func.request_id = request_id
-        return func
-    return wrapper
-
-
 async def auth_user(db, secret):
     row = await db.fetchrow("SELECT user_id FROM secret WHERE value=$1", secret)
     if row is None:

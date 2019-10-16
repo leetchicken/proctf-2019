@@ -1,11 +1,10 @@
 import asyncio
 import logging
 
-from app.common import handler, auth_user
-from app.enums import Response, Request, TrackAccess
+from app.common import auth_user
+from app.enums import Response, TrackAccess
 
 
-@handler(Request.TRACK_LIST)
 async def track_list(db, secret):
     user_id = await auth_user(db, secret)
     if user_id is None:
@@ -17,7 +16,6 @@ async def track_list(db, secret):
     return Response.OK, tracks
 
 
-@handler(Request.TRACK_GET)
 async def track_get(db, secret, track_id):
     user_id = await auth_user(db, secret)
     if user_id is None:
@@ -45,7 +43,6 @@ async def track_get(db, secret, track_id):
     return Response.OK, points
 
 
-@handler(Request.TRACK_DELETE)
 async def track_delete(db, secret, track_id):
     user_id = await auth_user(db, secret)
     if user_id is None:
@@ -61,7 +58,6 @@ async def track_delete(db, secret, track_id):
     return Response.OK
 
 
-@handler(Request.TRACK_REQUEST_SHARE)
 async def track_request_share(db, secret, track_id):
     user_id = await auth_user(db, secret)
     if user_id is None:
@@ -78,7 +74,6 @@ async def track_request_share(db, secret, track_id):
     return Response.OK
 
 
-@handler(Request.TRACK_SHARE)
 async def track_share(db, secret, track_id):
     user_id = await auth_user(db, secret)
     if user_id is None:

@@ -2,8 +2,8 @@ import logging
 import time
 import uuid
 
-from app.common import hash_password, generate_secret, handler, auth_user
-from app.enums import Response, Request
+from app.common import hash_password, generate_secret, auth_user
+from app.enums import Response
 
 MIN_PASSWORD_LEN = 8
 MAX_PASSWORD_LEN = 64
@@ -11,7 +11,6 @@ MAX_LOGIN_LEN = 16
 MAX_ACTIVE_SESSIONS = 3
 
 
-@handler(Request.USER_REGISTER)
 async def user_register(db, login, password):
     if len(password) < MIN_PASSWORD_LEN:
         return Response.BAD_REQUEST, "Password is too short."
@@ -33,7 +32,6 @@ async def user_register(db, login, password):
     return Response.OK
 
 
-@handler(Request.USER_LOGIN)
 async def user_login(db, login, password):
     user = await db.fetchrow('SELECT id FROM "user" WHERE login=$1 AND hash=$2',
                              login, hash_password(password))
@@ -56,13 +54,11 @@ async def user_login(db, login, password):
     return Response.OK, secret
 
 
-@handler(Request.USER_LOGOUT)
 async def user_logout(db, secret):
     res = await db.execute('DELETE FROM secret WHERE value=$1', secret)
     return Response.OK if res == "DELETE 1" else Response.NOT_FOUND
 
 
-@handler(Request.USER_DELETE)
 async def user_delete(db, secret):
     user_id = await auth_user(db, secret)
     if user_id is None:

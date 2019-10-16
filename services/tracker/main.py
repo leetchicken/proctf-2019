@@ -9,7 +9,7 @@ import asyncpg
 from app.common import configure_logging, connect_db
 from app.config import get_config
 from app.network import create_server_socket
-from app.protocol import handle_client, register_handlers
+from app.protocol import handle_client
 
 
 def parse_args():
@@ -44,7 +44,6 @@ async def async_main(loop, config, args):
     await create_tables(db)
     await db.close()
 
-    register_handlers()
     server = create_server_socket(config.host, config.port)
     while True:
         client_sock, _ = await loop.sock_accept(server)

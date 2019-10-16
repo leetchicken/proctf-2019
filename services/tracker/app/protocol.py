@@ -4,30 +4,30 @@ import sys
 
 import msgpack
 
+from app.api.user import user_register, user_delete, user_logout, user_login
+from app.api.tracker import tracker_add, tracker_list, tracker_delete
 from app.common import connect_db
-from app.enums import Response
+from app.enums import Response, Request
+from tracker import track_delete, track_get, track_list, track_request_share, track_share, point_add, point_add_batch
 
 MESSAGE_SIZE = 1024
 
-handlers = {}
-
-
-def register_handlers():
-    import inspect
-    for module_name, module in list(sys.modules.items()):
-        if module_name != "__main__" and not module_name.startswith("app.api."):
-            continue
-        for obj_name, obj in inspect.getmembers(module):
-            if inspect.isfunction(obj):
-                func = obj
-                if hasattr(obj, "request_id"):
-                    request_id = func.request_id
-                    if request_id in handlers:
-                        logging.warning("Handler with request_id %d already registered, %s/%s skipped.",
-                                        request_id, module_name, obj_name)
-                        continue
-                    handlers[func.request_id] = func
-                    logging.debug("Registered handler: %s/%s", module_name, obj_name)
+handlers = {
+    Request.USER_DELETE: user_delete,
+    Request.USER_LOGIN: user_login,
+    Request.USER_LOGOUT: user_logout,
+    Request.USER_REGISTER: user_register,
+    Request.TRACKER_ADD: tracker_add,
+    Request.TRACKER_LIST: tracker_list,
+    Request.TRACKER_DELETE: tracker_delete,
+    Request.TRACK_DELETE: track_delete,
+    Request.TRACK_GET: track_get,
+    Request.TRACK_LIST: track_list,
+    Request.TRACK_REQUEST_SHARE: track_request_share,
+    Request.TRACK_SHARE: track_share,
+    Request.POINT_ADD: point_add,
+    Request.POINT_ADD_BATCH: point_add_batch,
+}
 
 
 class Client:

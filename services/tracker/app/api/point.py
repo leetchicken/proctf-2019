@@ -1,8 +1,8 @@
 import logging
 import time
 
-from app.common import handler, auth_tracker
-from app.enums import Response, Request, TrackAccess
+from app.common import auth_tracker
+from app.enums import Response, TrackAccess
 
 NEW_TRACK_GAP_SECONDS = 2
 
@@ -22,7 +22,6 @@ async def get_or_create_track_id(db, user_id, tracker_id, now):
     return track_id
 
 
-@handler(Request.POINT_ADD)
 async def point_add(db, token, latitude, longitude, meta):
     try:
         latitude = float(latitude)
@@ -45,7 +44,6 @@ async def point_add(db, token, latitude, longitude, meta):
     return Response.OK, track_id
 
 
-@handler(Request.POINT_ADD_BATCH)
 async def point_add_batch(db, token, points):
     tracker_id, user_id = await auth_tracker(db, token)
     if tracker_id is None:
