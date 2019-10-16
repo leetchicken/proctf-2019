@@ -162,6 +162,7 @@ services/tracker/./db
 services/tracker/./db/drop.sql
 services/tracker/./db/create.sql
 services/tracker/./docker-compose.yml
+services/tracker/./start.sh
 services/tracker/./requirements.txt
 EOF
     ;;
