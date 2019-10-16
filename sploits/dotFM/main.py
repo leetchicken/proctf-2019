@@ -50,5 +50,5 @@ def create_playlist_file(path_for_playlist):
 
 
 create_playlist_file(
-    "/storage/playlists/00000000-4444-5555-6666-000000000000.m3u",
+    "/storage/playlists/e915797d-fba2-4b51-aa46-30df6810b387.m3u",
 )
