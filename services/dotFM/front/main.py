@@ -1,15 +1,19 @@
+import glob
+import uuid
+
+import aiohttp
 from sanic import Sanic
 from sanic.request import Request
 from sanic.response import json, text, file_stream, html
-import uuid
-import glob
-import random
-import aiohttp
-
 
 app = Sanic(__name__)
 app_root = "/app/storage"
 data = {}
+
+app.config["REQUEST_MAX_SIZE"] = 2000000
+app.config["ACCESS_LOG"] = False
+app.config["REQUEST_TIMEOUT"] = 10
+
 
 with open("index.html") as index:
     INDEX = index.read()
@@ -52,7 +56,11 @@ async def index(request):
 # noinspection PyUnresolvedReferences
 @app.post("/channel")
 async def create_channel(request: Request):
-    x, y = map(int, request.headers.get("Position", "0,0").split(","))
+    try:
+        x, y = map(int, request.headers.get("Position", "0,0").split(","))
+    except ValueError:
+        return text("Bad request", 400)
+
     some_data = request.body
 
     result = await upload(app.aio_http_session, some_data)
@@ -72,14 +80,13 @@ async def get_music_image(_, image_name: str):
 @app.get("/lookup")
 async def lookup_for_points(request: Request):
     rad = 40
-    x, y = map(int, request.headers.get("Position", "0,0").split(","))
+    try:
+        x, y = map(int, request.headers.get("Position", "0,0").split(","))
+    except ValueError:
+        return text("Bad request!")
+
     found = [{"pos": [x, y], "id": data[(x1, y1)]} for x1, y1 in data.keys() if ((x - x1) ** 2 + (y - y1) ** 2) <= rad ** 2]
     return json(found, 200)
-
-
-@app.get("/images")
-async def get_random_images(request):
-    return json((x.split("/")[-1] for x in random.choices(get_files_lookup("images", ".png"), k=10)))
 
 
 # noinspection PyUnresolvedReferences
@@ -95,7 +102,10 @@ async def get_channel(request: Request):
     except ValueError:
         return text("Invalid UUID provided!")
 
-    track_number = abs(int(args.get("num", 0)))
+    try:
+        track_number = abs(int(args.get("num", 0)))
+    except ValueError:
+        return text("Invalid track number provided!")
 
     result: dict = await find(app.aio_http_session, playlist_id)
     if len(result["tracks"]) == 0:
@@ -115,4 +125,5 @@ def get_files_lookup(folder: str, ending_rule: str):
 
 
 if __name__ == '__main__':
+
     app.run(host='0.0.0.0', port=8000)

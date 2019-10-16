@@ -1,14 +1,16 @@
 import os.path
 import shutil
-import eyed3
 import uuid
 import sys
 import traceback
 import contextlib
+
+import eyed3
 import eyed3.plugins
-from api import Api
 from PIL import Image
 from PIL.PngImagePlugin import PngInfo
+
+from api import Api
 
 
 @contextlib.contextmanager
