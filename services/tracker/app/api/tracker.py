@@ -1,15 +1,12 @@
 import logging
 
-from app.common import handler, generate_token, auth_user
-from app.enums import Response, Request
+from app.common import generate_token, auth_user
+from app.enums import Response
 
 MAX_TRACKERS = 8
 
-log = logging.getLogger()
 
-
-@handler(Request.TRACKER_LIST)
-async def list(db, secret):
+async def tracker_list(db, secret):
     user_id = await auth_user(db, secret)
     if user_id is None:
         return Response.FORBIDDEN
@@ -18,8 +15,7 @@ async def list(db, secret):
     return Response.OK, [(t["id"], t["name"]) for t in trackers]
 
 
-@handler(Request.TRACKER_ADD)
-async def add(db, secret, name):
+async def tracker_add(db, secret, name):
     user_id = await auth_user(db, secret)
     if user_id is None:
         return Response.FORBIDDEN
@@ -31,13 +27,12 @@ async def add(db, secret, name):
     token = generate_token()
     await db.execute("INSERT INTO tracker(user_id, name, token) VALUES($1, $2, $3)",
                      user_id, name, token)
-    log.debug("Added new tracker.")
+    logging.debug("Added new tracker.")
 
     return Response.OK, token
 
 
-@handler(Request.TRACKER_DELETE)
-async def delete(db, secret, id):
+async def tracker_delete(db, secret, id):
     user_id = await auth_user(db, secret)
     if user_id is None:
         return Response.FORBIDDEN

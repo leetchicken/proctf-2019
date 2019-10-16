@@ -3,29 +3,31 @@ import random
 
 import msgpack
 
-import app.api
+from app.api.tracker import tracker_add, tracker_list, tracker_delete
+from app.api.track import track_delete, track_get, track_list, track_request_share, track_share
+from app.api.point import point_add, point_add_batch
+from app.api.user import user_register, user_delete, user_logout, user_login
 from app.common import connect_db
-from app.enums import Response
+from app.enums import Response, Request
 
 MESSAGE_SIZE = 1024
 
-log = logging.getLogger()
-handlers = {}
-
-
-def register_handlers(module=app.api):
-    import inspect
-    import pkgutil
-    for _, modname, _ in pkgutil.iter_modules(module.__path__, module.__name__ + "."):
-        module = __import__(modname, fromlist=["dummy"])
-        functions = inspect.getmembers(module, inspect.isfunction)
-        for name, func in functions:
-            if hasattr(func, "request_id"):
-                request_id = func.request_id
-                if request_id in handlers:
-                    raise Exception("Handler with request_id {} already registered.".format(request_id))
-                handlers[func.request_id] = func
-                log.debug("Registered handler: %s/%s", modname, name)
+handlers = {
+    Request.USER_DELETE: user_delete,
+    Request.USER_LOGIN: user_login,
+    Request.USER_LOGOUT: user_logout,
+    Request.USER_REGISTER: user_register,
+    Request.TRACKER_ADD: tracker_add,
+    Request.TRACKER_LIST: tracker_list,
+    Request.TRACKER_DELETE: tracker_delete,
+    Request.TRACK_DELETE: track_delete,
+    Request.TRACK_GET: track_get,
+    Request.TRACK_LIST: track_list,
+    Request.TRACK_REQUEST_SHARE: track_request_share,
+    Request.TRACK_SHARE: track_share,
+    Request.POINT_ADD: point_add,
+    Request.POINT_ADD_BATCH: point_add_batch,
+}
 
 
 class Client:
@@ -36,11 +38,11 @@ class Client:
 
     def __enter__(self):
         self.host_port = self.client_sock.getpeername()
-        log.info("Client connected: %s:%d", *self.host_port)
+        logging.info("Client connected: %s:%d", *self.host_port)
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        log.info("Client disconnected: %s:%d", *self.host_port)
+        logging.info("Client disconnected: %s:%d", *self.host_port)
         self.client_sock.close()
 
     async def recv(self):
@@ -49,20 +51,20 @@ class Client:
             # Probably client disconnected
             return None
         if len(raw_request) >= MESSAGE_SIZE:
-            log.warning(" <=  [Too big: %d bytes]", len(raw_request))
+            logging.warning(" <=  [Too big: %d bytes]", len(raw_request))
             await self.send((Response.BAD_REQUEST, "Too big request."))
             return None
 
         raw_request = bytes(b ^ ((self.key + i) & 0xFF) for i, b in enumerate(raw_request))
         request = msgpack.unpackb(raw_request, raw=False)
-        log.debug(" <=  %s", request)
+        logging.debug(" <=  %s", request)
         return request
 
     async def send_key(self):
         await self.loop.sock_sendall(self.client_sock, bytes([self.key]))
 
     async def send(self, response):
-        log.debug(" =>  %s", response)
+        logging.debug(" =>  %s", response)
         raw_response = msgpack.packb(response)
         await self.loop.sock_sendall(self.client_sock, raw_response)
 
@@ -99,7 +101,7 @@ async def handle_client(client_sock, loop):
                 response = await handle_request(request)
                 await client.send(response)
             except Exception as e:
-                log.exception("Exception while handling client request")
+                logging.exception("Exception while handling client request")
                 try:
                     await client.send([Response.INTERNAL_ERROR])
                 except Exception as e:

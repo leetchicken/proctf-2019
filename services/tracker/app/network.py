@@ -6,8 +6,6 @@ IPROTO_DCCP = 33
 SOL_DCCP = 269
 DCCP_SOCKOPT_SERVICE = 2
 
-log = logging.getLogger()
-
 
 def create_server_socket(host: str, port: int):
     server = socket.socket(socket.AF_INET, SOCK_DCCP, IPROTO_DCCP)
@@ -17,5 +15,5 @@ def create_server_socket(host: str, port: int):
     server.listen(8)
     server.setblocking(False)
 
-    log.info("Listening %s:%d ...", host, port)
+    logging.info("Listening %s:%d ...", host, port)
     return server

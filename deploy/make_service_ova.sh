@@ -72,6 +72,11 @@ if [ $SERVICE == "sql_demo" ]; then
     docker save proctf/sql_demo | $SSH 127.0.0.2 docker load
 fi
 
+if [ $SERVICE == "tracker" ]; then
+    echo "import docker images"
+    docker save proctf/tracker | $SSH 127.0.0.2 docker load
+fi
+
 $SSH 127.0.0.2 "cd /service/$SERVICE; docker-compose up --no-start"
 
 

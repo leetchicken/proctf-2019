@@ -148,7 +148,6 @@ EOF
     "tracker")
     cat <<EOF
 services/tracker/./Dockerfile
-services/tracker/./main.py
 services/tracker/./kernel/kernel-headers-4.18.0-80.7.1.el8.dccp.x86_64.rpm
 services/tracker/./kernel/kernel-cross-headers-4.18.0-80.7.1.el8.dccp.x86_64.rpm
 services/tracker/./kernel/kernel-tools-libs-devel-4.18.0-80.7.1.el8.dccp.x86_64.rpm
@@ -159,22 +158,10 @@ services/tracker/./kernel/kernel-tools-4.18.0-80.7.1.el8.dccp.x86_64.rpm
 services/tracker/./kernel/kernel-devel-4.18.0-80.7.1.el8.dccp.x86_64.rpm
 services/tracker/./kernel/kernel-modules-extra-4.18.0-80.7.1.el8.dccp.x86_64.rpm
 services/tracker/./kernel/kernel-tools-libs-4.18.0-80.7.1.el8.dccp.x86_64.rpm
+services/tracker/./execute.py
 services/tracker/./db
 services/tracker/./db/drop.sql
 services/tracker/./db/create.sql
-services/tracker/./app
-services/tracker/./app/enums.py
-services/tracker/./app/__init__.py
-services/tracker/./app/config.py
-services/tracker/./app/protocol.py
-services/tracker/./app/network.py
-services/tracker/./app/common.py
-services/tracker/./app/api
-services/tracker/./app/api/track.py
-services/tracker/./app/api/__init__.py
-services/tracker/./app/api/tracker.py
-services/tracker/./app/api/point.py
-services/tracker/./app/api/user.py
 services/tracker/./docker-compose.yml
 services/tracker/./requirements.txt
 EOF
