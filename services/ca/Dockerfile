@@ -2,7 +2,7 @@ FROM perl:5.30-slim
 
 RUN apt-get update && \
   apt-get install -y --no-install-recommends \
-    libssl-dev libc6-dev zlib1g-dev openssl gcc
+    libssl-dev libc6-dev zlib1g-dev netcat openssl gcc sqlite3
 
 RUN cpanm -n \
   Mojolicious Cpanel::JSON::XS Crypt::JWT IO::Socket::SSL \

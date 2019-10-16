@@ -200,7 +200,11 @@ def check(args):
     if r != '|1|':
         verdict(MUMBLE, "Unexpected query result", "Unexpected query 6 result: `%s`" % r)
 
-    random_text = get_random_text()
+    while True:
+        random_text = get_random_text()
+        if len(random_text) > 20:
+            break
+
     random_word = get_random_word(random_text)
 
     sql = "CREATE VIRTUAL TABLE messages USING fts5(body);"

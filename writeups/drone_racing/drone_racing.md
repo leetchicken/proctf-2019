@@ -1,64 +1,76 @@
 # Drone racing
 
-Service "drone racing" allows users to create levels (some kind of mazes) and submit programs for drones which should pass the drone from one corner of maze to another one.
+The "drone racing" service allows users to create maze-like levels and submit drone programs that will navigate a drone in a race from one corner of the maze to another.
 
-There is HTTP REST API which support following requests:
-* POST /api/users — register a new user
-* POST /api/users/login — login
+There is HTTP REST API which supports the following requests:
+* `POST /api/users` — register a new user
+* `POST /api/users`/login — login
 
-Other endpoints are available only for authenticated user:
+Other endpoints are only available for authenticated users:
 
-* POST /api/levels — create a new level
-* GET /api/levels — receive all levels
-* POST /api/programs — submit a program for some level
-* GET /api/programs — receive list of your programs for some level
-* POST /api/runs — run one of yours program with some params
-* GET /api/runs — receive all runs for some level, see the scoreboard of competitors
+* `POST /api/levels` — create a new level
+* `GET /api/levels` — retrieve all levels
+* `POST /api/programs` — submit a program for a level
+* `GET /api/programs` — retrieve the list of your programs for a level
+* `POST /api/runs` — run one of your programs with some params
+* `GET /api/runs` — retrieve all runs for some level, see the scoreboard of competitors
 
-Flags from checksystem are stored in programs: they pass the maze and print flag to output.
+Flags from the checksystem are embedded into drone programs: once they finish the level, they print a flag to stdout.
 
-There are two known vulnerabilities: one of them allows to win any competition for any level, and another one allows to steal flags
+There are two known vulnerabilities: one of them allows to win any competition for any level, the other one allows to steal flags.
 
-## Calling setMaze() is available from the program
+## Calling setMaze() is available from within the program
 
-You can call method setMaze(String) from your program. This method is used by code runner on the server side to set maze's map for current program. If you will run setMaze("."), you will win with 0 moves.
+You can call the `setMaze(String)` method from your drone program. This method is used by the code runner on the server side to set the maze for the current program. If you run `setMaze(".")`, you will win with 0 moves.
 
 This vulnerability doesn't allow to steal flags.
 
-## Override the base class of generated class file, what leads to RCE
+## RCE by overriding the base class of a generated class file
 
-Second vulnerability is more interesting.
+The second vulnerability is more interesting.
 
-Program passed to the server is compiling to JVM bytecode. First of all it is compiling to abstract stack machine, and after it program for this machine is compiling to JVM code via ObjectWeb ASM library. While compiling, the name of class is always "ae/hitb/proctf/drone_racing/DroneRacingProgram". JVM uses constant pool — special section in .class file which contains all constants used in the program. So despite of this class name is used more then once in bytecode, this string is stored only one, somewhere in the constant pool. 
+Programs passed to the server are compiled into JVM bytecode. In the first pass the program is compiled into commands for the abstract stack machine. In the second pass the abstract stack machine program is compiled into to JVM code via ObjectWeb ASM library. While compiling into JVM, the name of the resulting class is a placeholder containing "ae/hitb/proctf/drone_racing/DroneRacingProgram".
 
-After generating the class file, this name ("ae/hitb/proctf/drone_racing/DroneRacingProgram") is replaced to program's title. Program's title can not be longer than length of "ae/hitb/proctf/drone_racing/DroneRacingProgram", 46 symbols. In case of smaller title, it is padded to 46 symbols.
+JVM uses a pool of constants — a special section in the .class file that contains all the constants used in the program. Constants are typed and follow each other. One of the types is UTF-8 string. The constants in the pool are unique, so despite the fact that the class name is used more than once in the bytecode, the corresponding string is stored only once, somewhere in the constant pool.
 
-After this manipulation class in .class file has name, passed as program's title.
+Another interesting type is ClassName. ClassName constants don't hold the actual string but rather a reference (index in the constant pool) to a UTF-8 string. So, when the class name is processed, it first takes the reference and follows it to retrieve the actual string.
 
-BUT. Class name is stored in .class file as bytes sequence, not as chars sequence. So we can overflow this segment if we will use non-ASCII chars. We can not use 4-bytes UTF-8 symbols (because .class files has *strange* UTF-8 implementation), but we can use 3-bytes UTF-8 symbols and overflow 2 * 46 bytes! 
+Once the class file has been generated, the service replaces a placeholder name in the constant pool with the actual title of the program. The service checks that the title of the program does not exceed 46 characters - the length of the placeholder. If the program title is shorter, it is padded to 46 characters.
 
-Next UTF-8 string in the constant pool is base class name. We need to use class with the same name's length, which is non-hackable. But we can do a trick: put needed base class name as string somewhere in the constant pool and overflow only link to the string.
+BUT. The class name is checked as a string, but is then stored in the .class file as a UTF-8 encoded byte sequence. Therefore we can overflow the constant if we use non-ASCII chars. We can not use 4-byte UTF-8 characters (because .class files have a *peculiar* UTF-8 implementation), but we can use 3-byte UTF-8 characters and overflow up to 2 * 46 bytes!
 
-Okey, we need to find a class in our assemble which can help us to achieve running arbitrary code. So we extract all class files from jars and grep it for "Runtime.getRuntime().exec()" calls. There are 3 methods in 3 classes with this call:
+The class name constant in the constant pool is followed by the base class name, so we can overflow the base class name to inherit some useful methods! But we have to preserve the base class name length, otherwise all constant pool references will become invalid and the program won't launch. Luckily, the actual layout of constant pool is as follows:
+```
+...
+"class name",
+class name reference,
+"base class name",
+base class name reference,
+...
+```
 
-1. `org.eclipse.jetty.servlets.CGI.exec()` — not suitable, because has complex arguments (`(File command, String pathInfo, HttpServletRequest req, HttpServletResponse res)`), which we can't pass from our program
-2. `org.h2.util.Profiler.exec(String... args)` — this method is looks good, but it's private, we can't call private method from child class
-3. `org.h2.tools.Server.openBrowser(String url)` — yes! It's public static method with one String argument. We can call it from our class. But... It's just opens a browser, not execute any command. 
+So what we can do is we can store the desired base class elsewhere in the constant pool, then overwrite the original base class name with junk bytes, and then overwrite the base class name _reference_ to make it point to our desired base class name.
 
-Let's see to source code of last method: https://github.com/h2database/h2database/blob/master/h2/src/main/org/h2/tools/Server.java#L649
-It has complex logic for defining which program is a "browser". We can see that if browser name contains "%url", that browser name is splitted by comma, %url is replaced to `url` (passed argument), and resulted command is executed. Okey, but how we can define a browser name?
+Okay, now we need to find a class in our assembly which will help us achieve running arbitrary code. So we extract all class files from jars and grep them for "Runtime.getRuntime().exec()" calls. There are 3 methods in 3 classes with this call:
+
+1. `org.eclipse.jetty.servlets.CGI.exec()` — not suitable, because it has complex arguments (`(File command, String pathInfo, HttpServletRequest req, HttpServletResponse res)`), which we can't pass from our program
+2. `org.h2.util.Profiler.exec(String... args)` — this method looks good, but it's private, and we can't call private methods from the child class.
+3. `org.h2.tools.Server.openBrowser(String url)` — yes! It's a public static method with one String argument. We can call it from our class. But... It does not execute arbitrary commands, it just opens a browser.
+
+Let's refer to the source code of this last method: https://github.com/h2database/h2database/blob/master/h2/src/main/org/h2/tools/Server.java#L649
+It has complex logic for defining which program constitutes a "browser". We can see that if browser name contains `"%url"`, that browser name is split by a comma, `%url` is replaced with `url` (the method argument), and the resulting command is executed. Okay, now how we can define a browser name?
 
 Let's see at
 `String browser = Utils.getProperty(SysProperties.H2_BROWSER, null);`
 
-`Utils.getProperty` is a method from https://github.com/h2database/h2database/blob/master/h2/src/main/org/h2/util/Utils.java#L722. It looks to the Java's system properties. But wait a second! We can define these properties with run's params.
+`Utils.getProperty` is a method from https://github.com/h2database/h2database/blob/master/h2/src/main/org/h2/util/Utils.java#L722. It looks into Java system properties. But wait a second! We can define these properties with run params when we launch our drone program!
 
-So the exploit technique is following:
-1. Register the user and login
-2. Upload a program which title has non-ASCII chars and overflow the class name, change base class to "h2/tools/Server".
-3. Define "setMaze(String)" function in this program, otherwise running the code will fail before start
-4. Call openBrowser("programs/")
-5. Run this program with params "h2.browser": "ln,-sf,static/classes.tar.gz,%url"
+To recap, this is the outline of the exploit:
+1. Register the user and log into the service;
+2. Upload a drone program which is constructed like this:
+    1. title has non-ASCII chars to overflow the class name and change the base class to "h2/tools/Server";
+    2. `setMaze(String)` function is defined in the program, otherwise running the code will fail before start;
+    3. there's a call to `openBrowser("programs/")` somewhere in the program;
+3. Run the drone program with params `"h2.browser": "tar,czf,static/classes.tar.gz,%url"`
 
-This program will archive all class files by all participants and put it to static/classes.tar.gz, which is available via static file downloading.
-
+Once run, this program will archive all the class files uploaded by all participants and put the archive to static/classes.tar.gz, which is available via static file downloading.

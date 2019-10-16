@@ -19,7 +19,7 @@ TIMEOUT = 3
 
 
 def create_session(host):
-    client = DepositClient()
+    client = DepositClient(log=True)
 
     conn = nclib.Netcat((host, PORT), raise_timeout=True, retry=5)
     conn.settimeout(TIMEOUT)
@@ -72,7 +72,7 @@ def check(host):
             if cell.secret.startswith(secret):
                 break
         else:
-            verdict(MUMBLE, "Check failed", "Secret is not in the list")
+            verdict(MUMBLE, "The item not found in the list", "Secret is not in the list")
 
         # 3. delete temp secret
         conn, client = create_session(host)
@@ -83,7 +83,7 @@ def check(host):
             verdict(MUMBLE, "Failed to delete secret while checking", "Response status is %d" % response.status)
         conn.close()
     except DepositClientError as e:
-        verdict(MUMBLE, "Check failed", traceback.format_exc())
+        verdict(MUMBLE, "Protocol error", traceback.format_exc())
 
     verdict(OK)
 
@@ -95,12 +95,12 @@ def put(host, flag_id, flag, vuln):
         conn.sendline(client.store_secret(bytes(flag, "ascii"), location))
         response = client.parse_response(conn.recvuntil(b'> '), geocacher_pb2.StoreSecretResponse)
         if response.status in (geocacher_pb2.FAIL, geocacher_pb2.TIMEOUT):
-            verdict(DOWN, "Failed to put flag", "Response status is %d" % response.status)
+            verdict(DOWN, "Failed to put flag: db error", "Response status is %d" % response.status)
         if response.status != geocacher_pb2.OK:
             verdict(MUMBLE, "Failed to put flag", "Response status is %d" % response.status)
         password = response.key
     except DepositClientError as e:
-        verdict(MUMBLE, "Failed to put flag", traceback.format_exc())
+        verdict(MUMBLE, "Failed to put flag: protocol error", traceback.format_exc())
 
     flag_id = base64.b64encode(struct.pack("II", *location) + password).decode()
     verdict(OK, flag_id)
@@ -115,12 +115,12 @@ def get(host, flag_id, flag, vuln):
         conn.sendline(client.get_secret(location, password))
         response = client.parse_response(conn.recvuntil(b'> '), geocacher_pb2.GetSecretResponse)
         if response.status == geocacher_pb2.NOT_FOUND:
-            verdict(CORRUPT, "Failed to get flag", "Response status is %d" % response.status)
+            verdict(CORRUPT, "Failed to get flag: not found", "Response status is %d" % response.status)
         elif response.status != geocacher_pb2.OK:
-            verdict(DOWN, "Failed to get flag", "Response status is %d" % response.status)
+            verdict(DOWN, "Failed to get flag: db error", "Response status is %d" % response.status)
         svc_flag = response.secret
     except DepositClientError as e:
-        verdict(MUMBLE, "Failed to get flag", traceback.format_exc())
+        verdict(MUMBLE, "Failed to get flag: protocol error", traceback.format_exc())
 
     if not svc_flag.startswith(bytes(flag, "ascii")):
         verdict(CORRUPT, "Retrieved flag doesn't match", str(svc_flag))
