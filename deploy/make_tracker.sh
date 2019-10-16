@@ -1,7 +1,8 @@
 #!/bin/bash
+set -e
 
 pushd ../services/tracker
-    docker-compose -f docker-compose-build.yml build
+    ./build.sh
 popd
 
 ./make_service_ova.sh tracker

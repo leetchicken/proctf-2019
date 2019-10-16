@@ -14,7 +14,7 @@ class Config(Model):
 
     
 def get_config() -> Config:
-    global _CONFIG
+    nonlocal _CONFIG
     if _CONFIG is None:
         _CONFIG = Config(dict(
             host=os.environ["LISTEN_HOST"],

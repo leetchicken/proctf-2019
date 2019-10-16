@@ -27,8 +27,8 @@ add app/api/tracker.py
 add app/api/user.py
 add main.py
 
-echo -en "Result of merge:\n  "
+echo "Result of merge:"
 wc -l $DST
 
-echo -en "Compiling:\n  "
+echo "Compiling:"
 ./compile.py tracker.py tracker.bin

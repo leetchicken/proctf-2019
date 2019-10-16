@@ -1,3 +1,3 @@
 #!/bin/bash
 
-docker-compose -f docker-compose-build.yml up --build
+docker build --network host -t proctf/tracker .

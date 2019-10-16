@@ -12,7 +12,8 @@ services:
     command: postgres -c listen_addresses=127.0.0.1
 
   app:
-    build: .
+    image: proctf/tracker
+    container_name: tracker
     restart: always
     environment:
       LISTEN_HOST: 0.0.0.0
