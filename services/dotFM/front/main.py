@@ -79,7 +79,7 @@ async def get_music_image(_, image_name: str):
 
 @app.get("/lookup")
 async def lookup_for_points(request: Request):
-    rad = 40
+    rad = 150
     try:
         x, y = map(lambda z: int(z.split(".")[0]), request.headers.get("Position", "0,0").split(","))
     except ValueError:
