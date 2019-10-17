@@ -94,11 +94,6 @@ class DepositClient(object):
         with open("service_public.pem", "rb") as f:
             self.pub_key = load_pem_public_key(f.read(), backend=default_backend())
 
-        with open("checker_private.pem", "rb") as f:
-            temp = load_pem_private_key(f.read(), password=None, backend=default_backend())
-            self.admin_d = temp.private_numbers().d
-            self.admin_n = temp.private_numbers().public_numbers.n
-
         self.key_3 = bytes([0] * 32)
         self.hmac1 = bytes([0] * 32)
         self.sequence_id = 0
