@@ -39,8 +39,8 @@ cs_checkers_hostname_cb: |
   sub { my ($team, $service) = @_; $service->{host_suffix} ? "$team->{host_prefix}$service->{host_suffix}" : "$team->{host}" }
 
 teams: |
-  {name => 'Eat Sleep Pwn Repeat', network => '10.60.1.0/24', host => '10.60.1.0', host_prefix => '10.60.1.', token => '1_111e886db3424fd2a9dd453e6c8a6492', logo => '/logo.png'},
-  {name => 'RedRocket', network => '10.60.2.0/24', host => '10.60.2.0', host_prefix => '10.60.2.', token => '2_d8a4fe6d49b44459b0a73bfdeee7d60d', logo => '/logo.png'},
+  {name => 'Eat Sleep Pwn Repeat', network => '10.60.1.0/24', host => '10.60.1.0', host_prefix => '10.60.1.', token => '1_111e886db3424fd2a9dd453e6c8a6492', logo => '/data/01.png'},
+  {name => 'RedRocket', network => '10.60.2.0/24', host => '10.60.2.0', host_prefix => '10.60.2.', token => '2_d8a4fe6d49b44459b0a73bfdeee7d60d', logo => '/data/02.png'},
   {name => 'Hack.ERS', network => '10.60.3.0/24', host => '10.60.3.0', host_prefix => '10.60.3.', token => '3_f3c68f2a5e194eab921864a2fff4767e', logo => '/data/03.png'},
   {name => 'dotRA', network => '10.60.4.0/24', host => '10.60.4.0', host_prefix => '10.60.4.', token => '4_7352e83e72944ce48bb46125c67a2d2c', logo => '/data/04.png'},
   {name => 'True0xA3', network => '10.60.5.0/24', host => '10.60.5.0', host_prefix => '10.60.5.', token => '5_2414af92486241feb87e4ffdc8e2e296', logo => '/data/05.png'},
