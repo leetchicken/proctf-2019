@@ -22,7 +22,7 @@ This CTF is brought to you by these amazing guys:
 
 * Alexander Bersenev aka bay, author of services `fraud_detector`, `polyfill`, and `startup`, also our network and infrastructure master
 * Andrew Gein aka andgein, author of service `drone_racing`
-* Andrew Hozov aka and, author of services `bb` and `ca`, also our checksystem master
+* Andrey Khozov aka and, author of services `bb` and `ca`, also our checksystem master
 * Artem Zinenko aka art, author of services `deer` and `sql_demo`
 * Dmitry Simonov aka dimmo, author of service `tracker`
 * Dmitry Titarenko aka dscheg, author of services `rubik` and `notepool`
