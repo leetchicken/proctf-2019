@@ -70,7 +70,7 @@ Kernel formula is:
 
 ![formula](formula.png)
 
-where 'c' is the channel index(0 - red, 1 - green, 2 - blue, 3 - alpha), 'p' - pixel value (0..255), 'k' - kernel parameter.
+where 'c' is the channel index(0 - red, 1 - green, 2 - blue, 3 - alpha), 'p' - pixel value (0..255), 'k' - kernel parameter  (0..255).
 
 ## Vector assembler
 The convolution is performed by a program written in custom assembler. It is similar to AMD GPU ISA. Compiled programs written in this assembler are called kernels, not to be confused with the convolution kernel. Each vector register has 8 lanes because vector instructions and registers are implemented by using AVX2 and SSE4. As in modern GPUs some of the lanes may be deactivated during execution because of the flow control instructions. The compiler generates two variants of the code: AVX2 variant and SSE4 variant. On the kernel startup all of 8 lanes are active and the AVX2 variant is used, but when the last 4 lanes are inactive the flow control switches to the SSE4 variant.
@@ -181,7 +181,7 @@ Here is an example of how the 2nd pixel in each block is processed (the processi
 ```
 The transition between AVX2 and SSE4, and therefore a penalty, may happen in the 8th line if the last 4 bits of the exec register are zeroes and then another penalty happens in the 11th line.
 
-We set each pixel of eight 3x3 blocks to `0xff` (except the 0th pixel of each block), that means that the condition ![compare](compare.png) is true for all lanes because any character in the flag is less that 0xff, so all lanes will be active and there will be no transitions between AVX2 and SSE4 variants. The 0th pixel of 0th, 1st, 2nd, 3rd, 5th, 6th and 7th block we set to `0x00`, that means that the condition ![compare](compare.png) is false for 0th, 1st, 2nd, 3rd, 5th, 6th and 7th lanes. The key is the 4th block, if the condition is true, the `exec` mask equals `0b00001000` and AVX2 variant is used, otherwise the `exec` mask equals `0b00000000` and the switch to SSE4 variant happens, causing time penalty.
+We set each pixel of eight 3x3 blocks to `0xff` (except the 0th pixel of each block), that means that the condition ![compare](compare.png) is true for all lanes because any character in the flag is less than 0xff, so all lanes will be active and there will be no transitions between AVX2 and SSE4 variants. The 0th pixel of 0th, 1st, 2nd, 3rd, 5th, 6th and 7th block we set to `0x00`, that means that the condition ![compare](compare.png) is false for 0th, 1st, 2nd, 3rd, 5th, 6th and 7th lanes. The key is the 4th block, if the condition is true, the `exec` mask equals `0b00010000` and AVX2 variant is used, otherwise the `exec` mask equals `0b00000000` and the switch to SSE4 variant happens, causing time penalty.
 
 The next step is to repeat all this for the remaining 31 bytes of kernel parameters, the only difference is that you need to select a different pixel and a different channel:
 
@@ -225,7 +225,7 @@ To level out the impact of randomness on timings, you can submit images that rep
 You can also speed up the search for the drop in timings by using a binary search.
 
 ### Fixing
-Remove xsave instruction between AVX2 and SSE4 switches.
+Remove `xsave` instruction between AVX2 and SSE4 switches.
 
 ## Note
-Tested only on Intel Coffee Lake Processors.
+Tested only on Intel Coffee Lake Processors. On game there was i7-8750H
