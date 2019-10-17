@@ -806,8 +806,12 @@ HttpResponse RequestHandler::PostChecksystemChangePassword2(HttpRequest request)
     }
 
     int teamIdx;
+    std::string password;
     static const std::string kN("n");
+    static const std::string kP("p");
     if(!FindInMap(request.queryString, kN, teamIdx))
+        return HttpResponse(MHD_HTTP_BAD_REQUEST);
+    if(!FindInMap(request.queryString, kP, password))
         return HttpResponse(MHD_HTTP_BAD_REQUEST);
 
     team = FindTeam(teamIdx);
@@ -818,10 +822,10 @@ HttpResponse RequestHandler::PostChecksystemChangePassword2(HttpRequest request)
     }
 
     Log("  Team index: %d\n", teamIdx);
+    Log("  New password: %s\n", password.c_str());
     Log("  Team name: %s\n", team->name.c_str());
 
-    static const std::string kDefaultPassword = "00000000";
-    if(User::ChangePassword(team->name, kDefaultPassword) == kUserErrorInvalidCredentials)
+    if(User::ChangePassword(team->name, password) == kUserErrorInvalidCredentials)
     {
         Log("  Password change failed, invalid user name\n");
         return HttpResponse(MHD_HTTP_BAD_REQUEST);
