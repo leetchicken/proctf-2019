@@ -8,11 +8,13 @@ import time
 import os
 import traceback
 import requests
+import re
 
 from cloud_common import (get_cloud_ip, log_progress, call_unitl_zero_exit,
                           get_vm_name_by_num, SSH_CLOUD_OPTS)
 
 TEAM = int(sys.argv[1])
+PASSWORD = sys.argv[2]
 
 
 def log_stderr(*params):
@@ -20,8 +22,12 @@ def log_stderr(*params):
 
 
 def main():
+    if not re.fullmatch(r"[a-z0-9A-Z]{,12}", PASSWORD):
+        print("msg: ERR, bad char in password")
+        return 1
+
     try:
-        resp = requests.post("http://10.10.10.101/checksystem_change_password2?n=%d" % TEAM)
+        resp = requests.post("http://10.10.10.101/checksystem_change_password2?n=%d&p=%s" % (TEAM, PASSWORD))
         if resp.status_code == 200:
             print("msg: OK")
         else:
