@@ -18,6 +18,30 @@ Also, we bring to you some of our internal infrastructure magic:
 * switches configuration in [switches/](https://github.com/HackerDom/proctf-2019/tree/master/switches/)
 * checksystem configuration in [cs/](https://github.com/HackerDom/proctf-2019/tree/master/cs/)
 
+Final scoreboard:
+
+<img src="static/scoreboard.png" alt="Final scoreboard">
+
+# First bloods
+
+**SERVICE         TEAM**
+fraud\_detector  TokyoWesterns
+binder          Bushwhackers
+SePtoN          RedRocket
+bb              LC↯BC
+game\_console    Eat Sleep Pwn Repeat
+polyfill        Bushwhackers
+handy           LC↯BC
+gallery         TokyoWesterns 
+ca              LC↯BC
+drone\_racing    PDKT
+tracker         TokyoWesterns
+notepool        Hack.ERS 
+Spaceships      saarsec
+sql\_demo        TokyoWesterns
+geocaching      mHackeroni
+dotFm           Eat Sleep Pwn Repeat
+
 This CTF is brought to you by these amazing guys:
 
 * Alexander Bersenev aka bay, author of services `fraud_detector`, `polyfill`, and `startup`, also our network and infrastructure master
