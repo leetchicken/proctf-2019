@@ -83,8 +83,9 @@ Symbol _
 ![_](_.png)
 
 Next step is to submit them all to process, after you got timings you need to look to timings for red channel, for example you got this:
+
 | .  | 0  | 1  | 2  | 3  | 4  | 5  | 6  | 7  | 8  | 9  | =  | A  | B  | C  | D  | E  | F  | G  | H  | I  | J  | K  | L  | M  | N  | O  | P  | Q  | R  | S  | T  | U  | V  | W  | X  | Y  | Z  | _ |
-| -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | 138088  | 130454  | 129942  | 129706  | 129626  | 129733  | 129659  | 129760  | 129799  | 129785  | 129635  | 135234  | 130276  | 129675  | 129760  | 129825  | 129686  | 129990  | 130020  | 129705  | 130046  | 129681  | 131270  | 129686  | 130331  | 129992  | 129788  | 130114  | 129955  | 129990  | 129806  | 130039  | 129615  | 97530  | 97604  | 97468  | 97480  | 97675  | 97639 |
 
 As you can see there is a drop between 'U' and 'V' symbols, that means that first symbol of flag is 'V'.
@@ -117,6 +118,7 @@ Transition between AVX2 and SSE4 therefore penalty may happen in 8th line if las
 Each pixel of 8 3x3 blocks except 0th we clear by value 0xff, that means that compare ![compare](compare.png) is true for all lanes because any symbol in flag is less that 0xff, so this lanes will be active and there will not be any transitions between AVX2 and SSE4 variants. 0th pixel of 0th, 1st, 2nd, 3rd, 5th, 6th and 7th 3x3 block we clear by value 0x0, that means that compare ![compare](compare.png) is false for 0th, 1st, 2nd, 3rd, 5th, 6th and 7th lanes. The key is 4th block, if compare is true exec mask equals to 0b00001000 and AVX2 variant is used, if false - exec mask equals to 0b00000000 and switch to SSE4 variant happens therefore penalty.
 
 Next step is to repeat all this for the remain 31 bytes of kernel parameters, the only difference is that you need to select another pixel and channel:
+
 | Byte index | Pixel index in block | Channel |
 |---|---|-----|
 | 0 | 0 | red |
