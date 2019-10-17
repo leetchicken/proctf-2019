@@ -14,7 +14,7 @@ This repository contains:
 * writeups with vulnerabilities and exploitation description for all services in folder [writeups/](https://github.com/HackerDom/proctf-2019/tree/master/writeups/)
 
 Also, we bring to you some of our internal infrastructure magic:
-* deploy scripts for virtual machines with services. Each service was hosted inside docker contrainer inside separate VirtualBox virtual machine. See [deploy/](https://github.com/HackerDom/proctf-2019/tree/master/deploy/)
+* deploy scripts for virtual machines with services. Each service was hosted inside docker container inside separate VirtualBox virtual machine. See [deploy/](https://github.com/HackerDom/proctf-2019/tree/master/deploy/)
 * switches configuration in [switches/](https://github.com/HackerDom/proctf-2019/tree/master/switches/)
 * checksystem configuration in [cs/](https://github.com/HackerDom/proctf-2019/tree/master/cs/)
 
@@ -29,7 +29,7 @@ This CTF is brought to you by these amazing guys:
 * Dmitry Titarenko aka dscheg, author of services `rubik` and `notepool`
 * domi, author of service `geocaching`
 * Konstantin Plotnikov aka kost, author of services `SePtoN` and `gallery`, also our teamleader
-* Mikhail Vytskov aka mik, author of service `handy`
+* Mikhail Vyatskov aka mik, author of service `handy`
 * Polina Zonova aka bosonojka5, our amazing project leader and manager
 * Ruslan Kutdusov, author of services `game_console` and `convolution`
 * Roman Bykov, author of service `dotFM`
