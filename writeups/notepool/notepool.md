@@ -10,13 +10,15 @@ The HTTP handlers are:
 * `/notes/search` — full-text search of added notes;
 
 Users can create public notes that can be searched by everyone. Logged in users can search their private notes.
-Also users can search or view all of their own notes by using `myOnly` flag.
+Also users can search or view all of their own notes by using `myOnly` flag. Hackers should get access to private messages of other users.
 
 ## Vulns
 
+*There is unintended vulnerability — the lack of user name and password validation/escaping for line breaks which makes it easier to hack the service.*
+
 ### Lucene query syntax injection
 
-The main vuln is Lucene query syntax injection through user login that is not fully escaped as one word because of the validation.
+The main vuln is Lucene query syntax injection through user login that is not fully escaped because of the validation.
 
 But there are other vulnerabilities that allow to bypass the validation and use something like `LOGIN OR /[a-z0-9]{32}/` where `/[a-z0-9]{32}/`
 is a regular expression that matches hashes of words used to save private messages. So the full request to Lucene will be
@@ -76,6 +78,6 @@ As a result there are 2 chars that meet all the conditions:
 \u212A:?:k:?
 ```
 
-So the full exploit is to concurrently register two users with names that differ in one character to get concurrent writes in one file which results in using name as login.
+So the full exploit is to concurrently register two users with names that differ in one character to get concurrent writes in one file which results in using name as login. And due to lack of validation the user name this leads to query syntax injection.
 
 See the exploit here: https://github.com/HackerDom/proctf-2019/blob/master/sploits/notepool/src/Program.cs
