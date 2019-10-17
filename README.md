@@ -28,7 +28,7 @@ This CTF is brought to you by these amazing guys:
 * Dmitry Simonov aka dimmo, author of service `tracker`
 * Dmitry Titarenko aka dscheg, author of services `rubik` and `notepool`
 * domi, author of service `geocaching`
-* Konstantin Plotnikov aka host, author of services `SePtoN` and `gallery`, also our teamleader
+* Konstantin Plotnikov aka kost, author of services `SePtoN` and `gallery`, also our teamleader
 * Mikhail Vytskov aka mik, author of service `handy`
 * Polina Zonova aka bosonojka5, our amazing project leader and manager
 * Ruslan Kutdusov, author of services `game_console` and `convolution`
