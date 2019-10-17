@@ -80,6 +80,7 @@ Using this vulnerabilities player can get access code by next algorithm:
 8. Allocate new Spaceship in slot 1. Set name to 'ZZzzzzz'.
 9. Delete spacemans 0-9 (to clear tcache of heap)
 10. Edit spaceman A name with next content:
+
     a1 = b"a" * 0x0                  # prev size
     a1 += pack("<Q",0x80)       # fake chunk size
     a1 += pack("<Q",adr_f1)     # address of forward free
@@ -96,7 +97,7 @@ Using this vulnerabilities player can get access code by next algorithm:
 ## Explanation of vulnerability
 
 Vulnerability idea was taken from [this](https://webcache.googleusercontent.com/search?q=cache:fwf5-Z-5GiQJ:https://heap-exploitation.dhavalkapil.com/attacks/unlink_exploit.html+&cd=1&hl=ru&ct=clnk&gl=ae&client=firefox-b-d).
-Look at next image ![](image1.png). Memory state before 11 step is presented. In data field of Spaceman A segment a fake free chunk was crafted. Its next and back free segments points to some fields of memory. This field has next properties:
+Look at next image ![](image1.PNG). Memory state before 11 step is presented. In data field of Spaceman A segment a fake free chunk was crafted. Its next and back free segments points to some fields of memory. This field has next properties:
 
 1. Spaceman A->forward_free_chunk + 8*3 = Spaceman A
 2. Spaceman A->backward_free_chunk + 2*8 = Spaceman A
@@ -108,7 +109,7 @@ As we starts to free Spaceman B chunk we takes size of previous chunk (0x80) and
 1.    Set P->fd->bk = P->bk.
 2.    Set P->bk->fd = P->fd.
 
-At next image the result is shown ![](image2.png)
+At next image the result is shown ![](image2.PNG)
 
 Now medic reference in Spaceship refers to the last 8 butes of launch code field. As 
-we can see at next image, now the name field of medic Spaceman contains the launch code and when we prints info about this spaceship we can see access code at medic name. ![](image3.png)
+we can see at next image, now the name field of medic Spaceman contains the launch code and when we prints info about this spaceship we can see access code at medic name. ![](image3.PNG)
