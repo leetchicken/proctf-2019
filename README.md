@@ -15,12 +15,12 @@ This repository contains:
 
 Also, we bring to you some of our internal infrastructure magic:
 * deploy scripts for virtual machines with services. Each service was hosted inside docker contrainer inside separate VirtualBox virtual machine. See [deploy/](https://github.com/HackerDom/proctf-2019/tree/master/deploy/)
-* switchers configuration in [switches/](https://github.com/HackerDom/proctf-2019/tree/master/switches/)
+* switches configuration in [switches/](https://github.com/HackerDom/proctf-2019/tree/master/switches/)
 * checksystem configuration in [cs/](https://github.com/HackerDom/proctf-2019/tree/master/cs/)
 
 This CTF is brought to you by these amazing guys:
 
-* Alexander Bersenev aka bay, author of services `fraud_detector`, `polyfill`, and `startup`, also our network and infstructure master
+* Alexander Bersenev aka bay, author of services `fraud_detector`, `polyfill`, and `startup`, also our network and infrastructure master
 * Andrew Gein aka andgein, author of service `drone_racing`
 * Andrew Hozov aka and, author of services `bb` and `ca`, also our checksystem master
 * Artem Zinenko aka art, author of services `deer` and `sql_demo`
