@@ -1,6 +1,8 @@
 ## .FM
+This service is an emulation of infinite field with radio stations.  
 
-This service is an emulation of infinite field with radio stations.
+![dotfm](fm.png)
+
 You can create a station by uploading an archive with music and playlist file.
 Uploading archive leads to this actions:
 
@@ -76,11 +78,15 @@ Main workflows are:
 
 ##### Path traversal
 While music parsing and creating image we combine mp3 tags: Artist, Album and track. There is no filtering.
-So, you could bypass it into `Path.Combine` and create png file in other path.
+So, you could bypass it into `Path.Combine` and create png file in other path.  
+```using (var imgFs = CreateFileStream(Path.Combine(Constants.ImagesPaths, value + ".png")))```  
+https://github.com/HackerDom/proctf-2019/blob/master/services/dotFM/uploader/Uploader/Storages/Storage.cs#L45  
 
 Surprisingly, if you store correct text in image file tags, you can parse it as a playlist.
 
 ##### Frontend file parsing
 Main logic is in searching <sha1>.mp3.
-Playlist always has full hases, but search is done by prefixes.
-So, you could list all files by bypsassing short sha1 prefixes of files.
+Playlist always has full hash string, but the search is performed by prefixes.  
+```get_files_lookup("music", f"{result['tracks'][circuited_number]}.mp3"```  
+https://github.com/HackerDom/proctf-2019/blob/master/services/dotFM/front/main.py#L117  
+So, you could list all files by bypsassing short sha1 prefixes of files.  
