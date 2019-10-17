@@ -14,7 +14,7 @@ Also users can search or view all of their own notes by using `myOnly` flag. Hac
 
 ## Vulns
 
-*There is unintended vulnerability — the lack of user name and password validation/escaping for line breaks which makes it easier to hack the service.*
+*There is a trivial unintended vulnerability — the lack of user name and password validation/escaping for line breaks which makes it easier to hack the service.*
 
 ### Lucene query syntax injection
 
