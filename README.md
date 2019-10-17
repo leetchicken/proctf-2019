@@ -24,23 +24,41 @@ Final scoreboard:
 
 # First bloods
 
-**SERVICE         TEAM**
-fraud\_detector  TokyoWesterns
-binder          Bushwhackers
-SePtoN          RedRocket
-bb              LC↯BC
-game\_console    Eat Sleep Pwn Repeat
-polyfill        Bushwhackers
-handy           LC↯BC
-gallery         TokyoWesterns 
-ca              LC↯BC
-drone\_racing    PDKT
-tracker         TokyoWesterns
-notepool        Hack.ERS 
-Spaceships      saarsec
-sql\_demo        TokyoWesterns
-geocaching      mHackeroni
-dotFm           Eat Sleep Pwn Repeat
+**SERVICE — TEAM**
+
+`fraud_detector` — TokyoWesterns
+
+`binder` — Bushwhackers
+
+`SePtoN` — RedRocket
+
+`bb` — LC↯BC
+
+`game_console` — Eat Sleep Pwn Repeat
+
+`polyfill` — Bushwhackers
+
+`handy` — LC↯BC
+
+`gallery` — TokyoWesterns 
+
+`ca` — LC↯BC
+
+`drone_racing` — PDKT
+
+`tracker` — TokyoWesterns
+
+`notepool` — Hack.ERS 
+
+`Spaceships` — saarsec
+
+`sql_demo` — TokyoWesterns
+
+`geocaching` — mHackeroni
+
+`dotFm` — Eat Sleep Pwn Repeat
+
+# Authors
 
 This CTF is brought to you by these amazing guys:
 
