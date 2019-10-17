@@ -24,14 +24,15 @@ This CTF is brought to you by these amazing guys:
 * Andrew Gein aka andgein, author of service `drone_racing`
 * Andrey Khozov aka and, author of services `bb` and `ca`, also our checksystem master
 * Artem Zinenko aka art, author of services `deer` and `sql_demo`
+* Artur Khanov aka awengar, author of services `Binder` and `Spaceships`
 * Dmitry Simonov aka dimmo, author of service `tracker`
 * Dmitry Titarenko aka dscheg, author of services `rubik` and `notepool`
-* Konstantin Plotnikov aka host, author of services `SePtoN` and `gallery`
+* domi, author of service `geocaching`
+* Konstantin Plotnikov aka host, author of services `SePtoN` and `gallery`, also our teamleader
 * Mikhail Vytskov aka mik, author of service `handy`
-* Artur Khanov aka awengar, author of services `Binder` and `Spaceships`
+* Polina Zonova aka bosonojka5, our amazing project leader and manager
 * Ruslan Kutdusov, author of services `game_console` and `convolution`
 * Roman Bykov, author of service `dotFM`
-* domi, author of service `geocaching`
 
 If you have any question about services write us an email to info@hackerdom.ru
 
