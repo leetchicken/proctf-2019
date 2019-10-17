@@ -82,13 +82,17 @@ This allows the client to only interact with the fast storage within the session
 
 The fast storage is implemented as a static array of pointers. When the item is stored, fast storage allocates some memory with `malloc` as records the pointer. When the item is removed, `free` is performed and the pointer is nulled-out.
 
-There's a trivial one-byte heap overflow in the storing function, the amount of memory allocated is always one byte short of the requested size. This can be exploited as any other one-byte heap overflow. The provided exploit converts one-byte overflow into multi-byte overflow by overwriting the size of the next chunk and then freeing and reallocating it. Once the multi-byte overflow is achieved, the exploit leaks the libc address by allocating and reading a chunk next to the arena border, and then uses the same overflowing technique to overwrite `__free_hook` in libc with a pointer to `execve('/bin/sh')` gadget.
+There's a trivial one-byte heap overflow in the storing function, the amount of memory allocated is always one byte short of the requested size. This can be exploited as any other one-byte heap overflow.
+
+The basic primitive is to convert a one-byte overflow into multi-byte overflow by overwriting the size of the adjacent chunk and then freeing and reallocating it. The exploit first leaks the libc address by freeing a chunk into unsorted bin and then by allocating, multi-byte overflowing, and printing another chunk right next to it. We then use the same multi-byte overflowing primitive to overwrite `__free_hook` in libc with a pointer to `execve('/bin/sh')` gadget, this time by leveraging tcache bins.
 
 To facilitate the exploitation there are two optional fields in `StoreSecretRequest`: `size_hint` and `key`.
 
 Normally the allocated memory is one byte short of the size of the secret. But if a `size_hint` is provided, the service will allocate that much memory as long as its bigger than the size of the secret.
 
 The `key` field allows to override the default random key that the service generates when the item is stored. One gadgets found in libc all have specific constraints. One of the gadgets needs both `rcx` and `rdx` to point to a zero, and luckily right before calling `free()` `rcx` and `rdx` are used to check that the provided key matches the one associated with the item. So if the item was stored with a zero key, both `rcx` and `rdx` will conveniently point at zeros.
+
+Another minor obstacle to RCE is the message authentication code, which might clash with the exploit because openssl allocates memory inside HMAC functions. Luckily, message authentication is not required by the service, so the client can just not send it.
 
 100% of the flags can be retrieved via this bug.
 
