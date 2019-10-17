@@ -277,7 +277,7 @@ def get(ip, id, flag, *args):
     tracks = client.query(Request.TRACK_LIST, secret, expect=Response.OK)
     logging.info("Get tracks succeeded, they are: %r", tracks)
 
-    retrieved_flag = ""
+    chunks = dict()
     for track in tracks:
         track_id = track[0]
         logging.info("Get track %r ...", track_id)
@@ -285,10 +285,12 @@ def get(ip, id, flag, *args):
         logging.info("Get track succeeded: %r", points)
 
         chunk = "".join([meta for ts, lat, lon, meta in points])
-        logging.info("Retrieved chunk: %r", retrieved_flag)
+        logging.info("Retrieved chunk: %r", chunk)
+        if len(points) > 0:
+            ts = points[0][0]
+            chunks[ts] = chunk
 
-        retrieved_flag += chunk
-
+    retrieved_flag = "".join([chunk for ts, chunk in sorted(chunks.items())])
     if retrieved_flag == flag:
         logging.info("Flag MATCHES!")
         return ExitCode.OK
