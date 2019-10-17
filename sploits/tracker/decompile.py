@@ -5,6 +5,6 @@ import sys
 
 with open(sys.argv[1], "rb") as f:
     raw = f.read()
-    co2 = marshal.loads(raw)
-    uncompyle6.code_deparse(co2)
+    co = marshal.loads(raw)
+    uncompyle6.code_deparse(co)
     print()
