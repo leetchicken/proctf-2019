@@ -1,5 +1,5 @@
 # Convolution
-The service allows users to upload images and get back the time it took the service to to do kernel filtering (convolution) of these images. Part of the service is written in a custom vector assembler, similar to ISA of modern GPUs.
+The service allows users to upload images and get back the time it took the service to do kernel filtering (convolution) of these images. Part of the service is written in a custom vector assembler, similar to ISA of modern GPUs.
 
 ## Functionality
 
