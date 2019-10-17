@@ -1,6 +1,6 @@
 # HITB PRO CTF 2019
 
-PRO CTF is an onsite international challenge in the information security. Developed by Hackerdom team for HITB CyberWeek in Abu Dhabi, UAE. PRO CTF was hel on October 15—17 October, 2019.
+PRO CTF is an onsite international challenge in the information security. Developed by Hackerdom team for HITB CyberWeek in Abu Dhabi, UAE. PRO CTF was held on October 15—17, 2019.
 
 The contest is driven by almost classic rules for Attack-Defense [CTF](https://en.wikipedia.org/wiki/Capture_the_flag#Computer_security). Each team is given a set of vulnerable services.
 Organizers regulary fill services with private information — the flags.
