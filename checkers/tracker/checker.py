@@ -74,7 +74,8 @@ def retry_timeouts(f):
                 retries_left -= 1
                 if retries_left == 0:
                     logging.error(str(e))
-                    return ExitCode.MUMBLE
+                    print("Connection failed")
+                    sys.exit(ExitCode.MUMBLE)
                 logging.warning("Timeout, retrying ... (%d retries left)", retries_left)
     return wrapper
 

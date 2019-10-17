@@ -273,8 +273,12 @@ def cmd_open_network(team, args):
 
 
 def reset_game_console_password(team, args):
+    name = str(args[0])
+    if not re.fullmatch(r"[a-z0-9A-Z]{,12}", name):
+        return "422 Failed to take snapshot", {"result": "bad char in password"}
+
     return create_task(team, "reset_game_console_password",
-                       "reset_game_console_password.py", [str(team)])
+                       "reset_game_console_password.py", [str(team), str(name)])
 
 
 def cmd_isolate_network(team, args):
@@ -328,7 +332,7 @@ def cmd_help(team, args):
   reboot_vm <vm>                        - reboot vm
   isolate_network                       - isolate network from other teams and checksystem
   open_network                          - open network
-  reset_game_console_password           - reset game console password
+  reset_game_console_password <pass>    - reset game console password
   help                                  - help
   man                                   - instructions
 """.strip("\n")
@@ -469,7 +473,7 @@ def application(environ, start_response):
         "oblaka": (cmd_oblaka, 0, False, False),
         "login": (cmd_login, 0, False, False),
         "poll": (cmd_poll, 1, False, False),
-        "reset_game_console_password": (reset_game_console_password, 0, False, False),
+        "reset_game_console_password": (reset_game_console_password, 1, False, False),
     }
 
     if cmd not in CMDS:

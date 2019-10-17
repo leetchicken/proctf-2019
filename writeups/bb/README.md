@@ -1,5 +1,9 @@
 # BB bulletin board
 
+## Desription
+
+The service bulletin board (bb) is a simple and secure web site with the ability to create ads. Users can register, create own ads and leave private messages under any other ads. All messages are encrypted and stored in PostgreSQL database. Service has a special SQL injection vulnerability which allows reading files on the system, so hackers can get a decryption key and decrypt stolen messages.
+
 ## Features
 
 1. register users by login/password
