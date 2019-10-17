@@ -9,15 +9,15 @@ transport layer protocol. DCCP implements reliable connection setup,
 teardown and congestion control. It does not provide reliable in-order 
 delivery.
 
-Each message is a serialized by MessagePack Python structure.
+Each message is a Python structure serialized with MessagePack.
 
-Messages have two types:
+There are two kinds of messages:
 - Requests, which are sent by users/trackers. They consist of 
 **request type** and variable-sized arguments.
 - Responses, which are sent by service. They consist of **status** 
 and variable-sized arguments.
 
-Requests are slightly encrypted (XOR-ed with a key). The key is sent 
+Requests are slightly obfuscated (XOR-ed with a key). The key is sent 
 by the service to the client as the first message after connection 
 is established. Responses are not encrypted.
 
@@ -83,9 +83,9 @@ drwxr-sr-x    2 root     root            40 Oct 16 14:56 db
 -rw-rw-r--    1 root     root         18226 Oct 16 19:29 tracker.bin
 ```
 
-Format of byte-code file is not ordinary `*.pyc`, but serialized
-CodeType object. That's why just running, e.g. `uncompyle6` 
-command-line tool doesn't help.
+The byte-code file is not an ordinary `*.pyc`, but a serialized
+CodeType object. That's why just running an off-the-shelf decompiler (e.g. `uncompyle6`)
+doesn't help.
 
 We should do something like that:
 ```
@@ -104,10 +104,11 @@ The service stores data in PostgreSQL database.
 
 There is one known vulnerability: incorrect validation of access rights
 in `TRACK_GET` method. By default, all tracks are private. Access to
-a private track can be requested by any user using `TRACK_REQUEST_SHARE`
-method. After that state of track in database changes from
-`TrackAccess.PRIVATE` to `TrackAccess.PENDING`. Due to the bug, these
-tracks are publicly readable:
+a private track can be requested by any user by using `TRACK_REQUEST_SHARE`
+method. While handling this request, the service changes the state of track in database from
+`TrackAccess.PRIVATE` to `TrackAccess.PENDING`.
+
+However, there's a bug that makes pending tracks publicly readable:
 ```
 async def track_get(db, secret, track_id):
 ...
@@ -118,8 +119,7 @@ async def track_get(db, secret, track_id):
     return (Response.OK, points)
 ```
 
-Here, `is` operator (compares the identity) is used instead of 
-`==` (compares values) for numbers (access) comparison. 
+Here, `access` is compared with `PRIVATE` and `PENDING` numerical constants by using `is` operator (compares the identity) instead of `==` (compares values). 
 `True` is returned by `is` only if both objects reference the 
 same object. 
 
@@ -148,5 +148,5 @@ $ python3 1.py
 
 `TrackAccess.PENDING = 0x101 (257)`, that's why `access` value
 obtained from DB will **never** be equal to program's constant
-`TrackAccess.PENDING`. So, for `PENDING` tracks ownership is 
-**not checked**.
+`TrackAccess.PENDING`. So, the ownership is 
+**not checked** for `PENDING` tracks.
