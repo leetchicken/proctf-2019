@@ -110,6 +110,5 @@ As we starts to free Spaceman B chunk we takes size of previous chunk (0x80) and
 2.    Set P->bk->fd = P->fd.
 
 At next image the result is shown ![](image2.PNG)
-
 Now medic reference in Spaceship refers to the last 8 butes of launch code field. As 
 we can see at next image, now the name field of medic Spaceman contains the launch code and when we prints info about this spaceship we can see access code at medic name. ![](image3.PNG)
